@@ -851,6 +851,94 @@ def _plan_path(start: int, target: int, max_depth: int):
 
     return None
 
+
+def _load_shape_algebra_module():
+    import importlib
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    try:
+        return importlib.import_module("pet_shape_algebra")
+    except Exception:
+        pass
+
+    path = Path(__file__).resolve().parents[2] / "tools" / "pet_shape_algebra.py"
+    if not path.exists():
+        raise RuntimeError(f"cannot locate pet_shape_algebra module at {path}")
+    spec = importlib.util.spec_from_file_location("pet_shape_algebra", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load pet_shape_algebra module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("pet_shape_algebra", module)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _shape_to_json_payload(shape):
+    return [_shape_to_json_payload(child) for child in shape]
+
+
+def _pet_tree_to_json_payload(tree):
+    return [{"p": int(p), "e": None if exp is None else _pet_tree_to_json_payload(exp)} for p, exp in tree]
+
+
+def _shape_height_local(shape) -> int:
+    if not shape:
+        return 0
+    return 1 + max((_shape_height_local(child) for child in shape), default=0)
+
+
+def _shape_key_local(shape):
+    return (len(shape), tuple((_shape_key_local(child) for child in shape)))
+
+
+def _run_shape_enumerate(args: argparse.Namespace) -> int:
+    import json
+
+    if args.max_mass < 1:
+        raise SystemExit("--max-mass must be >= 1")
+    if args.limit is not None and args.limit < 1:
+        raise SystemExit("--limit must be >= 1")
+
+    mod = _load_shape_algebra_module()
+    shapes = tuple(mod.partial_shape_completion_frontier(None, args.max_mass))
+    shapes = tuple(sorted(shapes, key=lambda s: (-_shape_height_local(s), len(s), _shape_key_local(s))))
+    if args.limit is not None:
+        shapes = shapes[: args.limit]
+
+    if args.json:
+        rows = []
+        for shape in shapes:
+            row = {
+                "mass": mod.shape_mass(shape),
+                "height": _shape_height_local(shape),
+                "root_width": len(shape),
+                "shape": _shape_to_json_payload(shape),
+            }
+            if args.with_gamma:
+                row["gamma"] = mod.shape_gamma(shape)
+            if args.with_pet:
+                row["pet"] = _pet_tree_to_json_payload(mod.shape_to_pet(shape))
+            rows.append(row)
+        print(json.dumps(rows, indent=2, ensure_ascii=False))
+        return 0
+
+    for i, shape in enumerate(shapes, start=1):
+        print(f"shape {i}")
+        print(f"mass: {mod.shape_mass(shape)}")
+        print(f"height: {_shape_height_local(shape)}")
+        print(f"root_width: {len(shape)}")
+        if args.with_gamma:
+            print(f"gamma: {mod.shape_gamma(shape)}")
+        print(f"shape: {json.dumps(_shape_to_json_payload(shape), ensure_ascii=False)}")
+        if args.with_pet:
+            print(f"pet: {json.dumps(_pet_tree_to_json_payload(mod.shape_to_pet(shape)), ensure_ascii=False)}")
+        if i != len(shapes):
+            print()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv
@@ -1030,6 +1118,38 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_shape_of.add_argument("n", type=int, metavar="N")
     p_shape_of.add_argument("--json", action="store_true")
+
+    # shape-enumerate
+    p_shape_enumerate = subparsers.add_parser(
+        "shape-enumerate",
+        help="enumerate exact shapes in canonical shape-first order",
+    )
+    p_shape_enumerate.add_argument(
+        "--max-mass",
+        type=int,
+        required=True,
+        help="maximum structural mass to enumerate",
+    )
+    p_shape_enumerate.add_argument(
+        "--limit",
+        type=int,
+        help="limit number of emitted shapes after canonical sorting",
+    )
+    p_shape_enumerate.add_argument(
+        "--json",
+        action="store_true",
+        help="emit JSON array instead of text output",
+    )
+    p_shape_enumerate.add_argument(
+        "--with-pet",
+        action="store_true",
+        help="include the minimal PET witness for each shape",
+    )
+    p_shape_enumerate.add_argument(
+        "--with-gamma",
+        action="store_true",
+        help="include gamma (can grow extremely fast for height-first shapes)",
+    )
 
     # partial-shape-report
     p_partial_shape_report = subparsers.add_parser(
@@ -1401,6 +1521,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"N = {args.n}")
                 print(to_json(tree))
                 print(f"decoded = {back}")
+
+        elif args.command == "shape-enumerate":
+            return _run_shape_enumerate(args)
 
         elif args.command == "decode":
             tree = load_json_file(args.file)

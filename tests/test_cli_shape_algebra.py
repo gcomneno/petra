@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 
 import subprocess
 import sys
@@ -262,3 +263,69 @@ def test_cli_partial_shape_target_warns_on_weak_stabilization():
 def test_cli_partial_shape_target_no_warning_when_stable():
     out = _run_cli("partial-shape-target", "(None, (None, None))", "--max-mass", "7")
     assert "warning = weak-stabilization" not in out
+
+
+def test_cli_shape_enumerate_text_smoke_without_gamma():
+    out = _run_cli("shape-enumerate", "--max-mass", "5", "--limit", "5")
+    assert "shape 1" in out
+    assert "mass:" in out
+    assert "height:" in out
+    assert "root_width:" in out
+    assert "shape:" in out
+    assert "gamma:" not in out
+
+
+def test_cli_shape_enumerate_json_orders_height_first_then_root_width():
+    out = _run_cli("shape-enumerate", "--max-mass", "5", "--limit", "10", "--json")
+    rows = json.loads(out)
+
+    assert len(rows) == 10
+
+    got = [(row["mass"], row["height"], row["root_width"], row["shape"]) for row in rows[:6]]
+    expected = [
+        (5, 5, 1, [[[[[[]]]]]]),
+        (4, 4, 1, [[[[[]]]]]),
+        (5, 4, 1, [[[[[], []]]]]),
+        (5, 4, 1, [[[[], [[]]]]]),
+        (5, 4, 1, [[[], [[[]]]]]),
+        (5, 4, 2, [[], [[[[]]]]]),
+    ]
+    assert got == expected
+
+
+def test_cli_shape_enumerate_json_with_pet_includes_pet_but_not_gamma():
+    out = _run_cli("shape-enumerate", "--max-mass", "5", "--limit", "3", "--json", "--with-pet")
+    rows = json.loads(out)
+
+    assert len(rows) == 3
+    assert all("pet" in row for row in rows)
+    assert all("gamma" not in row for row in rows)
+
+    first = rows[0]
+    assert first["mass"] == 5
+    assert first["height"] == 5
+    assert first["root_width"] == 1
+    assert first["pet"] == [{"p": 2, "e": [{"p": 2, "e": [{"p": 2, "e": [{"p": 2, "e": [{"p": 2, "e": None}]}]}]}]}]
+
+
+def test_cli_shape_enumerate_with_gamma_small_case():
+    out = _run_cli("shape-enumerate", "--max-mass", "3", "--limit", "10", "--with-gamma")
+
+    assert "gamma: 16" in out
+    assert "gamma: 4" in out
+    assert "gamma: 64" in out
+    assert "gamma: 12" in out
+    assert "gamma: 2" in out
+    assert "gamma: 6" in out
+    assert "gamma: 30" in out
+
+    gamma_lines = [line.strip() for line in out.splitlines() if line.strip().startswith("gamma: ")]
+    assert gamma_lines == [
+        "gamma: 16",
+        "gamma: 4",
+        "gamma: 64",
+        "gamma: 12",
+        "gamma: 2",
+        "gamma: 6",
+        "gamma: 30",
+    ]
