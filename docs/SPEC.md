@@ -435,6 +435,115 @@ Esistono coppie con `dh=0` e `dn=0` ma `distance>0` o `structural_distance>0`:
 `distance` e `structural_distance` sono quindi metriche genuinamente nuove —
 non riducibili a combinazioni di metriche scalari preesistenti come `height` e `node_count`.
 
+## Enumerazione shape-first (proposta operativa)
+
+Per i workflow operativi orientati alla shape, il criterio numerico
+"generatore minimo" non basta sempre.
+In particolare, quando si vuole esplorare o materializzare shape con priorità
+strutturale, serve una corsia dedicata che non ordini i casi solo per valore
+numerico del witness.
+
+### Obiettivo
+
+Introdurre un comando CLI dedicato all'enumerazione shape-first:
+
+```bash
+pet shape-enumerate --max-mass N
+```
+
+Questo comando non ridefinisce PET-Base e non sostituisce `pet encode`.
+Lavora invece nel layer operativo/algebrico, dove interessa enumerare
+shape esatte canoniche e materializzarne un witness minimo compatibile.
+
+### Ordinamento canonico proposto
+
+Le shape enumerate entro il bound scelto devono essere ordinate con priorità
+lessicografica:
+
+1. `height` decrescente
+2. `root_width` crescente
+3. ordine canonico stabile della shape (`shape_key` o equivalente)
+
+Interpretazione operativa:
+
+- prima si privilegia la verticalità
+- solo dopo si minimizza la larghezza della root
+- solo infine si usa un tie-break strutturale stabile
+
+### Parametri minimi
+
+MVP proposto:
+
+```bash
+pet shape-enumerate --max-mass N [--json] [--limit K] [--with-pet]
+```
+
+Dove:
+
+- `--max-mass N` limita l'enumerazione alle shape con massa strutturale `<= N`
+- `--json` emette record machine-friendly
+- `--limit K` tronca il numero di shape restituite
+- `--with-pet` include anche il witness PET materializzato oltre a `gamma`
+
+### Campi di output minimi
+
+Ogni record dovrebbe esporre almeno:
+
+- `shape`
+- `mass`
+- `height`
+- `root_width`
+- `gamma`
+
+Facoltativamente:
+
+- `pet`
+
+### Esempio di output testuale
+
+```text
+shape 1
+mass: 3
+height: 3
+root_width: 1
+gamma: 16
+shape: (((),),)
+
+shape 2
+mass: 3
+height: 2
+root_width: 2
+gamma: 12
+shape: (((),), ())
+```
+
+### Esempio di output JSON
+
+```json
+{
+  "mass": 3,
+  "height": 3,
+  "root_width": 1,
+  "gamma": 16,
+  "shape": [[[]]]
+}
+```
+
+### Nota di ambito
+
+Questa proposta riguarda l'interfaccia operativa shape-first.
+Non modifica:
+
+- la definizione canonica di PET
+- la serializzazione JSON canonica di PET
+- l'uso di `pet encode/decode` per gli interi
+
+Serve solo a rendere esplicita una corsia CLI coerente con la policy:
+
+- prima altezza
+- poi larghezza della root
+- poi ordine canonico stabile
+
 ## Clustering delle famiglie aritmetiche con PET-Algebra
 
 Le distanze `distance` e `structural_distance` sono state applicate a quattro famiglie
