@@ -806,6 +806,7 @@ def cmd_greedy_walk(args: argparse.Namespace) -> int:
             best = sorted(progressive, key=_greedy_move_key)[0]
         else:
             best = sorted(moves, key=_greedy_move_key)[0]
+
         trace.append(
             {
                 "step": step_idx,
@@ -851,29 +852,25 @@ def cmd_greedy_walk(args: argparse.Namespace) -> int:
             f"result_shape={mv['result_shape']}"
         )
 
-        dkey = mv.get("decision_key")
-        if dkey is not None:
-            ns0 = mv["next_state"]
-            print(
-                "      decision:"
-                f" compat={ns0.get('compat_status')}"
-                f" oracle_rank={ns0.get('oracle_rank')}"
-                f" op={mv['op']}"
-                f" depth={len(mv['representative_path'])}"
-                f" result_height={shape_height(shape_from_json(mv['result_shape']))}"
-                f" result_root_width={len(shape_from_json(mv['result_shape']))}"
-                f" moved_mass={mv['moved_mass']}"
-                f" key={dkey}"
-            )
-
         ns = mv["next_state"]
+        print(
+            "      decision:"
+            f" compat={ns.get('compat_status')}"
+            f" oracle_rank={ns.get('oracle_rank')}"
+            f" op={mv['op']}"
+            f" depth={len(mv['representative_path'])}"
+            f" result_height={shape_height(shape_from_json(mv['result_shape']))}"
+            f" result_root_width={len(shape_from_json(mv['result_shape']))}"
+            f" moved_mass={mv['moved_mass']}"
+            f" key={_greedy_move_key(mv)}"
+        )
+
         if ns["kind"] == "out-of-bound":
             print(f"      next=out-of-bound moved_mass={ns['moved_mass']} max_mass={ns['max_mass']}")
         else:
             print(
                 f"      next=shallow compat={ns['compat_status']} "
-                f"oracle_rank={ns['oracle_rank']} "
-                f"note={ns['compat_note']}"
+                f"oracle_rank={ns['oracle_rank']} note={ns['compat_note']}"
             )
     return 0
 
