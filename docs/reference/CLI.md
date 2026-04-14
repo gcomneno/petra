@@ -11,8 +11,8 @@ Il CLI è pensato come punto di accesso operativo per:
 - interrogazione di dataset PET per metriche
 - analisi bounded su dataset PET
 
-Per la visione generale del progetto, vedere `VISION.md`.
-Per lo stato epistemico del progetto, vedere `STATUS.md`.
+Per la visione generale del progetto, vedere `../VISION.md`.
+Per lo stato epistemico del progetto, vedere `../STATUS.md`.
 Per il formato e i contratti del dataset, vedere `SPEC.md`.
 
 ## Installazione rapida
