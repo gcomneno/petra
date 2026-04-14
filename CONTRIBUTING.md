@@ -14,7 +14,13 @@ Please prefer:
 - documentation updates when user-facing behavior changes
 
 When possible, do not mix unrelated work in the same change.
-For example, avoid combining a bug fix, a refactor, and a documentation rewrite in one PR.
+
+For example, avoid combining:
+- a bug fix
+- a refactor
+- a documentation rewrite
+
+in the same PR.
 
 ## Local setup
 
@@ -45,10 +51,14 @@ make test
 If you are changing behavior or documentation, these files are usually the most relevant:
 
 - `README.md`
-- `docs/CLI.md`
-- `docs/SPEC.md`
+- `docs/README.md`
+- `docs/VISION.md`
 - `docs/STATUS.md`
+- `docs/PET-METICA.md`
+- `docs/reference/CLI.md`
+- `docs/reference/SPEC.md`
 - `docs/reports/README.md`
+- `docs/research/README.md`
 
 Core implementation lives under:
 
@@ -68,6 +78,11 @@ If you change CLI behavior, output shape, or semantics:
 - update or add tests
 - keep examples aligned with actual output
 
+In practice, this usually means checking:
+
+- `docs/reference/CLI.md`
+- `README.md`
+
 ### Stable vs exploratory material
 
 PET contains both stable/core material and exploratory/research-facing material.
@@ -75,9 +90,22 @@ PET contains both stable/core material and exploratory/research-facing material.
 Please keep that distinction explicit:
 
 - stable definitions, contracts, and behavior belong in the main docs and implementation
-- exploratory observations, bounded empirical patterns, and research-facing notes should stay in the appropriate research/report documents
+- empirical observations, bounded patterns, and research-facing notes should stay in the appropriate research/report documents
+- rewrite-geometric findings belong in `docs/PET-METICA.md` only when they are stated carefully as empirical or as clearly delimited claims
 
 Do not present exploratory observations as established facts.
+
+### Documentation discipline
+
+Please preserve the current documentation hierarchy:
+
+- root docs for project-wide orientation and source of truth
+- `docs/reference/` for stable specification and CLI reference
+- `docs/research/` for active research notes, experiments, workflows, and datasets
+- `docs/reports/` for report-oriented process docs, generated summaries, and report data
+- `docs/paper/` for paper-oriented material
+
+If you move or rename docs, update cross-links in the affected README files.
 
 ### Scope discipline
 
@@ -99,6 +127,7 @@ For now:
 - follow the existing code and doc style
 - keep names and output consistent with the rest of the repo
 - prefer clarity over cleverness
+- keep stable claims, empirical findings, and exploratory ideas clearly separated
 
 ## Pull requests
 

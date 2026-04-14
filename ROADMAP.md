@@ -11,23 +11,35 @@ PET currently works best as:
 - a small Python CLI
 - a reproducible research/tooling lab
 - a project for exploring recursive prime-exponent-tree representations of integers
+- an emerging rewrite-geometric framework through PET-METICA
 
 It is not yet a polished end-user product.
 
 ## Near-term priorities
 
-### 1. Documentation and presentation
+### 1. Keep the project map clear
 
-Improve first-contact clarity for new visitors.
+Improve first-contact clarity for new visitors and contributors.
 
 Focus areas:
 
-- keep the README as a clear landing page
-- maintain a simple contributor path
-- improve project map and document discoverability
-- keep examples aligned with real CLI output
+- keep `README.md` as a clean landing page
+- keep `docs/` navigable and role-based
+- preserve a clear distinction between source-of-truth docs, research notes, reports, and paper material
+- keep document paths and cross-links aligned with the actual repository structure
 
-### 2. CLI usability and consistency
+### 2. Keep PET-Base stable and legible
+
+Preserve the credibility of the core representation.
+
+Focus areas:
+
+- keep the formal PET-Base contract stable
+- avoid accidental drift between implementation and `docs/reference/SPEC.md`
+- keep validation, serialization, and roundtrip behavior easy to inspect
+- document user-facing behavior changes precisely
+
+### 3. Improve CLI usability and consistency
 
 Make the command-line experience easier to understand and more stable.
 
@@ -38,9 +50,9 @@ Focus areas:
 - strengthen help text and examples
 - preserve consistency across commands and report tooling
 
-### 3. Reproducible empirical workflows
+### 4. Keep empirical workflows reproducible
 
-Keep scans, summaries, reports, and research artifacts easy to regenerate.
+Scans, summaries, reports, and datasets should remain easy to regenerate.
 
 Focus areas:
 
@@ -51,7 +63,30 @@ Focus areas:
 
 ## Mid-term priorities
 
-### 4. Sharper separation between stable and exploratory material
+### 5. Sharpen the PET-Metrics layer
+
+Continue clarifying which structural observations are merely available and which ones are actually informative.
+
+Focus areas:
+
+- stabilize the most useful metrics
+- compare families more systematically
+- separate robust recurring patterns from suggestive one-off observations
+- keep empirical claims clearly labeled as empirical
+
+### 6. Develop PET-METICA carefully
+
+PET-METICA is now the most promising live research direction beyond PET-Base.
+
+Focus areas:
+
+- keep local rewrite moves well defined
+- improve shortest-path / canonical-path tooling
+- study asymmetry and rewrite friction more systematically
+- identify robust hubs and family-level behavior
+- avoid overstating computational observations as proved mathematics
+
+### 7. Keep stable vs exploratory boundaries sharp
 
 Continue making it obvious which parts are:
 
@@ -62,32 +97,30 @@ Continue making it obvious which parts are:
 
 This helps the project stay credible as it grows.
 
-### 5. Better research-facing packaging
-
-Improve how PET is presented as a reusable lab.
-
-Possible directions:
-
-- tighter report organization
-- simpler reproducibility guidance
-- clearer artifact conventions
-- better navigability across docs and tools
-
 ## Later possibilities
 
 These are possible future directions, not commitments:
 
+- broader PET-METICA experiments at larger ranges
 - richer structural visualization
-- broader dataset summaries and catalogs
-- stronger comparison workflows across integer families
+- clearer family atlases and catalogs
+- shape algebra and partial-PET extensions
+- reconstruction and hybrid workflows
 - packaging improvements for easier external use
 
 ## What this roadmap is not
 
 This roadmap is not a promise of rapid feature expansion.
 
-The current priority is to improve clarity, consistency, and reproducibility before broadening scope.
+The current priority is to improve:
+
+- clarity
+- consistency
+- reproducibility
+- epistemic discipline
+
+before broadening scope.
 
 ## Guiding principle
 
-PET should grow by becoming easier to understand, easier to validate, and harder to misread.
+PET should grow by becoming easier to understand, easier to validate, harder to misread, and more explicit about which claims belong to PET-Base, PET-Metrics, PET-METICA, or the broader experimental frontier.

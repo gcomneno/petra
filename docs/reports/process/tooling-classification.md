@@ -47,7 +47,7 @@ Status:
 - not part of the current canonical workflow
 
 Reason:
-- cited in `docs/SPEC.md`
+- cited in `docs/reference/SPEC.md`
 - superseded in the current report workflow by `pet families benchmark-disjoint`
 - still meaningful, but not the benchmark path currently promoted by stable lab docs
 

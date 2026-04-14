@@ -18,7 +18,7 @@ stable bounded results.
 
 Examples:
 - `README.md`
-- `docs/SPEC.md`
+- `docs/reference/SPEC.md`
 - `docs/STATUS.md`
 - `docs/reports/canonical-workflow.md`
 - `docs/reports/README.md`

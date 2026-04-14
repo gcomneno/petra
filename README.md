@@ -5,10 +5,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI and research playground for representing integers as recursive prime-exponent trees.
+PET is a Python CLI and research lab for representing integers as recursive prime-exponent trees.
 
-It treats an integer not only as a value, but also as a structured multiplicative object.  
-The goal is to make that structure inspectable, measurable, and comparable.
+It treats an integer not only as a value, but also as a structured multiplicative object.
+The project studies that structure at three levels:
+
+- **PET-Base** — canonical recursive representation
+- **PET-Metrics** — structural observation and comparison
+- **PET-METICA** — rewrite geometry on canonical PET shapes
+
+PET is not presented as a replacement for classical arithmetic and not as a claimed solution to a major open problem.
+It is best understood as a structural and experimental framework for studying integers.
 
 ## Why this is interesting
 
@@ -17,10 +24,9 @@ PET gives you a way to explore integers through their recursive prime-factorizat
 It is useful as:
 
 - a canonical representation of integers based on prime factorization
-- a CLI for inspecting structural metrics of integers
+- a CLI for inspecting structural properties and metrics
 - a reproducible lab for scans, queries, summaries, and empirical reports
-
-PET is presented as a structural lens and research playground — not as a claimed solution to a major open problem.
+- a rewrite-geometric playground for studying paths, asymmetries, and families of PET shapes
 
 ## Try it in 30 seconds
 
@@ -97,47 +103,56 @@ pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
 
 ## What is stable today
 
-The project already treats some parts as stable and others as exploratory.
-
-Stable/core ideas:
-
+### Stable / core
 - recursive encoding based on prime factorization
 - canonical representation
 - invertibility / roundtrip behavior
 - machine-facing JSON representation
 - CLI-based inspection and dataset generation
 
-Exploratory/research-facing areas:
+### Active observational layer
+- PET-derived structural metrics
+- structural comparison across families
+- scan / query / atlas-style workflows
 
-- structural patterns in large scans
-- useful invariants over PET shapes
-- classification of integer families through PET metrics
-- possible future algebraic layers
+### Live research line
+- PET-METICA as rewrite geometry on canonical PET shapes
+- local rewrite moves such as `NEW`, `DROP`, `INC`, `DEC`
+- shortest paths, canonical paths, asymmetries, and rewrite friction
+- empirical family behavior in explored ranges
 
-For the precise claim-by-claim status, see [docs/STATUS.md](docs/STATUS.md).
+### Still exploratory
+- broad mathematical generalization beyond explored ranges
+- shape algebra and related experimental operations
+- partial PET and hybrid reconstruction frontiers
 
 ## Project map
 
 Start here depending on what you need:
 
-- [docs/CLI.md](docs/CLI.md) — command-line usage
-- [docs/SPEC.md](docs/SPEC.md) — format, schema, metrics, and behavior contracts
-- [docs/STATUS.md](docs/STATUS.md) — what is defined, proved, empirical, or still open
-- [docs/reports/README.md](docs/reports/README.md) — reproducible reports, datasets, and regeneration commands
-- [docs/problem-statement.md](docs/problem-statement.md) — concrete research problem and scope
-- [docs/experiment-1.md](docs/experiment-1.md) — first benchmark, metrics, and success criteria
-- [ROADMAP.md](ROADMAP.md) — current priorities and likely next directions
+- [docs/README.md](docs/README.md) — documentation entry point
+- [docs/VISION.md](docs/VISION.md) — project vision and layer structure
+- [docs/STATUS.md](docs/STATUS.md) — what is stable, empirical, or exploratory
+- [docs/PET-METICA.md](docs/PET-METICA.md) — current rewrite-geometric research line
+- [docs/reference/SPEC.md](docs/reference/SPEC.md) — formal PET-Base specification
+- [docs/reference/CLI.md](docs/reference/CLI.md) — command-line usage
+- [docs/reports/README.md](docs/reports/README.md) — reports, generated summaries, and report data
+- [docs/research/README.md](docs/research/README.md) — research notes, experiments, workflows, and datasets
+- [docs/paper/README.md](docs/paper/README.md) — paper-oriented material
+- [ROADMAP.md](ROADMAP.md) — current priorities and next directions
 - [CHANGELOG.md](CHANGELOG.md) — public release history
+- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guide
 
 ## Typical workflow
 
 A small practical PET workflow looks like this:
 
 1. encode or inspect specific integers
-2. generate a bounded JSONL scan
-3. query or group the scan
-4. summarize the dataset with report tooling
-5. compare structural families empirically
+2. compute structural metrics
+3. generate a bounded JSONL scan
+4. query or group the scan
+5. summarize the dataset with report tooling
+6. explore rewrite neighborhoods and paths where relevant
 
 ## Current scope
 
@@ -146,8 +161,9 @@ PET is currently best understood as:
 - a small Python CLI
 - a reproducible research/tooling lab
 - a project for studying structural properties of integers through PET representations
+- an emerging rewrite-geometric framework through PET-METICA
 
-It is not yet packaged or presented as a polished end-user product.
+It is not yet a polished end-user product.
 
 ## Development
 
