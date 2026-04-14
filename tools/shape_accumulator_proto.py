@@ -622,17 +622,17 @@ def _distinct_moves_for_shape(
                 "top_candidate": (next_payload["candidates"][0] if next_payload["candidates"] else None),
             }
 
-        rows.append(
-            {
-                "rank": i,
-                "op": row["op"],
-                "representative_path": row["representative_path"],
-                "equivalent_paths": row["equivalent_paths"],
-                "result_shape": row["result_shape"],
-                "moved_mass": row["moved_mass"],
-                "next_state": next_state,
-            }
-        )
+        row_out = {
+            "rank": i,
+            "op": row["op"],
+            "representative_path": row["representative_path"],
+            "equivalent_paths": row["equivalent_paths"],
+            "result_shape": row["result_shape"],
+            "moved_mass": row["moved_mass"],
+            "next_state": next_state,
+        }
+        row_out["decision_key"] = _greedy_move_key(row_out)
+        rows.append(row_out)
     return rows
 
 
@@ -850,6 +850,21 @@ def cmd_greedy_walk(args: argparse.Namespace) -> int:
             f"eq_paths={mv['equivalent_paths']} moved_mass={mv['moved_mass']} "
             f"result_shape={mv['result_shape']}"
         )
+
+        dkey = mv.get("decision_key")
+        if dkey is not None:
+            ns0 = mv["next_state"]
+            print(
+                "      decision:"
+                f" compat={ns0.get('compat_status')}"
+                f" oracle_rank={ns0.get('oracle_rank')}"
+                f" op={mv['op']}"
+                f" depth={len(mv['representative_path'])}"
+                f" result_height={shape_height(shape_from_json(mv['result_shape']))}"
+                f" result_root_width={len(shape_from_json(mv['result_shape']))}"
+                f" moved_mass={mv['moved_mass']}"
+                f" key={dkey}"
+            )
 
         ns = mv["next_state"]
         if ns["kind"] == "out-of-bound":
