@@ -7,6 +7,8 @@ Versioning corrente: `0.y.z`.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-14
+
 ### Added
 - Nuovo comando pubblico `pet generator` per calcolare il più piccolo intero con la stessa shape PET di un dato `N`.
 - Nuovo test end-to-end per il CLI pubblico `generator`.
