@@ -1505,6 +1505,43 @@ def main(argv: list[str] | None = None) -> int:
     p_branch_neighbors.add_argument("n", type=int, metavar="N")
     p_branch_neighbors.add_argument("--json", action="store_true")
 
+    # rewrite
+    p_rewrite = subparsers.add_parser(
+        "rewrite",
+        help="PET-METICA rewrite distance, scans, and pairwise matrices",
+    )
+    rewrite_subparsers = p_rewrite.add_subparsers(
+        dest="rewrite_command",
+        metavar="REWRITE_COMMAND",
+    )
+    rewrite_subparsers.required = True
+
+    p_rewrite_pair = rewrite_subparsers.add_parser(
+        "pair",
+        help="compute canonical rewrite difference between two numbers",
+    )
+    p_rewrite_pair.add_argument("src", type=int, metavar="SRC")
+    p_rewrite_pair.add_argument("dst", type=int, metavar="DST")
+    p_rewrite_pair.add_argument("--overscan", type=int, default=90)
+    p_rewrite_pair.add_argument("--json", action="store_true")
+
+    p_rewrite_scan = rewrite_subparsers.add_parser(
+        "scan",
+        help="global PET-METICA scan over 1..N with overscan",
+    )
+    p_rewrite_scan.add_argument("--n-max", type=int, default=30)
+    p_rewrite_scan.add_argument("--overscan", type=int, default=90)
+    p_rewrite_scan.add_argument("--limit", type=int, default=10)
+    p_rewrite_scan.add_argument("--json", action="store_true")
+
+    p_rewrite_matrix = rewrite_subparsers.add_parser(
+        "matrix",
+        help="emit all pair rewrite distances as JSON",
+    )
+    p_rewrite_matrix.add_argument("--n-max", type=int, default=30)
+    p_rewrite_matrix.add_argument("--overscan", type=int, default=90)
+    p_rewrite_matrix.add_argument("--json", action="store_true")
+
     # query / families
     register_query_subparser(subparsers)
     register_families_subparser(subparsers)
@@ -2591,6 +2628,17 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"    observed_local_count = {row['observed_local_count']}")
                     print(f"    observed_local_shapes = {row['observed_local_shapes']}")
                     print(f"    observed_local_gammas = {row['observed_local_gammas']}")
+
+        elif args.command == "rewrite":
+            from pet import rewrite_metric as _rewrite_metric
+
+            if args.rewrite_command == "pair":
+                return _rewrite_metric.cmd_pair(args)
+            elif args.rewrite_command == "scan":
+                return _rewrite_metric.cmd_scan(args)
+            elif args.rewrite_command == "matrix":
+                return _rewrite_metric.cmd_matrix(args)
+            raise ValueError(f"unknown rewrite command: {args.rewrite_command}")
 
         elif args.command == "query":
             return run_query(args)
