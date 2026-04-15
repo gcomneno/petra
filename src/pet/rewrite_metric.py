@@ -532,6 +532,44 @@ def one_step_return_costs(
     }
 
 
+def compose_transport_v1(
+    graph: dict[int, list[Edge]],
+    *,
+    a: int,
+    b: int,
+    c: int,
+) -> dict[str, Any]:
+    """
+    A-v1:
+    - witness sintattico = concatenazione di T(a,b) e T(b,c)
+    - risultato semantico = T(a,c)
+    """
+    ab = pet_rewrite_difference(graph, src=a, dst=b)
+    bc = pet_rewrite_difference(graph, src=b, dst=c)
+    ac = pet_rewrite_difference(graph, src=a, dst=c)
+
+    compatible = (
+        ab["reachable"]
+        and bc["reachable"]
+        and ab["dst"] == bc["src"] == b
+    )
+
+    witness_path = ((ab["path"] or []) + (bc["path"] or [])) if compatible else []
+
+    return {
+        "a": a,
+        "b": b,
+        "c": c,
+        "compatible": compatible,
+        "witness_path": witness_path,
+        "witness_cost": len(witness_path) if compatible else None,
+        "result_reachable": ac["reachable"],
+        "result_path": ac["path"],
+        "result_cost": ac["cost"],
+        "witness_equals_result": compatible and witness_path == (ac["path"] or []),
+    }
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
