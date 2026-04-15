@@ -43,3 +43,39 @@ def test_cli_build_from_int_rejects_noncanonical_support():
     )
     assert proc.returncode != 0
     assert "NEW-canonical" in proc.stderr
+
+def test_cli_build_from_int_json_partial_noncanonical_support():
+    out = _run_cli("build-from-int", "1234567890", "--allow-non-canonical-support", "--json")
+    payload = json.loads(out)
+
+    assert payload["schema"] == "pet-build-from-int-v2"
+    assert payload["input_n"] == 1234567890
+    assert payload["target_generator"] == 4620
+    assert payload["mode"] == "canonical-build+support-realization"
+    assert payload["build_status"] == "partial"
+
+    assert payload["phase1"]["status"] == "ok"
+    assert payload["phase1"]["target_n"] == 4620
+    assert payload["phase1"]["target_generator"] == 4620
+    assert payload["phase1"]["steps"] == 5
+    assert payload["phase1"]["path"][0]["source_n"] == 2
+    assert payload["phase1"]["path"][-1]["target_n"] == 4620
+
+    assert payload["phase2"]["status"] == "pending"
+    assert payload["phase2"]["same_pet_shape"] is True
+    assert payload["phase2"]["reached_target"] is False
+    assert "not yet implemented" in payload["phase2"]["message"]
+
+
+def test_cli_build_from_int_flag_keeps_canonical_case_normal():
+    out = _run_cli("build-from-int", "4620", "--allow-non-canonical-support", "--json")
+    payload = json.loads(out)
+
+    assert payload["input_n"] == 4620
+    assert payload["factors"] == [[2, 2], [3, 1], [5, 1], [7, 1], [11, 1]]
+    assert payload["target_n"] == 4620
+    assert payload["target_generator"] == 4620
+    assert payload["steps"] == 5
+    assert "build_status" not in payload
+    assert "phase1" not in payload
+    assert "phase2" not in payload
