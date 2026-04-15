@@ -1465,6 +1465,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_build_from_int.add_argument("n", type=int, metavar="N")
     p_build_from_int.add_argument("--json", action="store_true")
+    p_build_from_int.add_argument(
+        "--allow-non-canonical-support",
+        action="store_true",
+        help="build canonical shape first, then report pending non-canonical support realization",
+    )
 
     # build-from-factors
     p_build_from_factors = subparsers.add_parser(
@@ -1966,18 +1971,75 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
 
         elif args.command == "build-from-int":
-            report = _build_from_int_report(args.n)
+            partial_report = None
 
-            if args.json:
-                print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
+            try:
+                report = _build_from_int_report(args.n)
+            except ValueError as exc:
+                if not args.allow_non_canonical_support:
+                    raise
+
+                msg = str(exc)
+                if (
+                    "build-from-int requires NEW-canonical support starting at prime 2" not in msg
+                    and "integer factor support is not NEW-canonical:" not in msg
+                ):
+                    raise
+
+                generator_n = shape_generator(args.n)
+                phase1 = _build_from_int_report(generator_n)
+                partial_report = {
+                    "schema": "pet-build-from-int-v2",
+                    "input_n": args.n,
+                    "factors": tuple(prime_factorization(args.n)),
+                    "target_generator": generator_n,
+                    "mode": "canonical-build+support-realization",
+                    "build_status": "partial",
+                    "phase1": {
+                        "status": "ok",
+                        "target_n": phase1["target_n"],
+                        "target_generator": phase1["target_generator"],
+                        "steps": phase1["steps"],
+                        "path": phase1["path"],
+                    },
+                    "phase2": {
+                        "status": "pending",
+                        "same_pet_shape": True,
+                        "reached_target": False,
+                        "message": "canonical shape build succeeded, but non-canonical support realization is not yet implemented",
+                    },
+                }
+
+            if partial_report is not None:
+                if args.json:
+                    print(json.dumps(_jsonable_value(partial_report), indent=2, ensure_ascii=False))
+                else:
+                    print(f"input_n = {partial_report['input_n']}")
+                    print(f"factorization = {_format_factorization(partial_report['factors'])}")
+                    print(f"target_generator = {partial_report['target_generator']}")
+                    print(f"mode = {partial_report['mode']}")
+                    print(f"build_status = {partial_report['build_status']}")
+                    print()
+                    print("[phase 1: canonical shape build]")
+                    print(f"canonical_steps = {partial_report['phase1']['steps']}")
+                    for row in partial_report["phase1"]["path"]:
+                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
+                    print()
+                    print("[phase 2: non-canonical support realization]")
+                    print(f"status = {partial_report['phase2']['status']}")
+                    print(f"same_pet_shape = {str(partial_report['phase2']['same_pet_shape']).lower()}")
+                    print(f"message = {partial_report['phase2']['message']}")
             else:
-                print(f"input_n = {report['input_n']}")
-                print(f"factors = {_format_factorization(report['factors'])}")
-                print(f"target_n = {report['target_n']}")
-                print(f"target_generator = {report['target_generator']}")
-                print(f"steps = {report['steps']}")
-                for row in report["path"]:
-                    print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
+                if args.json:
+                    print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
+                else:
+                    print(f"input_n = {report['input_n']}")
+                    print(f"factors = {_format_factorization(report['factors'])}")
+                    print(f"target_n = {report['target_n']}")
+                    print(f"target_generator = {report['target_generator']}")
+                    print(f"steps = {report['steps']}")
+                    for row in report["path"]:
+                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
 
         elif args.command == "int-from-bytes":
             report = _read_int_from_bytes_file(
