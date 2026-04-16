@@ -658,3 +658,73 @@ def test_support_realization_reports_peeling_summary_for_full_resolution() -> No
         "peeled_divisor_count": 2,
         "fully_resolved_unknown_blocks": 1,
     }
+
+
+def test_support_realization_reports_partial_peeling_status_on_residual_unknown_block() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 30,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 3,
+                "target_product": 30,
+                "constraints": {
+                    "known_divisors": [2]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    unknown = report["unknown_blocks"][0]
+    assert unknown["peeling_status"] == {
+        "status": "partially-peeled",
+        "reason": "peeled-known-divisors",
+    }
+
+
+def test_support_realization_blocks_peeling_on_known_forbidden_divisor_conflict() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 30,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 3,
+                "target_product": 30,
+                "constraints": {
+                    "known_divisors": [2],
+                    "forbidden_divisors": [2]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 0
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 30
+
+    unknown = report["unknown_blocks"][0]
+    assert unknown["peeling_status"] == {
+        "status": "blocked",
+        "reason": "known-divisors-conflict-with-forbidden-divisors",
+    }

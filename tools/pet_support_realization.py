@@ -42,6 +42,21 @@ def _evaluate_supported_constraints(block: dict[str, Any]) -> dict[str, Any]:
 
 
 
+
+def _with_peeling_status(
+    block: dict[str, Any],
+    *,
+    status: str,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    out = dict(block)
+    peeling_status = {"status": status}
+    if reason is not None:
+        peeling_status["reason"] = reason
+    out["peeling_status"] = peeling_status
+    return out
+
+
 def _peel_known_divisors_from_unknown_blocks(
     unknown_blocks: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
@@ -54,17 +69,47 @@ def _peel_known_divisors_from_unknown_blocks(
         raw_divisors = constraints.get("known_divisors")
 
         if not raw_divisors:
-            updated_unknown_blocks.append(block)
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="not-attempted",
+                    reason="no-known-divisors",
+                )
+            )
             continue
 
         divisors = [int(x) for x in raw_divisors]
         if any(d <= 1 for d in divisors):
-            updated_unknown_blocks.append(block)
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="blocked",
+                    reason="invalid-known-divisors",
+                )
+            )
+            continue
+
+        raw_forbidden_divisors = constraints.get("forbidden_divisors") or []
+        forbidden_divisors = [int(x) for x in raw_forbidden_divisors]
+        if set(divisors) & set(forbidden_divisors):
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="blocked",
+                    reason="known-divisors-conflict-with-forbidden-divisors",
+                )
+            )
             continue
 
         slot_multiplicity = int(block["slot_multiplicity"])
         if len(divisors) > slot_multiplicity:
-            updated_unknown_blocks.append(block)
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="blocked",
+                    reason="known-divisor-count-exceeds-slot-multiplicity",
+                )
+            )
             continue
 
         target_product = int(block["target_product"])
@@ -77,14 +122,26 @@ def _peel_known_divisors_from_unknown_blocks(
             divisor_product *= d
 
         if not divisible or target_product % divisor_product != 0:
-            updated_unknown_blocks.append(block)
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="blocked",
+                    reason="known-divisors-do-not-divide-target-product",
+                )
+            )
             continue
 
         residual_slot_multiplicity = slot_multiplicity - len(divisors)
         residual_target_product = target_product // divisor_product
 
         if residual_slot_multiplicity == 0 and residual_target_product != 1:
-            updated_unknown_blocks.append(block)
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    block,
+                    status="blocked",
+                    reason="last-slot-would-leave-nontrivial-residue",
+                )
+            )
             continue
 
         block_id = str(block["block_id"])
@@ -115,7 +172,13 @@ def _peel_known_divisors_from_unknown_blocks(
             residual_constraints.pop("known_divisors", None)
             residual_block["constraints"] = residual_constraints
 
-            updated_unknown_blocks.append(_evaluate_supported_constraints(residual_block))
+            updated_unknown_blocks.append(
+                _with_peeling_status(
+                    _evaluate_supported_constraints(residual_block),
+                    status="partially-peeled",
+                    reason="peeled-known-divisors",
+                )
+            )
 
     peeling_summary = {
         "peeled_block_count": len(peeled_known_blocks),
@@ -123,7 +186,6 @@ def _peel_known_divisors_from_unknown_blocks(
         "fully_resolved_unknown_blocks": original_unknown_block_count - len(updated_unknown_blocks),
     }
     return peeled_known_blocks, updated_unknown_blocks, peeling_summary
-
 
 def _constraint_status(*block_lists: list[dict[str, Any]]) -> str:
     values: list[bool] = []
@@ -410,6 +472,10 @@ def _print_block(block: dict[str, Any]) -> None:
     checks = block.get("constraint_checks")
     if checks is not None:
         print(f"  constraint_checks = {json.dumps(checks, ensure_ascii=False, sort_keys=True)}")
+
+    peeling_status = block.get("peeling_status")
+    if peeling_status is not None:
+        print(f"  peeling_status = {json.dumps(peeling_status, ensure_ascii=False, sort_keys=True)}")
 
 
 def main() -> int:
