@@ -72,6 +72,7 @@ def _peel_known_divisors_from_unknown_blocks(
     peeled_known_blocks: list[dict[str, Any]] = []
     updated_unknown_blocks: list[dict[str, Any]] = []
     fully_peeled_block_ids: list[str] = []
+    blocked_block_ids: list[str] = []
 
     for block in unknown_blocks:
         constraints = block.get("constraints", {})
@@ -89,6 +90,7 @@ def _peel_known_divisors_from_unknown_blocks(
 
         divisors = [int(x) for x in raw_divisors]
         if any(d <= 1 for d in divisors):
+            blocked_block_ids.append(str(block["block_id"]))
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     block,
@@ -101,6 +103,7 @@ def _peel_known_divisors_from_unknown_blocks(
         raw_forbidden_divisors = constraints.get("forbidden_divisors") or []
         forbidden_divisors = [int(x) for x in raw_forbidden_divisors]
         if set(divisors) & set(forbidden_divisors):
+            blocked_block_ids.append(str(block["block_id"]))
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     block,
@@ -112,6 +115,7 @@ def _peel_known_divisors_from_unknown_blocks(
 
         slot_multiplicity = int(block["slot_multiplicity"])
         if len(divisors) > slot_multiplicity:
+            blocked_block_ids.append(str(block["block_id"]))
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     block,
@@ -131,6 +135,7 @@ def _peel_known_divisors_from_unknown_blocks(
             divisor_product *= d
 
         if not divisible or target_product % divisor_product != 0:
+            blocked_block_ids.append(str(block["block_id"]))
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     block,
@@ -144,6 +149,7 @@ def _peel_known_divisors_from_unknown_blocks(
         residual_target_product = target_product // divisor_product
 
         if residual_slot_multiplicity == 0 and residual_target_product != 1:
+            blocked_block_ids.append(str(block["block_id"]))
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     block,
@@ -211,6 +217,7 @@ def _peel_known_divisors_from_unknown_blocks(
         "fully_resolved_unknown_blocks": len(fully_peeled_block_ids),
         "fully_peeled_block_ids": fully_peeled_block_ids,
         "blocked_unknown_blocks": blocked_unknown_blocks,
+        "blocked_block_ids": blocked_block_ids,
         "not_attempted_unknown_blocks": not_attempted_unknown_blocks,
         "partially_peeled_unknown_blocks": partially_peeled_unknown_blocks,
     }
