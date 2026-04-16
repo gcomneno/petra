@@ -1987,25 +1987,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
 
         elif args.command == "builder-from-int":
-            repo_root = pathlib.Path(__file__).resolve().parents[2]
-            tool = repo_root / "tools" / "pet_builder_from_int.py"
+            from pet.builder_from_int import build_from_int_pipeline
 
-            if not tool.exists():
-                raise FileNotFoundError(f"missing builder tool: {tool}")
-
-            cmd = [
-                sys.executable,
-                str(tool),
-                str(args.n),
-                "--output-dir",
-                args.artifacts_dir,
-            ]
-            proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            payload = build_from_int_pipeline(args.n, args.artifacts_dir)
 
             if args.json:
-                print(proc.stdout.rstrip())
+                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
             else:
-                payload = json.loads(proc.stdout)
                 final_output = payload.get("final_build_output", {})
                 built = final_output.get("built_pet_object", {})
                 print(f"input_n = {payload.get('input_n')}")
