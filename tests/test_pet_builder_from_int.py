@@ -49,6 +49,9 @@ def test_pet_builder_from_int_runs_partial_case_for_18(tmp_path: Path) -> None:
         (5040, 4, "canonical"),
         (1234567890, 5, "partial"),
         (1234567890123, 3, "partial"),
+        (1606938044258990275541962092341162602522202993782792835301376, 1, "canonical"),
+        (7858321551080267055879090, 19, "canonical"),
+        (12345678901234567890, 8, "partial"),
     ],
 )
 def test_pet_builder_from_int_matrix_real_cases(
