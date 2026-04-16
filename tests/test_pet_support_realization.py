@@ -1219,3 +1219,73 @@ def test_support_realization_reports_builder_readiness_ready() -> None:
         "unknown-exp1-slots::known-divisor-2",
     ]
     assert report["builder_missing_unknown_block_ids"] == []
+
+
+def test_support_realization_reports_builder_plan_not_ready() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [
+            {
+                "block_id": "known-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 3,
+                "constraints": {"prime_only": True, "count": 1},
+            }
+        ],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {"prime_only": True, "count": 2},
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["builder_plan"] == {
+        "mode": "partial-realization",
+        "next_action": "realize-missing-blocks",
+        "missing_block_count": 1,
+    }
+
+
+def test_support_realization_reports_builder_plan_ready() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 6,
+        "target_generator": 6,
+        "shape_signature": [[], []],
+        "slot_count": 2,
+        "exponent_multiset": [1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 6,
+                "constraints": {
+                    "known_divisors": [2, 3]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["builder_plan"] == {
+        "mode": "exact-realized",
+        "next_action": "build-known-blocks",
+        "missing_block_count": 0,
+    }
