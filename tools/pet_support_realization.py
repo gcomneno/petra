@@ -238,7 +238,285 @@ def _constraint_status(*block_lists: list[dict[str, Any]]) -> str:
     return "ok" if all(values or [True]) else "failed"
 
 
+
+
+def _looks_like_canonical_cli_build_payload(payload: dict[str, Any]) -> bool:
+    required = {
+        "start_n",
+        "factors",
+        "target_n",
+        "target_generator",
+        "steps",
+        "path",
+        "input_n",
+    }
+    return isinstance(payload, dict) and "schema" not in payload and required.issubset(payload.keys())
+
+
+def _build_from_canonical_cli_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    input_n = int(require_field(payload, "input_n"))
+    target_n = int(require_field(payload, "target_n"))
+    target_generator = int(require_field(payload, "target_generator"))
+    raw_factors = require_field(payload, "factors")
+    steps = payload.get("steps")
+    path_steps = payload.get("path")
+
+    if not isinstance(raw_factors, list):
+        raise SystemExit("factors must be a list")
+
+    known_blocks: list[dict[str, Any]] = []
+    exponent_multiset: list[int] = []
+
+    for i, item in enumerate(raw_factors):
+        if not isinstance(item, list) or len(item) != 2:
+            raise SystemExit(f"factors[{i}] must be a [prime, exponent] pair")
+        prime = int(item[0])
+        exp = int(item[1])
+        exponent_multiset.append(exp)
+        known_blocks.append(
+            _evaluate_supported_constraints(
+                {
+                    "block_id": f"p{prime}-exp{exp}",
+                    "slot_exp": exp,
+                    "slot_multiplicity": 1,
+                    "target_product": prime,
+                    "constraints": {
+                        "prime_only": True,
+                        "count": 1,
+                        "derived_from_canonical_cli_build": True,
+                    },
+                }
+            )
+        )
+
+    resolved_product = 1
+    for block in known_blocks:
+        resolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    unresolved_product = 1
+    resolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in known_blocks
+    )
+    unresolved_exponent_mass = 0
+    total_exponent_mass = resolved_exponent_mass
+    reconstructed_target_n = resolved_product
+    exact_target_match = reconstructed_target_n == input_n
+
+    pre_known_block_ids = [str(block["block_id"]) for block in known_blocks]
+    peeling_summary = {
+        "peeled_block_count": 0,
+        "peeled_divisor_count": 0,
+        "peeled_known_block_ids": [],
+        "fully_resolved_unknown_blocks": 0,
+        "fully_peeled_block_ids": [],
+        "blocked_unknown_blocks": 0,
+        "blocked_block_ids": [],
+        "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
+        "partially_peeled_unknown_blocks": 0,
+        "partially_peeled_block_ids": [],
+        "pre_known_block_ids": pre_known_block_ids,
+    }
+
+    builder_readiness = "ready"
+    builder_ready_block_ids = pre_known_block_ids
+    builder_missing_unknown_block_ids: list[str] = []
+    builder_plan = {
+        "mode": "exact-realized",
+        "next_action": "build-known-blocks",
+        "missing_block_count": 0,
+        "ready_known_block_ids": builder_ready_block_ids,
+        "missing_unknown_block_ids": builder_missing_unknown_block_ids,
+    }
+
+    return {
+        "schema": "pet-support-realization-v0",
+        "source_schema": "pet-build-from-int-canonical-cli-v0",
+        "input_n": input_n,
+        "target_generator": target_generator,
+        "mode": "canonical-cli-build-support-realization",
+        "shape_signature": None,
+        "slot_count": len(known_blocks),
+        "exponent_multiset": exponent_multiset,
+        "realization_goal": "exact-target",
+        "phase1": {
+            "status": "canonical-cli-build",
+            "target_n": target_n,
+            "steps": steps,
+            "path": path_steps,
+        },
+        "phase2": {
+            "status": "already-canonical-built",
+            "same_pet_shape": True,
+        },
+        "known_block_count": len(known_blocks),
+        "unknown_block_count": 0,
+        "known_blocks": known_blocks,
+        "unknown_blocks": [],
+        "peeling_summary": peeling_summary,
+        "builder_readiness": builder_readiness,
+        "builder_ready_block_ids": builder_ready_block_ids,
+        "builder_missing_unknown_block_ids": builder_missing_unknown_block_ids,
+        "builder_plan": builder_plan,
+        "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
+        "resolved_product": resolved_product,
+        "unresolved_product": unresolved_product,
+        "resolved_fraction": f"{resolved_product}/{input_n}",
+        "resolved_exponent_mass": resolved_exponent_mass,
+        "unresolved_exponent_mass": unresolved_exponent_mass,
+        "total_exponent_mass": total_exponent_mass,
+        "reconstructed_target_n": reconstructed_target_n,
+        "exact_target_match": exact_target_match,
+        "constraint_status": _constraint_status(known_blocks, []),
+        "realization_status": "already-canonical-built",
+        "message": "canonical CLI build is already exact; support realization reduces to builder-ready known blocks",
+        "next_action": "builder can execute directly on the known blocks derived from the canonical CLI build",
+    }
+
+
+
+
+def _looks_like_canonical_cli_build_payload(payload: dict[str, Any]) -> bool:
+    required = {
+        "start_n",
+        "factors",
+        "target_n",
+        "target_generator",
+        "steps",
+        "path",
+        "input_n",
+    }
+    return isinstance(payload, dict) and "schema" not in payload and required.issubset(payload.keys())
+
+
+def _build_from_canonical_cli_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    input_n = int(require_field(payload, "input_n"))
+    target_n = int(require_field(payload, "target_n"))
+    target_generator = int(require_field(payload, "target_generator"))
+    raw_factors = require_field(payload, "factors")
+    steps = payload.get("steps")
+    path_steps = payload.get("path")
+
+    if not isinstance(raw_factors, list):
+        raise SystemExit("factors must be a list")
+
+    known_blocks: list[dict[str, Any]] = []
+    exponent_multiset: list[int] = []
+
+    for i, item in enumerate(raw_factors):
+        if not isinstance(item, list) or len(item) != 2:
+            raise SystemExit(f"factors[{i}] must be a [prime, exponent] pair")
+        prime = int(item[0])
+        exp = int(item[1])
+        exponent_multiset.append(exp)
+        known_blocks.append(
+            _evaluate_supported_constraints(
+                {
+                    "block_id": f"p{prime}-exp{exp}",
+                    "slot_exp": exp,
+                    "slot_multiplicity": 1,
+                    "target_product": prime,
+                    "constraints": {
+                        "prime_only": True,
+                        "count": 1,
+                        "derived_from_canonical_cli_build": True,
+                    },
+                }
+            )
+        )
+
+    resolved_product = 1
+    for block in known_blocks:
+        resolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    unresolved_product = 1
+    resolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in known_blocks
+    )
+    unresolved_exponent_mass = 0
+    total_exponent_mass = resolved_exponent_mass
+    reconstructed_target_n = resolved_product
+    exact_target_match = reconstructed_target_n == input_n
+
+    pre_known_block_ids = [str(block["block_id"]) for block in known_blocks]
+    peeling_summary = {
+        "peeled_block_count": 0,
+        "peeled_divisor_count": 0,
+        "peeled_known_block_ids": [],
+        "fully_resolved_unknown_blocks": 0,
+        "fully_peeled_block_ids": [],
+        "blocked_unknown_blocks": 0,
+        "blocked_block_ids": [],
+        "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
+        "partially_peeled_unknown_blocks": 0,
+        "partially_peeled_block_ids": [],
+        "pre_known_block_ids": pre_known_block_ids,
+    }
+
+    builder_readiness = "ready"
+    builder_ready_block_ids = pre_known_block_ids
+    builder_missing_unknown_block_ids: list[str] = []
+    builder_plan = {
+        "mode": "exact-realized",
+        "next_action": "build-known-blocks",
+        "missing_block_count": 0,
+        "ready_known_block_ids": builder_ready_block_ids,
+        "missing_unknown_block_ids": builder_missing_unknown_block_ids,
+    }
+
+    return {
+        "schema": "pet-support-realization-v0",
+        "source_schema": "pet-build-from-int-canonical-cli-v0",
+        "input_n": input_n,
+        "target_generator": target_generator,
+        "mode": "canonical-cli-build-support-realization",
+        "shape_signature": None,
+        "slot_count": len(known_blocks),
+        "exponent_multiset": exponent_multiset,
+        "realization_goal": "exact-target",
+        "phase1": {
+            "status": "canonical-cli-build",
+            "target_n": target_n,
+            "steps": steps,
+            "path": path_steps,
+        },
+        "phase2": {
+            "status": "already-canonical-built",
+            "same_pet_shape": True,
+        },
+        "known_block_count": len(known_blocks),
+        "unknown_block_count": 0,
+        "known_blocks": known_blocks,
+        "unknown_blocks": [],
+        "peeling_summary": peeling_summary,
+        "builder_readiness": builder_readiness,
+        "builder_ready_block_ids": builder_ready_block_ids,
+        "builder_missing_unknown_block_ids": builder_missing_unknown_block_ids,
+        "builder_plan": builder_plan,
+        "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
+        "resolved_product": resolved_product,
+        "unresolved_product": unresolved_product,
+        "resolved_fraction": f"{resolved_product}/{input_n}",
+        "resolved_exponent_mass": resolved_exponent_mass,
+        "unresolved_exponent_mass": unresolved_exponent_mass,
+        "total_exponent_mass": total_exponent_mass,
+        "reconstructed_target_n": reconstructed_target_n,
+        "exact_target_match": exact_target_match,
+        "constraint_status": _constraint_status(known_blocks, []),
+        "realization_status": "already-canonical-built",
+        "message": "canonical CLI build is already exact; support realization reduces to builder-ready known blocks",
+        "next_action": "builder can execute directly on the known blocks derived from the canonical CLI build",
+    }
+
+
 def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    if _looks_like_canonical_cli_build_payload(payload):
+        return _build_from_canonical_cli_payload(payload)
+
+    if _looks_like_canonical_cli_build_payload(payload):
+        return _build_from_canonical_cli_payload(payload)
+
     schema = require_field(payload, "schema")
     build_status = require_field(payload, "build_status")
 
