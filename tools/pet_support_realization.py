@@ -76,10 +76,15 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         )
 
     resolved_product = 1
-
     unresolved_product = 1
     for block in unknown_blocks:
         unresolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    resolved_exponent_mass = 0
+    unresolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in unknown_blocks
+    )
+    total_exponent_mass = resolved_exponent_mass + unresolved_exponent_mass
 
     reconstructed_target_n = resolved_product * unresolved_product
     exact_target_match = reconstructed_target_n == input_n
@@ -108,6 +113,9 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,
+        "resolved_exponent_mass": resolved_exponent_mass,
+        "unresolved_exponent_mass": unresolved_exponent_mass,
+        "total_exponent_mass": total_exponent_mass,
         "reconstructed_target_n": reconstructed_target_n,
         "exact_target_match": exact_target_match,
         "realization_status": (
@@ -122,23 +130,6 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         ),
     }
 
-
-# V0 realization constraints are aggregated by exponent class, not by individual slot.
-#
-# This means that blocks such as:
-#   - slot_exp = 2, slot_multiplicity = 1
-#   - slot_exp = 1, slot_multiplicity = 4
-# are interpreted as exponent-class aggregates.
-#
-# The goal of V0 is to keep the realization contract simple and avoid introducing
-# artificial ordering between shape-equivalent slots.
-#
-# This is appropriate for flat / root-level cases, where same-exponent slots can be
-# treated as one block without loss of intended meaning.
-#
-# Future versions may refine this into position-aware blocks (for example via slot_path
-# or subtree_path) when recursive PET shapes require distinguishing same-exponent slots
-# that occur in different structural contexts.
 def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
     schema = require_field(payload, "schema")
     if schema != "pet-support-realization-input-v0":
@@ -184,6 +175,14 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for block in unknown_blocks:
         unresolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
 
+    resolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in known_blocks
+    )
+    unresolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in unknown_blocks
+    )
+    total_exponent_mass = resolved_exponent_mass + unresolved_exponent_mass
+
     reconstructed_target_n = resolved_product * unresolved_product
     exact_target_match = reconstructed_target_n == input_n
     resolved_fraction = f"{resolved_product}/{input_n}"
@@ -214,6 +213,9 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,
+        "resolved_exponent_mass": resolved_exponent_mass,
+        "unresolved_exponent_mass": unresolved_exponent_mass,
+        "total_exponent_mass": total_exponent_mass,
         "reconstructed_target_n": reconstructed_target_n,
         "exact_target_match": exact_target_match,
         "realization_status": "exact-from-block-products" if exact_target_match else "block-product-mismatch",
@@ -226,7 +228,6 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "and cheap arithmetic constraints"
         ),
     }
-
 
 def build_report(payload: dict[str, Any]) -> dict[str, Any]:
     schema = require_field(payload, "schema")
@@ -302,6 +303,9 @@ def main() -> int:
             print(f"resolved_product = {report['resolved_product']}")
             print(f"unresolved_product = {report['unresolved_product']}")
             print(f"resolved_fraction = {report['resolved_fraction']}")
+            print(f"resolved_exponent_mass = {report['resolved_exponent_mass']}")
+            print(f"unresolved_exponent_mass = {report['unresolved_exponent_mass']}")
+            print(f"total_exponent_mass = {report['total_exponent_mass']}")
             print(f"reconstructed_target_n = {report['reconstructed_target_n']}")
             print(f"exact_target_match = {str(report['exact_target_match']).lower()}")
         print(f"realization_status = {report['realization_status']}")
