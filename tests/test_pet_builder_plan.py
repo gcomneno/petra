@@ -47,6 +47,20 @@ def test_pet_builder_plan_reports_realize_missing_blocks_action() -> None:
         "mode": "partial-realization",
         "next_action": "realize-missing-blocks",
         "missing_block_count": 1,
+        "can_execute_now": False,
+        "execution_status": "blocked-on-missing-realization",
+        "simulated_steps": [
+            {
+                "step": 1,
+                "kind": "inspect-missing-unknown-blocks",
+                "block_ids": ["unknown-exp1-slots"],
+            },
+            {
+                "step": 2,
+                "kind": "defer-build-until-realization",
+                "block_ids": ["unknown-exp1-slots"],
+            },
+        ],
         "action": {
             "kind": "realize-missing-blocks",
             "block_ids": ["unknown-exp1-slots"],
@@ -82,6 +96,26 @@ def test_pet_builder_plan_reports_execute_build_known_blocks_action() -> None:
         "mode": "exact-realized",
         "next_action": "build-known-blocks",
         "missing_block_count": 0,
+        "can_execute_now": True,
+        "execution_status": "simulatable-now",
+        "simulated_steps": [
+            {
+                "step": 1,
+                "kind": "load-ready-known-blocks",
+                "block_ids": [
+                    "unknown-exp1-slots::known-divisor-1",
+                    "unknown-exp1-slots::known-divisor-2",
+                ],
+            },
+            {
+                "step": 2,
+                "kind": "execute-build-known-blocks",
+                "block_ids": [
+                    "unknown-exp1-slots::known-divisor-1",
+                    "unknown-exp1-slots::known-divisor-2",
+                ],
+            },
+        ],
         "action": {
             "kind": "execute-build-known-blocks",
             "block_ids": [
@@ -91,3 +125,28 @@ def test_pet_builder_plan_reports_execute_build_known_blocks_action() -> None:
             "block_count": 2,
         },
     }
+
+
+def test_pet_builder_plan_simulation_is_consistent_with_action() -> None:
+    payload = {
+        "schema": "pet-support-realization-v0",
+        "input_n": 6,
+        "builder_readiness": "ready",
+        "builder_plan": {
+            "mode": "exact-realized",
+            "next_action": "build-known-blocks",
+            "missing_block_count": 0,
+            "ready_known_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "missing_unknown_block_ids": [],
+        },
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["can_execute_now"] is True
+    assert report["action"]["kind"] == "execute-build-known-blocks"
+    assert report["simulated_steps"][-1]["kind"] == "execute-build-known-blocks"
+    assert report["simulated_steps"][-1]["block_ids"] == report["action"]["block_ids"]

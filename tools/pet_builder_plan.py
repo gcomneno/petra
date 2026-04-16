@@ -39,12 +39,40 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
             "block_ids": ready_known_block_ids,
             "block_count": len(ready_known_block_ids),
         }
+        can_execute_now = True
+        execution_status = "simulatable-now"
+        simulated_steps = [
+            {
+                "step": 1,
+                "kind": "load-ready-known-blocks",
+                "block_ids": ready_known_block_ids,
+            },
+            {
+                "step": 2,
+                "kind": "execute-build-known-blocks",
+                "block_ids": ready_known_block_ids,
+            },
+        ]
     else:
         action = {
             "kind": "realize-missing-blocks",
             "block_ids": missing_unknown_block_ids,
             "block_count": len(missing_unknown_block_ids),
         }
+        can_execute_now = False
+        execution_status = "blocked-on-missing-realization"
+        simulated_steps = [
+            {
+                "step": 1,
+                "kind": "inspect-missing-unknown-blocks",
+                "block_ids": missing_unknown_block_ids,
+            },
+            {
+                "step": 2,
+                "kind": "defer-build-until-realization",
+                "block_ids": missing_unknown_block_ids,
+            },
+        ]
 
     return {
         "schema": "pet-builder-plan-v0",
@@ -54,6 +82,9 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "mode": mode,
         "next_action": next_action,
         "missing_block_count": missing_block_count,
+        "can_execute_now": can_execute_now,
+        "execution_status": execution_status,
+        "simulated_steps": simulated_steps,
         "action": action,
     }
 
