@@ -324,6 +324,8 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "mode": "exact-realized" if builder_readiness == "ready" else "partial-realization",
         "next_action": "build-known-blocks" if builder_readiness == "ready" else "realize-missing-blocks",
         "missing_block_count": len(builder_missing_unknown_block_ids),
+        "ready_known_block_ids": builder_ready_block_ids,
+        "missing_unknown_block_ids": builder_missing_unknown_block_ids,
     }
 
     reconstructed_target_n = resolved_product * unresolved_product
@@ -464,6 +466,8 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "mode": "exact-realized" if builder_readiness == "ready" else "partial-realization",
         "next_action": "build-known-blocks" if builder_readiness == "ready" else "realize-missing-blocks",
         "missing_block_count": len(builder_missing_unknown_block_ids),
+        "ready_known_block_ids": builder_ready_block_ids,
+        "missing_unknown_block_ids": builder_missing_unknown_block_ids,
     }
 
     reconstructed_target_n = resolved_product * unresolved_product

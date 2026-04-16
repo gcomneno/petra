@@ -1256,6 +1256,8 @@ def test_support_realization_reports_builder_plan_not_ready() -> None:
         "mode": "partial-realization",
         "next_action": "realize-missing-blocks",
         "missing_block_count": 1,
+        "ready_known_block_ids": [],
+        "missing_unknown_block_ids": ["unknown-exp1-slots"],
     }
 
 
@@ -1288,4 +1290,38 @@ def test_support_realization_reports_builder_plan_ready() -> None:
         "mode": "exact-realized",
         "next_action": "build-known-blocks",
         "missing_block_count": 0,
+        "ready_known_block_ids": [
+            "unknown-exp1-slots::known-divisor-1",
+            "unknown-exp1-slots::known-divisor-2",
+        ],
+        "missing_unknown_block_ids": [],
     }
+
+
+def test_support_realization_reports_builder_plan_ids_consistently() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 210,
+        "target_generator": 210,
+        "shape_signature": [[], [], [], []],
+        "slot_count": 4,
+        "exponent_multiset": [1, 1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 4,
+                "target_product": 210,
+                "constraints": {
+                    "known_divisors": [2, 3]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["builder_plan"]["ready_known_block_ids"] == report["builder_ready_block_ids"]
+    assert report["builder_plan"]["missing_unknown_block_ids"] == report["builder_missing_unknown_block_ids"]
