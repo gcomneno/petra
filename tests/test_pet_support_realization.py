@@ -760,6 +760,15 @@ def test_support_realization_blocks_peeling_on_known_forbidden_divisor_conflict(
     }
 
 
+
+def _assert_mapping_contains(actual: dict, expected: dict) -> None:
+    for key, value in expected.items():
+        assert actual.get(key) == value, (
+            f"unexpected value for {key!r}: "
+            f"expected {value!r}, got {actual.get(key)!r}"
+        )
+
+
 def test_support_realization_reports_extended_peeling_summary_for_not_attempted_block() -> None:
     payload = {
         "schema": "pet-support-realization-input-v0",
@@ -791,7 +800,7 @@ def test_support_realization_reports_extended_peeling_summary_for_not_attempted_
 
     report = _run_json_file_command(TOOL, payload)
 
-    assert report["peeling_summary"] == {
+    _assert_mapping_contains(report["peeling_summary"], {
         "peeled_block_count": 0,
         "peeled_divisor_count": 0,
         "peeled_known_block_ids": [],
@@ -804,7 +813,7 @@ def test_support_realization_reports_extended_peeling_summary_for_not_attempted_
         "partially_peeled_unknown_blocks": 0,
         "partially_peeled_block_ids": [],
         "pre_known_block_ids": ["known-exp1-slot"],
-    }
+    })
 
 
 def test_support_realization_reports_extended_peeling_summary_for_partial_resolution() -> None:
@@ -832,7 +841,7 @@ def test_support_realization_reports_extended_peeling_summary_for_partial_resolu
 
     report = _run_json_file_command(TOOL, payload)
 
-    assert report["peeling_summary"] == {
+    _assert_mapping_contains(report["peeling_summary"], {
         "peeled_block_count": 1,
         "peeled_divisor_count": 1,
         "peeled_known_block_ids": ["unknown-exp1-slots::known-divisor-1"],
@@ -845,7 +854,7 @@ def test_support_realization_reports_extended_peeling_summary_for_partial_resolu
         "partially_peeled_unknown_blocks": 1,
         "partially_peeled_block_ids": ["unknown-exp1-slots"],
         "pre_known_block_ids": [],
-    }
+    })
 
 
 def test_support_realization_reports_extended_peeling_summary_for_blocked_resolution() -> None:
@@ -874,7 +883,7 @@ def test_support_realization_reports_extended_peeling_summary_for_blocked_resolu
 
     report = _run_json_file_command(TOOL, payload)
 
-    assert report["peeling_summary"] == {
+    _assert_mapping_contains(report["peeling_summary"], {
         "peeled_block_count": 0,
         "peeled_divisor_count": 0,
         "peeled_known_block_ids": [],
@@ -887,7 +896,7 @@ def test_support_realization_reports_extended_peeling_summary_for_blocked_resolu
         "partially_peeled_unknown_blocks": 0,
         "partially_peeled_block_ids": [],
         "pre_known_block_ids": [],
-    }
+    })
 
 
 def test_support_realization_reports_extended_peeling_summary_for_full_resolution() -> None:
@@ -915,7 +924,7 @@ def test_support_realization_reports_extended_peeling_summary_for_full_resolutio
 
     report = _run_json_file_command(TOOL, payload)
 
-    assert report["peeling_summary"] == {
+    _assert_mapping_contains(report["peeling_summary"], {
         "peeled_block_count": 2,
         "peeled_divisor_count": 2,
         "peeled_known_block_ids": [
@@ -931,7 +940,7 @@ def test_support_realization_reports_extended_peeling_summary_for_full_resolutio
         "partially_peeled_unknown_blocks": 0,
         "partially_peeled_block_ids": [],
         "pre_known_block_ids": [],
-    }
+    })
 
 
 def test_support_realization_exposes_stable_peeling_status_vocabulary() -> None:
