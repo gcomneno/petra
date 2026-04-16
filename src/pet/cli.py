@@ -977,6 +977,19 @@ def main(argv: list[str] | None = None) -> int:
         help="directory for materialized builder artifacts",
     )
 
+    # builder-from-factorization
+    p = subparsers.add_parser(
+        "builder-from-factorization",
+        help="run the end-to-end PET builder pipeline from a known factorization file",
+    )
+    p.add_argument("file", metavar="FACTORS.json")
+    p.add_argument("--json", action="store_true")
+    p.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_builder_from_factorization_out",
+        help="directory for materialized builder artifacts",
+    )
+
     p_encode = subparsers.add_parser("encode", help="encode N into PET and print JSON")
     p_encode.add_argument("n", type=int, metavar="N")
     p_encode.add_argument("--json", action="store_true")
@@ -2017,6 +2030,23 @@ def main(argv: list[str] | None = None) -> int:
             from pet.builder_from_factors import build_from_factors_pipeline
 
             payload = build_from_factors_pipeline(args.file, args.artifacts_dir)
+
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+            else:
+                final_output = payload.get("final_build_output", {})
+                built = final_output.get("built_pet_object", {})
+                print(f"input_n = {payload.get('input_n')}")
+                print(f"schema = {payload.get('schema')}")
+                print(f"build_status = {final_output.get('build_status')}")
+                print(f"assembly_status = {built.get('assembly_status')}")
+                print(f"component_count = {built.get('component_count')}")
+                print(f"artifacts_dir = {args.artifacts_dir}")
+
+        elif args.command == "builder-from-factorization":
+            from pet.builder_from_factorization import build_from_factorization_pipeline
+
+            payload = build_from_factorization_pipeline(args.file, args.artifacts_dir)
 
             if args.json:
                 print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
