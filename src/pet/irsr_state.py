@@ -41,3 +41,7 @@ def residual_state_to_builder_payload(state: dict) -> dict:
 def residual_state_builder_unready_reasons(state: dict) -> list[str]:
     payload_slice = residual_state_to_support_payload_slice(state)
     return payload_slice_builder_unusable_reasons(payload_slice)
+
+
+def residual_state_is_builder_ready(state: dict) -> bool:
+    return residual_state_builder_unready_reasons(state) == []
