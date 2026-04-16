@@ -597,6 +597,7 @@ def test_support_realization_reports_zero_peeling_summary_when_no_peeling_occurs
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 1,
+        "not_attempted_block_ids": ["unknown-exp1-slots"],
         "partially_peeled_unknown_blocks": 0,
     }
 
@@ -634,6 +635,7 @@ def test_support_realization_reports_peeling_summary_for_partial_resolution() ->
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
         "partially_peeled_unknown_blocks": 1,
     }
 
@@ -671,6 +673,7 @@ def test_support_realization_reports_peeling_summary_for_full_resolution() -> No
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
         "partially_peeled_unknown_blocks": 0,
     }
 
@@ -784,6 +787,7 @@ def test_support_realization_reports_extended_peeling_summary_for_not_attempted_
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 1,
+        "not_attempted_block_ids": ["unknown-exp1-slots"],
         "partially_peeled_unknown_blocks": 0,
     }
 
@@ -821,6 +825,7 @@ def test_support_realization_reports_extended_peeling_summary_for_partial_resolu
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
         "partially_peeled_unknown_blocks": 1,
     }
 
@@ -859,6 +864,7 @@ def test_support_realization_reports_extended_peeling_summary_for_blocked_resolu
         "blocked_unknown_blocks": 1,
         "blocked_block_ids": ["unknown-exp1-slots"],
         "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
         "partially_peeled_unknown_blocks": 0,
     }
 
@@ -896,6 +902,7 @@ def test_support_realization_reports_extended_peeling_summary_for_full_resolutio
         "blocked_unknown_blocks": 0,
         "blocked_block_ids": [],
         "not_attempted_unknown_blocks": 0,
+        "not_attempted_block_ids": [],
         "partially_peeled_unknown_blocks": 0,
     }
 
@@ -988,3 +995,29 @@ def test_support_realization_reports_blocked_block_ids() -> None:
     report = _run_json_file_command(TOOL, payload)
 
     assert report["peeling_summary"]["blocked_block_ids"] == ["unknown-exp1-slots"]
+
+
+def test_support_realization_reports_not_attempted_block_ids() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {"prime_only": True, "count": 2},
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["peeling_summary"]["not_attempted_block_ids"] == ["unknown-exp1-slots"]
