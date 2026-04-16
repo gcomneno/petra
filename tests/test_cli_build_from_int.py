@@ -79,3 +79,20 @@ def test_cli_build_from_int_flag_keeps_canonical_case_normal():
     assert "build_status" not in payload
     assert "phase1" not in payload
     assert "phase2" not in payload
+
+
+def test_cli_build_from_int_json_partial_noncanonical_support_for_18():
+    out = _run_cli("build-from-int", "18", "--allow-non-canonical-support", "--json")
+    payload = json.loads(out)
+
+    assert payload["schema"] == "pet-build-from-int-v2"
+    assert payload["input_n"] == 18
+    assert payload["target_generator"] == 12
+    assert payload["mode"] == "canonical-build+support-realization"
+    assert payload["build_status"] == "partial"
+    assert payload["phase1"]["status"] == "ok"
+    assert payload["phase1"]["target_n"] == 12
+    assert payload["phase1"]["target_generator"] == 12
+    assert payload["phase2"]["status"] == "pending"
+    assert payload["phase2"]["same_pet_shape"] is True
+    assert payload["phase2"]["reached_target"] is False

@@ -1975,7 +1975,7 @@ def main(argv: list[str] | None = None) -> int:
 
             try:
                 report = _build_from_int_report(args.n)
-            except ValueError as exc:
+            except (ValueError, RuntimeError) as exc:
                 if not args.allow_non_canonical_support:
                     raise
 
@@ -1983,6 +1983,7 @@ def main(argv: list[str] | None = None) -> int:
                 if (
                     "build-from-int requires NEW-canonical support starting at prime 2" not in msg
                     and "integer factor support is not NEW-canonical:" not in msg
+                    and "builder ended at " not in msg
                 ):
                     raise
 
