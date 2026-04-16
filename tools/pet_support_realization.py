@@ -300,6 +300,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         )
 
     known_blocks: list[dict[str, Any]] = []
+    pre_known_block_ids: list[str] = []
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
     peeled_known_blocks, unknown_blocks, peeling_summary = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
     known_blocks.extend(peeled_known_blocks)
@@ -339,7 +340,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
-        "peeling_summary": peeling_summary,
+        "peeling_summary": {**peeling_summary, "pre_known_block_ids": pre_known_block_ids},
         "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
@@ -421,6 +422,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         raw_unknown_blocks.append(block)
 
     known_blocks = [_evaluate_supported_constraints(b) for b in raw_known_blocks]
+    pre_known_block_ids = [str(block["block_id"]) for block in known_blocks]
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
     peeled_known_blocks, unknown_blocks, peeling_summary = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
     known_blocks.extend(peeled_known_blocks)
@@ -468,7 +470,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
-        "peeling_summary": peeling_summary,
+        "peeling_summary": {**peeling_summary, "pre_known_block_ids": pre_known_block_ids},
         "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
