@@ -41,6 +41,84 @@ def _evaluate_supported_constraints(block: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+
+def _peel_known_divisors_from_unknown_blocks(
+    unknown_blocks: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    peeled_known_blocks: list[dict[str, Any]] = []
+    updated_unknown_blocks: list[dict[str, Any]] = []
+
+    for block in unknown_blocks:
+        constraints = block.get("constraints", {})
+        raw_divisors = constraints.get("known_divisors")
+
+        if not raw_divisors:
+            updated_unknown_blocks.append(block)
+            continue
+
+        divisors = [int(x) for x in raw_divisors]
+        if any(d <= 1 for d in divisors):
+            updated_unknown_blocks.append(block)
+            continue
+
+        slot_multiplicity = int(block["slot_multiplicity"])
+        if len(divisors) > slot_multiplicity:
+            updated_unknown_blocks.append(block)
+            continue
+
+        target_product = int(block["target_product"])
+        divisor_product = 1
+        divisible = True
+        for d in divisors:
+            if target_product % d != 0:
+                divisible = False
+                break
+            divisor_product *= d
+
+        if not divisible or target_product % divisor_product != 0:
+            updated_unknown_blocks.append(block)
+            continue
+
+        residual_slot_multiplicity = slot_multiplicity - len(divisors)
+        residual_target_product = target_product // divisor_product
+
+        if residual_slot_multiplicity == 0 and residual_target_product != 1:
+            updated_unknown_blocks.append(block)
+            continue
+
+        block_id = str(block["block_id"])
+        slot_exp = int(block["slot_exp"])
+
+        for i, d in enumerate(divisors, start=1):
+            peeled_known_blocks.append(
+                _evaluate_supported_constraints(
+                    {
+                        "block_id": f"{block_id}::known-divisor-{i}",
+                        "slot_exp": slot_exp,
+                        "slot_multiplicity": 1,
+                        "target_product": d,
+                        "constraints": {
+                            "peeled_from_block": block_id,
+                            "peeled_via_known_divisors": True,
+                        },
+                    }
+                )
+            )
+
+        if residual_slot_multiplicity > 0:
+            residual_block = dict(block)
+            residual_block["slot_multiplicity"] = residual_slot_multiplicity
+            residual_block["target_product"] = residual_target_product
+
+            residual_constraints = dict(constraints)
+            residual_constraints.pop("known_divisors", None)
+            residual_block["constraints"] = residual_constraints
+
+            updated_unknown_blocks.append(_evaluate_supported_constraints(residual_block))
+
+    return peeled_known_blocks, updated_unknown_blocks
+
+
 def _constraint_status(*block_lists: list[dict[str, Any]]) -> str:
     values: list[bool] = []
     for blocks in block_lists:
@@ -113,6 +191,8 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
 
     known_blocks: list[dict[str, Any]] = []
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
+    peeled_known_blocks, unknown_blocks = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
+    known_blocks.extend(peeled_known_blocks)
 
     resolved_product = 1
     unresolved_product = 1
@@ -230,6 +310,8 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
     known_blocks = [_evaluate_supported_constraints(b) for b in raw_known_blocks]
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
+    peeled_known_blocks, unknown_blocks = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
+    known_blocks.extend(peeled_known_blocks)
 
     resolved_product = 1
     for block in known_blocks:

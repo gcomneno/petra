@@ -289,3 +289,87 @@ def test_support_realization_validates_supported_constraints_failed() -> None:
     assert report["constraint_status"] == "failed"
     assert report["known_blocks"][0]["constraint_checks"]["forbidden_divisors"] is False
     assert report["unknown_blocks"][0]["constraint_checks"]["bit_length_max"] is False
+
+
+def test_support_realization_peels_known_divisors_from_unknown_block() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 30,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 3,
+                "target_product": 30,
+                "constraints": {
+                    "known_divisors": [2]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 1
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 2
+    assert report["unresolved_product"] == 15
+    assert report["resolved_exponent_mass"] == 1
+    assert report["unresolved_exponent_mass"] == 2
+    assert report["reconstructed_target_n"] == 30
+    assert report["exact_target_match"] is True
+
+    known = report["known_blocks"][0]
+    unknown = report["unknown_blocks"][0]
+
+    assert known["target_product"] == 2
+    assert known["slot_exp"] == 1
+    assert known["slot_multiplicity"] == 1
+
+    assert unknown["target_product"] == 15
+    assert unknown["slot_exp"] == 1
+    assert unknown["slot_multiplicity"] == 2
+
+
+def test_support_realization_does_not_peel_if_last_slot_would_leave_nontrivial_residue() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 6,
+        "target_generator": 6,
+        "shape_signature": [[], []],
+        "slot_count": 2,
+        "exponent_multiset": [1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 6,
+                "constraints": {
+                    "known_divisors": [2]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 0
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 6
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 1
+    assert report["exact_target_match"] is True
+
+    unknown = report["unknown_blocks"][0]
+    assert unknown["target_product"] == 6
+    assert unknown["slot_multiplicity"] == 1
