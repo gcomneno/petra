@@ -72,6 +72,20 @@ def test_pet_builder_execute_materializes_planned_artifacts(tmp_path: Path) -> N
         ],
         "build_status": "built",
         "assembled_from_artifacts": True,
+        "built_pet_object": {
+            "schema": "pet-built-object-v0",
+            "input_n": 6,
+            "built_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "artifact_ids": [
+                "artifact::unknown-exp1-slots::known-divisor-1",
+                "artifact::unknown-exp1-slots::known-divisor-2",
+            ],
+            "assembly_status": "assembled",
+            "assembled_from_artifacts": True,
+        },
     }
 
     produced_paths = [Path(p) for p in report["produced_files"]]
@@ -119,6 +133,14 @@ def test_pet_builder_execute_reports_blocked_without_materializing(tmp_path: Pat
         "artifact_ids": [],
         "build_status": "deferred",
         "assembled_from_artifacts": False,
+        "built_pet_object": {
+            "schema": "pet-built-object-v0",
+            "input_n": 1234567890123,
+            "built_block_ids": [],
+            "artifact_ids": [],
+            "assembly_status": "deferred",
+            "assembled_from_artifacts": False,
+        },
     }
 
     assert output_dir.exists()
@@ -160,5 +182,58 @@ def test_pet_builder_execute_reports_final_build_output_consistently(tmp_path: P
             "artifact::unknown-exp1-slots::known-divisor-2",
         ],
         "build_status": "built",
+        "assembled_from_artifacts": True,
+        "built_pet_object": {
+            "schema": "pet-built-object-v0",
+            "input_n": 6,
+            "built_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "artifact_ids": [
+                "artifact::unknown-exp1-slots::known-divisor-1",
+                "artifact::unknown-exp1-slots::known-divisor-2",
+            ],
+            "assembly_status": "assembled",
+            "assembled_from_artifacts": True,
+        },
+    }
+
+
+def test_pet_builder_execute_reports_built_pet_object_consistently(tmp_path: Path) -> None:
+    output_dir = tmp_path / "out"
+    payload = {
+        "schema": "pet-builder-plan-v0",
+        "input_n": 6,
+        "can_execute_now": True,
+        "action": {"kind": "execute-build-known-blocks"},
+        "build_artifacts": [
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+                "source_block_id": "unknown-exp1-slots::known-divisor-1",
+                "status": "planned",
+            },
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+                "source_block_id": "unknown-exp1-slots::known-divisor-2",
+                "status": "planned",
+            },
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload, output_dir)
+
+    assert report["final_build_output"]["built_pet_object"] == {
+        "schema": "pet-built-object-v0",
+        "input_n": 6,
+        "built_block_ids": [
+            "unknown-exp1-slots::known-divisor-1",
+            "unknown-exp1-slots::known-divisor-2",
+        ],
+        "artifact_ids": [
+            "artifact::unknown-exp1-slots::known-divisor-1",
+            "artifact::unknown-exp1-slots::known-divisor-2",
+        ],
+        "assembly_status": "assembled",
         "assembled_from_artifacts": True,
     }

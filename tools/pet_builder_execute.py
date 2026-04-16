@@ -74,13 +74,26 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
             produced_artifact_ids.append(str(_require_field(artifact, "artifact_id")))
             produced_files.append(_materialize_artifact(artifact, plan, output_dir))
         execution_status = "executed"
+        built_block_ids = [
+            str(artifact.get("source_block_id"))
+            for artifact in build_artifacts
+            if artifact.get("status") == "planned"
+        ]
         final_build_output = {
             "schema": "pet-builder-output-v0",
             "input_n": plan.get("input_n"),
-            "built_block_ids": [str(artifact.get("source_block_id")) for artifact in build_artifacts if artifact.get("status") == "planned"],
+            "built_block_ids": built_block_ids,
             "artifact_ids": produced_artifact_ids,
             "build_status": "built",
             "assembled_from_artifacts": True,
+            "built_pet_object": {
+                "schema": "pet-built-object-v0",
+                "input_n": plan.get("input_n"),
+                "built_block_ids": built_block_ids,
+                "artifact_ids": produced_artifact_ids,
+                "assembly_status": "assembled",
+                "assembled_from_artifacts": True,
+            },
         }
     else:
         execution_status = "blocked"
@@ -91,6 +104,14 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
             "artifact_ids": [],
             "build_status": "deferred",
             "assembled_from_artifacts": False,
+            "built_pet_object": {
+                "schema": "pet-built-object-v0",
+                "input_n": plan.get("input_n"),
+                "built_block_ids": [],
+                "artifact_ids": [],
+                "assembly_status": "deferred",
+                "assembled_from_artifacts": False,
+            },
         }
 
     return {
