@@ -53,3 +53,25 @@ def payload_slice_builder_unusable_reasons(payload: dict) -> list[str]:
 
 def payload_slice_is_builder_usable(payload: dict) -> bool:
     return payload_slice_builder_unusable_reasons(payload) == []
+
+
+def payload_slice_to_builder_payload(payload: dict) -> dict:
+    reasons = payload_slice_builder_unusable_reasons(payload)
+    if reasons:
+        raise ValueError(
+            "payload slice is not builder-usable: " + ", ".join(reasons)
+        )
+
+    return {
+        "support_size": payload["support_size"],
+        "exponent_profile": list(payload["exponent_profile"]),
+        "prime_slots": [
+            {
+                "slot": slot["slot"],
+                "candidates": deepcopy(slot["domain"]["candidates"]),
+            }
+            for slot in payload["slots"]
+        ],
+        "joint_pet_constraints": deepcopy(payload["joint_pet_constraints"]),
+        "forbidden_patterns": deepcopy(payload["forbidden_patterns"]),
+    }
