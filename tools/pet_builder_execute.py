@@ -74,8 +74,24 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
             produced_artifact_ids.append(str(_require_field(artifact, "artifact_id")))
             produced_files.append(_materialize_artifact(artifact, plan, output_dir))
         execution_status = "executed"
+        final_build_output = {
+            "schema": "pet-builder-output-v0",
+            "input_n": plan.get("input_n"),
+            "built_block_ids": [str(artifact.get("source_block_id")) for artifact in build_artifacts if artifact.get("status") == "planned"],
+            "artifact_ids": produced_artifact_ids,
+            "build_status": "built",
+            "assembled_from_artifacts": True,
+        }
     else:
         execution_status = "blocked"
+        final_build_output = {
+            "schema": "pet-builder-output-v0",
+            "input_n": plan.get("input_n"),
+            "built_block_ids": [],
+            "artifact_ids": [],
+            "build_status": "deferred",
+            "assembled_from_artifacts": False,
+        }
 
     return {
         "schema": "pet-builder-execution-v0",
@@ -89,6 +105,7 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
         "produced_artifact_ids": produced_artifact_ids,
         "deferred_artifact_ids": deferred_artifact_ids,
         "produced_files": produced_files,
+        "final_build_output": final_build_output,
     }
 
 
