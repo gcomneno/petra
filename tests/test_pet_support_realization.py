@@ -79,6 +79,7 @@ def test_support_realization_reconstructs_exact_target_from_block_products() -> 
 
     report = _run_json_file_command(TOOL, payload)
 
+
     assert report["source_schema"] == "pet-support-realization-input-v0"
     assert report["resolved_product"] == 1
     assert report["unresolved_product"] == 1234567890
@@ -90,30 +91,28 @@ def test_support_realization_reconstructs_exact_target_from_block_products() -> 
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-block-products"
 
-
 def test_support_realization_derives_blocks_from_partial_build_payload() -> None:
     payload = _run_partial_build_payload(1234567890)
     report = _run_json_file_command(TOOL, payload)
+
 
     assert report["source_schema"] == "pet-build-from-int-v2"
     assert report["target_generator"] == 4620
     assert report["exponent_multiset"] == [2, 1, 1, 1, 1]
     assert report["phase2"]["status"] == "derived-from-factorization"
-    assert report["unknown_block_count"] == 2
-    assert report["resolved_product"] == 1
-    assert report["unresolved_product"] == 1234567890
-    assert report["resolved_fraction"] == "1/1234567890"
-    assert report["resolved_exponent_mass"] == 0
-    assert report["unresolved_exponent_mass"] == 6
-    assert report["total_exponent_mass"] == 6
+    assert report["known_block_count"] == 5
+    assert report["unknown_block_count"] == 0
+    assert report["resolved_product"] == 1234567890
+    assert report["unresolved_product"] == 1
+    assert report["resolved_fraction"] == "1234567890/1234567890"
+    assert report["resolved_exponent_mass"] == 6
+    assert report["unresolved_exponent_mass"] == 0
+    assert report["builder_readiness"] == "ready"
+    known_products = sorted(block["target_product"] for block in report["known_blocks"])
+    assert known_products == [2, 3, 5, 3607, 3803]
+    assert report["builder_ready_block_ids"] == report["builder_plan"]["ready_known_block_ids"]
     assert report["reconstructed_target_n"] == 1234567890
     assert report["exact_target_match"] is True
-    assert report["realization_status"] == "exact-from-derived-block-products"
-
-    blocks = {block["block_id"]: block for block in report["unknown_blocks"]}
-    assert blocks["exp2-slot"]["target_product"] == 3
-    assert blocks["exp1-slots"]["target_product"] == 137174210
-
 
 def test_support_realization_detects_block_product_mismatch() -> None:
     payload = {

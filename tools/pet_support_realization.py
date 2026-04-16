@@ -296,6 +296,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
                     "prime_only": True,
                     "count": len(primes),
                     "derived_from_full_factorization": True,
+                    "known_divisors": primes,
                 },
             }
         )
@@ -307,11 +308,16 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
     known_blocks.extend(peeled_known_blocks)
 
     resolved_product = 1
+    for block in known_blocks:
+        resolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
     unresolved_product = 1
     for block in unknown_blocks:
         unresolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
 
-    resolved_exponent_mass = 0
+    resolved_exponent_mass = sum(
+        int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in known_blocks
+    )
     unresolved_exponent_mass = sum(
         int(block["slot_exp"]) * int(block["slot_multiplicity"]) for block in unknown_blocks
     )
@@ -349,6 +355,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
             "same_pet_shape": same_pet_shape,
         },
         "known_block_count": 0,
+        "known_block_count": len(known_blocks),
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,

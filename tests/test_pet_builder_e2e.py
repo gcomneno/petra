@@ -284,16 +284,18 @@ def test_pet_builder_e2e_from_real_cli_partial_build_payload(tmp_path: Path) -> 
 
     support = _run_support(cli_payload, tmp_path)
     assert support["source_schema"] == "pet-build-from-int-v2"
-    assert support["builder_readiness"] == "not-ready"
-    assert support["unknown_block_count"] > 0
+    assert support["builder_readiness"] == "ready"
+    assert support["unknown_block_count"] == 0
+    assert support["known_block_count"] == 5
 
     plan = _run_plan(support, tmp_path)
-    assert plan["builder_readiness"] == "not-ready"
-    assert plan["action"]["kind"] == "realize-missing-blocks"
-    assert plan["can_execute_now"] is False
+    assert plan["builder_readiness"] == "ready"
+    assert plan["action"]["kind"] == "execute-build-known-blocks"
+    assert plan["can_execute_now"] is True
 
     execution = _run_execute(plan, tmp_path)
-    assert execution["execution_status"] == "blocked"
-    assert execution["materialized_artifact_count"] == 0
-    assert execution["final_build_output"]["build_status"] == "deferred"
-    assert execution["final_build_output"]["built_pet_object"]["assembly_status"] == "deferred"
+    assert execution["execution_status"] == "executed"
+    assert execution["materialized_artifact_count"] == 5
+    assert execution["final_build_output"]["build_status"] == "built"
+    assert execution["final_build_output"]["built_pet_object"]["assembly_status"] == "assembled"
+    assert execution["final_build_output"]["built_pet_object"]["component_count"] == 5
