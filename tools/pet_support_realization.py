@@ -810,6 +810,9 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_report(payload: dict[str, Any]) -> dict[str, Any]:
+    if _looks_like_canonical_cli_build_payload(payload):
+        return _build_from_canonical_cli_payload(payload)
+
     schema = require_field(payload, "schema")
 
     if schema == "pet-build-from-int-v2":
