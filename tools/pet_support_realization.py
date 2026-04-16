@@ -74,6 +74,7 @@ def _peel_known_divisors_from_unknown_blocks(
     fully_peeled_block_ids: list[str] = []
     blocked_block_ids: list[str] = []
     not_attempted_block_ids: list[str] = []
+    partially_peeled_block_ids: list[str] = []
 
     for block in unknown_blocks:
         constraints = block.get("constraints", {})
@@ -189,6 +190,7 @@ def _peel_known_divisors_from_unknown_blocks(
             residual_constraints.pop("known_divisors", None)
             residual_block["constraints"] = residual_constraints
 
+            partially_peeled_block_ids.append(block_id)
             updated_unknown_blocks.append(
                 _with_peeling_status(
                     _evaluate_supported_constraints(residual_block),
@@ -223,6 +225,7 @@ def _peel_known_divisors_from_unknown_blocks(
         "not_attempted_unknown_blocks": not_attempted_unknown_blocks,
         "not_attempted_block_ids": not_attempted_block_ids,
         "partially_peeled_unknown_blocks": partially_peeled_unknown_blocks,
+        "partially_peeled_block_ids": partially_peeled_block_ids,
     }
     return peeled_known_blocks, updated_unknown_blocks, peeling_summary
 
