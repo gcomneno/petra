@@ -454,3 +454,105 @@ def test_support_realization_peels_multiple_known_divisors_and_fully_resolves_bl
 
     known_products = sorted(block["target_product"] for block in report["known_blocks"])
     assert known_products == [2, 3]
+
+
+def test_support_realization_does_not_peel_when_known_divisors_include_unit_or_nonpositive() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 30,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 3,
+                "target_product": 30,
+                "constraints": {
+                    "known_divisors": [1, 2]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 0
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 30
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 3
+    assert report["exact_target_match"] is True
+
+
+def test_support_realization_does_not_peel_when_known_divisor_count_exceeds_slot_multiplicity() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 6,
+        "target_generator": 6,
+        "shape_signature": [[]],
+        "slot_count": 1,
+        "exponent_multiset": [1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 6,
+                "constraints": {
+                    "known_divisors": [2, 3]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 0
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 6
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 1
+    assert report["exact_target_match"] is True
+
+
+def test_support_realization_does_not_peel_when_known_divisor_product_overconsumes_target_product() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 12,
+        "target_generator": 6,
+        "shape_signature": [[], []],
+        "slot_count": 2,
+        "exponent_multiset": [1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 12,
+                "constraints": {
+                    "known_divisors": [4, 6]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["known_block_count"] == 0
+    assert report["unknown_block_count"] == 1
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 12
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 2
+    assert report["exact_target_match"] is True
