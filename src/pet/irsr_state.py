@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from pet.irsr_payload_slice import (
+    payload_slice_builder_unusable_reasons,
     payload_slice_is_builder_usable,
     payload_slice_to_builder_payload,
     residual_state_to_support_payload_slice,
@@ -35,3 +36,8 @@ def refine_residual_state_slot_candidates(
 def residual_state_to_builder_payload(state: dict) -> dict:
     payload_slice = residual_state_to_support_payload_slice(state)
     return payload_slice_to_builder_payload(payload_slice)
+
+
+def residual_state_builder_unready_reasons(state: dict) -> list[str]:
+    payload_slice = residual_state_to_support_payload_slice(state)
+    return payload_slice_builder_unusable_reasons(payload_slice)
