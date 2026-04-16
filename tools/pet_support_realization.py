@@ -317,6 +317,10 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
     )
     total_exponent_mass = resolved_exponent_mass + unresolved_exponent_mass
 
+    builder_readiness = "ready" if not unknown_blocks else "not-ready"
+    builder_ready_block_ids = [str(block["block_id"]) for block in known_blocks] if not unknown_blocks else []
+    builder_missing_unknown_block_ids = [str(block["block_id"]) for block in unknown_blocks]
+
     reconstructed_target_n = resolved_product * unresolved_product
     exact_target_match = reconstructed_target_n == input_n
     resolved_fraction = f"{resolved_product}/{input_n}"
@@ -342,6 +346,9 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
         "peeling_summary": {**peeling_summary, "pre_known_block_ids": pre_known_block_ids},
+        "builder_readiness": builder_readiness,
+        "builder_ready_block_ids": builder_ready_block_ids,
+        "builder_missing_unknown_block_ids": builder_missing_unknown_block_ids,
         "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
@@ -444,6 +451,10 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
     )
     total_exponent_mass = resolved_exponent_mass + unresolved_exponent_mass
 
+    builder_readiness = "ready" if not unknown_blocks else "not-ready"
+    builder_ready_block_ids = [str(block["block_id"]) for block in known_blocks] if not unknown_blocks else []
+    builder_missing_unknown_block_ids = [str(block["block_id"]) for block in unknown_blocks]
+
     reconstructed_target_n = resolved_product * unresolved_product
     exact_target_match = reconstructed_target_n == input_n
     resolved_fraction = f"{resolved_product}/{input_n}"
@@ -472,6 +483,9 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
         "peeling_summary": {**peeling_summary, "pre_known_block_ids": pre_known_block_ids},
+        "builder_readiness": builder_readiness,
+        "builder_ready_block_ids": builder_ready_block_ids,
+        "builder_missing_unknown_block_ids": builder_missing_unknown_block_ids,
         "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,

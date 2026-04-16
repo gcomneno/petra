@@ -1150,3 +1150,72 @@ def test_support_realization_reports_peeled_known_block_ids() -> None:
         "unknown-exp1-slots::known-divisor-1",
         "unknown-exp1-slots::known-divisor-2",
     ]
+
+
+def test_support_realization_reports_builder_readiness_not_ready() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [
+            {
+                "block_id": "known-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 3,
+                "constraints": {"prime_only": True, "count": 1},
+            }
+        ],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {"prime_only": True, "count": 2},
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["builder_readiness"] == "not-ready"
+    assert report["builder_ready_block_ids"] == []
+    assert report["builder_missing_unknown_block_ids"] == ["unknown-exp1-slots"]
+
+
+def test_support_realization_reports_builder_readiness_ready() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 6,
+        "target_generator": 6,
+        "shape_signature": [[], []],
+        "slot_count": 2,
+        "exponent_multiset": [1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 6,
+                "constraints": {
+                    "known_divisors": [2, 3]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["builder_readiness"] == "ready"
+    assert report["builder_ready_block_ids"] == [
+        "unknown-exp1-slots::known-divisor-1",
+        "unknown-exp1-slots::known-divisor-2",
+    ]
+    assert report["builder_missing_unknown_block_ids"] == []
