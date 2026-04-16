@@ -53,6 +53,32 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
                 "block_ids": ready_known_block_ids,
             },
         ]
+        script_steps = []
+        step = 1
+        for block_id in ready_known_block_ids:
+            script_steps.append(
+                {
+                    "step": step,
+                    "command": "prepare-block",
+                    "block_id": block_id,
+                }
+            )
+            step += 1
+            script_steps.append(
+                {
+                    "step": step,
+                    "command": "build-block",
+                    "block_id": block_id,
+                }
+            )
+            step += 1
+        script_steps.append(
+            {
+                "step": step,
+                "command": "finalize-build",
+                "block_ids": ready_known_block_ids,
+            }
+        )
     else:
         action = {
             "kind": "realize-missing-blocks",
@@ -73,6 +99,23 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
                 "block_ids": missing_unknown_block_ids,
             },
         ]
+        script_steps = [
+            {
+                "step": 1,
+                "command": "inspect-missing-blocks",
+                "block_ids": missing_unknown_block_ids,
+            },
+            {
+                "step": 2,
+                "command": "realize-blocks",
+                "block_ids": missing_unknown_block_ids,
+            },
+            {
+                "step": 3,
+                "command": "retry-builder-plan",
+                "block_ids": missing_unknown_block_ids,
+            },
+        ]
 
     return {
         "schema": "pet-builder-plan-v0",
@@ -85,6 +128,7 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "can_execute_now": can_execute_now,
         "execution_status": execution_status,
         "simulated_steps": simulated_steps,
+        "script_steps": script_steps,
         "action": action,
     }
 
