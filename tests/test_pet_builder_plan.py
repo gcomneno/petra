@@ -91,6 +91,11 @@ def test_pet_builder_plan_reports_realize_missing_blocks_action() -> None:
             "deferred_block_ids": ["unknown-exp1-slots"],
             "manifest_status": "deferred",
         },
+        "build_result": {
+            "result_status": "deferred",
+            "produced_artifact_ids": [],
+            "deferred_artifact_ids": ["artifact::unknown-exp1-slots"],
+        },
         "action": {
             "kind": "realize-missing-blocks",
             "block_ids": ["unknown-exp1-slots"],
@@ -197,6 +202,14 @@ def test_pet_builder_plan_reports_execute_build_known_blocks_action() -> None:
             "deferred_block_ids": [],
             "manifest_status": "planned",
         },
+        "build_result": {
+            "result_status": "simulated-success",
+            "produced_artifact_ids": [
+                "artifact::unknown-exp1-slots::known-divisor-1",
+                "artifact::unknown-exp1-slots::known-divisor-2",
+            ],
+            "deferred_artifact_ids": [],
+        },
         "action": {
             "kind": "execute-build-known-blocks",
             "block_ids": [
@@ -298,3 +311,32 @@ def test_pet_builder_plan_reports_build_artifacts_consistently() -> None:
             "status": "planned",
         },
     ]
+
+
+def test_pet_builder_plan_reports_build_result_consistently() -> None:
+    payload = {
+        "schema": "pet-support-realization-v0",
+        "input_n": 6,
+        "builder_readiness": "ready",
+        "builder_plan": {
+            "mode": "exact-realized",
+            "next_action": "build-known-blocks",
+            "missing_block_count": 0,
+            "ready_known_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "missing_unknown_block_ids": [],
+        },
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["build_result"] == {
+        "result_status": "simulated-success",
+        "produced_artifact_ids": [
+            "artifact::unknown-exp1-slots::known-divisor-1",
+            "artifact::unknown-exp1-slots::known-divisor-2",
+        ],
+        "deferred_artifact_ids": [],
+    }

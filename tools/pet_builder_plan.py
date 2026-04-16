@@ -149,6 +149,19 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "deferred_block_ids": deferred_block_ids,
         "manifest_status": "planned" if can_execute_now else "deferred",
     }
+    build_result = {
+        "result_status": "simulated-success" if can_execute_now else "deferred",
+        "produced_artifact_ids": [
+            artifact["artifact_id"]
+            for artifact in build_artifacts
+            if artifact["status"] == "planned"
+        ],
+        "deferred_artifact_ids": [
+            artifact["artifact_id"]
+            for artifact in build_artifacts
+            if artifact["status"] == "deferred-until-realization"
+        ],
+    }
 
     return {
         "schema": "pet-builder-plan-v0",
@@ -164,6 +177,7 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "script_steps": script_steps,
         "build_artifacts": build_artifacts,
         "build_manifest": build_manifest,
+        "build_result": build_result,
         "action": action,
     }
 
