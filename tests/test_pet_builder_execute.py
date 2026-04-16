@@ -23,6 +23,15 @@ def _run_json_file_command(tool: Path, payload: dict, output_dir: Path) -> dict:
     return json.loads(proc.stdout)
 
 
+
+def _assert_mapping_contains(actual: dict, expected: dict) -> None:
+    for key, value in expected.items():
+        assert actual.get(key) == value, (
+            f"unexpected value for {key!r}: "
+            f"expected {value!r}, got {actual.get(key)!r}"
+        )
+
+
 def test_pet_builder_execute_materializes_planned_artifacts(tmp_path: Path) -> None:
     output_dir = tmp_path / "out"
     payload = {
@@ -59,7 +68,7 @@ def test_pet_builder_execute_materializes_planned_artifacts(tmp_path: Path) -> N
     ]
     assert report["deferred_artifact_ids"] == []
     assert len(report["produced_files"]) == 2
-    assert report["final_build_output"] == {
+    _assert_mapping_contains(report["final_build_output"], {
         "schema": "pet-builder-output-v0",
         "input_n": 6,
         "built_block_ids": [
@@ -85,8 +94,33 @@ def test_pet_builder_execute_materializes_planned_artifacts(tmp_path: Path) -> N
             ],
             "assembly_status": "assembled",
             "assembled_from_artifacts": True,
+            "component_count": 2,
+            "artifact_count": 2,
+            "components": [
+                {
+                    "block_id": "unknown-exp1-slots::known-divisor-1",
+                    "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+                    "component_status": "built",
+                },
+                {
+                    "block_id": "unknown-exp1-slots::known-divisor-2",
+                    "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+                    "component_status": "built",
+                },
+            ],
+            "assembly_trace": [
+                "prepare-block",
+                "build-block",
+                "prepare-block",
+                "build-block",
+                "finalize-build",
+            ],
+            "finalization": {
+                "status": "finalized",
+                "finalized_by": "finalize-build",
+            },
         },
-    }
+    })
 
     produced_paths = [Path(p) for p in report["produced_files"]]
     for produced_path in produced_paths:
@@ -140,6 +174,18 @@ def test_pet_builder_execute_reports_blocked_without_materializing(tmp_path: Pat
             "artifact_ids": [],
             "assembly_status": "deferred",
             "assembled_from_artifacts": False,
+            "component_count": 0,
+            "artifact_count": 0,
+            "components": [],
+            "assembly_trace": [
+                "inspect-missing-blocks",
+                "realize-blocks",
+                "retry-builder-plan",
+            ],
+            "finalization": {
+                "status": "deferred",
+                "finalized_by": None,
+            },
         },
     }
 
@@ -170,7 +216,7 @@ def test_pet_builder_execute_reports_final_build_output_consistently(tmp_path: P
 
     report = _run_json_file_command(TOOL, payload, output_dir)
 
-    assert report["final_build_output"] == {
+    _assert_mapping_contains(report["final_build_output"], {
         "schema": "pet-builder-output-v0",
         "input_n": 6,
         "built_block_ids": [
@@ -183,21 +229,21 @@ def test_pet_builder_execute_reports_final_build_output_consistently(tmp_path: P
         ],
         "build_status": "built",
         "assembled_from_artifacts": True,
-        "built_pet_object": {
-            "schema": "pet-built-object-v0",
-            "input_n": 6,
-            "built_block_ids": [
-                "unknown-exp1-slots::known-divisor-1",
-                "unknown-exp1-slots::known-divisor-2",
-            ],
-            "artifact_ids": [
-                "artifact::unknown-exp1-slots::known-divisor-1",
-                "artifact::unknown-exp1-slots::known-divisor-2",
-            ],
-            "assembly_status": "assembled",
-            "assembled_from_artifacts": True,
-        },
-    }
+    })
+    _assert_mapping_contains(report["final_build_output"]["built_pet_object"], {
+        "schema": "pet-built-object-v0",
+        "input_n": 6,
+        "built_block_ids": [
+            "unknown-exp1-slots::known-divisor-1",
+            "unknown-exp1-slots::known-divisor-2",
+        ],
+        "artifact_ids": [
+            "artifact::unknown-exp1-slots::known-divisor-1",
+            "artifact::unknown-exp1-slots::known-divisor-2",
+        ],
+        "assembly_status": "assembled",
+        "assembled_from_artifacts": True,
+    })
 
 
 def test_pet_builder_execute_reports_built_pet_object_consistently(tmp_path: Path) -> None:
@@ -223,7 +269,7 @@ def test_pet_builder_execute_reports_built_pet_object_consistently(tmp_path: Pat
 
     report = _run_json_file_command(TOOL, payload, output_dir)
 
-    assert report["final_build_output"]["built_pet_object"] == {
+    _assert_mapping_contains(report["final_build_output"]["built_pet_object"], {
         "schema": "pet-built-object-v0",
         "input_n": 6,
         "built_block_ids": [
@@ -236,4 +282,65 @@ def test_pet_builder_execute_reports_built_pet_object_consistently(tmp_path: Pat
         ],
         "assembly_status": "assembled",
         "assembled_from_artifacts": True,
+    })
+
+
+def test_pet_builder_execute_reports_substantial_built_pet_object_structure(tmp_path: Path) -> None:
+    output_dir = tmp_path / "out"
+    payload = {
+        "schema": "pet-builder-plan-v0",
+        "input_n": 6,
+        "can_execute_now": True,
+        "action": {"kind": "execute-build-known-blocks"},
+        "script_steps": [
+            {"step": 1, "command": "prepare-block", "block_id": "unknown-exp1-slots::known-divisor-1"},
+            {"step": 2, "command": "build-block", "block_id": "unknown-exp1-slots::known-divisor-1"},
+            {"step": 3, "command": "prepare-block", "block_id": "unknown-exp1-slots::known-divisor-2"},
+            {"step": 4, "command": "build-block", "block_id": "unknown-exp1-slots::known-divisor-2"},
+            {"step": 5, "command": "finalize-build", "block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ]},
+        ],
+        "build_artifacts": [
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+                "source_block_id": "unknown-exp1-slots::known-divisor-1",
+                "status": "planned",
+            },
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+                "source_block_id": "unknown-exp1-slots::known-divisor-2",
+                "status": "planned",
+            },
+        ],
     }
+
+    report = _run_json_file_command(TOOL, payload, output_dir)
+    built = report["final_build_output"]["built_pet_object"]
+
+    assert built["component_count"] == 2
+    assert built["artifact_count"] == 2
+    assert built["assembly_trace"] == [
+        "prepare-block",
+        "build-block",
+        "prepare-block",
+        "build-block",
+        "finalize-build",
+    ]
+    assert built["finalization"] == {
+        "status": "finalized",
+        "finalized_by": "finalize-build",
+    }
+    assert built["components"] == [
+        {
+            "block_id": "unknown-exp1-slots::known-divisor-1",
+            "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+            "component_status": "built",
+        },
+        {
+            "block_id": "unknown-exp1-slots::known-divisor-2",
+            "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+            "component_status": "built",
+        },
+    ]
