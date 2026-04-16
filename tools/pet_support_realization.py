@@ -44,7 +44,8 @@ def _evaluate_supported_constraints(block: dict[str, Any]) -> dict[str, Any]:
 
 def _peel_known_divisors_from_unknown_blocks(
     unknown_blocks: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
+    original_unknown_block_count = len(unknown_blocks)
     peeled_known_blocks: list[dict[str, Any]] = []
     updated_unknown_blocks: list[dict[str, Any]] = []
 
@@ -116,7 +117,12 @@ def _peel_known_divisors_from_unknown_blocks(
 
             updated_unknown_blocks.append(_evaluate_supported_constraints(residual_block))
 
-    return peeled_known_blocks, updated_unknown_blocks
+    peeling_summary = {
+        "peeled_block_count": len(peeled_known_blocks),
+        "peeled_divisor_count": sum(int(block["slot_multiplicity"]) for block in peeled_known_blocks),
+        "fully_resolved_unknown_blocks": original_unknown_block_count - len(updated_unknown_blocks),
+    }
+    return peeled_known_blocks, updated_unknown_blocks, peeling_summary
 
 
 def _constraint_status(*block_lists: list[dict[str, Any]]) -> str:
@@ -191,7 +197,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
 
     known_blocks: list[dict[str, Any]] = []
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
-    peeled_known_blocks, unknown_blocks = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
+    peeled_known_blocks, unknown_blocks, peeling_summary = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
     known_blocks.extend(peeled_known_blocks)
 
     resolved_product = 1
@@ -229,6 +235,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
+        "peeling_summary": peeling_summary,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,
@@ -310,7 +317,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
     known_blocks = [_evaluate_supported_constraints(b) for b in raw_known_blocks]
     unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
-    peeled_known_blocks, unknown_blocks = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
+    peeled_known_blocks, unknown_blocks, peeling_summary = _peel_known_divisors_from_unknown_blocks(unknown_blocks)
     known_blocks.extend(peeled_known_blocks)
 
     resolved_product = 1
@@ -356,6 +363,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
+        "peeling_summary": peeling_summary,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,
