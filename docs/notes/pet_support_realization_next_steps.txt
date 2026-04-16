@@ -1,0 +1,3 @@
+- next micro-target: supportare peeling multi-divisor nello stesso blocco ignoto
+- vincolo: sempre deterministico, senza search/backtracking
+- non toccare ancora bit_length/forbidden_divisors in modo attivo
