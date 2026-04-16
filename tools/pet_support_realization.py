@@ -67,10 +67,11 @@ def _with_peeling_status(
 
 def _peel_known_divisors_from_unknown_blocks(
     unknown_blocks: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     original_unknown_block_count = len(unknown_blocks)
     peeled_known_blocks: list[dict[str, Any]] = []
     updated_unknown_blocks: list[dict[str, Any]] = []
+    fully_peeled_block_ids: list[str] = []
 
     for block in unknown_blocks:
         constraints = block.get("constraints", {})
@@ -187,6 +188,8 @@ def _peel_known_divisors_from_unknown_blocks(
                     reason="peeled-known-divisors",
                 )
             )
+        else:
+            fully_peeled_block_ids.append(block_id)
 
     blocked_unknown_blocks = 0
     not_attempted_unknown_blocks = 0
@@ -205,7 +208,8 @@ def _peel_known_divisors_from_unknown_blocks(
     peeling_summary = {
         "peeled_block_count": len(peeled_known_blocks),
         "peeled_divisor_count": sum(int(block["slot_multiplicity"]) for block in peeled_known_blocks),
-        "fully_resolved_unknown_blocks": original_unknown_block_count - len(updated_unknown_blocks),
+        "fully_resolved_unknown_blocks": len(fully_peeled_block_ids),
+        "fully_peeled_block_ids": fully_peeled_block_ids,
         "blocked_unknown_blocks": blocked_unknown_blocks,
         "not_attempted_unknown_blocks": not_attempted_unknown_blocks,
         "partially_peeled_unknown_blocks": partially_peeled_unknown_blocks,
