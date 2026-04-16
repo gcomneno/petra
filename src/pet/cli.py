@@ -5,6 +5,7 @@ import ast
 import json
 import heapq
 import pathlib
+import subprocess
 import sys
 from collections import deque
 
@@ -949,6 +950,21 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
+
+    # builder-from-int
+    p = subparsers.add_parser(
+        "builder-from-int",
+        help="experimental single-entry PET builder pipeline from an integer",
+    )
+    p.add_argument("n", type=int, help="target integer")
+    p.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_builder_from_int_out",
+        help="directory where builder artifacts are materialized",
+    )
+    p.add_argument("--json", action="store_true", help="emit JSON output")
+
+
 
     # encode
     p_encode = subparsers.add_parser("encode", help="encode N into PET and print JSON")
@@ -1969,6 +1985,35 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"steps = {report['steps']}")
                 for row in report["path"]:
                     print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
+
+        elif args.command == "builder-from-int":
+            repo_root = pathlib.Path(__file__).resolve().parents[2]
+            tool = repo_root / "tools" / "pet_builder_from_int.py"
+
+            if not tool.exists():
+                raise FileNotFoundError(f"missing builder tool: {tool}")
+
+            cmd = [
+                sys.executable,
+                str(tool),
+                str(args.n),
+                "--output-dir",
+                args.artifacts_dir,
+            ]
+            proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
+
+            if args.json:
+                print(proc.stdout.rstrip())
+            else:
+                payload = json.loads(proc.stdout)
+                final_output = payload.get("final_build_output", {})
+                built = final_output.get("built_pet_object", {})
+                print(f"input_n = {payload.get('input_n')}")
+                print(f"schema = {payload.get('schema')}")
+                print(f"build_status = {final_output.get('build_status')}")
+                print(f"assembly_status = {built.get('assembly_status')}")
+                print(f"component_count = {built.get('component_count')}")
+                print(f"artifacts_dir = {args.artifacts_dir}")
 
         elif args.command == "build-from-int":
             partial_report = None

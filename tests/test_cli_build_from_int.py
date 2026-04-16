@@ -96,3 +96,27 @@ def test_cli_build_from_int_json_partial_noncanonical_support_for_18():
     assert payload["phase2"]["status"] == "pending"
     assert payload["phase2"]["same_pet_shape"] is True
     assert payload["phase2"]["reached_target"] is False
+
+
+def test_cli_builder_from_int_json_for_30():
+    out = _run_cli("builder-from-int", "30", "--json")
+    payload = json.loads(out)
+
+    assert payload["schema"] == "pet-builder-from-int-v0"
+    assert payload["input_n"] == 30
+    assert payload["builder_execution"]["execution_status"] == "executed"
+    assert payload["final_build_output"]["build_status"] == "built"
+    assert payload["final_build_output"]["built_pet_object"]["assembly_status"] == "assembled"
+    assert payload["final_build_output"]["built_pet_object"]["component_count"] == 3
+
+
+def test_cli_builder_from_int_json_for_18():
+    out = _run_cli("builder-from-int", "18", "--json")
+    payload = json.loads(out)
+
+    assert payload["schema"] == "pet-builder-from-int-v0"
+    assert payload["input_n"] == 18
+    assert payload["builder_execution"]["execution_status"] == "executed"
+    assert payload["final_build_output"]["build_status"] == "built"
+    assert payload["final_build_output"]["built_pet_object"]["assembly_status"] == "assembled"
+    assert payload["final_build_output"]["built_pet_object"]["component_count"] == 2
