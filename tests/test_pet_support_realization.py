@@ -85,15 +85,22 @@ def test_support_realization_reconstructs_exact_target_from_block_products() -> 
     assert report["realization_status"] == "exact-from-block-products"
 
 
-def test_support_realization_keeps_partial_build_payload_pending() -> None:
+def test_support_realization_derives_blocks_from_partial_build_payload() -> None:
     payload = _run_partial_build_payload(1234567890)
     report = _run_json_file_command(TOOL, payload)
 
     assert report["source_schema"] == "pet-build-from-int-v2"
     assert report["target_generator"] == 4620
-    assert report["realization_status"] == "pending"
-    assert "reconstructed_target_n" not in report
-    assert "exact_target_match" not in report
+    assert report["exponent_multiset"] == [2, 1, 1, 1, 1]
+    assert report["phase2"]["status"] == "derived-from-factorization"
+    assert report["unknown_block_count"] == 2
+    assert report["reconstructed_target_n"] == 1234567890
+    assert report["exact_target_match"] is True
+    assert report["realization_status"] == "exact-from-derived-block-products"
+
+    blocks = {block["block_id"]: block for block in report["unknown_blocks"]}
+    assert blocks["exp2-slot"]["target_product"] == 3
+    assert blocks["exp1-slots"]["target_product"] == 137174210
 
 
 def test_support_realization_detects_block_product_mismatch() -> None:
