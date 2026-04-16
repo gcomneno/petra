@@ -85,6 +85,12 @@ def test_pet_builder_plan_reports_realize_missing_blocks_action() -> None:
                 "status": "deferred-until-realization",
             },
         ],
+        "build_manifest": {
+            "artifact_count": 1,
+            "planned_block_ids": [],
+            "deferred_block_ids": ["unknown-exp1-slots"],
+            "manifest_status": "deferred",
+        },
         "action": {
             "kind": "realize-missing-blocks",
             "block_ids": ["unknown-exp1-slots"],
@@ -182,6 +188,15 @@ def test_pet_builder_plan_reports_execute_build_known_blocks_action() -> None:
                 "status": "planned",
             },
         ],
+        "build_manifest": {
+            "artifact_count": 2,
+            "planned_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "deferred_block_ids": [],
+            "manifest_status": "planned",
+        },
         "action": {
             "kind": "execute-build-known-blocks",
             "block_ids": [

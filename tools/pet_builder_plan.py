@@ -133,6 +133,23 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
             for block_id in missing_unknown_block_ids
         ]
 
+    planned_block_ids = [
+        artifact["source_block_id"]
+        for artifact in build_artifacts
+        if artifact["status"] == "planned"
+    ]
+    deferred_block_ids = [
+        artifact["source_block_id"]
+        for artifact in build_artifacts
+        if artifact["status"] == "deferred-until-realization"
+    ]
+    build_manifest = {
+        "artifact_count": len(build_artifacts),
+        "planned_block_ids": planned_block_ids,
+        "deferred_block_ids": deferred_block_ids,
+        "manifest_status": "planned" if can_execute_now else "deferred",
+    }
+
     return {
         "schema": "pet-builder-plan-v0",
         "source_schema": report.get("schema"),
@@ -146,6 +163,7 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "simulated_steps": simulated_steps,
         "script_steps": script_steps,
         "build_artifacts": build_artifacts,
+        "build_manifest": build_manifest,
         "action": action,
     }
 
