@@ -83,6 +83,9 @@ def test_support_realization_reconstructs_exact_target_from_block_products() -> 
     assert report["resolved_product"] == 1
     assert report["unresolved_product"] == 1234567890
     assert report["resolved_fraction"] == "1/1234567890"
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 6
+    assert report["total_exponent_mass"] == 6
     assert report["reconstructed_target_n"] == 1234567890
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-block-products"
@@ -100,6 +103,9 @@ def test_support_realization_derives_blocks_from_partial_build_payload() -> None
     assert report["resolved_product"] == 1
     assert report["unresolved_product"] == 1234567890
     assert report["resolved_fraction"] == "1/1234567890"
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 6
+    assert report["total_exponent_mass"] == 6
     assert report["reconstructed_target_n"] == 1234567890
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-derived-block-products"
@@ -142,6 +148,9 @@ def test_support_realization_detects_block_product_mismatch() -> None:
     assert report["resolved_product"] == 1
     assert report["unresolved_product"] != 1234567890
     assert report["resolved_fraction"] == "1/1234567890"
+    assert report["resolved_exponent_mass"] == 0
+    assert report["unresolved_exponent_mass"] == 6
+    assert report["total_exponent_mass"] == 6
     assert report["reconstructed_target_n"] != 1234567890
     assert report["exact_target_match"] is False
     assert report["realization_status"] == "block-product-mismatch"
@@ -181,6 +190,102 @@ def test_support_realization_reports_known_unknown_split_fraction() -> None:
     assert report["resolved_product"] == 3
     assert report["unresolved_product"] == 411522630041
     assert report["resolved_fraction"] == "3/1234567890123"
+    assert report["resolved_exponent_mass"] == 1
+    assert report["unresolved_exponent_mass"] == 2
+    assert report["total_exponent_mass"] == 3
     assert report["reconstructed_target_n"] == 1234567890123
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-block-products"
+
+
+def test_support_realization_validates_supported_constraints_ok() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [
+            {
+                "block_id": "known-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 3,
+                "constraints": {
+                    "prime_only": True,
+                    "count": 1,
+                    "bit_length_min": 2,
+                    "bit_length_max": 2,
+                    "known_divisors": [3],
+                    "forbidden_divisors": [5]
+                },
+            }
+        ],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {
+                    "count": 2,
+                    "bit_length_min": 39,
+                    "bit_length_max": 39
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["constraint_status"] == "ok"
+    known = report["known_blocks"][0]
+    unknown = report["unknown_blocks"][0]
+    assert known["constraint_checks"]["bit_length_min"] is True
+    assert known["constraint_checks"]["bit_length_max"] is True
+    assert known["constraint_checks"]["known_divisors"] is True
+    assert known["constraint_checks"]["forbidden_divisors"] is True
+    assert unknown["constraint_checks"]["bit_length_min"] is True
+    assert unknown["constraint_checks"]["bit_length_max"] is True
+
+
+def test_support_realization_validates_supported_constraints_failed() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [
+            {
+                "block_id": "known-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 3,
+                "constraints": {
+                    "forbidden_divisors": [3]
+                },
+            }
+        ],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {
+                    "bit_length_max": 10
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["constraint_status"] == "failed"
+    assert report["known_blocks"][0]["constraint_checks"]["forbidden_divisors"] is False
+    assert report["unknown_blocks"][0]["constraint_checks"]["bit_length_max"] is False

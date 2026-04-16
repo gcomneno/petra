@@ -13,6 +13,42 @@ def require_field(obj: dict[str, Any], key: str) -> Any:
     return obj[key]
 
 
+def _evaluate_supported_constraints(block: dict[str, Any]) -> dict[str, Any]:
+    out = dict(block)
+    constraints = out.get("constraints")
+    if not isinstance(constraints, dict):
+        return out
+
+    target_product = int(out["target_product"])
+    checks: dict[str, bool] = {}
+
+    if "bit_length_min" in constraints:
+        checks["bit_length_min"] = target_product.bit_length() >= int(constraints["bit_length_min"])
+
+    if "bit_length_max" in constraints:
+        checks["bit_length_max"] = target_product.bit_length() <= int(constraints["bit_length_max"])
+
+    if "known_divisors" in constraints:
+        divisors = [int(x) for x in constraints["known_divisors"]]
+        checks["known_divisors"] = all(d != 0 and target_product % d == 0 for d in divisors)
+
+    if "forbidden_divisors" in constraints:
+        divisors = [int(x) for x in constraints["forbidden_divisors"]]
+        checks["forbidden_divisors"] = all(d == 0 or target_product % d != 0 for d in divisors)
+
+    if checks:
+        out["constraint_checks"] = checks
+    return out
+
+
+def _constraint_status(*block_lists: list[dict[str, Any]]) -> str:
+    values: list[bool] = []
+    for blocks in block_lists:
+        for block in blocks:
+            values.extend(block.get("constraint_checks", {}).values())
+    return "ok" if all(values or [True]) else "failed"
+
+
 def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]:
     schema = require_field(payload, "schema")
     build_status = require_field(payload, "build_status")
@@ -54,14 +90,14 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         reverse=True,
     )
 
-    unknown_blocks = []
+    raw_unknown_blocks = []
     for exp in sorted(grouped.keys(), reverse=True):
         primes = sorted(grouped[exp])
         target_product = 1
         for p in primes:
             target_product *= p
         label = f"exp{exp}-slot" if len(primes) == 1 else f"exp{exp}-slots"
-        unknown_blocks.append(
+        raw_unknown_blocks.append(
             {
                 "block_id": label,
                 "slot_exp": exp,
@@ -74,6 +110,9 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
                 },
             }
         )
+
+    known_blocks: list[dict[str, Any]] = []
+    unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
 
     resolved_product = 1
     unresolved_product = 1
@@ -108,7 +147,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         },
         "known_block_count": 0,
         "unknown_block_count": len(unknown_blocks),
-        "known_blocks": [],
+        "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
@@ -118,6 +157,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "total_exponent_mass": total_exponent_mass,
         "reconstructed_target_n": reconstructed_target_n,
         "exact_target_match": exact_target_match,
+        "constraint_status": _constraint_status(known_blocks, unknown_blocks),
         "realization_status": (
             "exact-from-derived-block-products" if exact_target_match else "derived-block-product-mismatch"
         ),
@@ -130,6 +170,23 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         ),
     }
 
+
+# V0 realization constraints are aggregated by exponent class, not by individual slot.
+#
+# This means that blocks such as:
+#   - slot_exp = 2, slot_multiplicity = 1
+#   - slot_exp = 1, slot_multiplicity = 4
+# are interpreted as exponent-class aggregates.
+#
+# The goal of V0 is to keep the realization contract simple and avoid introducing
+# artificial ordering between shape-equivalent slots.
+#
+# This is appropriate for flat / root-level cases, where same-exponent slots can be
+# treated as one block without loss of intended meaning.
+#
+# Future versions may refine this into position-aware blocks (for example via slot_path
+# or subtree_path) when recursive PET shapes require distinguishing same-exponent slots
+# that occur in different structural contexts.
 def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
     schema = require_field(payload, "schema")
     if schema != "pet-support-realization-input-v0":
@@ -151,6 +208,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(unknown_blocks, list):
         raise SystemExit("unknown_blocks must be a list")
 
+    raw_known_blocks = []
     for i, block in enumerate(known_blocks):
         if not isinstance(block, dict):
             raise SystemExit(f"known_blocks[{i}] must be an object")
@@ -158,7 +216,9 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         require_field(block, "slot_exp")
         require_field(block, "slot_multiplicity")
         require_field(block, "target_product")
+        raw_known_blocks.append(block)
 
+    raw_unknown_blocks = []
     for i, block in enumerate(unknown_blocks):
         if not isinstance(block, dict):
             raise SystemExit(f"unknown_blocks[{i}] must be an object")
@@ -166,6 +226,10 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         require_field(block, "slot_exp")
         require_field(block, "slot_multiplicity")
         require_field(block, "target_product")
+        raw_unknown_blocks.append(block)
+
+    known_blocks = [_evaluate_supported_constraints(b) for b in raw_known_blocks]
+    unknown_blocks = [_evaluate_supported_constraints(b) for b in raw_unknown_blocks]
 
     resolved_product = 1
     for block in known_blocks:
@@ -218,6 +282,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "total_exponent_mass": total_exponent_mass,
         "reconstructed_target_n": reconstructed_target_n,
         "exact_target_match": exact_target_match,
+        "constraint_status": _constraint_status(known_blocks, unknown_blocks),
         "realization_status": "exact-from-block-products" if exact_target_match else "block-product-mismatch",
         "message": (
             "support realization is not implemented yet; "
@@ -228,6 +293,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "and cheap arithmetic constraints"
         ),
     }
+
 
 def build_report(payload: dict[str, Any]) -> dict[str, Any]:
     schema = require_field(payload, "schema")
@@ -251,6 +317,9 @@ def _print_block(block: dict[str, Any]) -> None:
     constraints = block.get("constraints")
     if constraints is not None:
         print(f"  constraints = {json.dumps(constraints, ensure_ascii=False, sort_keys=True)}")
+    checks = block.get("constraint_checks")
+    if checks is not None:
+        print(f"  constraint_checks = {json.dumps(checks, ensure_ascii=False, sort_keys=True)}")
 
 
 def main() -> int:
@@ -308,6 +377,7 @@ def main() -> int:
             print(f"total_exponent_mass = {report['total_exponent_mass']}")
             print(f"reconstructed_target_n = {report['reconstructed_target_n']}")
             print(f"exact_target_match = {str(report['exact_target_match']).lower()}")
+        print(f"constraint_status = {report['constraint_status']}")
         print(f"realization_status = {report['realization_status']}")
         print(f"message = {report['message']}")
         print(f"next_action = {report['next_action']}")
