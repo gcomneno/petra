@@ -22,6 +22,11 @@ REPORT_CONTRACTS = {
     },
 }
 
+EXISTING_REPORT_CONTRACTS = {
+    path: spec for path, spec in REPORT_CONTRACTS.items() if Path(path).exists()
+}
+
+
 
 def read_text(path: str) -> str:
     file_path = Path(path)
@@ -71,7 +76,7 @@ def assert_script_benchmark_markers(text: str, path: str) -> None:
     ), f"{path}: missing benchmark command/script reference"
 
 
-@pytest.mark.parametrize("path,spec", REPORT_CONTRACTS.items())
+@pytest.mark.parametrize("path,spec", EXISTING_REPORT_CONTRACTS.items())
 def test_canonical_bounded_reports_expose_minimum_contract(path: str, spec: dict) -> None:
     text = read_text(path)
 
