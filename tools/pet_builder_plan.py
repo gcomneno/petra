@@ -79,6 +79,14 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
                 "block_ids": ready_known_block_ids,
             }
         )
+        build_artifacts = [
+            {
+                "artifact_id": f"artifact::{block_id}",
+                "source_block_id": block_id,
+                "status": "planned",
+            }
+            for block_id in ready_known_block_ids
+        ]
     else:
         action = {
             "kind": "realize-missing-blocks",
@@ -116,6 +124,14 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
                 "block_ids": missing_unknown_block_ids,
             },
         ]
+        build_artifacts = [
+            {
+                "artifact_id": f"artifact::{block_id}",
+                "source_block_id": block_id,
+                "status": "deferred-until-realization",
+            }
+            for block_id in missing_unknown_block_ids
+        ]
 
     return {
         "schema": "pet-builder-plan-v0",
@@ -129,6 +145,7 @@ def _build_plan(report: dict[str, Any]) -> dict[str, Any]:
         "execution_status": execution_status,
         "simulated_steps": simulated_steps,
         "script_steps": script_steps,
+        "build_artifacts": build_artifacts,
         "action": action,
     }
 

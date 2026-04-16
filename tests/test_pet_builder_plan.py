@@ -78,6 +78,13 @@ def test_pet_builder_plan_reports_realize_missing_blocks_action() -> None:
                 "block_ids": ["unknown-exp1-slots"],
             },
         ],
+        "build_artifacts": [
+            {
+                "artifact_id": "artifact::unknown-exp1-slots",
+                "source_block_id": "unknown-exp1-slots",
+                "status": "deferred-until-realization",
+            },
+        ],
         "action": {
             "kind": "realize-missing-blocks",
             "block_ids": ["unknown-exp1-slots"],
@@ -163,6 +170,18 @@ def test_pet_builder_plan_reports_execute_build_known_blocks_action() -> None:
                 ],
             },
         ],
+        "build_artifacts": [
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+                "source_block_id": "unknown-exp1-slots::known-divisor-1",
+                "status": "planned",
+            },
+            {
+                "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+                "source_block_id": "unknown-exp1-slots::known-divisor-2",
+                "status": "planned",
+            },
+        ],
         "action": {
             "kind": "execute-build-known-blocks",
             "block_ids": [
@@ -231,3 +250,36 @@ def test_pet_builder_plan_reports_script_steps_consistently() -> None:
             "unknown-exp1-slots::known-divisor-2",
         ],
     }
+
+
+def test_pet_builder_plan_reports_build_artifacts_consistently() -> None:
+    payload = {
+        "schema": "pet-support-realization-v0",
+        "input_n": 6,
+        "builder_readiness": "ready",
+        "builder_plan": {
+            "mode": "exact-realized",
+            "next_action": "build-known-blocks",
+            "missing_block_count": 0,
+            "ready_known_block_ids": [
+                "unknown-exp1-slots::known-divisor-1",
+                "unknown-exp1-slots::known-divisor-2",
+            ],
+            "missing_unknown_block_ids": [],
+        },
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["build_artifacts"] == [
+        {
+            "artifact_id": "artifact::unknown-exp1-slots::known-divisor-1",
+            "source_block_id": "unknown-exp1-slots::known-divisor-1",
+            "status": "planned",
+        },
+        {
+            "artifact_id": "artifact::unknown-exp1-slots::known-divisor-2",
+            "source_block_id": "unknown-exp1-slots::known-divisor-2",
+            "status": "planned",
+        },
+    ]
