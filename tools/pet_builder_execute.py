@@ -67,6 +67,63 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
         if artifact.get("status") != "planned"
     ]
 
+    script_steps = list(plan.get("script_steps", []))
+    if not script_steps:
+        planned_block_ids = [
+            str(artifact.get("source_block_id"))
+            for artifact in build_artifacts
+            if artifact.get("status") == "planned"
+        ]
+        missing_block_ids = [
+            str(artifact.get("source_block_id"))
+            for artifact in build_artifacts
+            if artifact.get("status") != "planned"
+        ]
+        if can_execute_now:
+            step = 1
+            for block_id in planned_block_ids:
+                script_steps.append(
+                    {
+                        "step": step,
+                        "command": "prepare-block",
+                        "block_id": block_id,
+                    }
+                )
+                step += 1
+                script_steps.append(
+                    {
+                        "step": step,
+                        "command": "build-block",
+                        "block_id": block_id,
+                    }
+                )
+                step += 1
+            script_steps.append(
+                {
+                    "step": step,
+                    "command": "finalize-build",
+                    "block_ids": planned_block_ids,
+                }
+            )
+        else:
+            script_steps = [
+                {
+                    "step": 1,
+                    "command": "inspect-missing-blocks",
+                    "block_ids": missing_block_ids,
+                },
+                {
+                    "step": 2,
+                    "command": "realize-blocks",
+                    "block_ids": missing_block_ids,
+                },
+                {
+                    "step": 3,
+                    "command": "retry-builder-plan",
+                    "block_ids": missing_block_ids,
+                },
+            ]
+
     if can_execute_now:
         for artifact in build_artifacts:
             if artifact.get("status") != "planned":
@@ -76,6 +133,15 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
         execution_status = "executed"
         built_block_ids = [
             str(artifact.get("source_block_id"))
+            for artifact in build_artifacts
+            if artifact.get("status") == "planned"
+        ]
+        built_components = [
+            {
+                "block_id": str(artifact.get("source_block_id")),
+                "artifact_id": str(artifact.get("artifact_id")),
+                "component_status": "built",
+            }
             for artifact in build_artifacts
             if artifact.get("status") == "planned"
         ]
@@ -93,6 +159,14 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
                 "artifact_ids": produced_artifact_ids,
                 "assembly_status": "assembled",
                 "assembled_from_artifacts": True,
+                "component_count": len(built_components),
+                "artifact_count": len(produced_artifact_ids),
+                "components": built_components,
+                "assembly_trace": [step.get("command") for step in script_steps],
+                "finalization": {
+                    "status": "finalized",
+                    "finalized_by": "finalize-build",
+                },
             },
         }
     else:
@@ -111,6 +185,14 @@ def _execute_plan(plan: dict[str, Any], output_dir_str: str) -> dict[str, Any]:
                 "artifact_ids": [],
                 "assembly_status": "deferred",
                 "assembled_from_artifacts": False,
+                "component_count": 0,
+                "artifact_count": 0,
+                "components": [],
+                "assembly_trace": [step.get("command") for step in script_steps],
+                "finalization": {
+                    "status": "deferred",
+                    "finalized_by": None,
+                },
             },
         }
 
