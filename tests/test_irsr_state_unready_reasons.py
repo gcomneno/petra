@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from pet.irsr_state import (
+    intersect_residual_state_slot_candidates,
     refine_residual_state_slot_candidates,
     residual_state_builder_unready_reasons,
 )
@@ -30,3 +31,11 @@ def test_residual_state_builder_unready_reasons_is_empty_for_ready_state():
     state = refine_residual_state_slot_candidates(state, "b", [113])
 
     assert residual_state_builder_unready_reasons(state) == []
+
+
+def test_residual_state_builder_unready_reasons_reports_contradiction_state():
+    state = _load_state()
+    state = refine_residual_state_slot_candidates(state, "a", [101, 103])
+    state = intersect_residual_state_slot_candidates(state, "a", [109])
+
+    assert residual_state_builder_unready_reasons(state) == ["state:contradiction"]
