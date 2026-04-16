@@ -218,6 +218,7 @@ def _peel_known_divisors_from_unknown_blocks(
     peeling_summary = {
         "peeled_block_count": len(peeled_known_blocks),
         "peeled_divisor_count": sum(int(block["slot_multiplicity"]) for block in peeled_known_blocks),
+        "peeled_known_block_ids": [str(block["block_id"]) for block in peeled_known_blocks],
         "fully_resolved_unknown_blocks": len(fully_peeled_block_ids),
         "fully_peeled_block_ids": fully_peeled_block_ids,
         "blocked_unknown_blocks": blocked_unknown_blocks,
