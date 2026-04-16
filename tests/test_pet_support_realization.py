@@ -80,6 +80,9 @@ def test_support_realization_reconstructs_exact_target_from_block_products() -> 
     report = _run_json_file_command(TOOL, payload)
 
     assert report["source_schema"] == "pet-support-realization-input-v0"
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 1234567890
+    assert report["resolved_fraction"] == "1/1234567890"
     assert report["reconstructed_target_n"] == 1234567890
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-block-products"
@@ -94,6 +97,9 @@ def test_support_realization_derives_blocks_from_partial_build_payload() -> None
     assert report["exponent_multiset"] == [2, 1, 1, 1, 1]
     assert report["phase2"]["status"] == "derived-from-factorization"
     assert report["unknown_block_count"] == 2
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] == 1234567890
+    assert report["resolved_fraction"] == "1/1234567890"
     assert report["reconstructed_target_n"] == 1234567890
     assert report["exact_target_match"] is True
     assert report["realization_status"] == "exact-from-derived-block-products"
@@ -133,6 +139,48 @@ def test_support_realization_detects_block_product_mismatch() -> None:
 
     report = _run_json_file_command(TOOL, payload)
 
+    assert report["resolved_product"] == 1
+    assert report["unresolved_product"] != 1234567890
+    assert report["resolved_fraction"] == "1/1234567890"
     assert report["reconstructed_target_n"] != 1234567890
     assert report["exact_target_match"] is False
     assert report["realization_status"] == "block-product-mismatch"
+
+
+def test_support_realization_reports_known_unknown_split_fraction() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 1234567890123,
+        "target_generator": 30,
+        "shape_signature": [[], [], []],
+        "slot_count": 3,
+        "exponent_multiset": [1, 1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [
+            {
+                "block_id": "known-exp1-slot",
+                "slot_exp": 1,
+                "slot_multiplicity": 1,
+                "target_product": 3,
+                "constraints": {"prime_only": True, "count": 1},
+            }
+        ],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 411522630041,
+                "constraints": {"prime_only": True, "count": 2},
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["resolved_product"] == 3
+    assert report["unresolved_product"] == 411522630041
+    assert report["resolved_fraction"] == "3/1234567890123"
+    assert report["reconstructed_target_n"] == 1234567890123
+    assert report["exact_target_match"] is True
+    assert report["realization_status"] == "exact-from-block-products"

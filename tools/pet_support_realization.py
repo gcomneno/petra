@@ -30,14 +30,60 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
     input_n = require_field(payload, "input_n")
     target_generator = require_field(payload, "target_generator")
     mode = require_field(payload, "mode")
+    factors = require_field(payload, "factors")
     phase1 = require_field(payload, "phase1")
     phase2 = require_field(payload, "phase2")
 
     phase1_status = require_field(phase1, "status")
     phase1_target_n = require_field(phase1, "target_n")
     phase1_steps = require_field(phase1, "steps")
-    phase2_status = require_field(phase2, "status")
     same_pet_shape = require_field(phase2, "same_pet_shape")
+
+    if not isinstance(factors, list):
+        raise SystemExit("factors must be a list")
+
+    grouped: dict[int, list[int]] = {}
+    for i, item in enumerate(factors):
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            raise SystemExit(f"factors[{i}] must be a [prime, exp] pair")
+        prime, exp = int(item[0]), int(item[1])
+        grouped.setdefault(exp, []).append(prime)
+
+    exponent_multiset = sorted(
+        [exp for exp, primes in grouped.items() for _ in primes],
+        reverse=True,
+    )
+
+    unknown_blocks = []
+    for exp in sorted(grouped.keys(), reverse=True):
+        primes = sorted(grouped[exp])
+        target_product = 1
+        for p in primes:
+            target_product *= p
+        label = f"exp{exp}-slot" if len(primes) == 1 else f"exp{exp}-slots"
+        unknown_blocks.append(
+            {
+                "block_id": label,
+                "slot_exp": exp,
+                "slot_multiplicity": len(primes),
+                "target_product": target_product,
+                "constraints": {
+                    "prime_only": True,
+                    "count": len(primes),
+                    "derived_from_full_factorization": True,
+                },
+            }
+        )
+
+    resolved_product = 1
+
+    unresolved_product = 1
+    for block in unknown_blocks:
+        unresolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    reconstructed_target_n = resolved_product * unresolved_product
+    exact_target_match = reconstructed_target_n == input_n
+    resolved_fraction = f"{resolved_product}/{input_n}"
 
     return {
         "schema": "pet-support-realization-v0",
@@ -45,27 +91,34 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "input_n": input_n,
         "target_generator": target_generator,
         "mode": mode,
+        "exponent_multiset": exponent_multiset,
         "phase1": {
             "status": phase1_status,
             "target_n": phase1_target_n,
             "steps": phase1_steps,
         },
         "phase2": {
-            "status": phase2_status,
+            "status": "derived-from-factorization",
             "same_pet_shape": same_pet_shape,
         },
         "known_block_count": 0,
-        "unknown_block_count": 0,
+        "unknown_block_count": len(unknown_blocks),
         "known_blocks": [],
-        "unknown_blocks": [],
-        "realization_status": "pending",
+        "unknown_blocks": unknown_blocks,
+        "resolved_product": resolved_product,
+        "unresolved_product": unresolved_product,
+        "resolved_fraction": resolved_fraction,
+        "reconstructed_target_n": reconstructed_target_n,
+        "exact_target_match": exact_target_match,
+        "realization_status": (
+            "exact-from-derived-block-products" if exact_target_match else "derived-block-product-mismatch"
+        ),
         "message": (
             "support realization is not implemented yet; "
-            "this stub only validates and re-exposes the partial build payload"
+            "this version derives exponent-class blocks from the provided factorization"
         ),
         "next_action": (
-            "future versions should consume generator + realization constraints "
-            "to attempt non-canonical support lift"
+            "future versions should consume cheaper build-down constraints when full factorization is not available"
         ),
     }
 
@@ -123,6 +176,18 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         require_field(block, "slot_multiplicity")
         require_field(block, "target_product")
 
+    resolved_product = 1
+    for block in known_blocks:
+        resolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    unresolved_product = 1
+    for block in unknown_blocks:
+        unresolved_product *= int(block["target_product"]) ** int(block["slot_exp"])
+
+    reconstructed_target_n = resolved_product * unresolved_product
+    exact_target_match = reconstructed_target_n == input_n
+    resolved_fraction = f"{resolved_product}/{input_n}"
+
     return {
         "schema": "pet-support-realization-v0",
         "source_schema": schema,
@@ -146,10 +211,15 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "unknown_block_count": len(unknown_blocks),
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
-        "realization_status": "pending",
+        "resolved_product": resolved_product,
+        "unresolved_product": unresolved_product,
+        "resolved_fraction": resolved_fraction,
+        "reconstructed_target_n": reconstructed_target_n,
+        "exact_target_match": exact_target_match,
+        "realization_status": "exact-from-block-products" if exact_target_match else "block-product-mismatch",
         "message": (
             "support realization is not implemented yet; "
-            "this stub validates and restates realization constraints"
+            "this version can only reconstruct the target from provided block products"
         ),
         "next_action": (
             "future versions should attempt support lift from the provided blocks "
@@ -228,6 +298,12 @@ def main() -> int:
             for block in report["unknown_blocks"]:
                 _print_block(block)
         print()
+        if "reconstructed_target_n" in report:
+            print(f"resolved_product = {report['resolved_product']}")
+            print(f"unresolved_product = {report['unresolved_product']}")
+            print(f"resolved_fraction = {report['resolved_fraction']}")
+            print(f"reconstructed_target_n = {report['reconstructed_target_n']}")
+            print(f"exact_target_match = {str(report['exact_target_match']).lower()}")
         print(f"realization_status = {report['realization_status']}")
         print(f"message = {report['message']}")
         print(f"next_action = {report['next_action']}")
