@@ -299,3 +299,50 @@ def test_pet_builder_e2e_from_real_cli_partial_build_payload(tmp_path: Path) -> 
     assert execution["final_build_output"]["build_status"] == "built"
     assert execution["final_build_output"]["built_pet_object"]["assembly_status"] == "assembled"
     assert execution["final_build_output"]["built_pet_object"]["component_count"] == 5
+
+
+def test_pet_builder_e2e_from_real_cli_partial_build_payload_for_1234567890123(tmp_path: Path) -> None:
+    import os
+
+    env = os.environ.copy()
+    src_path = str(Path.cwd() / "src")
+    env["PYTHONPATH"] = src_path + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+
+    cli_proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "build-from-int",
+            "1234567890123",
+            "--allow-non-canonical-support",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    cli_payload = json.loads(cli_proc.stdout)
+
+    assert cli_payload["schema"] == "pet-build-from-int-v2"
+    assert cli_payload["input_n"] == 1234567890123
+    assert cli_payload["build_status"] == "partial"
+
+    support = _run_support(cli_payload, tmp_path)
+    assert support["source_schema"] == "pet-build-from-int-v2"
+    assert support["builder_readiness"] == "ready"
+    assert support["unknown_block_count"] == 0
+    assert support["known_block_count"] >= 1
+
+    plan = _run_plan(support, tmp_path)
+    assert plan["builder_readiness"] == "ready"
+    assert plan["action"]["kind"] == "execute-build-known-blocks"
+    assert plan["can_execute_now"] is True
+
+    execution = _run_execute(plan, tmp_path)
+    assert execution["execution_status"] == "executed"
+    assert execution["materialized_artifact_count"] >= 1
+    assert execution["final_build_output"]["build_status"] == "built"
+    assert execution["final_build_output"]["built_pet_object"]["assembly_status"] == "assembled"
+    assert execution["final_build_output"]["built_pet_object"]["component_count"] >= 1
