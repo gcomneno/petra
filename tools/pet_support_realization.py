@@ -13,6 +13,14 @@ def require_field(obj: dict[str, Any], key: str) -> Any:
     return obj[key]
 
 
+PEELING_STATUS_VOCABULARY = [
+    "not-attempted",
+    "blocked",
+    "partially-peeled",
+    "fully-peeled",
+]
+
+
 def _evaluate_supported_constraints(block: dict[str, Any]) -> dict[str, Any]:
     out = dict(block)
     constraints = out.get("constraints")
@@ -180,10 +188,27 @@ def _peel_known_divisors_from_unknown_blocks(
                 )
             )
 
+    blocked_unknown_blocks = 0
+    not_attempted_unknown_blocks = 0
+    partially_peeled_unknown_blocks = 0
+
+    for block in updated_unknown_blocks:
+        peeling_status = block.get("peeling_status", {})
+        status = peeling_status.get("status")
+        if status == "blocked":
+            blocked_unknown_blocks += 1
+        elif status == "not-attempted":
+            not_attempted_unknown_blocks += 1
+        elif status == "partially-peeled":
+            partially_peeled_unknown_blocks += 1
+
     peeling_summary = {
         "peeled_block_count": len(peeled_known_blocks),
         "peeled_divisor_count": sum(int(block["slot_multiplicity"]) for block in peeled_known_blocks),
         "fully_resolved_unknown_blocks": original_unknown_block_count - len(updated_unknown_blocks),
+        "blocked_unknown_blocks": blocked_unknown_blocks,
+        "not_attempted_unknown_blocks": not_attempted_unknown_blocks,
+        "partially_peeled_unknown_blocks": partially_peeled_unknown_blocks,
     }
     return peeled_known_blocks, updated_unknown_blocks, peeling_summary
 
@@ -298,6 +323,7 @@ def _build_from_partial_build_payload(payload: dict[str, Any]) -> dict[str, Any]
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
         "peeling_summary": peeling_summary,
+        "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,
@@ -426,6 +452,7 @@ def _build_from_constraint_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "known_blocks": known_blocks,
         "unknown_blocks": unknown_blocks,
         "peeling_summary": peeling_summary,
+        "peeling_status_vocabulary": PEELING_STATUS_VOCABULARY,
         "resolved_product": resolved_product,
         "unresolved_product": unresolved_product,
         "resolved_fraction": resolved_fraction,

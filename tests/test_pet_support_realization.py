@@ -884,3 +884,36 @@ def test_support_realization_reports_extended_peeling_summary_for_full_resolutio
         "not_attempted_unknown_blocks": 0,
         "partially_peeled_unknown_blocks": 0,
     }
+
+
+def test_support_realization_exposes_stable_peeling_status_vocabulary() -> None:
+    payload = {
+        "schema": "pet-support-realization-input-v0",
+        "input_n": 6,
+        "target_generator": 6,
+        "shape_signature": [[], []],
+        "slot_count": 2,
+        "exponent_multiset": [1, 1],
+        "realization_goal": "exact-target",
+        "known_blocks": [],
+        "unknown_blocks": [
+            {
+                "block_id": "unknown-exp1-slots",
+                "slot_exp": 1,
+                "slot_multiplicity": 2,
+                "target_product": 6,
+                "constraints": {
+                    "known_divisors": [2, 3]
+                },
+            }
+        ],
+    }
+
+    report = _run_json_file_command(TOOL, payload)
+
+    assert report["peeling_status_vocabulary"] == [
+        "not-attempted",
+        "blocked",
+        "partially-peeled",
+        "fully-peeled",
+    ]
