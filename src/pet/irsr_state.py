@@ -354,6 +354,88 @@ def score_branchable_residual_state_slots(state: dict, scorer) -> list[dict]:
     return scored
 
 
+
+def build_branch_selection_context(state: dict) -> dict:
+    branchable_slots = residual_state_branchable_slots(state)
+    slot_data: dict[str, dict] = {}
+
+    for slot_name in branchable_slots:
+        slot_data[slot_name] = {
+            "candidate_count": score_by_candidate_count(state, slot_name),
+            "near_generator_hint_count": score_by_near_generator_hint_count(state, slot_name),
+            "block_shape_hint_count": score_by_block_shape_hint_count(state, slot_name),
+            "total_hint_count": score_by_total_hint_count(state, slot_name),
+        }
+
+    return {
+        "branchable_slots": branchable_slots,
+        "slot_data": slot_data,
+    }
+
+
+def context_score_by_candidate_count(context: dict, slot_name: str) -> int:
+    return context["slot_data"][slot_name]["candidate_count"]
+
+
+def context_score_by_total_hint_count(context: dict, slot_name: str) -> int:
+    return context["slot_data"][slot_name]["total_hint_count"]
+
+
+def context_score_by_hint_density(context: dict, slot_name: str) -> float:
+    slot = context["slot_data"][slot_name]
+    return slot["total_hint_count"] / slot["candidate_count"]
+
+
+def score_branchable_slots_with_context(state: dict, contextual_scorer) -> list[dict]:
+    context = build_branch_selection_context(state)
+    return [
+        {
+            "slot": slot_name,
+            "score": contextual_scorer(context, slot_name),
+        }
+        for slot_name in context["branchable_slots"]
+    ]
+
+
+def select_contextual_branchable_slot(
+    state: dict, contextual_scorer, maximize: bool = True
+) -> str | None:
+    scored = score_branchable_slots_with_context(state, contextual_scorer)
+    if not scored:
+        return None
+
+    best = scored[0]
+    for item in scored[1:]:
+        if maximize:
+            if item["score"] > best["score"]:
+                best = item
+        else:
+            if item["score"] < best["score"]:
+                best = item
+
+    return best["slot"]
+
+
+def make_contextual_branch_selector(
+    contextual_scorer,
+    maximize: bool = True,
+    selector_name: str | None = None,
+):
+    def _selector(state: dict) -> str | None:
+        return select_contextual_branchable_slot(
+            state,
+            contextual_scorer,
+            maximize=maximize,
+        )
+
+    _selector.__name__ = selector_name or (
+        "select_max_contextual_branchable_slot"
+        if maximize
+        else "select_min_contextual_branchable_slot"
+    )
+    return _selector
+
+
 def select_scored_branchable_slot(state: dict, scorer, maximize: bool = True) -> str | None:
     scored = score_branchable_residual_state_slots(state, scorer)
     if not scored:
