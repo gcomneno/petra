@@ -1,3 +1,4 @@
+import pytest
 import json
 from pathlib import Path
 
@@ -36,3 +37,14 @@ def test_refine_residual_state_slot_candidates_sets_payload_ready_when_all_slots
     assert refined["refinement"]["iteration"] == 2
     assert refined["refinement"]["status"] == "payload-ready"
     assert refined["refinement"]["payload_ready"] is True
+
+
+import pytest
+
+
+def test_refine_residual_state_slot_candidates_rejects_reinitializing_nonempty_slot():
+    state = _load_state()
+    state = refine_residual_state_slot_candidates(state, "a", [101, 103])
+
+    with pytest.raises(ValueError, match="slot already initialized"):
+        refine_residual_state_slot_candidates(state, "a", [107])

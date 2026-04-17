@@ -17,6 +17,8 @@ def refine_residual_state_slot_candidates(
 
     for slot in refined["slots"]:
         if slot.get("slot") == slot_name:
+            if slot["domain"]["candidates"]:
+                raise ValueError(f"slot already initialized: {slot_name}")
             slot["domain"]["candidates"] = normalized_candidates
             break
     else:
