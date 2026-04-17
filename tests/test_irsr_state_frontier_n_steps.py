@@ -1,3 +1,4 @@
+import pytest
 import json
 from pathlib import Path
 
@@ -89,3 +90,8 @@ def test_advance_residual_state_frontier_n_steps_preserves_idle_frontier_when_bo
     assert result["promoted"] == []
     assert result["stopped"] == []
     assert len(result["idle"]) == 2
+
+
+def test_advance_residual_state_frontier_n_steps_rejects_negative_steps():
+    with pytest.raises(ValueError, match="steps must be >= 0"):
+        advance_residual_state_frontier_n_steps([], -1)

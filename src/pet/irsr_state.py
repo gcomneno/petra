@@ -188,6 +188,9 @@ def build_next_residual_state_frontier(step_result: dict) -> list[dict]:
 
 
 def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> dict:
+    if steps < 0:
+        raise ValueError("steps must be >= 0")
+
     frontier = deepcopy(states)
     promoted: list[dict] = []
     stopped: list[dict] = []
