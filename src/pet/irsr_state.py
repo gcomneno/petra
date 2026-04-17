@@ -58,6 +58,18 @@ def residual_state_can_refine(state: dict) -> bool:
 
 
 
+def residual_state_can_branch_on_slot(state: dict, slot_name: str) -> bool:
+    if state.get("refinement", {}).get("status") == "contradiction":
+        return False
+
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            return len(slot["domain"]["candidates"]) > 1
+
+    raise KeyError(f"unknown slot: {slot_name}")
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
