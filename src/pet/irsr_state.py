@@ -72,6 +72,39 @@ def try_seed_residual_state_slot_candidates(
     raise KeyError(f"unknown slot: {slot_name}")
 
 
+def empty_residual_state_slots(state: dict) -> list[str]:
+    return [
+        slot["slot"]
+        for slot in state["slots"]
+        if not slot["domain"]["candidates"]
+    ]
+
+
+def make_seed_slot_policy(
+    slot_name: str, candidates: list[int], policy_name: str | None = None
+):
+    def _policy(state: dict):
+        return try_seed_residual_state_slot_candidates(state, slot_name, candidates)
+
+    _policy.__name__ = policy_name or f"seed_{slot_name}"
+    return _policy
+
+
+def make_seed_first_empty_slot_policy(
+    candidates: list[int], policy_name: str | None = None
+):
+    def _policy(state: dict):
+        empty_slots = empty_residual_state_slots(state)
+        if not empty_slots:
+            return None
+        return try_seed_residual_state_slot_candidates(
+            state, empty_slots[0], candidates
+        )
+
+    _policy.__name__ = policy_name or "seed_first_empty_slot"
+    return _policy
+
+
 def try_refine_open_residual_state_with_policy_chain(
     state: dict, refiners
 ) -> dict | None:
