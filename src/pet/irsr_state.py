@@ -178,6 +178,15 @@ def advance_residual_state_frontier_once(states: list[dict]) -> dict:
 
 
 
+def build_next_residual_state_frontier(step_result: dict) -> list[dict]:
+    return (
+        deepcopy(step_result["remaining"])
+        + deepcopy(step_result["emitted"])
+        + deepcopy(step_result["idle"])
+    )
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
