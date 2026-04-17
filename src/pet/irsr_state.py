@@ -139,6 +139,50 @@ def try_accept_refined_residual_state(before: dict, after: dict) -> dict | None:
     }
 
 
+def collect_acceptable_residual_state_refinements(
+    state: dict, refiners
+) -> list[dict]:
+    accepted: list[dict] = []
+
+    for refiner in refiners:
+        refined = refiner(deepcopy(state))
+        if refined is None:
+            continue
+
+        candidate = try_accept_refined_residual_state(state, refined)
+        if candidate is None:
+            continue
+
+        accepted.append(
+            {
+                "refiner": _policy_name(refiner),
+                "state": candidate["state"],
+                "progress": candidate["progress"],
+                "score": score_residual_state_progress(candidate["progress"]),
+            }
+        )
+
+    return accepted
+
+
+def rank_acceptable_residual_state_refinements(
+    state: dict, refiners
+) -> list[dict]:
+    accepted = collect_acceptable_residual_state_refinements(state, refiners)
+    return sorted(
+        accepted,
+        key=lambda item: item["score"],
+        reverse=True,
+    )
+
+
+def select_best_residual_state_refinement(
+    state: dict, refiners
+) -> dict | None:
+    ranked = rank_acceptable_residual_state_refinements(state, refiners)
+    return ranked[0] if ranked else None
+
+
 def make_seed_slot_policy(
     slot_name: str, candidates: list[int], policy_name: str | None = None
 ):
@@ -212,35 +256,13 @@ def make_intersect_first_branchable_slot_policy(
 def try_refine_open_residual_state_with_policy_chain(
     state: dict, refiners
 ) -> dict | None:
-    for refiner in refiners:
-        refined = refiner(deepcopy(state))
-        if refined is not None:
-            accepted = try_accept_refined_residual_state(state, refined)
-            if accepted is not None:
-                return {
-                    "refiner": _policy_name(refiner),
-                    "state": accepted["state"],
-                    "progress": accepted["progress"],
-                }
-
-    return None
+    return select_best_residual_state_refinement(state, refiners)
 
 
 def try_refine_branchable_residual_state_with_policy_chain(
     state: dict, refiners
 ) -> dict | None:
-    for refiner in refiners:
-        refined = refiner(deepcopy(state))
-        if refined is not None:
-            accepted = try_accept_refined_residual_state(state, refined)
-            if accepted is not None:
-                return {
-                    "refiner": _policy_name(refiner),
-                    "state": accepted["state"],
-                    "progress": accepted["progress"],
-                }
-
-    return None
+    return select_best_residual_state_refinement(state, refiners)
 
 
 
@@ -767,6 +789,7 @@ def advance_residual_state_once_with_prebranch_policy_chain(
                 "action": "refine",
                 "refiner": result["refiner"],
                 "state": result["state"],
+                "score": result["score"],
             }
         slot = branch_selector(state)
         return {
@@ -781,6 +804,7 @@ def advance_residual_state_once_with_prebranch_policy_chain(
             "action": "refine",
             "refiner": result["refiner"],
             "state": result["state"],
+            "score": result["score"],
         }
 
     return {
@@ -789,6 +813,18 @@ def advance_residual_state_once_with_prebranch_policy_chain(
     }
 
 
+def advance_residual_state_once_with_ranked_policy_chain(
+    state: dict,
+    open_refiners=(),
+    branch_refiners=(),
+    branch_selector=select_first_branchable_slot,
+) -> dict:
+    return advance_residual_state_once_with_prebranch_policy_chain(
+        state,
+        open_refiners=open_refiners,
+        branch_refiners=branch_refiners,
+        branch_selector=branch_selector,
+    )
 
 def advance_residual_state_frontier_once(states: list[dict]) -> dict:
     if not states:
@@ -1267,6 +1303,20 @@ def run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
     }
 
 
+def run_residual_state_frontier_until_quiescence_with_ranked_policy_chain(
+    states: list[dict],
+    max_steps: int,
+    open_refiners=(),
+    branch_refiners=(),
+    branch_selector=select_first_branchable_slot,
+) -> dict:
+    return run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
+        states,
+        max_steps,
+        open_refiners=open_refiners,
+        branch_refiners=branch_refiners,
+        branch_selector=branch_selector,
+    )
 
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
