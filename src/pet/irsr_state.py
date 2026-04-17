@@ -1,5 +1,61 @@
 from copy import deepcopy
 
+
+def make_hostile_semiprime_residual_state(n: int | str) -> dict:
+    return {
+        "target": {
+            "n": str(n),
+        },
+        "skeleton": {
+            "support_size": 2,
+            "exponent_profile": [1, 1],
+            "squarefree": True,
+            "normalized_order": "a<=b",
+        },
+        "slots": [
+            {
+                "slot": "a",
+                "kind": "prime",
+                "domain": {
+                    "type": "range_or_candidates",
+                    "min": None,
+                    "max": None,
+                    "candidates": [],
+                },
+                "pet_hints": {
+                    "near_generator": [],
+                    "block_shape": [],
+                },
+            },
+            {
+                "slot": "b",
+                "kind": "prime",
+                "domain": {
+                    "type": "range_or_candidates",
+                    "min": None,
+                    "max": None,
+                    "candidates": [],
+                },
+                "pet_hints": {
+                    "near_generator": [],
+                    "block_shape": [],
+                },
+            },
+        ],
+        "coupling": {
+            "product_constraint": "a*b=n",
+            "joint_pet_constraints": [],
+            "forbidden_patterns": [],
+        },
+        "refinement": {
+            "iteration": 0,
+            "status": "open",
+            "payload_ready": False,
+        },
+    }
+
+
+
 from pet.irsr_payload_slice import (
     payload_slice_builder_unusable_reasons,
     payload_slice_is_builder_usable,
