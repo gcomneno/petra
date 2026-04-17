@@ -80,6 +80,65 @@ def empty_residual_state_slots(state: dict) -> list[str]:
     ]
 
 
+def _total_residual_state_candidate_count(state: dict) -> int:
+    return sum(len(slot["domain"]["candidates"]) for slot in state["slots"])
+
+
+def summarize_residual_state_progress(before: dict, after: dict) -> dict:
+    return {
+        "candidate_count_delta": (
+            _total_residual_state_candidate_count(after)
+            - _total_residual_state_candidate_count(before)
+        ),
+        "empty_slot_count_delta": (
+            len(empty_residual_state_slots(after))
+            - len(empty_residual_state_slots(before))
+        ),
+        "branchable_slot_count_delta": (
+            len(residual_state_branchable_slots(after))
+            - len(residual_state_branchable_slots(before))
+        ),
+        "payload_ready_changed": (
+            (not before["refinement"]["payload_ready"])
+            and after["refinement"]["payload_ready"]
+        ),
+        "entered_contradiction": (
+            before["refinement"]["status"] != "contradiction"
+            and after["refinement"]["status"] == "contradiction"
+        ),
+    }
+
+
+def score_residual_state_progress(progress: dict) -> float:
+    if progress["entered_contradiction"]:
+        return float("-inf")
+
+    score = 0.0
+    score += -1.0 * progress["candidate_count_delta"]
+    score += -10.0 * progress["empty_slot_count_delta"]
+    score += -2.0 * progress["branchable_slot_count_delta"]
+    if progress["payload_ready_changed"]:
+        score += 100.0
+    return score
+
+
+def is_residual_state_progress_acceptable(progress: dict) -> bool:
+    if progress["entered_contradiction"]:
+        return False
+    return score_residual_state_progress(progress) > 0
+
+
+def try_accept_refined_residual_state(before: dict, after: dict) -> dict | None:
+    progress = summarize_residual_state_progress(before, after)
+    if not is_residual_state_progress_acceptable(progress):
+        return None
+
+    return {
+        "state": after,
+        "progress": progress,
+    }
+
+
 def make_seed_slot_policy(
     slot_name: str, candidates: list[int], policy_name: str | None = None
 ):
@@ -156,10 +215,13 @@ def try_refine_open_residual_state_with_policy_chain(
     for refiner in refiners:
         refined = refiner(deepcopy(state))
         if refined is not None:
-            return {
-                "refiner": _policy_name(refiner),
-                "state": refined,
-            }
+            accepted = try_accept_refined_residual_state(state, refined)
+            if accepted is not None:
+                return {
+                    "refiner": _policy_name(refiner),
+                    "state": accepted["state"],
+                    "progress": accepted["progress"],
+                }
 
     return None
 
@@ -170,10 +232,13 @@ def try_refine_branchable_residual_state_with_policy_chain(
     for refiner in refiners:
         refined = refiner(deepcopy(state))
         if refined is not None:
-            return {
-                "refiner": _policy_name(refiner),
-                "state": refined,
-            }
+            accepted = try_accept_refined_residual_state(state, refined)
+            if accepted is not None:
+                return {
+                    "refiner": _policy_name(refiner),
+                    "state": accepted["state"],
+                    "progress": accepted["progress"],
+                }
 
     return None
 
