@@ -105,7 +105,66 @@ def make_seed_first_empty_slot_policy(
     return _policy
 
 
+def try_intersect_residual_state_slot_candidates(
+    state: dict, slot_name: str, candidates: list[int]
+) -> dict | None:
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            current = list(slot["domain"]["candidates"])
+            if not current:
+                return None
+
+            narrowed = sorted(set(current).intersection(set(candidates)))
+            if narrowed == current:
+                return None
+
+            return intersect_residual_state_slot_candidates(state, slot_name, candidates)
+
+    raise KeyError(f"unknown slot: {slot_name}")
+
+
+def make_intersect_slot_policy(
+    slot_name: str, candidates: list[int], policy_name: str | None = None
+):
+    def _policy(state: dict):
+        return try_intersect_residual_state_slot_candidates(
+            state, slot_name, candidates
+        )
+
+    _policy.__name__ = policy_name or f"intersect_{slot_name}"
+    return _policy
+
+
+def make_intersect_first_branchable_slot_policy(
+    candidates: list[int], policy_name: str | None = None
+):
+    def _policy(state: dict):
+        slots = residual_state_branchable_slots(state)
+        if not slots:
+            return None
+        return try_intersect_residual_state_slot_candidates(
+            state, slots[0], candidates
+        )
+
+    _policy.__name__ = policy_name or "intersect_first_branchable_slot"
+    return _policy
+
+
 def try_refine_open_residual_state_with_policy_chain(
+    state: dict, refiners
+) -> dict | None:
+    for refiner in refiners:
+        refined = refiner(deepcopy(state))
+        if refined is not None:
+            return {
+                "refiner": _policy_name(refiner),
+                "state": refined,
+            }
+
+    return None
+
+
+def try_refine_branchable_residual_state_with_policy_chain(
     state: dict, refiners
 ) -> dict | None:
     for refiner in refiners:
@@ -314,6 +373,49 @@ def advance_residual_state_once_with_policy_chain(state: dict, refiners) -> dict
         "action": "refine",
         "refiner": result["refiner"],
         "state": result["state"],
+    }
+
+
+def advance_residual_state_once_with_prebranch_policy_chain(
+    state: dict, open_refiners=(), branch_refiners=()
+) -> dict:
+    classification = classify_residual_state(state)
+
+    if classification == "contradiction":
+        return {
+            "action": "stop",
+            "reason": "contradiction",
+        }
+
+    if classification == "payload-ready":
+        return {
+            "action": "promote",
+            "builder_payload": residual_state_to_builder_payload(state),
+        }
+
+    if classification == "branchable":
+        result = try_refine_branchable_residual_state_with_policy_chain(
+            state, branch_refiners
+        )
+        if result is not None:
+            return {
+                "action": "refine",
+                "refiner": result["refiner"],
+                "state": result["state"],
+            }
+        return advance_residual_state_once(state)
+
+    result = try_refine_open_residual_state_with_policy_chain(state, open_refiners)
+    if result is not None:
+        return {
+            "action": "refine",
+            "refiner": result["refiner"],
+            "state": result["state"],
+        }
+
+    return {
+        "action": "idle",
+        "reason": "open-without-branching-policy",
     }
 
 
@@ -658,6 +760,105 @@ def run_residual_state_frontier_until_quiescence_with_policy_chain(
             else:
                 raise ValueError(
                     f"unknown policy-chain action: {decision['action']}"
+                )
+
+        if not frontier:
+            termination_reason = "frontier-exhausted"
+            break
+
+        if steps_run >= max_steps:
+            termination_reason = "step-budget-exhausted"
+            break
+
+        if sweep_actions and all(action == "idle" for action in sweep_actions):
+            termination_reason = "quiescent-idle-frontier"
+            break
+    else:
+        termination_reason = (
+            "frontier-exhausted" if not frontier else "step-budget-exhausted"
+        )
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+        "trace": trace,
+        "termination_reason": termination_reason,
+    }
+
+
+def run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
+    states: list[dict], max_steps: int, open_refiners=(), branch_refiners=()
+) -> dict:
+    if max_steps < 0:
+        raise ValueError("max_steps must be >= 0")
+
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+    trace: list[dict] = []
+
+    steps_run = 0
+
+    while frontier and steps_run < max_steps:
+        sweep_len = len(frontier)
+        sweep_actions: list[str] = []
+
+        for _ in range(sweep_len):
+            if not frontier or steps_run >= max_steps:
+                break
+
+            current = deepcopy(frontier[0])
+            remaining = deepcopy(frontier[1:])
+            decision = advance_residual_state_once_with_prebranch_policy_chain(
+                current,
+                open_refiners=open_refiners,
+                branch_refiners=branch_refiners,
+            )
+            steps_run += 1
+
+            if decision["action"] == "branch":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "branch",
+                        "emitted": len(decision["branches"]),
+                    }
+                )
+                sweep_actions.append("branch")
+                frontier = remaining + deepcopy(decision["branches"])
+            elif decision["action"] == "promote":
+                trace.append({"step": steps_run, "action": "promote"})
+                sweep_actions.append("promote")
+                promoted.append(deepcopy(decision["builder_payload"]))
+                frontier = remaining
+            elif decision["action"] == "stop":
+                trace.append({"step": steps_run, "action": "stop"})
+                sweep_actions.append("stop")
+                stopped.append(current)
+                frontier = remaining
+            elif decision["action"] == "refine":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "refine",
+                        "refiner": decision["refiner"],
+                    }
+                )
+                sweep_actions.append("refine")
+                frontier = remaining + [deepcopy(decision["state"])]
+            elif decision["action"] == "idle":
+                trace.append({"step": steps_run, "action": "idle"})
+                sweep_actions.append("idle")
+                idle.append(current)
+                frontier = remaining + [current]
+            else:
+                raise ValueError(
+                    f"unknown prebranch policy action: {decision['action']}"
                 )
 
         if not frontier:
