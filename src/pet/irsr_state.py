@@ -1823,6 +1823,17 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
     portfolio_budget_state = _initialize_portfolio_budget_state(
         list(open_portfolios) + list(branch_portfolios)
     )
+    initial_portfolio_budget_state = deepcopy(portfolio_budget_state)
+
+    action_counts = {
+        "refine": 0,
+        "branch": 0,
+        "promote": 0,
+        "stop": 0,
+        "idle": 0,
+    }
+    portfolio_refine_counts: dict[str, int] = {}
+    refiner_refine_counts: dict[str, int] = {}
 
     steps_run = 0
 
@@ -1848,6 +1859,7 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
             steps_run += 1
 
             if decision["action"] == "branch":
+                action_counts["branch"] += 1
                 trace.append(
                     {
                         "step": steps_run,
@@ -1859,16 +1871,25 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
                 sweep_actions.append("branch")
                 frontier = remaining + deepcopy(decision["branches"])
             elif decision["action"] == "promote":
+                action_counts["promote"] += 1
                 trace.append({"step": steps_run, "action": "promote"})
                 sweep_actions.append("promote")
                 promoted.append(deepcopy(decision["builder_payload"]))
                 frontier = remaining
             elif decision["action"] == "stop":
+                action_counts["stop"] += 1
                 trace.append({"step": steps_run, "action": "stop"})
                 sweep_actions.append("stop")
                 stopped.append(current)
                 frontier = remaining
             elif decision["action"] == "refine":
+                action_counts["refine"] += 1
+                portfolio_refine_counts[decision["portfolio"]] = (
+                    portfolio_refine_counts.get(decision["portfolio"], 0) + 1
+                )
+                refiner_refine_counts[decision["refiner"]] = (
+                    refiner_refine_counts.get(decision["refiner"], 0) + 1
+                )
                 trace.append(
                     {
                         "step": steps_run,
@@ -1880,6 +1901,7 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
                 sweep_actions.append("refine")
                 frontier = remaining + [deepcopy(decision["state"])]
             elif decision["action"] == "idle":
+                action_counts["idle"] += 1
                 trace.append({"step": steps_run, "action": "idle"})
                 sweep_actions.append("idle")
                 idle.append(current)
@@ -1905,6 +1927,20 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
             "frontier-exhausted" if not frontier else "step-budget-exhausted"
         )
 
+    budget_consumed: dict[str, int] = {}
+    for portfolio_name, initial_budget in initial_portfolio_budget_state.items():
+        final_budget = portfolio_budget_state.get(portfolio_name)
+        if (
+            initial_budget is None
+            or final_budget is None
+            or not isinstance(initial_budget, int)
+            or not isinstance(final_budget, int)
+        ):
+            continue
+        consumed = initial_budget - final_budget
+        if consumed > 0:
+            budget_consumed[portfolio_name] = consumed
+
     return {
         "steps_run": steps_run,
         "frontier": frontier,
@@ -1915,5 +1951,11 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         "trace": trace,
         "termination_reason": termination_reason,
         "portfolio_budget_state": portfolio_budget_state,
+        "telemetry": {
+            "actions": action_counts,
+            "portfolio_refine_counts": portfolio_refine_counts,
+            "refiner_refine_counts": refiner_refine_counts,
+            "budget_consumed": budget_consumed,
+        },
     }
 
