@@ -195,6 +195,7 @@ def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> d
     promoted: list[dict] = []
     stopped: list[dict] = []
     idle: list[dict] = []
+    trace: list[dict] = []
 
     steps_run = 0
 
@@ -204,6 +205,21 @@ def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> d
 
         step_result = advance_residual_state_frontier_once(frontier)
         steps_run += step_result["consumed"]
+
+        if step_result["emitted"]:
+            trace.append(
+                {
+                    "step": steps_run,
+                    "action": "branch",
+                    "emitted": len(step_result["emitted"]),
+                }
+            )
+        elif step_result["promoted"]:
+            trace.append({"step": steps_run, "action": "promote"})
+        elif step_result["stopped"]:
+            trace.append({"step": steps_run, "action": "stop"})
+        elif step_result["idle"]:
+            trace.append({"step": steps_run, "action": "idle"})
 
         promoted.extend(deepcopy(step_result["promoted"]))
         stopped.extend(deepcopy(step_result["stopped"]))
@@ -217,6 +233,7 @@ def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> d
         "promoted": promoted,
         "stopped": stopped,
         "idle": idle,
+        "trace": trace,
     }
 
 
