@@ -260,10 +260,42 @@ def residual_state_branchable_slots(state: dict) -> list[str]:
     ]
 
 
+def branchable_residual_state_slot_widths(state: dict) -> list[dict]:
+    if state.get("refinement", {}).get("status") == "contradiction":
+        return []
 
-def choose_branch_slot(state: dict) -> str | None:
+    return [
+        {
+            "slot": slot["slot"],
+            "candidate_count": len(slot["domain"]["candidates"]),
+        }
+        for slot in state["slots"]
+        if len(slot["domain"]["candidates"]) > 1
+    ]
+
+
+def select_first_branchable_slot(state: dict) -> str | None:
     slots = residual_state_branchable_slots(state)
     return slots[0] if slots else None
+
+
+def select_min_width_branchable_slot(state: dict) -> str | None:
+    widths = branchable_residual_state_slot_widths(state)
+    if not widths:
+        return None
+    return min(widths, key=lambda item: item["candidate_count"])["slot"]
+
+
+def select_max_width_branchable_slot(state: dict) -> str | None:
+    widths = branchable_residual_state_slot_widths(state)
+    if not widths:
+        return None
+    return max(widths, key=lambda item: item["candidate_count"])["slot"]
+
+
+
+def choose_branch_slot(state: dict) -> str | None:
+    return select_first_branchable_slot(state)
 
 
 
@@ -272,6 +304,13 @@ def branch_residual_state(state: dict) -> list[dict]:
     if slot_name is None:
         return []
 
+    return branch_residual_state_on_slot_candidates(state, slot_name)
+
+
+def branch_residual_state_with_selector(state: dict, selector) -> list[dict]:
+    slot_name = selector(state)
+    if slot_name is None:
+        return []
     return branch_residual_state_on_slot_candidates(state, slot_name)
 
 
@@ -377,7 +416,10 @@ def advance_residual_state_once_with_policy_chain(state: dict, refiners) -> dict
 
 
 def advance_residual_state_once_with_prebranch_policy_chain(
-    state: dict, open_refiners=(), branch_refiners=()
+    state: dict,
+    open_refiners=(),
+    branch_refiners=(),
+    branch_selector=select_first_branchable_slot,
 ) -> dict:
     classification = classify_residual_state(state)
 
@@ -403,7 +445,12 @@ def advance_residual_state_once_with_prebranch_policy_chain(
                 "refiner": result["refiner"],
                 "state": result["state"],
             }
-        return advance_residual_state_once(state)
+        slot = branch_selector(state)
+        return {
+            "action": "branch",
+            "slot": slot,
+            "branches": branch_residual_state_with_selector(state, branch_selector),
+        }
 
     result = try_refine_open_residual_state_with_policy_chain(state, open_refiners)
     if result is not None:
@@ -638,6 +685,7 @@ def run_residual_state_frontier_until_quiescence_with_policy(
                     {
                         "step": steps_run,
                         "action": "branch",
+                        "slot": decision["slot"],
                         "emitted": len(decision["branches"]),
                     }
                 )
@@ -727,6 +775,7 @@ def run_residual_state_frontier_until_quiescence_with_policy_chain(
                     {
                         "step": steps_run,
                         "action": "branch",
+                        "slot": decision["slot"],
                         "emitted": len(decision["branches"]),
                     }
                 )
@@ -791,7 +840,11 @@ def run_residual_state_frontier_until_quiescence_with_policy_chain(
 
 
 def run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
-    states: list[dict], max_steps: int, open_refiners=(), branch_refiners=()
+    states: list[dict],
+    max_steps: int,
+    open_refiners=(),
+    branch_refiners=(),
+    branch_selector=select_first_branchable_slot,
 ) -> dict:
     if max_steps < 0:
         raise ValueError("max_steps must be >= 0")
@@ -818,6 +871,7 @@ def run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
                 current,
                 open_refiners=open_refiners,
                 branch_refiners=branch_refiners,
+                branch_selector=branch_selector,
             )
             steps_run += 1
 
@@ -826,6 +880,7 @@ def run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
                     {
                         "step": steps_run,
                         "action": "branch",
+                        "slot": decision["slot"],
                         "emitted": len(decision["branches"]),
                     }
                 )

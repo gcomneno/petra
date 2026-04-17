@@ -80,7 +80,7 @@ def test_prebranch_policy_chain_still_branches_when_no_branch_refiner_progresses
         "contradiction": 0,
     }
     assert result["trace"] == [
-        {"step": 1, "action": "branch", "emitted": 2},
+        {"step": 1, "action": "branch", "slot": "a", "emitted": 2},
         {"step": 2, "action": "idle"},
     ]
     assert result["termination_reason"] == "step-budget-exhausted"
