@@ -139,8 +139,65 @@ def try_accept_refined_residual_state(before: dict, after: dict) -> dict | None:
     }
 
 
+def _total_residual_state_hint_count(state: dict) -> int:
+    total = 0
+    for slot in state["slots"]:
+        total += len(slot["pet_hints"]["near_generator"])
+        total += len(slot["pet_hints"]["block_shape"])
+    return total
+
+
+def build_residual_state_progress_context(
+    before: dict,
+    after: dict,
+    progress: dict | None = None,
+) -> dict:
+    progress = progress or summarize_residual_state_progress(before, after)
+
+    return {
+        "progress": progress,
+        "before": {
+            "candidate_count": _total_residual_state_candidate_count(before),
+            "empty_slot_count": len(empty_residual_state_slots(before)),
+            "branchable_slot_count": len(residual_state_branchable_slots(before)),
+            "total_hint_count": _total_residual_state_hint_count(before),
+            "payload_ready": before["refinement"]["payload_ready"],
+            "status": before["refinement"]["status"],
+        },
+        "after": {
+            "candidate_count": _total_residual_state_candidate_count(after),
+            "empty_slot_count": len(empty_residual_state_slots(after)),
+            "branchable_slot_count": len(residual_state_branchable_slots(after)),
+            "total_hint_count": _total_residual_state_hint_count(after),
+            "payload_ready": after["refinement"]["payload_ready"],
+            "status": after["refinement"]["status"],
+        },
+    }
+
+
+def contextual_progress_score_by_structural_gain(context: dict) -> float:
+    return score_residual_state_progress(context["progress"])
+
+
+def contextual_progress_score_by_total_hint_delta(context: dict) -> int:
+    return context["after"]["total_hint_count"] - context["before"]["total_hint_count"]
+
+
+def make_weighted_progress_scorer(components, scorer_name: str | None = None):
+    def _scorer(context: dict) -> float:
+        total = 0.0
+        for scorer, weight in components:
+            total += scorer(context) * weight
+        return total
+
+    _scorer.__name__ = scorer_name or "weighted_progress_scorer"
+    return _scorer
+
+
 def collect_acceptable_residual_state_refinements(
-    state: dict, refiners
+    state: dict,
+    refiners,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> list[dict]:
     accepted: list[dict] = []
 
@@ -153,12 +210,19 @@ def collect_acceptable_residual_state_refinements(
         if candidate is None:
             continue
 
+        progress_context = build_residual_state_progress_context(
+            state,
+            candidate["state"],
+            candidate["progress"],
+        )
+
         accepted.append(
             {
                 "refiner": _policy_name(refiner),
                 "state": candidate["state"],
                 "progress": candidate["progress"],
-                "score": score_residual_state_progress(candidate["progress"]),
+                "progress_context": progress_context,
+                "score": progress_scorer(progress_context),
             }
         )
 
@@ -166,9 +230,15 @@ def collect_acceptable_residual_state_refinements(
 
 
 def rank_acceptable_residual_state_refinements(
-    state: dict, refiners
+    state: dict,
+    refiners,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> list[dict]:
-    accepted = collect_acceptable_residual_state_refinements(state, refiners)
+    accepted = collect_acceptable_residual_state_refinements(
+        state,
+        refiners,
+        progress_scorer=progress_scorer,
+    )
     return sorted(
         accepted,
         key=lambda item: item["score"],
@@ -177,9 +247,15 @@ def rank_acceptable_residual_state_refinements(
 
 
 def select_best_residual_state_refinement(
-    state: dict, refiners
+    state: dict,
+    refiners,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> dict | None:
-    ranked = rank_acceptable_residual_state_refinements(state, refiners)
+    ranked = rank_acceptable_residual_state_refinements(
+        state,
+        refiners,
+        progress_scorer=progress_scorer,
+    )
     return ranked[0] if ranked else None
 
 
@@ -254,15 +330,27 @@ def make_intersect_first_branchable_slot_policy(
 
 
 def try_refine_open_residual_state_with_policy_chain(
-    state: dict, refiners
+    state: dict,
+    refiners,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> dict | None:
-    return select_best_residual_state_refinement(state, refiners)
+    return select_best_residual_state_refinement(
+        state,
+        refiners,
+        progress_scorer=progress_scorer,
+    )
 
 
 def try_refine_branchable_residual_state_with_policy_chain(
-    state: dict, refiners
+    state: dict,
+    refiners,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> dict | None:
-    return select_best_residual_state_refinement(state, refiners)
+    return select_best_residual_state_refinement(
+        state,
+        refiners,
+        progress_scorer=progress_scorer,
+    )
 
 
 
@@ -818,13 +906,59 @@ def advance_residual_state_once_with_ranked_policy_chain(
     open_refiners=(),
     branch_refiners=(),
     branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> dict:
-    return advance_residual_state_once_with_prebranch_policy_chain(
+    classification = classify_residual_state(state)
+
+    if classification == "contradiction":
+        return {
+            "action": "stop",
+            "reason": "contradiction",
+        }
+
+    if classification == "payload-ready":
+        return {
+            "action": "promote",
+            "builder_payload": residual_state_to_builder_payload(state),
+        }
+
+    if classification == "branchable":
+        result = try_refine_branchable_residual_state_with_policy_chain(
+            state,
+            branch_refiners,
+            progress_scorer=progress_scorer,
+        )
+        if result is not None:
+            return {
+                "action": "refine",
+                "refiner": result["refiner"],
+                "state": result["state"],
+                "score": result["score"],
+            }
+        slot = branch_selector(state)
+        return {
+            "action": "branch",
+            "slot": slot,
+            "branches": branch_residual_state_with_selector(state, branch_selector),
+        }
+
+    result = try_refine_open_residual_state_with_policy_chain(
         state,
-        open_refiners=open_refiners,
-        branch_refiners=branch_refiners,
-        branch_selector=branch_selector,
+        open_refiners,
+        progress_scorer=progress_scorer,
     )
+    if result is not None:
+        return {
+            "action": "refine",
+            "refiner": result["refiner"],
+            "state": result["state"],
+            "score": result["score"],
+        }
+
+    return {
+        "action": "idle",
+        "reason": "open-without-branching-policy",
+    }
 
 def advance_residual_state_frontier_once(states: list[dict]) -> dict:
     if not states:
@@ -1309,14 +1443,105 @@ def run_residual_state_frontier_until_quiescence_with_ranked_policy_chain(
     open_refiners=(),
     branch_refiners=(),
     branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
 ) -> dict:
-    return run_residual_state_frontier_until_quiescence_with_prebranch_policy_chain(
-        states,
-        max_steps,
-        open_refiners=open_refiners,
-        branch_refiners=branch_refiners,
-        branch_selector=branch_selector,
-    )
+    if max_steps < 0:
+        raise ValueError("max_steps must be >= 0")
+
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+    trace: list[dict] = []
+
+    steps_run = 0
+
+    while frontier and steps_run < max_steps:
+        sweep_len = len(frontier)
+        sweep_actions: list[str] = []
+
+        for _ in range(sweep_len):
+            if not frontier or steps_run >= max_steps:
+                break
+
+            current = deepcopy(frontier[0])
+            remaining = deepcopy(frontier[1:])
+            decision = advance_residual_state_once_with_ranked_policy_chain(
+                current,
+                open_refiners=open_refiners,
+                branch_refiners=branch_refiners,
+                branch_selector=branch_selector,
+                progress_scorer=progress_scorer,
+            )
+            steps_run += 1
+
+            if decision["action"] == "branch":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "branch",
+                        "slot": decision["slot"],
+                        "emitted": len(decision["branches"]),
+                    }
+                )
+                sweep_actions.append("branch")
+                frontier = remaining + deepcopy(decision["branches"])
+            elif decision["action"] == "promote":
+                trace.append({"step": steps_run, "action": "promote"})
+                sweep_actions.append("promote")
+                promoted.append(deepcopy(decision["builder_payload"]))
+                frontier = remaining
+            elif decision["action"] == "stop":
+                trace.append({"step": steps_run, "action": "stop"})
+                sweep_actions.append("stop")
+                stopped.append(current)
+                frontier = remaining
+            elif decision["action"] == "refine":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "refine",
+                        "refiner": decision["refiner"],
+                    }
+                )
+                sweep_actions.append("refine")
+                frontier = remaining + [deepcopy(decision["state"])]
+            elif decision["action"] == "idle":
+                trace.append({"step": steps_run, "action": "idle"})
+                sweep_actions.append("idle")
+                idle.append(current)
+                frontier = remaining + [current]
+            else:
+                raise ValueError(
+                    f"unknown ranked policy action: {decision['action']}"
+                )
+
+        if not frontier:
+            termination_reason = "frontier-exhausted"
+            break
+
+        if steps_run >= max_steps:
+            termination_reason = "step-budget-exhausted"
+            break
+
+        if sweep_actions and all(action == "idle" for action in sweep_actions):
+            termination_reason = "quiescent-idle-frontier"
+            break
+    else:
+        termination_reason = (
+            "frontier-exhausted" if not frontier else "step-budget-exhausted"
+        )
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+        "trace": trace,
+        "termination_reason": termination_reason,
+    }
 
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
