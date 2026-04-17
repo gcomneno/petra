@@ -110,6 +110,8 @@ def intersect_residual_state_slot_candidates(
 def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> list[dict]:
     if state.get("refinement", {}).get("status") == "contradiction":
         raise ValueError("state is in contradiction")
+    if not residual_state_can_branch_on_slot(state, slot_name):
+        raise ValueError("slot is not branchable")
 
     branches: list[dict] = []
 
@@ -120,9 +122,6 @@ def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> lis
             break
     else:
         raise KeyError(f"unknown slot: {slot_name}")
-
-    if not slot_candidates:
-        return []
 
     for candidate in slot_candidates:
         branch = deepcopy(state)

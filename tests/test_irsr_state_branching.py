@@ -60,3 +60,18 @@ def test_branch_residual_state_on_slot_candidates_rejects_contradiction_state():
 
     with pytest.raises(ValueError, match="state is in contradiction"):
         branch_residual_state_on_slot_candidates(state, "a")
+
+
+def test_branch_residual_state_on_slot_candidates_rejects_empty_slot():
+    state = _load_state()
+
+    with pytest.raises(ValueError, match="slot is not branchable"):
+        branch_residual_state_on_slot_candidates(state, "a")
+
+
+def test_branch_residual_state_on_slot_candidates_rejects_singleton_slot():
+    state = _load_state()
+    state = refine_residual_state_slot_candidates(state, "a", [101])
+
+    with pytest.raises(ValueError, match="slot is not branchable"):
+        branch_residual_state_on_slot_candidates(state, "a")
