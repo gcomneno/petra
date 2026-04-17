@@ -373,6 +373,65 @@ def build_branch_selection_context(state: dict) -> dict:
     }
 
 
+
+def _count_slot_mentions(items, slot_name: str) -> int:
+    count = 0
+    for item in items:
+        tokens = (
+            str(item)
+            .replace("-", " ")
+            .replace("_", " ")
+            .replace(",", " ")
+            .replace(";", " ")
+            .replace(":", " ")
+            .replace("(", " ")
+            .replace(")", " ")
+            .split()
+        )
+        count += sum(1 for token in tokens if token == slot_name)
+    return count
+
+
+def build_coupling_aware_branch_selection_context(state: dict) -> dict:
+    branchable_slots = residual_state_branchable_slots(state)
+    joint = state["coupling"]["joint_pet_constraints"]
+    forbidden = state["coupling"]["forbidden_patterns"]
+
+    slot_data: dict[str, dict] = {}
+
+    for slot_name in branchable_slots:
+        joint_mentions = _count_slot_mentions(joint, slot_name)
+        forbidden_mentions = _count_slot_mentions(forbidden, slot_name)
+
+        slot_data[slot_name] = {
+            "candidate_count": score_by_candidate_count(state, slot_name),
+            "near_generator_hint_count": score_by_near_generator_hint_count(state, slot_name),
+            "block_shape_hint_count": score_by_block_shape_hint_count(state, slot_name),
+            "total_hint_count": score_by_total_hint_count(state, slot_name),
+            "joint_constraint_mentions": joint_mentions,
+            "forbidden_pattern_mentions": forbidden_mentions,
+            "coupling_mentions": joint_mentions + forbidden_mentions,
+        }
+
+    return {
+        "branchable_slots": branchable_slots,
+        "slot_data": slot_data,
+        "global": {
+            "joint_constraint_count": len(joint),
+            "forbidden_pattern_count": len(forbidden),
+        },
+    }
+
+
+def context_score_by_coupling_mentions(context: dict, slot_name: str) -> int:
+    return context["slot_data"][slot_name]["coupling_mentions"]
+
+
+def context_score_by_coupling_weighted_hint_density(context: dict, slot_name: str) -> float:
+    slot = context["slot_data"][slot_name]
+    return (slot["total_hint_count"] + slot["coupling_mentions"]) / slot["candidate_count"]
+
+
 def context_score_by_candidate_count(context: dict, slot_name: str) -> int:
     return context["slot_data"][slot_name]["candidate_count"]
 
@@ -386,8 +445,12 @@ def context_score_by_hint_density(context: dict, slot_name: str) -> float:
     return slot["total_hint_count"] / slot["candidate_count"]
 
 
-def score_branchable_slots_with_context(state: dict, contextual_scorer) -> list[dict]:
-    context = build_branch_selection_context(state)
+def score_branchable_slots_with_context(
+    state: dict,
+    contextual_scorer,
+    context_builder=build_branch_selection_context,
+) -> list[dict]:
+    context = context_builder(state)
     return [
         {
             "slot": slot_name,
@@ -398,9 +461,16 @@ def score_branchable_slots_with_context(state: dict, contextual_scorer) -> list[
 
 
 def select_contextual_branchable_slot(
-    state: dict, contextual_scorer, maximize: bool = True
+    state: dict,
+    contextual_scorer,
+    maximize: bool = True,
+    context_builder=build_branch_selection_context,
 ) -> str | None:
-    scored = score_branchable_slots_with_context(state, contextual_scorer)
+    scored = score_branchable_slots_with_context(
+        state,
+        contextual_scorer,
+        context_builder=context_builder,
+    )
     if not scored:
         return None
 
@@ -420,12 +490,14 @@ def make_contextual_branch_selector(
     contextual_scorer,
     maximize: bool = True,
     selector_name: str | None = None,
+    context_builder=build_branch_selection_context,
 ):
     def _selector(state: dict) -> str | None:
         return select_contextual_branchable_slot(
             state,
             contextual_scorer,
             maximize=maximize,
+            context_builder=context_builder,
         )
 
     _selector.__name__ = selector_name or (
