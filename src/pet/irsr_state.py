@@ -1616,16 +1616,64 @@ def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> lis
 
     return branches
 
+
+def _initialize_portfolio_budget_state(portfolios) -> dict:
+    state: dict[str, int | None] = {}
+
+    for portfolio in portfolios:
+        name = portfolio["name"]
+        budget = portfolio.get("budget", None)
+        state[name] = budget
+
+    return state
+
+
+def _portfolio_budget_available(
+    portfolio_name: str,
+    portfolio_budget_state: dict | None,
+) -> bool:
+    if portfolio_budget_state is None:
+        return True
+
+    remaining = portfolio_budget_state.get(portfolio_name, None)
+    return remaining is None or remaining > 0
+
+
+def _consume_portfolio_budget(
+    portfolio_name: str,
+    portfolio_budget_state: dict | None,
+) -> dict | None:
+    if portfolio_budget_state is None:
+        return None
+
+    updated = deepcopy(portfolio_budget_state)
+    remaining = updated.get(portfolio_name, None)
+
+    if remaining is None:
+        return updated
+
+    if remaining > 0:
+        updated[portfolio_name] = remaining - 1
+
+    return updated
+
+
+
 def collect_acceptable_residual_state_refinements_from_portfolios(
     state: dict,
     portfolios,
     progress_scorer=contextual_progress_score_by_structural_gain,
+    portfolio_budget_state: dict | None = None,
 ) -> list[dict]:
     accepted: list[dict] = []
 
     for portfolio in portfolios:
         portfolio_name = portfolio["name"]
         portfolio_priority = portfolio.get("priority", 0)
+
+        if not _portfolio_budget_available(portfolio_name, portfolio_budget_state):
+            continue
+
         refiners = portfolio["refiners"]
 
         for item in collect_acceptable_residual_state_refinements(
@@ -1648,11 +1696,13 @@ def rank_acceptable_residual_state_refinements_from_portfolios(
     state: dict,
     portfolios,
     progress_scorer=contextual_progress_score_by_structural_gain,
+    portfolio_budget_state: dict | None = None,
 ) -> list[dict]:
     accepted = collect_acceptable_residual_state_refinements_from_portfolios(
         state,
         portfolios,
         progress_scorer=progress_scorer,
+        portfolio_budget_state=portfolio_budget_state,
     )
     return sorted(
         accepted,
@@ -1665,11 +1715,13 @@ def select_best_residual_state_refinement_from_portfolios(
     state: dict,
     portfolios,
     progress_scorer=contextual_progress_score_by_structural_gain,
+    portfolio_budget_state: dict | None = None,
 ) -> dict | None:
     ranked = rank_acceptable_residual_state_refinements_from_portfolios(
         state,
         portfolios,
         progress_scorer=progress_scorer,
+        portfolio_budget_state=portfolio_budget_state,
     )
     return ranked[0] if ranked else None
 
@@ -1680,6 +1732,7 @@ def advance_residual_state_once_with_ranked_portfolios(
     branch_portfolios=(),
     branch_selector=select_first_branchable_slot,
     progress_scorer=contextual_progress_score_by_structural_gain,
+    portfolio_budget_state: dict | None = None,
 ) -> dict:
     classification = classify_residual_state(state)
 
@@ -1687,12 +1740,14 @@ def advance_residual_state_once_with_ranked_portfolios(
         return {
             "action": "stop",
             "reason": "contradiction",
+            "portfolio_budget_state": portfolio_budget_state,
         }
 
     if classification == "payload-ready":
         return {
             "action": "promote",
             "builder_payload": residual_state_to_builder_payload(state),
+            "portfolio_budget_state": portfolio_budget_state,
         }
 
     if classification == "branchable":
@@ -1700,6 +1755,7 @@ def advance_residual_state_once_with_ranked_portfolios(
             state,
             branch_portfolios,
             progress_scorer=progress_scorer,
+            portfolio_budget_state=portfolio_budget_state,
         )
         if result is not None:
             return {
@@ -1708,18 +1764,24 @@ def advance_residual_state_once_with_ranked_portfolios(
                 "refiner": result["refiner"],
                 "state": result["state"],
                 "score": result["score"],
+                "portfolio_budget_state": _consume_portfolio_budget(
+                    result["portfolio"],
+                    portfolio_budget_state,
+                ),
             }
         slot = branch_selector(state)
         return {
             "action": "branch",
             "slot": slot,
             "branches": branch_residual_state_with_selector(state, branch_selector),
+            "portfolio_budget_state": portfolio_budget_state,
         }
 
     result = select_best_residual_state_refinement_from_portfolios(
         state,
         open_portfolios,
         progress_scorer=progress_scorer,
+        portfolio_budget_state=portfolio_budget_state,
     )
     if result is not None:
         return {
@@ -1728,11 +1790,16 @@ def advance_residual_state_once_with_ranked_portfolios(
             "refiner": result["refiner"],
             "state": result["state"],
             "score": result["score"],
+            "portfolio_budget_state": _consume_portfolio_budget(
+                result["portfolio"],
+                portfolio_budget_state,
+            ),
         }
 
     return {
         "action": "idle",
         "reason": "open-without-branching-policy",
+        "portfolio_budget_state": portfolio_budget_state,
     }
 
 
@@ -1753,6 +1820,10 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
     idle: list[dict] = []
     trace: list[dict] = []
 
+    portfolio_budget_state = _initialize_portfolio_budget_state(
+        list(open_portfolios) + list(branch_portfolios)
+    )
+
     steps_run = 0
 
     while frontier and steps_run < max_steps:
@@ -1771,7 +1842,9 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
                 branch_portfolios=branch_portfolios,
                 branch_selector=branch_selector,
                 progress_scorer=progress_scorer,
+                portfolio_budget_state=portfolio_budget_state,
             )
+            portfolio_budget_state = decision["portfolio_budget_state"]
             steps_run += 1
 
             if decision["action"] == "branch":
@@ -1841,4 +1914,6 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         "idle": idle,
         "trace": trace,
         "termination_reason": termination_reason,
+        "portfolio_budget_state": portfolio_budget_state,
     }
+
