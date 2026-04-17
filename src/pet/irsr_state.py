@@ -1625,6 +1625,7 @@ def collect_acceptable_residual_state_refinements_from_portfolios(
 
     for portfolio in portfolios:
         portfolio_name = portfolio["name"]
+        portfolio_priority = portfolio.get("priority", 0)
         refiners = portfolio["refiners"]
 
         for item in collect_acceptable_residual_state_refinements(
@@ -1635,6 +1636,7 @@ def collect_acceptable_residual_state_refinements_from_portfolios(
             accepted.append(
                 {
                     "portfolio": portfolio_name,
+                    "portfolio_priority": portfolio_priority,
                     **item,
                 }
             )
@@ -1654,7 +1656,7 @@ def rank_acceptable_residual_state_refinements_from_portfolios(
     )
     return sorted(
         accepted,
-        key=lambda item: item["score"],
+        key=lambda item: (item["portfolio_priority"], item["score"]),
         reverse=True,
     )
 
