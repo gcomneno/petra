@@ -1615,3 +1615,228 @@ def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> lis
         branches.append(branch)
 
     return branches
+
+def collect_acceptable_residual_state_refinements_from_portfolios(
+    state: dict,
+    portfolios,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> list[dict]:
+    accepted: list[dict] = []
+
+    for portfolio in portfolios:
+        portfolio_name = portfolio["name"]
+        refiners = portfolio["refiners"]
+
+        for item in collect_acceptable_residual_state_refinements(
+            state,
+            refiners,
+            progress_scorer=progress_scorer,
+        ):
+            accepted.append(
+                {
+                    "portfolio": portfolio_name,
+                    **item,
+                }
+            )
+
+    return accepted
+
+
+def rank_acceptable_residual_state_refinements_from_portfolios(
+    state: dict,
+    portfolios,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> list[dict]:
+    accepted = collect_acceptable_residual_state_refinements_from_portfolios(
+        state,
+        portfolios,
+        progress_scorer=progress_scorer,
+    )
+    return sorted(
+        accepted,
+        key=lambda item: item["score"],
+        reverse=True,
+    )
+
+
+def select_best_residual_state_refinement_from_portfolios(
+    state: dict,
+    portfolios,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> dict | None:
+    ranked = rank_acceptable_residual_state_refinements_from_portfolios(
+        state,
+        portfolios,
+        progress_scorer=progress_scorer,
+    )
+    return ranked[0] if ranked else None
+
+
+def advance_residual_state_once_with_ranked_portfolios(
+    state: dict,
+    open_portfolios=(),
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> dict:
+    classification = classify_residual_state(state)
+
+    if classification == "contradiction":
+        return {
+            "action": "stop",
+            "reason": "contradiction",
+        }
+
+    if classification == "payload-ready":
+        return {
+            "action": "promote",
+            "builder_payload": residual_state_to_builder_payload(state),
+        }
+
+    if classification == "branchable":
+        result = select_best_residual_state_refinement_from_portfolios(
+            state,
+            branch_portfolios,
+            progress_scorer=progress_scorer,
+        )
+        if result is not None:
+            return {
+                "action": "refine",
+                "portfolio": result["portfolio"],
+                "refiner": result["refiner"],
+                "state": result["state"],
+                "score": result["score"],
+            }
+        slot = branch_selector(state)
+        return {
+            "action": "branch",
+            "slot": slot,
+            "branches": branch_residual_state_with_selector(state, branch_selector),
+        }
+
+    result = select_best_residual_state_refinement_from_portfolios(
+        state,
+        open_portfolios,
+        progress_scorer=progress_scorer,
+    )
+    if result is not None:
+        return {
+            "action": "refine",
+            "portfolio": result["portfolio"],
+            "refiner": result["refiner"],
+            "state": result["state"],
+            "score": result["score"],
+        }
+
+    return {
+        "action": "idle",
+        "reason": "open-without-branching-policy",
+    }
+
+
+def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
+    states: list[dict],
+    max_steps: int,
+    open_portfolios=(),
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> dict:
+    if max_steps < 0:
+        raise ValueError("max_steps must be >= 0")
+
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+    trace: list[dict] = []
+
+    steps_run = 0
+
+    while frontier and steps_run < max_steps:
+        sweep_len = len(frontier)
+        sweep_actions: list[str] = []
+
+        for _ in range(sweep_len):
+            if not frontier or steps_run >= max_steps:
+                break
+
+            current = deepcopy(frontier[0])
+            remaining = deepcopy(frontier[1:])
+            decision = advance_residual_state_once_with_ranked_portfolios(
+                current,
+                open_portfolios=open_portfolios,
+                branch_portfolios=branch_portfolios,
+                branch_selector=branch_selector,
+                progress_scorer=progress_scorer,
+            )
+            steps_run += 1
+
+            if decision["action"] == "branch":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "branch",
+                        "slot": decision["slot"],
+                        "emitted": len(decision["branches"]),
+                    }
+                )
+                sweep_actions.append("branch")
+                frontier = remaining + deepcopy(decision["branches"])
+            elif decision["action"] == "promote":
+                trace.append({"step": steps_run, "action": "promote"})
+                sweep_actions.append("promote")
+                promoted.append(deepcopy(decision["builder_payload"]))
+                frontier = remaining
+            elif decision["action"] == "stop":
+                trace.append({"step": steps_run, "action": "stop"})
+                sweep_actions.append("stop")
+                stopped.append(current)
+                frontier = remaining
+            elif decision["action"] == "refine":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "refine",
+                        "portfolio": decision["portfolio"],
+                        "refiner": decision["refiner"],
+                    }
+                )
+                sweep_actions.append("refine")
+                frontier = remaining + [deepcopy(decision["state"])]
+            elif decision["action"] == "idle":
+                trace.append({"step": steps_run, "action": "idle"})
+                sweep_actions.append("idle")
+                idle.append(current)
+                frontier = remaining + [current]
+            else:
+                raise ValueError(
+                    f"unknown ranked portfolio action: {decision['action']}"
+                )
+
+        if not frontier:
+            termination_reason = "frontier-exhausted"
+            break
+
+        if steps_run >= max_steps:
+            termination_reason = "step-budget-exhausted"
+            break
+
+        if sweep_actions and all(action == "idle" for action in sweep_actions):
+            termination_reason = "quiescent-idle-frontier"
+            break
+    else:
+        termination_reason = (
+            "frontier-exhausted" if not frontier else "step-budget-exhausted"
+        )
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+        "trace": trace,
+        "termination_reason": termination_reason,
+    }
