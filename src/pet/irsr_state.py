@@ -1,6 +1,11 @@
 from copy import deepcopy
 
 
+def _policy_name(refiner) -> str:
+    return getattr(refiner, "__name__", "<anonymous>")
+
+
+
 def make_hostile_semiprime_residual_state(n: int | str) -> dict:
     return {
         "target": {
@@ -65,6 +70,20 @@ def try_seed_residual_state_slot_candidates(
             return refine_residual_state_slot_candidates(state, slot_name, candidates)
 
     raise KeyError(f"unknown slot: {slot_name}")
+
+
+def try_refine_open_residual_state_with_policy_chain(
+    state: dict, refiners
+) -> dict | None:
+    for refiner in refiners:
+        refined = refiner(deepcopy(state))
+        if refined is not None:
+            return {
+                "refiner": _policy_name(refiner),
+                "state": refined,
+            }
+
+    return None
 
 
 
@@ -245,6 +264,23 @@ def advance_residual_state_once_with_policy(
     return {
         "action": "refine",
         "state": refined,
+    }
+
+
+def advance_residual_state_once_with_policy_chain(state: dict, refiners) -> dict:
+    base = advance_residual_state_once(state)
+
+    if base["action"] != "idle":
+        return base
+
+    result = try_refine_open_residual_state_with_policy_chain(state, refiners)
+    if result is None:
+        return base
+
+    return {
+        "action": "refine",
+        "refiner": result["refiner"],
+        "state": result["state"],
     }
 
 
@@ -493,6 +529,103 @@ def run_residual_state_frontier_until_quiescence_with_policy(
                 frontier = remaining + [current]
             else:
                 raise ValueError(f"unknown policy-aware action: {decision['action']}")
+
+        if not frontier:
+            termination_reason = "frontier-exhausted"
+            break
+
+        if steps_run >= max_steps:
+            termination_reason = "step-budget-exhausted"
+            break
+
+        if sweep_actions and all(action == "idle" for action in sweep_actions):
+            termination_reason = "quiescent-idle-frontier"
+            break
+    else:
+        termination_reason = (
+            "frontier-exhausted" if not frontier else "step-budget-exhausted"
+        )
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+        "trace": trace,
+        "termination_reason": termination_reason,
+    }
+
+
+def run_residual_state_frontier_until_quiescence_with_policy_chain(
+    states: list[dict], max_steps: int, refiners
+) -> dict:
+    if max_steps < 0:
+        raise ValueError("max_steps must be >= 0")
+
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+    trace: list[dict] = []
+
+    steps_run = 0
+
+    while frontier and steps_run < max_steps:
+        sweep_len = len(frontier)
+        sweep_actions: list[str] = []
+
+        for _ in range(sweep_len):
+            if not frontier or steps_run >= max_steps:
+                break
+
+            current = deepcopy(frontier[0])
+            remaining = deepcopy(frontier[1:])
+            decision = advance_residual_state_once_with_policy_chain(
+                current, refiners
+            )
+            steps_run += 1
+
+            if decision["action"] == "branch":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "branch",
+                        "emitted": len(decision["branches"]),
+                    }
+                )
+                sweep_actions.append("branch")
+                frontier = remaining + deepcopy(decision["branches"])
+            elif decision["action"] == "promote":
+                trace.append({"step": steps_run, "action": "promote"})
+                sweep_actions.append("promote")
+                promoted.append(deepcopy(decision["builder_payload"]))
+                frontier = remaining
+            elif decision["action"] == "stop":
+                trace.append({"step": steps_run, "action": "stop"})
+                sweep_actions.append("stop")
+                stopped.append(current)
+                frontier = remaining
+            elif decision["action"] == "refine":
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "refine",
+                        "refiner": decision["refiner"],
+                    }
+                )
+                sweep_actions.append("refine")
+                frontier = remaining + [deepcopy(decision["state"])]
+            elif decision["action"] == "idle":
+                trace.append({"step": steps_run, "action": "idle"})
+                sweep_actions.append("idle")
+                idle.append(current)
+                frontier = remaining + [current]
+            else:
+                raise ValueError(
+                    f"unknown policy-chain action: {decision['action']}"
+                )
 
         if not frontier:
             termination_reason = "frontier-exhausted"
