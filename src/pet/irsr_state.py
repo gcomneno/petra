@@ -92,3 +92,40 @@ def intersect_residual_state_slot_candidates(
     )
 
     return refined
+
+
+
+def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> list[dict]:
+    if state.get("refinement", {}).get("status") == "contradiction":
+        raise ValueError("state is in contradiction")
+
+    branches: list[dict] = []
+
+    slot_candidates = None
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            slot_candidates = list(slot["domain"]["candidates"])
+            break
+    else:
+        raise KeyError(f"unknown slot: {slot_name}")
+
+    if not slot_candidates:
+        return []
+
+    for candidate in slot_candidates:
+        branch = deepcopy(state)
+
+        for slot in branch["slots"]:
+            if slot.get("slot") == slot_name:
+                slot["domain"]["candidates"] = [candidate]
+                break
+
+        payload = residual_state_to_support_payload_slice(branch)
+        branch["refinement"]["payload_ready"] = payload_slice_is_builder_usable(payload)
+        branch["refinement"]["status"] = (
+            "payload-ready" if branch["refinement"]["payload_ready"] else "open"
+        )
+
+        branches.append(branch)
+
+    return branches
