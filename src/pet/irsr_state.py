@@ -97,6 +97,17 @@ def branch_residual_state(state: dict) -> list[dict]:
 
 
 
+def classify_residual_state(state: dict) -> str:
+    if state.get("refinement", {}).get("status") == "contradiction":
+        return "contradiction"
+    if residual_state_is_builder_ready(state):
+        return "payload-ready"
+    if residual_state_branchable_slots(state):
+        return "branchable"
+    return "open"
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
