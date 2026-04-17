@@ -50,6 +50,11 @@ def residual_state_is_builder_ready(state: dict) -> bool:
     return residual_state_builder_unready_reasons(state) == []
 
 
+def residual_state_can_refine(state: dict) -> bool:
+    status = state.get("refinement", {}).get("status")
+    return status not in {"payload-ready", "contradiction"}
+
+
 
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
