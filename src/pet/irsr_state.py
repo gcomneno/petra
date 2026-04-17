@@ -287,6 +287,59 @@ def score_by_candidate_count(state: dict, slot_name: str) -> int:
     raise KeyError(f"unknown slot: {slot_name}")
 
 
+
+def score_by_near_generator_hint_count(state: dict, slot_name: str) -> int:
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            return len(slot["pet_hints"]["near_generator"])
+    raise KeyError(f"unknown slot: {slot_name}")
+
+
+def score_by_block_shape_hint_count(state: dict, slot_name: str) -> int:
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            return len(slot["pet_hints"]["block_shape"])
+    raise KeyError(f"unknown slot: {slot_name}")
+
+
+def score_by_total_hint_count(state: dict, slot_name: str) -> int:
+    return (
+        score_by_near_generator_hint_count(state, slot_name)
+        + score_by_block_shape_hint_count(state, slot_name)
+    )
+
+
+def make_weighted_slot_scorer(components, scorer_name: str | None = None):
+    def _scorer(state: dict, slot_name: str) -> int:
+        total = 0
+        for scorer, weight in components:
+            total += scorer(state, slot_name) * weight
+        return total
+
+    _scorer.__name__ = scorer_name or "weighted_slot_scorer"
+    return _scorer
+
+
+def make_weighted_branch_selector(
+    components,
+    maximize: bool = True,
+    selector_name: str | None = None,
+):
+    scorer = make_weighted_slot_scorer(
+        components,
+        scorer_name=(selector_name or "weighted_slot_scorer"),
+    )
+    return make_scored_branch_selector(
+        scorer,
+        maximize=maximize,
+        selector_name=selector_name or (
+            "select_max_weighted_branchable_slot"
+            if maximize
+            else "select_min_weighted_branchable_slot"
+        ),
+    )
+
+
 def score_branchable_residual_state_slots(state: dict, scorer) -> list[dict]:
     scored: list[dict] = []
 
