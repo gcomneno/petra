@@ -266,6 +266,85 @@ def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> d
 
 
 
+def run_residual_state_frontier_until_quiescence(
+    states: list[dict], max_steps: int
+) -> dict:
+    if max_steps < 0:
+        raise ValueError("max_steps must be >= 0")
+
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+    trace: list[dict] = []
+
+    steps_run = 0
+
+    while frontier and steps_run < max_steps:
+        sweep_len = len(frontier)
+        sweep_actions: list[str] = []
+
+        for _ in range(sweep_len):
+            if not frontier or steps_run >= max_steps:
+                break
+
+            step_result = advance_residual_state_frontier_once(frontier)
+            steps_run += step_result["consumed"]
+
+            if step_result["emitted"]:
+                trace.append(
+                    {
+                        "step": steps_run,
+                        "action": "branch",
+                        "emitted": len(step_result["emitted"]),
+                    }
+                )
+                sweep_actions.append("branch")
+            elif step_result["promoted"]:
+                trace.append({"step": steps_run, "action": "promote"})
+                sweep_actions.append("promote")
+            elif step_result["stopped"]:
+                trace.append({"step": steps_run, "action": "stop"})
+                sweep_actions.append("stop")
+            elif step_result["idle"]:
+                trace.append({"step": steps_run, "action": "idle"})
+                sweep_actions.append("idle")
+
+            promoted.extend(deepcopy(step_result["promoted"]))
+            stopped.extend(deepcopy(step_result["stopped"]))
+            idle.extend(deepcopy(step_result["idle"]))
+
+            frontier = build_next_residual_state_frontier(step_result)
+
+        if not frontier:
+            termination_reason = "frontier-exhausted"
+            break
+
+        if steps_run >= max_steps:
+            termination_reason = "step-budget-exhausted"
+            break
+
+        if sweep_actions and all(action == "idle" for action in sweep_actions):
+            termination_reason = "quiescent-idle-frontier"
+            break
+    else:
+        termination_reason = (
+            "frontier-exhausted" if not frontier else "step-budget-exhausted"
+        )
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+        "trace": trace,
+        "termination_reason": termination_reason,
+    }
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
