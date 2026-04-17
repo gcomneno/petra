@@ -279,18 +279,69 @@ def select_first_branchable_slot(state: dict) -> str | None:
     return slots[0] if slots else None
 
 
-def select_min_width_branchable_slot(state: dict) -> str | None:
-    widths = branchable_residual_state_slot_widths(state)
-    if not widths:
+
+def score_by_candidate_count(state: dict, slot_name: str) -> int:
+    for slot in state["slots"]:
+        if slot.get("slot") == slot_name:
+            return len(slot["domain"]["candidates"])
+    raise KeyError(f"unknown slot: {slot_name}")
+
+
+def score_branchable_residual_state_slots(state: dict, scorer) -> list[dict]:
+    scored: list[dict] = []
+
+    for slot_name in residual_state_branchable_slots(state):
+        scored.append(
+            {
+                "slot": slot_name,
+                "score": scorer(state, slot_name),
+            }
+        )
+
+    return scored
+
+
+def select_scored_branchable_slot(state: dict, scorer, maximize: bool = True) -> str | None:
+    scored = score_branchable_residual_state_slots(state, scorer)
+    if not scored:
         return None
-    return min(widths, key=lambda item: item["candidate_count"])["slot"]
+
+    best = scored[0]
+    for item in scored[1:]:
+        if maximize:
+            if item["score"] > best["score"]:
+                best = item
+        else:
+            if item["score"] < best["score"]:
+                best = item
+
+    return best["slot"]
+
+
+def make_scored_branch_selector(scorer, maximize: bool = True, selector_name: str | None = None):
+    def _selector(state: dict) -> str | None:
+        return select_scored_branchable_slot(state, scorer, maximize=maximize)
+
+    _selector.__name__ = selector_name or (
+        "select_max_scored_branchable_slot" if maximize else "select_min_scored_branchable_slot"
+    )
+    return _selector
+
+
+def select_min_width_branchable_slot(state: dict) -> str | None:
+    return select_scored_branchable_slot(
+        state,
+        score_by_candidate_count,
+        maximize=False,
+    )
 
 
 def select_max_width_branchable_slot(state: dict) -> str | None:
-    widths = branchable_residual_state_slot_widths(state)
-    if not widths:
-        return None
-    return max(widths, key=lambda item: item["candidate_count"])["slot"]
+    return select_scored_branchable_slot(
+        state,
+        score_by_candidate_count,
+        maximize=True,
+    )
 
 
 
