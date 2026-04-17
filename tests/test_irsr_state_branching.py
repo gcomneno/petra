@@ -28,6 +28,7 @@ def test_branch_residual_state_on_slot_candidates_splits_single_slot_candidates(
         [103],
         [107],
     ]
+    assert all(branch["refinement"]["iteration"] == 2 for branch in branches)
     assert all(branch["slots"][1]["domain"]["candidates"] == [] for branch in branches)
 
 
@@ -39,6 +40,7 @@ def test_branch_residual_state_on_slot_candidates_recomputes_ready_status_per_br
     branches = branch_residual_state_on_slot_candidates(state, "a")
 
     assert len(branches) == 2
+    assert all(branch["refinement"]["iteration"] == 3 for branch in branches)
     assert all(branch["refinement"]["status"] == "payload-ready" for branch in branches)
     assert all(branch["refinement"]["payload_ready"] is True for branch in branches)
 

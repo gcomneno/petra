@@ -108,6 +108,36 @@ def classify_residual_state(state: dict) -> str:
 
 
 
+def advance_residual_state_once(state: dict) -> dict:
+    classification = classify_residual_state(state)
+
+    if classification == "contradiction":
+        return {
+            "action": "stop",
+            "reason": "contradiction",
+        }
+
+    if classification == "payload-ready":
+        return {
+            "action": "promote",
+            "builder_payload": residual_state_to_builder_payload(state),
+        }
+
+    if classification == "branchable":
+        slot = choose_branch_slot(state)
+        return {
+            "action": "branch",
+            "slot": slot,
+            "branches": branch_residual_state(state),
+        }
+
+    return {
+        "action": "idle",
+        "reason": "open-without-branching-policy",
+    }
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
@@ -168,6 +198,8 @@ def branch_residual_state_on_slot_candidates(state: dict, slot_name: str) -> lis
             if slot.get("slot") == slot_name:
                 slot["domain"]["candidates"] = [candidate]
                 break
+
+        branch["refinement"]["iteration"] += 1
 
         payload = residual_state_to_support_payload_slice(branch)
         branch["refinement"]["payload_ready"] = payload_slice_is_builder_usable(payload)
