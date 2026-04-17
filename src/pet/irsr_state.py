@@ -138,6 +138,46 @@ def advance_residual_state_once(state: dict) -> dict:
 
 
 
+def advance_residual_state_frontier_once(states: list[dict]) -> dict:
+    if not states:
+        return {
+            "consumed": 0,
+            "remaining": [],
+            "emitted": [],
+            "promoted": [],
+            "stopped": [],
+            "idle": [],
+        }
+
+    current = deepcopy(states[0])
+    remaining = deepcopy(states[1:])
+
+    result = {
+        "consumed": 1,
+        "remaining": remaining,
+        "emitted": [],
+        "promoted": [],
+        "stopped": [],
+        "idle": [],
+    }
+
+    decision = advance_residual_state_once(current)
+
+    if decision["action"] == "branch":
+        result["emitted"] = decision["branches"]
+    elif decision["action"] == "promote":
+        result["promoted"] = [decision["builder_payload"]]
+    elif decision["action"] == "stop":
+        result["stopped"] = [current]
+    elif decision["action"] == "idle":
+        result["idle"] = [current]
+    else:
+        raise ValueError(f"unknown frontier action: {decision['action']}")
+
+    return result
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
