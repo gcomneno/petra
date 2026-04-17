@@ -82,6 +82,12 @@ def residual_state_branchable_slots(state: dict) -> list[str]:
 
 
 
+def choose_branch_slot(state: dict) -> str | None:
+    slots = residual_state_branchable_slots(state)
+    return slots[0] if slots else None
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
