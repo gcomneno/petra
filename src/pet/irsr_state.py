@@ -187,6 +187,37 @@ def build_next_residual_state_frontier(step_result: dict) -> list[dict]:
 
 
 
+def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> dict:
+    frontier = deepcopy(states)
+    promoted: list[dict] = []
+    stopped: list[dict] = []
+    idle: list[dict] = []
+
+    steps_run = 0
+
+    for _ in range(steps):
+        if not frontier:
+            break
+
+        step_result = advance_residual_state_frontier_once(frontier)
+        steps_run += step_result["consumed"]
+
+        promoted.extend(deepcopy(step_result["promoted"]))
+        stopped.extend(deepcopy(step_result["stopped"]))
+        idle.extend(deepcopy(step_result["idle"]))
+
+        frontier = build_next_residual_state_frontier(step_result)
+
+    return {
+        "steps_run": steps_run,
+        "frontier": frontier,
+        "promoted": promoted,
+        "stopped": stopped,
+        "idle": idle,
+    }
+
+
+
 def intersect_residual_state_slot_candidates(
     state: dict, slot_name: str, candidates: list[int]
 ) -> dict:
