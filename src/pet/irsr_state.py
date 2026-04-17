@@ -108,6 +108,28 @@ def classify_residual_state(state: dict) -> str:
 
 
 
+def summarize_residual_state_frontier(states: list[dict]) -> dict:
+    summary = {
+        "total": len(states),
+        "open": 0,
+        "branchable": 0,
+        "payload_ready": 0,
+        "contradiction": 0,
+    }
+
+    for state in states:
+        classification = classify_residual_state(state)
+        if classification == "payload-ready":
+            summary["payload_ready"] += 1
+        elif classification in summary:
+            summary[classification] += 1
+        else:
+            raise ValueError(f"unknown state classification: {classification}")
+
+    return summary
+
+
+
 def advance_residual_state_once(state: dict) -> dict:
     classification = classify_residual_state(state)
 
@@ -227,13 +249,19 @@ def advance_residual_state_frontier_n_steps(states: list[dict], steps: int) -> d
 
         frontier = build_next_residual_state_frontier(step_result)
 
+    termination_reason = (
+        "frontier-exhausted" if not frontier else "step-budget-exhausted"
+    )
+
     return {
         "steps_run": steps_run,
         "frontier": frontier,
+        "frontier_summary": summarize_residual_state_frontier(frontier),
         "promoted": promoted,
         "stopped": stopped,
         "idle": idle,
         "trace": trace,
+        "termination_reason": termination_reason,
     }
 
 

@@ -1,6 +1,7 @@
-import pytest
 import json
 from pathlib import Path
+
+import pytest
 
 from pet.irsr_state import (
     advance_residual_state_frontier_n_steps,
@@ -22,11 +23,24 @@ def test_advance_residual_state_frontier_n_steps_keeps_empty_frontier_empty():
     assert result == {
         "steps_run": 0,
         "frontier": [],
+        "frontier_summary": {
+            "total": 0,
+            "open": 0,
+            "branchable": 0,
+            "payload_ready": 0,
+            "contradiction": 0,
+        },
         "promoted": [],
         "stopped": [],
         "idle": [],
         "trace": [],
+        "termination_reason": "frontier-exhausted",
     }
+
+
+def test_advance_residual_state_frontier_n_steps_rejects_negative_steps():
+    with pytest.raises(ValueError, match="steps must be >= 0"):
+        advance_residual_state_frontier_n_steps([], -1)
 
 
 def test_advance_residual_state_frontier_n_steps_accumulates_promoted_payloads():
@@ -38,11 +52,19 @@ def test_advance_residual_state_frontier_n_steps_accumulates_promoted_payloads()
 
     assert result["steps_run"] == 1
     assert result["frontier"] == []
+    assert result["frontier_summary"] == {
+        "total": 0,
+        "open": 0,
+        "branchable": 0,
+        "payload_ready": 0,
+        "contradiction": 0,
+    }
     assert result["stopped"] == []
     assert result["idle"] == []
     assert result["trace"] == [
         {"step": 1, "action": "promote"}
     ]
+    assert result["termination_reason"] == "frontier-exhausted"
     assert result["promoted"] == [
         {
             "support_size": 2,
@@ -66,11 +88,19 @@ def test_advance_residual_state_frontier_n_steps_promotes_ready_state_before_bra
 
     assert result["steps_run"] == 1
     assert result["frontier"] == []
+    assert result["frontier_summary"] == {
+        "total": 0,
+        "open": 0,
+        "branchable": 0,
+        "payload_ready": 0,
+        "contradiction": 0,
+    }
     assert result["stopped"] == []
     assert result["idle"] == []
     assert result["trace"] == [
         {"step": 1, "action": "promote"}
     ]
+    assert result["termination_reason"] == "frontier-exhausted"
     assert result["promoted"] == [
         {
             "support_size": 2,
@@ -94,6 +124,13 @@ def test_advance_residual_state_frontier_n_steps_preserves_idle_frontier_when_bo
     assert result["steps_run"] == 2
     assert len(result["frontier"]) == 1
     assert result["frontier"][0]["slots"][0]["domain"]["candidates"] == [101]
+    assert result["frontier_summary"] == {
+        "total": 1,
+        "open": 1,
+        "branchable": 0,
+        "payload_ready": 0,
+        "contradiction": 0,
+    }
     assert result["promoted"] == []
     assert result["stopped"] == []
     assert len(result["idle"]) == 2
@@ -101,14 +138,10 @@ def test_advance_residual_state_frontier_n_steps_preserves_idle_frontier_when_bo
         {"step": 1, "action": "idle"},
         {"step": 2, "action": "idle"},
     ]
+    assert result["termination_reason"] == "step-budget-exhausted"
 
 
-def test_advance_residual_state_frontier_n_steps_rejects_negative_steps():
-    with pytest.raises(ValueError, match="steps must be >= 0"):
-        advance_residual_state_frontier_n_steps([], -1)
-
-
-def test_advance_residual_state_frontier_n_steps_traces_branch_then_promote():
+def test_advance_residual_state_frontier_n_steps_traces_branch_then_idle():
     state = _load_state()
     state = refine_residual_state_slot_candidates(state, "a", [101, 103])
 
@@ -120,3 +153,4 @@ def test_advance_residual_state_frontier_n_steps_traces_branch_then_promote():
         {"step": 2, "action": "idle"},
         {"step": 3, "action": "idle"},
     ]
+    assert result["termination_reason"] == "step-budget-exhausted"
