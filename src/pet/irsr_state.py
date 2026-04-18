@@ -2641,6 +2641,11 @@ def format_hostile_semiprime_auto_seed_comparison_report(result: dict) -> str:
 
     lines.append(f"Best run: {best_run['name']}")
     lines.append(f"Final status: {best_run['final_status']}")
+    status_counts = ", ".join(
+        f"{status}={count}"
+        for status, count in sorted(summary["status_counts"].items())
+    )
+    lines.append(f"Status counts: {status_counts}")
     lines.append("Runs:")
 
     for run in result.get("runs", []):

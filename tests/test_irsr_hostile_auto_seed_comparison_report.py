@@ -76,6 +76,7 @@ def test_format_hostile_semiprime_auto_seed_comparison_report_emits_readable_mul
     assert "IRSR auto-seed comparison for n=10403" in report
     assert "Best run: sqrt-auto-r1" in report
     assert "Final status: built-exact-match" in report
+    assert "Status counts: built-exact-match=1, payloads-nonexact=1" in report
     assert "- sqrt-auto-r1 | radii=[1] | status=built-exact-match | payloads=1 | built=1 | exact=1" in report
     assert "- sqrt-auto-r4 | radii=[4] | status=payloads-nonexact | payloads=1 | built=0 | exact=0" in report
 
