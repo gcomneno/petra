@@ -1984,7 +1984,7 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
             "portfolio_family_refine_counts": portfolio_family_refine_counts,
             "refiner_refine_counts": refiner_refine_counts,
             "budget_consumed": budget_consumed,
-            "portfolio_family_budget_consumed": portfolio_family_budget_consumed,
+            "portfolio_family_budget_consumed": dict(portfolio_family_refine_counts),
         },
     }
 
@@ -2030,7 +2030,11 @@ def run_hostile_semiprime_irsr_to_payload_candidates(
         "payload_summary": summarize_irsr_payload_candidates(payload_candidates),
     }
 
-def irsr_payload_candidate_to_factorization_spec(payload: dict) -> dict | None:
+
+def irsr_payload_candidate_to_factorization_spec(
+    payload: dict,
+    expected_n: int | str | None = None,
+) -> dict | None:
     prime_slots = payload.get("prime_slots", [])
     exponents = payload.get("exponent_profile", [])
 
@@ -2038,12 +2042,18 @@ def irsr_payload_candidate_to_factorization_spec(payload: dict) -> dict | None:
         return None
 
     factors: list[list[int]] = []
+    product = 1
 
     for slot, exp in zip(prime_slots, exponents):
         candidates = slot.get("candidates", [])
         if len(candidates) != 1:
             return None
-        factors.append([candidates[0], exp])
+        prime = candidates[0]
+        factors.append([prime, exp])
+        product *= prime ** exp
+
+    if expected_n is not None and product != int(expected_n):
+        return None
 
     return {"factors": factors}
 
@@ -2051,8 +2061,13 @@ def irsr_payload_candidate_to_factorization_spec(payload: dict) -> dict | None:
 def run_builder_on_irsr_payload_candidate(
     payload: dict,
     output_dir,
+    *,
+    expected_n: int | str | None = None,
 ) -> dict:
-    factorization_spec = irsr_payload_candidate_to_factorization_spec(payload)
+    factorization_spec = irsr_payload_candidate_to_factorization_spec(
+        payload,
+        expected_n=expected_n,
+    )
     if factorization_spec is None:
         return {
             "build_attempted": False,
@@ -2079,7 +2094,6 @@ def run_builder_on_irsr_payload_candidate(
         "report": report,
     }
 
-
 def summarize_irsr_builder_results(build_results: list[dict]) -> dict:
     attempted = [item for item in build_results if item.get("build_attempted")]
     skipped = [item for item in build_results if not item.get("build_attempted")]
@@ -2102,6 +2116,7 @@ def summarize_irsr_builder_results(build_results: list[dict]) -> dict:
         "exact_match_count": len(exact),
         "skipped_count": len(skipped),
     }
+
 
 
 def run_hostile_semiprime_irsr_to_builder_results(
@@ -2129,7 +2144,11 @@ def run_hostile_semiprime_irsr_to_builder_results(
     for idx, payload in enumerate(pipeline["payload_candidates"]):
         candidate_dir = output_dir / f"candidate_{idx}"
         build_results.append(
-            run_builder_on_irsr_payload_candidate(payload, candidate_dir)
+            run_builder_on_irsr_payload_candidate(
+                payload,
+                candidate_dir,
+                expected_n=n,
+            )
         )
 
     result = {
@@ -2453,3 +2472,59 @@ def run_hostile_semiprime_irsr_with_multi_seed_portfolios(
         progress_scorer=progress_scorer,
         output_dir=output_dir,
     )
+
+def build_hostile_semiprime_auto_seed_portfolios(
+    n: int | str,
+    *,
+    sqrt_radii,
+    base_priority: int = 100,
+    priority_step: int = 10,
+    budget: int | None = None,
+) -> list[dict]:
+    portfolios: list[dict] = []
+
+    for idx, radius in enumerate(sqrt_radii):
+        portfolio = make_hostile_semiprime_sqrt_seed_portfolio(
+            n,
+            radius=radius,
+            name=f"sqrt-auto-r{radius}",
+            priority=base_priority - idx * priority_step,
+            budget=budget,
+        )
+        portfolio["family"] = "sqrt-auto"
+        portfolios.append(portfolio)
+
+    return portfolios
+
+
+def run_hostile_semiprime_irsr_with_auto_seed_portfolios(
+    n: int | str,
+    *,
+    sqrt_radii,
+    max_steps: int,
+    base_priority: int = 100,
+    priority_step: int = 10,
+    budget: int | None = None,
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    open_portfolios = build_hostile_semiprime_auto_seed_portfolios(
+        n,
+        sqrt_radii=sqrt_radii,
+        base_priority=base_priority,
+        priority_step=priority_step,
+        budget=budget,
+    )
+
+    return run_hostile_semiprime_irsr_to_builder_results(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+        output_dir=output_dir,
+    )
+
