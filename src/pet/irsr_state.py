@@ -2105,9 +2105,39 @@ def run_hostile_semiprime_irsr_to_builder_results(
             run_builder_on_irsr_payload_candidate(payload, candidate_dir)
         )
 
-    return {
+    result = {
         **pipeline,
         "build_results": build_results,
         "build_summary": summarize_irsr_builder_results(build_results),
     }
+    result["final_status"] = classify_irsr_builder_outcome(result)
+    return result
+
+def classify_irsr_builder_outcome(result: dict) -> str:
+    payload_candidates = result.get("payload_candidates", [])
+    build_results = result.get("build_results", [])
+
+    if not payload_candidates:
+        return "no-payload-candidates"
+
+    attempted = [item for item in build_results if item.get("build_attempted")]
+    if not attempted:
+        return "payloads-nonexact"
+
+    built = [
+        item
+        for item in attempted
+        if item["report"]["final_build_output"]["build_status"] == "built"
+    ]
+    exact = [
+        item
+        for item in attempted
+        if item["report"]["support_report"]["exact_target_match"] is True
+    ]
+
+    if exact:
+        return "built-exact-match"
+    if built:
+        return "built"
+    return "builder-attempted-no-build"
 
