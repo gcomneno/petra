@@ -217,3 +217,34 @@ def test_irsr_auto_seed_report_manual_radii_override_preset(tmp_path, capsys):
     assert payload["best_run"]["name"] == "sqrt-auto-r1"
     assert payload["best_run"]["final_status"] == "built-exact-match"
 
+def test_irsr_auto_seed_report_rejects_non_integer_radii(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--sqrt-radii",
+        "1,x",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --sqrt-radii must contain only integers" in captured.err
+
+
+def test_irsr_auto_seed_report_rejects_negative_radii(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--sqrt-radii",
+        "-1",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --sqrt-radii values must be >= 0" in captured.err
+
