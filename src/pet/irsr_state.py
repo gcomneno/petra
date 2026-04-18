@@ -2141,3 +2141,67 @@ def classify_irsr_builder_outcome(result: dict) -> str:
         return "built"
     return "builder-attempted-no-build"
 
+def make_slot_candidate_seed_refiner(
+    slot_name: str,
+    candidates: list[int],
+    policy_name: str | None = None,
+):
+    return make_seed_slot_policy(
+        slot_name,
+        candidates,
+        policy_name=policy_name or f"seed_{slot_name}_candidates",
+    )
+
+
+def make_hostile_semiprime_seed_portfolio(
+    slot_candidates: dict[str, list[int]],
+    *,
+    name: str = "hostile-semiprime-baseline",
+    priority: int = 100,
+    budget: int | None = None,
+) -> dict:
+    ordered_slots = sorted(slot_candidates)
+
+    return {
+        "name": name,
+        "priority": priority,
+        "budget": budget,
+        "refiners": [
+            make_slot_candidate_seed_refiner(slot_name, slot_candidates[slot_name])
+            for slot_name in ordered_slots
+        ],
+    }
+
+
+def run_hostile_semiprime_irsr_with_seed_candidates(
+    n: int | str,
+    slot_candidates: dict[str, list[int]],
+    *,
+    max_steps: int,
+    portfolio_name: str = "hostile-semiprime-baseline",
+    portfolio_priority: int = 100,
+    portfolio_budget: int | None = None,
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    open_portfolios = [
+        make_hostile_semiprime_seed_portfolio(
+            slot_candidates,
+            name=portfolio_name,
+            priority=portfolio_priority,
+            budget=portfolio_budget,
+        )
+    ]
+
+    return run_hostile_semiprime_irsr_to_builder_results(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+        output_dir=output_dir,
+    )
+
