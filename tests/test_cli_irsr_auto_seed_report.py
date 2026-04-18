@@ -182,3 +182,38 @@ def test_irsr_auto_seed_report_json_includes_preset_selection(tmp_path, capsys):
     assert payload["best_run"]["name"] == "sqrt-auto-r2-r4"
     assert payload["best_run"]["final_status"] == "payloads-nonexact"
 
+def test_irsr_auto_seed_report_manual_radii_override_preset(tmp_path, capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--preset",
+        "wide",
+        "--sqrt-radii",
+        "1",
+        "--sqrt-radii",
+        "4",
+        "--max-steps",
+        "5",
+        "--artifacts-dir",
+        str(tmp_path / "artifacts-manual-overrides-preset"),
+        "--json",
+    ])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 0
+    assert captured.err == ""
+    assert payload["selection"] == {
+        "mode": "manual",
+        "preset": None,
+        "sqrt_radii_specs": [[1], [4]],
+    }
+    assert [run["name"] for run in payload["runs"]] == [
+        "sqrt-auto-r1",
+        "sqrt-auto-r4",
+    ]
+    assert payload["best_run"]["name"] == "sqrt-auto-r1"
+    assert payload["best_run"]["final_status"] == "built-exact-match"
+
