@@ -2528,3 +2528,84 @@ def run_hostile_semiprime_irsr_with_auto_seed_portfolios(
         output_dir=output_dir,
     )
 
+def score_irsr_final_status(status: str) -> int:
+    ranking = {
+        "no-payload-candidates": 0,
+        "payloads-nonexact": 1,
+        "builder-attempted-no-build": 2,
+        "built": 3,
+        "built-exact-match": 4,
+    }
+    return ranking[status]
+
+
+def select_best_hostile_semiprime_auto_seed_run(runs: list[dict]) -> dict | None:
+    if not runs:
+        return None
+
+    return max(
+        runs,
+        key=lambda run: (
+            score_irsr_final_status(run["final_status"]),
+            run.get("build_summary", {}).get("exact_match_count", 0),
+            run.get("build_summary", {}).get("built_count", 0),
+            run.get("payload_summary", {}).get("payload_count", 0),
+        ),
+    )
+
+
+def compare_hostile_semiprime_auto_seed_runs(
+    n: int | str,
+    *,
+    auto_seed_specs,
+    max_steps: int,
+    base_priority: int = 100,
+    priority_step: int = 10,
+    budget: int | None = None,
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    runs: list[dict] = []
+
+    for idx, spec in enumerate(auto_seed_specs):
+        run_name = spec["name"]
+        run_output_dir = output_dir / f"run_{idx}_{run_name}"
+
+        run_result = run_hostile_semiprime_irsr_with_auto_seed_portfolios(
+            n,
+            sqrt_radii=spec["sqrt_radii"],
+            max_steps=max_steps,
+            base_priority=spec.get("base_priority", base_priority),
+            priority_step=spec.get("priority_step", priority_step),
+            budget=spec.get("budget", budget),
+            branch_portfolios=branch_portfolios,
+            branch_selector=branch_selector,
+            progress_scorer=progress_scorer,
+            output_dir=run_output_dir,
+        )
+
+        runs.append(
+            {
+                "name": run_name,
+                "sqrt_radii": list(spec["sqrt_radii"]),
+                "final_status": run_result["final_status"],
+                "payload_summary": run_result["payload_summary"],
+                "build_summary": run_result["build_summary"],
+                "run": run_result["run"],
+            }
+        )
+
+    return {
+        "input": {
+            "n": str(n),
+            "kind": "hostile-semiprime",
+        },
+        "runs": runs,
+        "best_run": select_best_hostile_semiprime_auto_seed_run(runs),
+    }
+
