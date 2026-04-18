@@ -1,3 +1,4 @@
+from math import isqrt
 from pet.core import is_prime
 import json
 from copy import deepcopy
@@ -2271,6 +2272,75 @@ def run_hostile_semiprime_irsr_with_seed_ranges(
     open_portfolios = [
         make_hostile_semiprime_range_seed_portfolio(
             slot_ranges,
+            name=portfolio_name,
+            priority=portfolio_priority,
+            budget=portfolio_budget,
+        )
+    ]
+
+    return run_hostile_semiprime_irsr_to_builder_results(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+        output_dir=output_dir,
+    )
+
+def derive_hostile_semiprime_sqrt_slot_ranges(
+    n: int | str,
+    *,
+    radius: int,
+) -> dict[str, dict[str, int]]:
+    n_int = int(n)
+    root = isqrt(n_int)
+
+    return {
+        "a": {
+            "min": max(2, root - radius),
+            "max": root,
+        },
+        "b": {
+            "min": root + 1,
+            "max": root + radius + 1,
+        },
+    }
+
+
+def make_hostile_semiprime_sqrt_seed_portfolio(
+    n: int | str,
+    *,
+    radius: int,
+    name: str = "hostile-semiprime-sqrt-baseline",
+    priority: int = 100,
+    budget: int | None = None,
+) -> dict:
+    return make_hostile_semiprime_range_seed_portfolio(
+        derive_hostile_semiprime_sqrt_slot_ranges(n, radius=radius),
+        name=name,
+        priority=priority,
+        budget=budget,
+    )
+
+
+def run_hostile_semiprime_irsr_with_sqrt_seed_baseline(
+    n: int | str,
+    *,
+    radius: int,
+    max_steps: int,
+    portfolio_name: str = "hostile-semiprime-sqrt-baseline",
+    portfolio_priority: int = 100,
+    portfolio_budget: int | None = None,
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    open_portfolios = [
+        make_hostile_semiprime_sqrt_seed_portfolio(
+            n,
+            radius=radius,
             name=portfolio_name,
             priority=portfolio_priority,
             budget=portfolio_budget,
