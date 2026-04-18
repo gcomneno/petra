@@ -279,3 +279,34 @@ def test_irsr_auto_seed_report_rejects_negative_max_steps(capsys):
     assert captured.out == ""
     assert "ERROR: --max-steps must be >= 1" in captured.err
 
+def test_irsr_auto_seed_report_rejects_empty_radii_item_between_commas(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--sqrt-radii",
+        "1,,4",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --sqrt-radii must be a comma-separated list of integers" in captured.err
+
+
+def test_irsr_auto_seed_report_rejects_only_empty_radii_items(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--sqrt-radii",
+        ",",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --sqrt-radii must be a comma-separated list of integers" in captured.err
+
