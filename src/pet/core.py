@@ -300,6 +300,42 @@ def shape_generator(n: int) -> int:
     return decode(minimal_shape_representative(encode(n)))
 
 
+def pet_from_factorization(factors: List[Tuple[int, int]]) -> PET:
+    """Build a canonical PET directly from a sorted factor specification.
+
+    This avoids factoring the decoded target integer again.
+    """
+    if not factors:
+        raise ValueError("factor spec cannot be empty")
+
+    tree: PET = []
+    last_prime = 1
+
+    for prime, exp in factors:
+        if not isinstance(prime, int) or not isinstance(exp, int):
+            raise TypeError("factor spec entries must be integer pairs")
+        if prime < 2:
+            raise ValueError("prime must be >= 2")
+        if exp < 1:
+            raise ValueError("exponent must be >= 1")
+        if not is_prime(prime):
+            raise ValueError(f"{prime} is not prime")
+        if prime <= last_prime:
+            raise ValueError("primes must be strictly increasing")
+        last_prime = prime
+
+        exp_repr: PETExp = None if exp == 1 else encode(exp)
+        tree.append((prime, exp_repr))
+
+    validate(tree)
+    return tree
+
+
+def shape_generator_from_factorization(factors: List[Tuple[int, int]]) -> int:
+    """Return the minimal-shape generator directly from a factor specification."""
+    return decode(minimal_shape_representative(pet_from_factorization(factors)))
+
+
 def metrics_dict(tree: PET) -> dict[str, Any]:
     validate(tree)
     return {

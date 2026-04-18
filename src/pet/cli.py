@@ -7,7 +7,7 @@ import heapq
 import pathlib
 import subprocess
 import sys
-from collections import deque
+from collections import Counter, deque
 
 from .atlas import atlas, draw_shape, extract_shape, print_atlas
 from .algebra import distance, structural_distance
@@ -19,6 +19,7 @@ from .core import (
     minimal_shape_representative,
     prime_factorization,
     shape_generator,
+    shape_generator_from_factorization,
     shape_signature_dict,
     validate,
 )
@@ -616,19 +617,35 @@ def _build_from_int_report(n: int) -> dict:
         raise ValueError("build-from-int expects an integer >= 2")
 
     factors = tuple(prime_factorization(n))
-    canonical = _parse_factor_spec_file  # silence lint-style reuse marker
-
-    support = set()
-    if factors[0][0] != 2:
+    if not factors or factors[0][0] != 2:
         raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
 
-    for prime, _exp in factors:
-        expected = _next_new_prime(support)
-        if prime != expected:
-            raise ValueError(
-                f"integer factor support is not NEW-canonical: expected next prime {expected}, got {prime}"
-            )
-        support.add(prime)
+    support = [prime for prime, _ in factors]
+    expected_support = []
+    candidate = 2
+    while len(expected_support) < len(support):
+        is_prime = True
+        if candidate < 2:
+            is_prime = False
+        elif candidate % 2 == 0:
+            is_prime = candidate == 2
+        else:
+            d = 3
+            while d * d <= candidate:
+                if candidate % d == 0:
+                    is_prime = False
+                    break
+                d += 2
+        if is_prime:
+            expected_support.append(candidate)
+        candidate += 1
+
+    if support != expected_support:
+        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
+
+    exponents = [exp for _, exp in factors]
+    if any(left < right for left, right in zip(exponents, exponents[1:])):
+        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
 
     report = _build_from_factors_report(factors)
     report["input_n"] = n
@@ -647,40 +664,38 @@ def _build_from_factors_report(factors: tuple[tuple[int, int], ...]) -> dict:
 
     n = 2
     path = []
+    current_exp: dict[int, int] = {2: 1}
 
     for i, (prime, target_exp) in enumerate(factors):
-        if i > 0:
-            new = _explain_moves(n)["new"]
-            if new is None or new["prime"] != prime:
-                raise RuntimeError(f"cannot introduce prime {prime} from n={n}")
+        if i == 0:
+            if prime != 2:
+                raise RuntimeError(f"expected first prime 2, got {prime}")
+        else:
+            prev_n = n
+            n *= prime
+            current_exp[prime] = 1
+            path.append(
+                {
+                    "source_n": prev_n,
+                    "label": f"NEW(p={prime})",
+                    "target_n": n,
+                    "target_generator": None,
+                }
+            )
 
-            move = {
-                "source_n": n,
-                "label": f"NEW(p={new['prime']})",
-                "target_n": new["target_n"],
-                "target_generator": new["target_generator"],
-            }
-            path.append(move)
-            n = move["target_n"]
-
-        while _factor_exp(n, prime) < target_exp:
-            rows = [
-                row
-                for row in _explain_moves(n)["inc"]
-                if row["representative_prime"] == prime or prime in row.get("primes", [])
-            ]
-            if not rows:
-                raise RuntimeError(f"cannot increase exponent of prime {prime} from n={n}")
-
-            row = max(rows, key=lambda r: (r["exponent"], r["target_n"]))
-            move = {
-                "source_n": n,
-                "label": f"INC(p={row['representative_prime']},e={row['exponent']})",
-                "target_n": row["target_n"],
-                "target_generator": row["target_generator"],
-            }
-            path.append(move)
-            n = move["target_n"]
+        while current_exp[prime] < target_exp:
+            prev_n = n
+            prev_exp = current_exp[prime]
+            n *= prime
+            current_exp[prime] = prev_exp + 1
+            path.append(
+                {
+                    "source_n": prev_n,
+                    "label": f"INC(p={prime},e={prev_exp})",
+                    "target_n": n,
+                    "target_generator": None,
+                }
+            )
 
     if n != target_n:
         raise RuntimeError(f"builder ended at {n}, expected {target_n}")
@@ -689,11 +704,10 @@ def _build_from_factors_report(factors: tuple[tuple[int, int], ...]) -> dict:
         "start_n": 2,
         "factors": factors,
         "target_n": target_n,
-        "target_generator": shape_signature_dict(target_n)["generator"],
+        "target_generator": shape_generator_from_factorization(list(factors)),
         "steps": len(path),
         "path": path,
     }
-
 
 def _factor_exp_map(n: int) -> dict[int, int]:
     return dict(prime_factorization(n))
@@ -1050,6 +1064,106 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_xmetrics.add_argument("n", type=int, metavar="N")
     p_xmetrics.add_argument("--json", action="store_true")
+
+    # irsr-auto-seed-report
+    p_irsr_auto_seed_report = subparsers.add_parser(
+        "irsr-auto-seed-report",
+        help="compare hostile semiprime auto-seed ladders and print a readable report",
+    )
+    p_irsr_auto_seed_report.add_argument("n", type=int, metavar="N")
+    p_irsr_auto_seed_report.add_argument(
+        "--preset",
+        choices=("standard", "wide"),
+        default="standard",
+        help="predefined ladder preset to use when --sqrt-radii is not provided (default: standard)",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--sqrt-radii",
+        action="append",
+        help="comma-separated radii for one ladder; repeat to compare multiple ladders (overrides --preset)",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--max-steps",
+        type=int,
+        default=5,
+        help="maximum IRSR steps per ladder run (default: 5)",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_irsr_auto_seed_report_out",
+        help="directory for materialized builder artifacts",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--output",
+        help="write the rendered report or JSON payload to FILE instead of stdout",
+    )
+    p_irsr_auto_seed_report.add_argument("--json", action="store_true")
+    p_irsr_auto_seed_report.add_argument(
+        "--compact-json",
+        action="store_true",
+        help="with --json, omit raw per-run IRSR traces and keep only compact summaries",
+    )
+
+    # irsr-auto-seed-batch
+    p_irsr_auto_seed_batch = subparsers.add_parser(
+        "irsr-auto-seed-batch",
+        help="write compact JSONL auto-seed comparison records for hostile semiprime inputs",
+    )
+    p_irsr_auto_seed_batch.add_argument("start", type=int, metavar="START")
+    p_irsr_auto_seed_batch.add_argument("end", type=int, metavar="END")
+    p_irsr_auto_seed_batch.add_argument(
+        "--jsonl",
+        required=True,
+        help="write compact JSONL comparison records to FILE",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--preset",
+        choices=("standard", "wide"),
+        default="standard",
+        help="predefined ladder preset to use when --sqrt-radii is not provided (default: standard)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--sqrt-radii",
+        action="append",
+        help="comma-separated radii for one ladder; repeat to compare multiple ladders (overrides --preset)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--max-steps",
+        type=int,
+        default=5,
+        help="maximum IRSR steps per ladder run (default: 5)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_irsr_auto_seed_batch_out",
+        help="directory for materialized builder artifacts",
+    )
+
+    # irsr-auto-seed-batch-summary
+    p_irsr_auto_seed_batch_summary = subparsers.add_parser(
+        "irsr-auto-seed-batch-summary",
+        help="summarize and filter compact IRSR auto-seed batch JSONL records",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument("file", metavar="BATCH.jsonl")
+    p_irsr_auto_seed_batch_summary.add_argument(
+        "--status",
+        action="append",
+        choices=(
+            "no-payload-candidates",
+            "payloads-nonexact",
+            "builder-attempted-no-build",
+            "built",
+            "built-exact-match",
+        ),
+        help="keep only records whose best final status matches this value; repeatable",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="maximum number of matching rows to preview (default: 20)",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument("--json", action="store_true")
 
     # explain
     p_explain = subparsers.add_parser(
@@ -1703,6 +1817,286 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"N = {args.n}")
                 for key, value in data.items():
                     print(f"{key} = {value}")
+
+        elif args.command == "irsr-auto-seed-report":
+            from pet.irsr_state import (
+                compare_hostile_semiprime_auto_seed_runs,
+                format_hostile_semiprime_auto_seed_comparison_report,
+                summarize_hostile_semiprime_auto_seed_comparison,
+            )
+
+            if args.n < 2:
+                raise ValueError("irsr-auto-seed-report expects N >= 2")
+            if args.max_steps < 1:
+                raise ValueError("--max-steps must be >= 1")
+            if args.compact_json and not args.json:
+                raise ValueError("--compact-json requires --json")
+
+            preset_specs = {
+                "standard": ["1", "4"],
+                "wide": ["1", "2,4"],
+            }
+
+            raw_specs = args.sqrt_radii or preset_specs[args.preset]
+
+            auto_seed_specs = []
+            for raw in raw_specs:
+                parts = [part.strip() for part in raw.split(",")]
+                if not parts or any(not part for part in parts):
+                    raise ValueError("--sqrt-radii must be a comma-separated list of integers")
+
+                radii = []
+                for part in parts:
+                    try:
+                        radius = int(part)
+                    except ValueError as exc:
+                        raise ValueError("--sqrt-radii must contain only integers") from exc
+                    if radius < 0:
+                        raise ValueError("--sqrt-radii values must be >= 0")
+                    radii.append(radius)
+
+                auto_seed_specs.append(
+                    {
+                        "name": "sqrt-auto-" + "-".join(f"r{radius}" for radius in radii),
+                        "sqrt_radii": radii,
+                    }
+                )
+
+            result = compare_hostile_semiprime_auto_seed_runs(
+                args.n,
+                auto_seed_specs=auto_seed_specs,
+                max_steps=args.max_steps,
+                output_dir=pathlib.Path(args.artifacts_dir),
+            )
+            summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+            report = format_hostile_semiprime_auto_seed_comparison_report(result)
+
+            selection = {
+                "mode": "manual" if args.sqrt_radii else "preset",
+                "preset": None if args.sqrt_radii else args.preset,
+                "sqrt_radii_specs": [list(spec["sqrt_radii"]) for spec in auto_seed_specs],
+            }
+
+            if args.json:
+                payload_result = result
+                json_mode = "full"
+
+                if args.compact_json:
+                    json_mode = "compact"
+                    compact_runs = [
+                        {key: value for key, value in run.items() if key != "run"}
+                        for run in result["runs"]
+                    ]
+                    compact_best_run = result["best_run"]
+                    if compact_best_run is not None:
+                        compact_best_run = {
+                            key: value for key, value in compact_best_run.items()
+                            if key != "run"
+                        }
+                    payload_result = {
+                        "input": result["input"],
+                        "runs": compact_runs,
+                        "best_run": compact_best_run,
+                    }
+
+                payload = dict(payload_result)
+                payload["json_mode"] = json_mode
+                payload["selection"] = selection
+                payload["summary"] = summary
+                payload["report"] = report
+                rendered = json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False) + "\n"
+            else:
+                rendered = (
+                    "Selection: "
+                    + (
+                        f"preset={selection['preset']}"
+                        if selection["mode"] == "preset"
+                        else "manual"
+                    )
+                    + "\n"
+                    + f"Radii specs: {selection['sqrt_radii_specs']}\n"
+                    + report
+                    + "\n"
+                )
+
+            if args.output:
+                pathlib.Path(args.output).write_text(rendered, encoding="utf-8")
+            else:
+                print(rendered, end="")
+
+        elif args.command == "irsr-auto-seed-batch":
+            from pet.irsr_state import (
+                compare_hostile_semiprime_auto_seed_runs,
+                format_hostile_semiprime_auto_seed_comparison_report,
+                summarize_hostile_semiprime_auto_seed_comparison,
+            )
+            from .scan import write_jsonl
+
+            if args.start < 2:
+                raise ValueError("irsr-auto-seed-batch expects START >= 2")
+            if args.end < args.start:
+                raise ValueError("--end must be >= --start")
+            if args.max_steps < 1:
+                raise ValueError("--max-steps must be >= 1")
+
+            preset_specs = {
+                "standard": ["1", "4"],
+                "wide": ["1", "2,4"],
+            }
+
+            raw_specs = args.sqrt_radii or preset_specs[args.preset]
+
+            auto_seed_specs = []
+            for raw in raw_specs:
+                parts = [part.strip() for part in raw.split(",")]
+                if not parts or any(not part for part in parts):
+                    raise ValueError("--sqrt-radii must be a comma-separated list of integers")
+
+                radii = []
+                for part in parts:
+                    try:
+                        radius = int(part)
+                    except ValueError as exc:
+                        raise ValueError("--sqrt-radii must contain only integers") from exc
+                    if radius < 0:
+                        raise ValueError("--sqrt-radii values must be >= 0")
+                    radii.append(radius)
+
+                auto_seed_specs.append(
+                    {
+                        "name": "sqrt-auto-" + "-".join(f"r{radius}" for radius in radii),
+                        "sqrt_radii": radii,
+                    }
+                )
+
+            selection = {
+                "mode": "manual" if args.sqrt_radii else "preset",
+                "preset": None if args.sqrt_radii else args.preset,
+                "sqrt_radii_specs": [list(spec["sqrt_radii"]) for spec in auto_seed_specs],
+            }
+
+            output_root = pathlib.Path(args.artifacts_dir)
+            output_root.mkdir(parents=True, exist_ok=True)
+
+            records = []
+            for n in range(args.start, args.end + 1):
+                result = compare_hostile_semiprime_auto_seed_runs(
+                    n,
+                    auto_seed_specs=auto_seed_specs,
+                    max_steps=args.max_steps,
+                    output_dir=output_root / f"n_{n}",
+                )
+                summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+                report = format_hostile_semiprime_auto_seed_comparison_report(result)
+
+                compact_runs = [
+                    {key: value for key, value in run.items() if key != "run"}
+                    for run in result["runs"]
+                ]
+                compact_best_run = result["best_run"]
+                if compact_best_run is not None:
+                    compact_best_run = {
+                        key: value for key, value in compact_best_run.items()
+                        if key != "run"
+                    }
+
+                records.append(
+                    {
+                        "schema": "irsr-auto-seed-report-batch-v1",
+                        "json_mode": "compact",
+                        "input": result["input"],
+                        "selection": selection,
+                        "summary": summary,
+                        "best_run": compact_best_run,
+                        "runs": compact_runs,
+                        "report": report,
+                    }
+                )
+
+            write_jsonl(records, args.jsonl)
+
+        elif args.command == "irsr-auto-seed-batch-summary":
+            if args.limit < 1:
+                raise ValueError("--limit must be >= 1")
+
+            path = pathlib.Path(args.file)
+            if not path.exists():
+                raise ValueError(f"file not found: {args.file}")
+
+            best_status_counts = Counter()
+            best_run_counts = Counter()
+            matches = []
+
+            with path.open("r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    row = json.loads(line)
+                    summary = row["summary"]
+                    best_status = summary["best_final_status"]
+                    best_run_name = summary["best_run_name"]
+                    n = row["input"]["n"]
+                    selection = row.get("selection", {})
+
+                    best_status_counts[best_status] += 1
+                    if best_run_name is not None:
+                        best_run_counts[best_run_name] += 1
+
+                    if args.status and best_status not in args.status:
+                        continue
+
+                    matches.append(
+                        {
+                            "n": n,
+                            "best_run_name": best_run_name,
+                            "best_final_status": best_status,
+                            "selection_mode": selection.get("mode"),
+                            "selection_preset": selection.get("preset"),
+                            "sqrt_radii_specs": selection.get("sqrt_radii_specs"),
+                        }
+                    )
+
+            payload = {
+                "schema": "irsr-auto-seed-batch-summary-v1",
+                "file": str(path),
+                "selected_statuses": [] if args.status is None else list(args.status),
+                "total_records": sum(best_status_counts.values()),
+                "best_status_counts": dict(sorted(best_status_counts.items())),
+                "best_run_counts": dict(sorted(best_run_counts.items())),
+                "matching_count": len(matches),
+                "matches": matches[: args.limit],
+            }
+
+            if args.json:
+                print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))
+            else:
+                print(f"File: {payload['file']}")
+                print(f"Total records: {payload['total_records']}")
+                if payload["selected_statuses"]:
+                    print(f"Selected statuses: {payload['selected_statuses']}")
+                best_status_counts_text = ", ".join(
+                    f"{status}={count}"
+                    for status, count in payload["best_status_counts"].items()
+                )
+                print(f"Best status counts: {best_status_counts_text}")
+                best_run_counts_text = ", ".join(
+                    f"{name}={count}"
+                    for name, count in payload["best_run_counts"].items()
+                )
+                print(f"Best run counts: {best_run_counts_text}")
+                print(f"Matching records: {payload['matching_count']}")
+                print(f"Matches (limit={args.limit}):")
+                for row in payload["matches"]:
+                    print(
+                        f"- n={row['n']} | "
+                        f"best_run={row['best_run_name']} | "
+                        f"best_status={row['best_final_status']} | "
+                        f"mode={row['selection_mode']} | "
+                        f"preset={row['selection_preset']} | "
+                        f"radii={row['sqrt_radii_specs']}"
+                    )
 
         elif args.command == "explain":
             if args.pathwise_depth < 1:

@@ -1,0 +1,54 @@
+{
+  "target": {
+    "n": "SEMIPRIME_N"
+  },
+  "skeleton": {
+    "support_size": 2,
+    "exponent_profile": [
+      1,
+      1
+    ],
+    "squarefree": true,
+    "normalized_order": "a<=b"
+  },
+  "slots": [
+    {
+      "slot": "a",
+      "kind": "prime",
+      "domain": {
+        "type": "range_or_candidates",
+        "min": null,
+        "max": null,
+        "candidates": []
+      },
+      "pet_hints": {
+        "near_generator": [],
+        "block_shape": []
+      }
+    },
+    {
+      "slot": "b",
+      "kind": "prime",
+      "domain": {
+        "type": "range_or_candidates",
+        "min": null,
+        "max": null,
+        "candidates": []
+      },
+      "pet_hints": {
+        "near_generator": [],
+        "block_shape": []
+      }
+    }
+  ],
+  "coupling": {
+    "product_constraint": "a*b=n",
+    "joint_pet_constraints": [],
+    "forbidden_patterns": []
+  },
+  "refinement": {
+    "iteration": 0,
+    "status": "open",
+    "payload_ready": false
+  }
+}
