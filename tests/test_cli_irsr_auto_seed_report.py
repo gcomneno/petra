@@ -310,3 +310,30 @@ def test_irsr_auto_seed_report_rejects_only_empty_radii_items(capsys):
     assert captured.out == ""
     assert "ERROR: --sqrt-radii must be a comma-separated list of integers" in captured.err
 
+def test_irsr_auto_seed_report_rejects_zero_n(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "0",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: irsr-auto-seed-report expects N >= 2" in captured.err
+
+
+def test_irsr_auto_seed_report_rejects_negative_n(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "-5",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: irsr-auto-seed-report expects N >= 2" in captured.err
+

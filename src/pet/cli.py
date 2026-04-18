@@ -1741,6 +1741,8 @@ def main(argv: list[str] | None = None) -> int:
                 summarize_hostile_semiprime_auto_seed_comparison,
             )
 
+            if args.n < 2:
+                raise ValueError("irsr-auto-seed-report expects N >= 2")
             if args.max_steps < 1:
                 raise ValueError("--max-steps must be >= 1")
 
