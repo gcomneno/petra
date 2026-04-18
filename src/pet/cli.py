@@ -1079,6 +1079,10 @@ def main(argv: list[str] | None = None) -> int:
         default="/tmp/pet_irsr_auto_seed_report_out",
         help="directory for materialized builder artifacts",
     )
+    p_irsr_auto_seed_report.add_argument(
+        "--output",
+        help="write the rendered report or JSON payload to FILE instead of stdout",
+    )
     p_irsr_auto_seed_report.add_argument("--json", action="store_true")
 
     # explain
@@ -1796,18 +1800,25 @@ def main(argv: list[str] | None = None) -> int:
                 payload["selection"] = selection
                 payload["summary"] = summary
                 payload["report"] = report
-                print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))
+                rendered = json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False) + "\n"
             else:
-                print(
+                rendered = (
                     "Selection: "
                     + (
                         f"preset={selection['preset']}"
                         if selection["mode"] == "preset"
                         else "manual"
                     )
+                    + "\n"
+                    + f"Radii specs: {selection['sqrt_radii_specs']}\n"
+                    + report
+                    + "\n"
                 )
-                print(f"Radii specs: {selection['sqrt_radii_specs']}")
-                print(report)
+
+            if args.output:
+                pathlib.Path(args.output).write_text(rendered, encoding="utf-8")
+            else:
+                print(rendered, end="")
 
         elif args.command == "explain":
             if args.pathwise_depth < 1:

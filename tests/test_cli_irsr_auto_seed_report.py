@@ -343,3 +343,55 @@ def test_irsr_auto_seed_report_rejects_negative_n(capsys):
     assert captured.out == ""
     assert "ERROR: irsr-auto-seed-report expects N >= 2" in captured.err
 
+def test_irsr_auto_seed_report_writes_text_output_file(tmp_path, capsys):
+    output_path = tmp_path / "report.txt"
+
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--output",
+        str(output_path),
+    ])
+
+    captured = capsys.readouterr()
+    written = output_path.read_text()
+
+    assert rc == 0
+    assert captured.out == ""
+    assert captured.err == ""
+    assert "Selection: preset=standard" in written
+    assert "Radii specs: [[1], [4]]" in written
+    assert "IRSR auto-seed comparison for n=10403" in written
+    assert "Run count: 2" in written
+    assert "Best run: sqrt-auto-r1" in written
+
+
+def test_irsr_auto_seed_report_writes_json_output_file(tmp_path, capsys):
+    output_path = tmp_path / "report.json"
+
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "11413",
+        "--preset",
+        "wide",
+        "--json",
+        "--output",
+        str(output_path),
+    ])
+
+    captured = capsys.readouterr()
+    payload = json.loads(output_path.read_text())
+
+    assert rc == 0
+    assert captured.out == ""
+    assert captured.err == ""
+    assert payload["selection"] == {
+        "mode": "preset",
+        "preset": "wide",
+        "sqrt_radii_specs": [[1], [2, 4]],
+    }
+    assert payload["best_run"]["name"] == "sqrt-auto-r2-r4"
+    assert payload["best_run"]["final_status"] == "payloads-nonexact"
+
