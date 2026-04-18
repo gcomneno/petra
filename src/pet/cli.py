@@ -7,7 +7,7 @@ import heapq
 import pathlib
 import subprocess
 import sys
-from collections import deque
+from collections import Counter, deque
 
 from .atlas import atlas, draw_shape, extract_shape, print_atlas
 from .algebra import distance, structural_distance
@@ -1125,6 +1125,32 @@ def main(argv: list[str] | None = None) -> int:
         help="directory for materialized builder artifacts",
     )
 
+    # irsr-auto-seed-batch-summary
+    p_irsr_auto_seed_batch_summary = subparsers.add_parser(
+        "irsr-auto-seed-batch-summary",
+        help="summarize and filter compact IRSR auto-seed batch JSONL records",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument("file", metavar="BATCH.jsonl")
+    p_irsr_auto_seed_batch_summary.add_argument(
+        "--status",
+        action="append",
+        choices=(
+            "no-payload-candidates",
+            "payloads-nonexact",
+            "builder-attempted-no-build",
+            "built",
+            "built-exact-match",
+        ),
+        help="keep only records whose best final status matches this value; repeatable",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="maximum number of matching rows to preview (default: 20)",
+    )
+    p_irsr_auto_seed_batch_summary.add_argument("--json", action="store_true")
+
     # explain
     p_explain = subparsers.add_parser(
         "explain",
@@ -1974,6 +2000,89 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
             write_jsonl(records, args.jsonl)
+
+        elif args.command == "irsr-auto-seed-batch-summary":
+            if args.limit < 1:
+                raise ValueError("--limit must be >= 1")
+
+            path = pathlib.Path(args.file)
+            if not path.exists():
+                raise ValueError(f"file not found: {args.file}")
+
+            best_status_counts = Counter()
+            best_run_counts = Counter()
+            matches = []
+
+            with path.open("r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    row = json.loads(line)
+                    summary = row["summary"]
+                    best_status = summary["best_final_status"]
+                    best_run_name = summary["best_run_name"]
+                    n = row["input"]["n"]
+                    selection = row.get("selection", {})
+
+                    best_status_counts[best_status] += 1
+                    if best_run_name is not None:
+                        best_run_counts[best_run_name] += 1
+
+                    if args.status and best_status not in args.status:
+                        continue
+
+                    matches.append(
+                        {
+                            "n": n,
+                            "best_run_name": best_run_name,
+                            "best_final_status": best_status,
+                            "selection_mode": selection.get("mode"),
+                            "selection_preset": selection.get("preset"),
+                            "sqrt_radii_specs": selection.get("sqrt_radii_specs"),
+                        }
+                    )
+
+            payload = {
+                "schema": "irsr-auto-seed-batch-summary-v1",
+                "file": str(path),
+                "selected_statuses": [] if args.status is None else list(args.status),
+                "total_records": sum(best_status_counts.values()),
+                "best_status_counts": dict(sorted(best_status_counts.items())),
+                "best_run_counts": dict(sorted(best_run_counts.items())),
+                "matching_count": len(matches),
+                "matches": matches[: args.limit],
+            }
+
+            if args.json:
+                print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))
+            else:
+                print(f"File: {payload['file']}")
+                print(f"Total records: {payload['total_records']}")
+                if payload["selected_statuses"]:
+                    print(f"Selected statuses: {payload['selected_statuses']}")
+                best_status_counts_text = ", ".join(
+                    f"{status}={count}"
+                    for status, count in payload["best_status_counts"].items()
+                )
+                print(f"Best status counts: {best_status_counts_text}")
+                best_run_counts_text = ", ".join(
+                    f"{name}={count}"
+                    for name, count in payload["best_run_counts"].items()
+                )
+                print(f"Best run counts: {best_run_counts_text}")
+                print(f"Matching records: {payload['matching_count']}")
+                print(f"Matches (limit={args.limit}):")
+                for row in payload["matches"]:
+                    print(
+                        f"- n={row['n']} | "
+                        f"best_run={row['best_run_name']} | "
+                        f"best_status={row['best_final_status']} | "
+                        f"mode={row['selection_mode']} | "
+                        f"preset={row['selection_preset']} | "
+                        f"radii={row['sqrt_radii_specs']}"
+                    )
 
         elif args.command == "explain":
             if args.pathwise_depth < 1:
