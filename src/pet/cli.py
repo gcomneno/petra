@@ -617,19 +617,35 @@ def _build_from_int_report(n: int) -> dict:
         raise ValueError("build-from-int expects an integer >= 2")
 
     factors = tuple(prime_factorization(n))
-    canonical = _parse_factor_spec_file  # silence lint-style reuse marker
-
-    support = set()
-    if factors[0][0] != 2:
+    if not factors or factors[0][0] != 2:
         raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
 
-    for prime, _exp in factors:
-        expected = _next_new_prime(support)
-        if prime != expected:
-            raise ValueError(
-                f"integer factor support is not NEW-canonical: expected next prime {expected}, got {prime}"
-            )
-        support.add(prime)
+    support = [prime for prime, _ in factors]
+    expected_support = []
+    candidate = 2
+    while len(expected_support) < len(support):
+        is_prime = True
+        if candidate < 2:
+            is_prime = False
+        elif candidate % 2 == 0:
+            is_prime = candidate == 2
+        else:
+            d = 3
+            while d * d <= candidate:
+                if candidate % d == 0:
+                    is_prime = False
+                    break
+                d += 2
+        if is_prime:
+            expected_support.append(candidate)
+        candidate += 1
+
+    if support != expected_support:
+        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
+
+    exponents = [exp for _, exp in factors]
+    if any(left < right for left, right in zip(exponents, exponents[1:])):
+        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
 
     report = _build_from_factors_report(factors)
     report["input_n"] = n
