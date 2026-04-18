@@ -2609,3 +2609,48 @@ def compare_hostile_semiprime_auto_seed_runs(
         "best_run": select_best_hostile_semiprime_auto_seed_run(runs),
     }
 
+def summarize_hostile_semiprime_auto_seed_comparison(result: dict) -> dict:
+    runs = result.get("runs", [])
+    status_counts: dict[str, int] = {}
+
+    for run in runs:
+        status = run["final_status"]
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    best_run = result.get("best_run")
+
+    return {
+        "input": result["input"],
+        "run_count": len(runs),
+        "best_run_name": None if best_run is None else best_run["name"],
+        "best_final_status": None if best_run is None else best_run["final_status"],
+        "status_counts": status_counts,
+    }
+
+
+def format_hostile_semiprime_auto_seed_comparison_report(result: dict) -> str:
+    summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+    lines = [
+        f"IRSR auto-seed comparison for n={summary['input']['n']}",
+    ]
+
+    best_run = result.get("best_run")
+    if best_run is None:
+        lines.append("No runs available.")
+        return "\n".join(lines)
+
+    lines.append(f"Best run: {best_run['name']}")
+    lines.append(f"Final status: {best_run['final_status']}")
+    lines.append("Runs:")
+
+    for run in result.get("runs", []):
+        lines.append(
+            f"- {run['name']} | radii={run['sqrt_radii']} | "
+            f"status={run['final_status']} | "
+            f"payloads={run['payload_summary']['payload_count']} | "
+            f"built={run['build_summary']['built_count']} | "
+            f"exact={run['build_summary']['exact_match_count']}"
+        )
+
+    return "\n".join(lines)
+
