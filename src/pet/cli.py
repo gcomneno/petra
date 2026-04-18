@@ -1058,9 +1058,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_irsr_auto_seed_report.add_argument("n", type=int, metavar="N")
     p_irsr_auto_seed_report.add_argument(
+        "--preset",
+        choices=("standard",),
+        default="standard",
+        help="predefined ladder preset to use when --sqrt-radii is not provided (default: standard)",
+    )
+    p_irsr_auto_seed_report.add_argument(
         "--sqrt-radii",
         action="append",
-        help="comma-separated radii for one ladder; repeat to compare multiple ladders (default: 1 and 4)",
+        help="comma-separated radii for one ladder; repeat to compare multiple ladders (overrides --preset)",
     )
     p_irsr_auto_seed_report.add_argument(
         "--max-steps",
@@ -1735,7 +1741,11 @@ def main(argv: list[str] | None = None) -> int:
                 summarize_hostile_semiprime_auto_seed_comparison,
             )
 
-            raw_specs = args.sqrt_radii or ["1", "4"]
+            preset_specs = {
+                "standard": ["1", "4"],
+            }
+
+            raw_specs = args.sqrt_radii or preset_specs[args.preset]
 
             auto_seed_specs = []
             for raw in raw_specs:

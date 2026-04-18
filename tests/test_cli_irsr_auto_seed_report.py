@@ -31,6 +31,30 @@ def test_irsr_auto_seed_report_prints_text_report(tmp_path, capsys):
 
 
 
+
+def test_irsr_auto_seed_report_accepts_explicit_standard_preset(tmp_path, capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--preset",
+        "standard",
+        "--max-steps",
+        "5",
+        "--artifacts-dir",
+        str(tmp_path / "artifacts-preset"),
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 0
+    assert captured.err == ""
+    assert "IRSR auto-seed comparison for n=10403" in captured.out
+    assert "Best run: sqrt-auto-r1" in captured.out
+    assert "- sqrt-auto-r1 | radii=[1] | status=built-exact-match | payloads=1 | built=1 | exact=1" in captured.out
+    assert "- sqrt-auto-r4 | radii=[4] | status=payloads-nonexact | payloads=1 | built=0 | exact=0" in captured.out
+
+
 def test_irsr_auto_seed_report_uses_default_ladders_when_not_provided(tmp_path, capsys):
     rc = main([
         "pet",
