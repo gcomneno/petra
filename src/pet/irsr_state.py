@@ -1663,6 +1663,7 @@ def _consume_portfolio_budget(
 
 
 
+
 def collect_acceptable_residual_state_refinements_from_portfolios(
     state: dict,
     portfolios,
@@ -1673,6 +1674,7 @@ def collect_acceptable_residual_state_refinements_from_portfolios(
 
     for portfolio in portfolios:
         portfolio_name = portfolio["name"]
+        portfolio_family = portfolio.get("family")
         portfolio_priority = portfolio.get("priority", 0)
 
         if not _portfolio_budget_available(portfolio_name, portfolio_budget_state):
@@ -1688,13 +1690,13 @@ def collect_acceptable_residual_state_refinements_from_portfolios(
             accepted.append(
                 {
                     "portfolio": portfolio_name,
+                    "portfolio_family": portfolio_family,
                     "portfolio_priority": portfolio_priority,
                     **item,
                 }
             )
 
     return accepted
-
 
 def rank_acceptable_residual_state_refinements_from_portfolios(
     state: dict,
@@ -1728,6 +1730,7 @@ def select_best_residual_state_refinement_from_portfolios(
         portfolio_budget_state=portfolio_budget_state,
     )
     return ranked[0] if ranked else None
+
 
 
 def advance_residual_state_once_with_ranked_portfolios(
@@ -1765,6 +1768,7 @@ def advance_residual_state_once_with_ranked_portfolios(
             return {
                 "action": "refine",
                 "portfolio": result["portfolio"],
+                "portfolio_family": result.get("portfolio_family"),
                 "refiner": result["refiner"],
                 "state": result["state"],
                 "score": result["score"],
@@ -1791,6 +1795,7 @@ def advance_residual_state_once_with_ranked_portfolios(
         return {
             "action": "refine",
             "portfolio": result["portfolio"],
+            "portfolio_family": result.get("portfolio_family"),
             "refiner": result["refiner"],
             "state": result["state"],
             "score": result["score"],
@@ -1837,6 +1842,7 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         "idle": 0,
     }
     portfolio_refine_counts: dict[str, int] = {}
+    portfolio_family_refine_counts: dict[str, int] = {}
     refiner_refine_counts: dict[str, int] = {}
 
     steps_run = 0
@@ -1891,6 +1897,11 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
                 portfolio_refine_counts[decision["portfolio"]] = (
                     portfolio_refine_counts.get(decision["portfolio"], 0) + 1
                 )
+                if decision.get("portfolio_family") is not None:
+                    family = decision["portfolio_family"]
+                    portfolio_family_refine_counts[family] = (
+                        portfolio_family_refine_counts.get(family, 0) + 1
+                    )
                 refiner_refine_counts[decision["refiner"]] = (
                     refiner_refine_counts.get(decision["refiner"], 0) + 1
                 )
@@ -1932,6 +1943,13 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         )
 
     budget_consumed: dict[str, int] = {}
+    portfolio_family_budget_consumed: dict[str, int] = {}
+
+    portfolio_family_by_name = {
+        portfolio["name"]: portfolio.get("family")
+        for portfolio in list(open_portfolios) + list(branch_portfolios)
+    }
+
     for portfolio_name, initial_budget in initial_portfolio_budget_state.items():
         final_budget = portfolio_budget_state.get(portfolio_name)
         if (
@@ -1944,6 +1962,11 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         consumed = initial_budget - final_budget
         if consumed > 0:
             budget_consumed[portfolio_name] = consumed
+            family = portfolio_family_by_name.get(portfolio_name)
+            if family is not None:
+                portfolio_family_budget_consumed[family] = (
+                    portfolio_family_budget_consumed.get(family, 0) + consumed
+                )
 
     return {
         "steps_run": steps_run,
@@ -1958,8 +1981,10 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         "telemetry": {
             "actions": action_counts,
             "portfolio_refine_counts": portfolio_refine_counts,
+            "portfolio_family_refine_counts": portfolio_family_refine_counts,
             "refiner_refine_counts": refiner_refine_counts,
             "budget_consumed": budget_consumed,
+            "portfolio_family_budget_consumed": portfolio_family_budget_consumed,
         },
     }
 
@@ -2357,3 +2382,74 @@ def run_hostile_semiprime_irsr_with_sqrt_seed_baseline(
         output_dir=output_dir,
     )
 
+
+def build_hostile_semiprime_seed_portfolios(
+    n: int | str,
+    *,
+    candidate_seed_specs=(),
+    range_seed_specs=(),
+    sqrt_seed_specs=(),
+) -> list[dict]:
+    portfolios: list[dict] = []
+
+    for spec in candidate_seed_specs:
+        portfolio = make_hostile_semiprime_seed_portfolio(
+            spec["slot_candidates"],
+            name=spec.get("name", "hostile-semiprime-baseline"),
+            priority=spec.get("priority", 100),
+            budget=spec.get("budget", None),
+        )
+        portfolio["family"] = "candidate"
+        portfolios.append(portfolio)
+
+    for spec in range_seed_specs:
+        portfolio = make_hostile_semiprime_range_seed_portfolio(
+            spec["slot_ranges"],
+            name=spec.get("name", "hostile-semiprime-range-baseline"),
+            priority=spec.get("priority", 100),
+            budget=spec.get("budget", None),
+        )
+        portfolio["family"] = "range"
+        portfolios.append(portfolio)
+
+    for spec in sqrt_seed_specs:
+        portfolio = make_hostile_semiprime_sqrt_seed_portfolio(
+            n,
+            radius=spec["radius"],
+            name=spec.get("name", "hostile-semiprime-sqrt-baseline"),
+            priority=spec.get("priority", 100),
+            budget=spec.get("budget", None),
+        )
+        portfolio["family"] = "sqrt"
+        portfolios.append(portfolio)
+
+    return portfolios
+
+def run_hostile_semiprime_irsr_with_multi_seed_portfolios(
+    n: int | str,
+    *,
+    max_steps: int,
+    candidate_seed_specs=(),
+    range_seed_specs=(),
+    sqrt_seed_specs=(),
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    open_portfolios = build_hostile_semiprime_seed_portfolios(
+        n,
+        candidate_seed_specs=candidate_seed_specs,
+        range_seed_specs=range_seed_specs,
+        sqrt_seed_specs=sqrt_seed_specs,
+    )
+
+    return run_hostile_semiprime_irsr_to_builder_results(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+        output_dir=output_dir,
+    )
