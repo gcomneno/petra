@@ -2639,7 +2639,9 @@ def format_hostile_semiprime_auto_seed_comparison_report(result: dict) -> str:
         lines.append("No runs available.")
         return "\n".join(lines)
 
+    lines.append(f"Run count: {summary['run_count']}")
     lines.append(f"Best run: {best_run['name']}")
+    lines.append(f"Best radii: {best_run['sqrt_radii']}")
     lines.append(f"Final status: {best_run['final_status']}")
     status_counts = ", ".join(
         f"{status}={count}"
