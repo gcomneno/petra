@@ -1,3 +1,4 @@
+from pet.core import is_prime
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -2189,6 +2190,87 @@ def run_hostile_semiprime_irsr_with_seed_candidates(
     open_portfolios = [
         make_hostile_semiprime_seed_portfolio(
             slot_candidates,
+            name=portfolio_name,
+            priority=portfolio_priority,
+            budget=portfolio_budget,
+        )
+    ]
+
+    return run_hostile_semiprime_irsr_to_builder_results(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+        output_dir=output_dir,
+    )
+
+def primes_in_closed_range(min_value: int, max_value: int) -> list[int]:
+    if min_value > max_value:
+        return []
+
+    primes: list[int] = []
+    for n in range(max(2, min_value), max_value + 1):
+        if is_prime(n):
+            primes.append(n)
+    return primes
+
+
+def make_slot_prime_range_seed_refiner(
+    slot_name: str,
+    min_value: int,
+    max_value: int,
+    policy_name: str | None = None,
+):
+    candidates = primes_in_closed_range(min_value, max_value)
+    return make_slot_candidate_seed_refiner(
+        slot_name,
+        candidates,
+        policy_name=policy_name or f"seed_{slot_name}_range",
+    )
+
+
+def make_hostile_semiprime_range_seed_portfolio(
+    slot_ranges: dict[str, dict[str, int]],
+    *,
+    name: str = "hostile-semiprime-range-baseline",
+    priority: int = 100,
+    budget: int | None = None,
+) -> dict:
+    ordered_slots = sorted(slot_ranges)
+
+    return {
+        "name": name,
+        "priority": priority,
+        "budget": budget,
+        "refiners": [
+            make_slot_prime_range_seed_refiner(
+                slot_name,
+                slot_ranges[slot_name]["min"],
+                slot_ranges[slot_name]["max"],
+            )
+            for slot_name in ordered_slots
+        ],
+    }
+
+
+def run_hostile_semiprime_irsr_with_seed_ranges(
+    n: int | str,
+    slot_ranges: dict[str, dict[str, int]],
+    *,
+    max_steps: int,
+    portfolio_name: str = "hostile-semiprime-range-baseline",
+    portfolio_priority: int = 100,
+    portfolio_budget: int | None = None,
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    open_portfolios = [
+        make_hostile_semiprime_range_seed_portfolio(
+            slot_ranges,
             name=portfolio_name,
             priority=portfolio_priority,
             budget=portfolio_budget,
