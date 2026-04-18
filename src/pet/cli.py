@@ -1793,6 +1793,15 @@ def main(argv: list[str] | None = None) -> int:
                 payload["report"] = report
                 print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))
             else:
+                print(
+                    "Selection: "
+                    + (
+                        f"preset={selection['preset']}"
+                        if selection["mode"] == "preset"
+                        else "manual"
+                    )
+                )
+                print(f"Radii specs: {selection['sqrt_radii_specs']}")
                 print(report)
 
         elif args.command == "explain":
