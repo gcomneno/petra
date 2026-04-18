@@ -1,4 +1,6 @@
+import json
 from copy import deepcopy
+from pathlib import Path
 
 
 def _policy_name(refiner) -> str:
@@ -1999,5 +2001,113 @@ def run_hostile_semiprime_irsr_to_payload_candidates(
         "run": run_result,
         "payload_candidates": payload_candidates,
         "payload_summary": summarize_irsr_payload_candidates(payload_candidates),
+    }
+
+def irsr_payload_candidate_to_factorization_spec(payload: dict) -> dict | None:
+    prime_slots = payload.get("prime_slots", [])
+    exponents = payload.get("exponent_profile", [])
+
+    if len(prime_slots) != len(exponents):
+        return None
+
+    factors: list[list[int]] = []
+
+    for slot, exp in zip(prime_slots, exponents):
+        candidates = slot.get("candidates", [])
+        if len(candidates) != 1:
+            return None
+        factors.append([candidates[0], exp])
+
+    return {"factors": factors}
+
+
+def run_builder_on_irsr_payload_candidate(
+    payload: dict,
+    output_dir,
+) -> dict:
+    factorization_spec = irsr_payload_candidate_to_factorization_spec(payload)
+    if factorization_spec is None:
+        return {
+            "build_attempted": False,
+            "skip_reason": "non-exact-payload-candidates",
+            "factorization_spec": None,
+        }
+
+    from pet.builder_from_factorization import build_from_factorization_pipeline
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    spec_path = output_dir / "irsr_factorization_spec.json"
+    spec_path.write_text(
+        json.dumps(factorization_spec),
+        encoding="utf-8",
+    )
+
+    report = build_from_factorization_pipeline(spec_path, output_dir)
+
+    return {
+        "build_attempted": True,
+        "factorization_spec": factorization_spec,
+        "report": report,
+    }
+
+
+def summarize_irsr_builder_results(build_results: list[dict]) -> dict:
+    attempted = [item for item in build_results if item.get("build_attempted")]
+    skipped = [item for item in build_results if not item.get("build_attempted")]
+
+    built = [
+        item
+        for item in attempted
+        if item["report"]["final_build_output"]["build_status"] == "built"
+    ]
+    exact = [
+        item
+        for item in attempted
+        if item["report"]["support_report"]["exact_target_match"] is True
+    ]
+
+    return {
+        "candidate_count": len(build_results),
+        "attempted_count": len(attempted),
+        "built_count": len(built),
+        "exact_match_count": len(exact),
+        "skipped_count": len(skipped),
+    }
+
+
+def run_hostile_semiprime_irsr_to_builder_results(
+    n: int | str,
+    max_steps: int,
+    open_portfolios=(),
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+    output_dir=".",
+) -> dict:
+    pipeline = run_hostile_semiprime_irsr_to_payload_candidates(
+        n,
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+    )
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    build_results: list[dict] = []
+    for idx, payload in enumerate(pipeline["payload_candidates"]):
+        candidate_dir = output_dir / f"candidate_{idx}"
+        build_results.append(
+            run_builder_on_irsr_payload_candidate(payload, candidate_dir)
+        )
+
+    return {
+        **pipeline,
+        "build_results": build_results,
+        "build_summary": summarize_irsr_builder_results(build_results),
     }
 
