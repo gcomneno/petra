@@ -1741,6 +1741,9 @@ def main(argv: list[str] | None = None) -> int:
                 summarize_hostile_semiprime_auto_seed_comparison,
             )
 
+            if args.max_steps < 1:
+                raise ValueError("--max-steps must be >= 1")
+
             preset_specs = {
                 "standard": ["1", "4"],
                 "wide": ["1", "2,4"],

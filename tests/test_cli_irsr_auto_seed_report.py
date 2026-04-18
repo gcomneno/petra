@@ -248,3 +248,34 @@ def test_irsr_auto_seed_report_rejects_negative_radii(capsys):
     assert captured.out == ""
     assert "ERROR: --sqrt-radii values must be >= 0" in captured.err
 
+def test_irsr_auto_seed_report_rejects_zero_max_steps(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--max-steps",
+        "0",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --max-steps must be >= 1" in captured.err
+
+
+def test_irsr_auto_seed_report_rejects_negative_max_steps(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--max-steps",
+        "-1",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --max-steps must be >= 1" in captured.err
+
