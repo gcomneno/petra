@@ -1084,6 +1084,11 @@ def main(argv: list[str] | None = None) -> int:
         help="write the rendered report or JSON payload to FILE instead of stdout",
     )
     p_irsr_auto_seed_report.add_argument("--json", action="store_true")
+    p_irsr_auto_seed_report.add_argument(
+        "--compact-json",
+        action="store_true",
+        help="with --json, omit raw per-run IRSR traces and keep only compact summaries",
+    )
 
     # explain
     p_explain = subparsers.add_parser(
@@ -1749,6 +1754,8 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError("irsr-auto-seed-report expects N >= 2")
             if args.max_steps < 1:
                 raise ValueError("--max-steps must be >= 1")
+            if args.compact_json and not args.json:
+                raise ValueError("--compact-json requires --json")
 
             preset_specs = {
                 "standard": ["1", "4"],
@@ -1796,7 +1803,29 @@ def main(argv: list[str] | None = None) -> int:
             }
 
             if args.json:
-                payload = dict(result)
+                payload_result = result
+                json_mode = "full"
+
+                if args.compact_json:
+                    json_mode = "compact"
+                    compact_runs = [
+                        {key: value for key, value in run.items() if key != "run"}
+                        for run in result["runs"]
+                    ]
+                    compact_best_run = result["best_run"]
+                    if compact_best_run is not None:
+                        compact_best_run = {
+                            key: value for key, value in compact_best_run.items()
+                            if key != "run"
+                        }
+                    payload_result = {
+                        "input": result["input"],
+                        "runs": compact_runs,
+                        "best_run": compact_best_run,
+                    }
+
+                payload = dict(payload_result)
+                payload["json_mode"] = json_mode
                 payload["selection"] = selection
                 payload["summary"] = summary
                 payload["report"] = report

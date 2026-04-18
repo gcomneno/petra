@@ -395,3 +395,43 @@ def test_irsr_auto_seed_report_writes_json_output_file(tmp_path, capsys):
     assert payload["best_run"]["name"] == "sqrt-auto-r2-r4"
     assert payload["best_run"]["final_status"] == "payloads-nonexact"
 
+def test_irsr_auto_seed_report_emits_compact_json_without_raw_run(tmp_path, capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "11413",
+        "--preset",
+        "wide",
+        "--json",
+        "--compact-json",
+        "--output",
+        str(tmp_path / "report-compact.json"),
+    ])
+
+    captured = capsys.readouterr()
+    payload = json.loads((tmp_path / "report-compact.json").read_text())
+
+    assert rc == 0
+    assert captured.out == ""
+    assert captured.err == ""
+    assert payload["json_mode"] == "compact"
+    assert "run" not in payload["runs"][0]
+    assert "run" not in payload["best_run"]
+    assert payload["best_run"]["name"] == "sqrt-auto-r2-r4"
+    assert payload["best_run"]["final_status"] == "payloads-nonexact"
+
+
+def test_irsr_auto_seed_report_rejects_compact_json_without_json(capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "10403",
+        "--compact-json",
+    ])
+
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert captured.out == ""
+    assert "ERROR: --compact-json requires --json" in captured.err
+
