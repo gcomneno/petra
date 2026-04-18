@@ -51,6 +51,8 @@ def test_ranked_portfolio_runner_reports_action_and_refiner_telemetry():
             "tight-seeding": 1,
             "broad-seeding": 1,
         },
+        "portfolio_family_refine_counts": {},
+        "portfolio_family_budget_consumed": {},
     }
 
 
@@ -98,6 +100,8 @@ def test_ranked_portfolio_runner_reports_branch_and_idle_telemetry():
         "budget_consumed": {
             "broad-seeding": 1,
         },
+        "portfolio_family_refine_counts": {},
+        "portfolio_family_budget_consumed": {},
     }
 
 
@@ -123,4 +127,6 @@ def test_ranked_portfolio_runner_reports_idle_only_telemetry_when_nothing_progre
         "portfolio_refine_counts": {},
         "refiner_refine_counts": {},
         "budget_consumed": {},
+        "portfolio_family_refine_counts": {},
+        "portfolio_family_budget_consumed": {},
     }
