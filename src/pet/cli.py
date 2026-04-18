@@ -1059,7 +1059,7 @@ def main(argv: list[str] | None = None) -> int:
     p_irsr_auto_seed_report.add_argument("n", type=int, metavar="N")
     p_irsr_auto_seed_report.add_argument(
         "--preset",
-        choices=("standard",),
+        choices=("standard", "wide"),
         default="standard",
         help="predefined ladder preset to use when --sqrt-radii is not provided (default: standard)",
     )
@@ -1743,6 +1743,7 @@ def main(argv: list[str] | None = None) -> int:
 
             preset_specs = {
                 "standard": ["1", "4"],
+                "wide": ["1", "2,4"],
             }
 
             raw_specs = args.sqrt_radii or preset_specs[args.preset]
