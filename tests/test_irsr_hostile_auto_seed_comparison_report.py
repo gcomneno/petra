@@ -1,4 +1,5 @@
 from pet.irsr_state import (
+    compare_hostile_semiprime_auto_seed_runs,
     format_hostile_semiprime_auto_seed_comparison_report,
     summarize_hostile_semiprime_auto_seed_comparison,
 )
@@ -93,3 +94,43 @@ def test_format_hostile_semiprime_auto_seed_comparison_report_handles_empty_run_
 
     assert "IRSR auto-seed comparison for n=11413" in report
     assert "No runs available." in report
+
+def test_auto_seed_comparison_report_accepts_real_comparison_result(tmp_path):
+    result = compare_hostile_semiprime_auto_seed_runs(
+        10403,
+        auto_seed_specs=[
+            {
+                "name": "sqrt-auto-r1",
+                "sqrt_radii": [1],
+            },
+            {
+                "name": "sqrt-auto-r4",
+                "sqrt_radii": [4],
+            },
+        ],
+        max_steps=5,
+        output_dir=tmp_path / "artifacts",
+    )
+
+    summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+    report = format_hostile_semiprime_auto_seed_comparison_report(result)
+
+    assert summary == {
+        "input": {
+            "n": "10403",
+            "kind": "hostile-semiprime",
+        },
+        "run_count": 2,
+        "best_run_name": "sqrt-auto-r1",
+        "best_final_status": "built-exact-match",
+        "status_counts": {
+            "built-exact-match": 1,
+            "payloads-nonexact": 1,
+        },
+    }
+
+    assert "IRSR auto-seed comparison for n=10403" in report
+    assert "Best run: sqrt-auto-r1" in report
+    assert "Final status: built-exact-match" in report
+    assert "- sqrt-auto-r1 | radii=[1] | status=built-exact-match | payloads=1 | built=1 | exact=1" in report
+    assert "- sqrt-auto-r4 | radii=[4] | status=payloads-nonexact | payloads=1 | built=0 | exact=0" in report
