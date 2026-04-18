@@ -1780,8 +1780,15 @@ def main(argv: list[str] | None = None) -> int:
             summary = summarize_hostile_semiprime_auto_seed_comparison(result)
             report = format_hostile_semiprime_auto_seed_comparison_report(result)
 
+            selection = {
+                "mode": "manual" if args.sqrt_radii else "preset",
+                "preset": None if args.sqrt_radii else args.preset,
+                "sqrt_radii_specs": [list(spec["sqrt_radii"]) for spec in auto_seed_specs],
+            }
+
             if args.json:
                 payload = dict(result)
+                payload["selection"] = selection
                 payload["summary"] = summary
                 payload["report"] = report
                 print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))

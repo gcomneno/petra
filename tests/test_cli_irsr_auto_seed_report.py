@@ -100,6 +100,11 @@ def test_irsr_auto_seed_report_emits_json_payload(tmp_path, capsys):
         "n": "10403",
         "kind": "hostile-semiprime",
     }
+    assert payload["selection"] == {
+        "mode": "manual",
+        "preset": None,
+        "sqrt_radii_specs": [[1], [4]],
+    }
     assert [run["name"] for run in payload["runs"]] == [
         "sqrt-auto-r1",
         "sqrt-auto-r4",
@@ -141,4 +146,31 @@ def test_irsr_auto_seed_report_accepts_explicit_wide_preset(tmp_path, capsys):
     assert "Final status: payloads-nonexact" in captured.out
     assert "- sqrt-auto-r1 | radii=[1] | status=no-payload-candidates" in captured.out
     assert "- sqrt-auto-r2-r4 | radii=[2, 4] | status=payloads-nonexact" in captured.out
+
+def test_irsr_auto_seed_report_json_includes_preset_selection(tmp_path, capsys):
+    rc = main([
+        "pet",
+        "irsr-auto-seed-report",
+        "11413",
+        "--preset",
+        "wide",
+        "--max-steps",
+        "5",
+        "--artifacts-dir",
+        str(tmp_path / "artifacts-wide-json"),
+        "--json",
+    ])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 0
+    assert captured.err == ""
+    assert payload["selection"] == {
+        "mode": "preset",
+        "preset": "wide",
+        "sqrt_radii_specs": [[1], [2, 4]],
+    }
+    assert payload["best_run"]["name"] == "sqrt-auto-r2-r4"
+    assert payload["best_run"]["final_status"] == "payloads-nonexact"
 
