@@ -1090,6 +1090,41 @@ def main(argv: list[str] | None = None) -> int:
         help="with --json, omit raw per-run IRSR traces and keep only compact summaries",
     )
 
+    # irsr-auto-seed-batch
+    p_irsr_auto_seed_batch = subparsers.add_parser(
+        "irsr-auto-seed-batch",
+        help="write compact JSONL auto-seed comparison records for hostile semiprime inputs",
+    )
+    p_irsr_auto_seed_batch.add_argument("start", type=int, metavar="START")
+    p_irsr_auto_seed_batch.add_argument("end", type=int, metavar="END")
+    p_irsr_auto_seed_batch.add_argument(
+        "--jsonl",
+        required=True,
+        help="write compact JSONL comparison records to FILE",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--preset",
+        choices=("standard", "wide"),
+        default="standard",
+        help="predefined ladder preset to use when --sqrt-radii is not provided (default: standard)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--sqrt-radii",
+        action="append",
+        help="comma-separated radii for one ladder; repeat to compare multiple ladders (overrides --preset)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--max-steps",
+        type=int,
+        default=5,
+        help="maximum IRSR steps per ladder run (default: 5)",
+    )
+    p_irsr_auto_seed_batch.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_irsr_auto_seed_batch_out",
+        help="directory for materialized builder artifacts",
+    )
+
     # explain
     p_explain = subparsers.add_parser(
         "explain",
@@ -1848,6 +1883,97 @@ def main(argv: list[str] | None = None) -> int:
                 pathlib.Path(args.output).write_text(rendered, encoding="utf-8")
             else:
                 print(rendered, end="")
+
+        elif args.command == "irsr-auto-seed-batch":
+            from pet.irsr_state import (
+                compare_hostile_semiprime_auto_seed_runs,
+                format_hostile_semiprime_auto_seed_comparison_report,
+                summarize_hostile_semiprime_auto_seed_comparison,
+            )
+            from .scan import write_jsonl
+
+            if args.start < 2:
+                raise ValueError("irsr-auto-seed-batch expects START >= 2")
+            if args.end < args.start:
+                raise ValueError("--end must be >= --start")
+            if args.max_steps < 1:
+                raise ValueError("--max-steps must be >= 1")
+
+            preset_specs = {
+                "standard": ["1", "4"],
+                "wide": ["1", "2,4"],
+            }
+
+            raw_specs = args.sqrt_radii or preset_specs[args.preset]
+
+            auto_seed_specs = []
+            for raw in raw_specs:
+                parts = [part.strip() for part in raw.split(",")]
+                if not parts or any(not part for part in parts):
+                    raise ValueError("--sqrt-radii must be a comma-separated list of integers")
+
+                radii = []
+                for part in parts:
+                    try:
+                        radius = int(part)
+                    except ValueError as exc:
+                        raise ValueError("--sqrt-radii must contain only integers") from exc
+                    if radius < 0:
+                        raise ValueError("--sqrt-radii values must be >= 0")
+                    radii.append(radius)
+
+                auto_seed_specs.append(
+                    {
+                        "name": "sqrt-auto-" + "-".join(f"r{radius}" for radius in radii),
+                        "sqrt_radii": radii,
+                    }
+                )
+
+            selection = {
+                "mode": "manual" if args.sqrt_radii else "preset",
+                "preset": None if args.sqrt_radii else args.preset,
+                "sqrt_radii_specs": [list(spec["sqrt_radii"]) for spec in auto_seed_specs],
+            }
+
+            output_root = pathlib.Path(args.artifacts_dir)
+            output_root.mkdir(parents=True, exist_ok=True)
+
+            records = []
+            for n in range(args.start, args.end + 1):
+                result = compare_hostile_semiprime_auto_seed_runs(
+                    n,
+                    auto_seed_specs=auto_seed_specs,
+                    max_steps=args.max_steps,
+                    output_dir=output_root / f"n_{n}",
+                )
+                summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+                report = format_hostile_semiprime_auto_seed_comparison_report(result)
+
+                compact_runs = [
+                    {key: value for key, value in run.items() if key != "run"}
+                    for run in result["runs"]
+                ]
+                compact_best_run = result["best_run"]
+                if compact_best_run is not None:
+                    compact_best_run = {
+                        key: value for key, value in compact_best_run.items()
+                        if key != "run"
+                    }
+
+                records.append(
+                    {
+                        "schema": "irsr-auto-seed-report-batch-v1",
+                        "json_mode": "compact",
+                        "input": result["input"],
+                        "selection": selection,
+                        "summary": summary,
+                        "best_run": compact_best_run,
+                        "runs": compact_runs,
+                        "report": report,
+                    }
+                )
+
+            write_jsonl(records, args.jsonl)
 
         elif args.command == "explain":
             if args.pathwise_depth < 1:
