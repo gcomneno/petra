@@ -11,11 +11,23 @@ from typing import Any
 
 
 def _run_json(cmd: list[str], *, env: dict[str, str] | None = None) -> dict[str, Any]:
-    proc = subprocess.run(cmd, check=True, capture_output=True, text=True, env=env)
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True, env=env)
+    if proc.returncode != 0:
+        raise SystemExit(
+            "command failed: "
+            f"{cmd!r}\n"
+            f"returncode={proc.returncode}\n"
+            f"--- stdout ---\n{proc.stdout}\n"
+            f"--- stderr ---\n{proc.stderr}"
+        )
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"invalid JSON from command {cmd!r}: {exc}")
+        raise SystemExit(
+            f"invalid JSON from command {cmd!r}: {exc}\n"
+            f"--- stdout ---\n{proc.stdout}\n"
+            f"--- stderr ---\n{proc.stderr}"
+        )
 
 
 def build_cli_payload_from_factors_file(file: str | Path) -> dict[str, Any]:
@@ -38,6 +50,7 @@ def build_cli_payload_from_factors_file(file: str | Path) -> dict[str, Any]:
 def build_from_factors_pipeline(file: str | Path, output_dir: str | Path) -> dict[str, Any]:
     repo_root = Path(__file__).resolve().parents[2]
     env = os.environ.copy()
+    env["PYTHONINTMAXSTRDIGITS"] = "0"
     src_path = str(repo_root / "src")
     env["PYTHONPATH"] = src_path + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
 

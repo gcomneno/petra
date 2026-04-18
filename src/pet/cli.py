@@ -19,6 +19,7 @@ from .core import (
     minimal_shape_representative,
     prime_factorization,
     shape_generator,
+    shape_generator_from_factorization,
     shape_signature_dict,
     validate,
 )
@@ -647,40 +648,38 @@ def _build_from_factors_report(factors: tuple[tuple[int, int], ...]) -> dict:
 
     n = 2
     path = []
+    current_exp: dict[int, int] = {2: 1}
 
     for i, (prime, target_exp) in enumerate(factors):
-        if i > 0:
-            new = _explain_moves(n)["new"]
-            if new is None or new["prime"] != prime:
-                raise RuntimeError(f"cannot introduce prime {prime} from n={n}")
+        if i == 0:
+            if prime != 2:
+                raise RuntimeError(f"expected first prime 2, got {prime}")
+        else:
+            prev_n = n
+            n *= prime
+            current_exp[prime] = 1
+            path.append(
+                {
+                    "source_n": prev_n,
+                    "label": f"NEW(p={prime})",
+                    "target_n": n,
+                    "target_generator": None,
+                }
+            )
 
-            move = {
-                "source_n": n,
-                "label": f"NEW(p={new['prime']})",
-                "target_n": new["target_n"],
-                "target_generator": new["target_generator"],
-            }
-            path.append(move)
-            n = move["target_n"]
-
-        while _factor_exp(n, prime) < target_exp:
-            rows = [
-                row
-                for row in _explain_moves(n)["inc"]
-                if row["representative_prime"] == prime or prime in row.get("primes", [])
-            ]
-            if not rows:
-                raise RuntimeError(f"cannot increase exponent of prime {prime} from n={n}")
-
-            row = max(rows, key=lambda r: (r["exponent"], r["target_n"]))
-            move = {
-                "source_n": n,
-                "label": f"INC(p={row['representative_prime']},e={row['exponent']})",
-                "target_n": row["target_n"],
-                "target_generator": row["target_generator"],
-            }
-            path.append(move)
-            n = move["target_n"]
+        while current_exp[prime] < target_exp:
+            prev_n = n
+            prev_exp = current_exp[prime]
+            n *= prime
+            current_exp[prime] = prev_exp + 1
+            path.append(
+                {
+                    "source_n": prev_n,
+                    "label": f"INC(p={prime},e={prev_exp})",
+                    "target_n": n,
+                    "target_generator": None,
+                }
+            )
 
     if n != target_n:
         raise RuntimeError(f"builder ended at {n}, expected {target_n}")
@@ -689,11 +688,10 @@ def _build_from_factors_report(factors: tuple[tuple[int, int], ...]) -> dict:
         "start_n": 2,
         "factors": factors,
         "target_n": target_n,
-        "target_generator": shape_signature_dict(target_n)["generator"],
+        "target_generator": shape_generator_from_factorization(list(factors)),
         "steps": len(path),
         "path": path,
     }
-
 
 def _factor_exp_map(n: int) -> dict[int, int]:
     return dict(prime_factorization(n))
