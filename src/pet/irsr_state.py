@@ -1959,3 +1959,45 @@ def run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
         },
     }
 
+def extract_builder_payload_candidates_from_irsr_run(run_result: dict) -> list[dict]:
+    return deepcopy(run_result.get("promoted", []))
+
+
+def summarize_irsr_payload_candidates(payloads: list[dict]) -> dict:
+    return {
+        "payload_count": len(payloads),
+        "support_sizes": [payload["support_size"] for payload in payloads],
+        "exponent_profiles": [payload["exponent_profile"] for payload in payloads],
+    }
+
+
+def run_hostile_semiprime_irsr_to_payload_candidates(
+    n: int | str,
+    max_steps: int,
+    open_portfolios=(),
+    branch_portfolios=(),
+    branch_selector=select_first_branchable_slot,
+    progress_scorer=contextual_progress_score_by_structural_gain,
+) -> dict:
+    initial_state = make_hostile_semiprime_residual_state(n)
+    run_result = run_residual_state_frontier_until_quiescence_with_ranked_portfolios(
+        [initial_state],
+        max_steps=max_steps,
+        open_portfolios=open_portfolios,
+        branch_portfolios=branch_portfolios,
+        branch_selector=branch_selector,
+        progress_scorer=progress_scorer,
+    )
+    payload_candidates = extract_builder_payload_candidates_from_irsr_run(run_result)
+
+    return {
+        "input": {
+            "n": str(n),
+            "kind": "hostile-semiprime",
+        },
+        "initial_state": initial_state,
+        "run": run_result,
+        "payload_candidates": payload_candidates,
+        "payload_summary": summarize_irsr_payload_candidates(payload_candidates),
+    }
+
