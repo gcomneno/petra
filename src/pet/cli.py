@@ -1051,6 +1051,31 @@ def main(argv: list[str] | None = None) -> int:
     p_xmetrics.add_argument("n", type=int, metavar="N")
     p_xmetrics.add_argument("--json", action="store_true")
 
+    # irsr-auto-seed-report
+    p_irsr_auto_seed_report = subparsers.add_parser(
+        "irsr-auto-seed-report",
+        help="compare hostile semiprime auto-seed ladders and print a readable report",
+    )
+    p_irsr_auto_seed_report.add_argument("n", type=int, metavar="N")
+    p_irsr_auto_seed_report.add_argument(
+        "--sqrt-radii",
+        action="append",
+        required=True,
+        help="comma-separated radii for one ladder; repeat to compare multiple ladders",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--max-steps",
+        type=int,
+        default=5,
+        help="maximum IRSR steps per ladder run (default: 5)",
+    )
+    p_irsr_auto_seed_report.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_irsr_auto_seed_report_out",
+        help="directory for materialized builder artifacts",
+    )
+    p_irsr_auto_seed_report.add_argument("--json", action="store_true")
+
     # explain
     p_explain = subparsers.add_parser(
         "explain",
@@ -1703,6 +1728,53 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"N = {args.n}")
                 for key, value in data.items():
                     print(f"{key} = {value}")
+
+        elif args.command == "irsr-auto-seed-report":
+            from pet.irsr_state import (
+                compare_hostile_semiprime_auto_seed_runs,
+                format_hostile_semiprime_auto_seed_comparison_report,
+                summarize_hostile_semiprime_auto_seed_comparison,
+            )
+
+            auto_seed_specs = []
+            for raw in args.sqrt_radii:
+                parts = [part.strip() for part in raw.split(",")]
+                if not parts or any(not part for part in parts):
+                    raise ValueError("--sqrt-radii must be a comma-separated list of integers")
+
+                radii = []
+                for part in parts:
+                    try:
+                        radius = int(part)
+                    except ValueError as exc:
+                        raise ValueError("--sqrt-radii must contain only integers") from exc
+                    if radius < 0:
+                        raise ValueError("--sqrt-radii values must be >= 0")
+                    radii.append(radius)
+
+                auto_seed_specs.append(
+                    {
+                        "name": "sqrt-auto-" + "-".join(f"r{radius}" for radius in radii),
+                        "sqrt_radii": radii,
+                    }
+                )
+
+            result = compare_hostile_semiprime_auto_seed_runs(
+                args.n,
+                auto_seed_specs=auto_seed_specs,
+                max_steps=args.max_steps,
+                output_dir=pathlib.Path(args.artifacts_dir),
+            )
+            summary = summarize_hostile_semiprime_auto_seed_comparison(result)
+            report = format_hostile_semiprime_auto_seed_comparison_report(result)
+
+            if args.json:
+                payload = dict(result)
+                payload["summary"] = summary
+                payload["report"] = report
+                print(json.dumps(_jsonable_value(payload), indent=2, ensure_ascii=False))
+            else:
+                print(report)
 
         elif args.command == "explain":
             if args.pathwise_depth < 1:
