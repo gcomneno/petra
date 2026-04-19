@@ -19,6 +19,7 @@ def _irsr_block_reason_from_final_status(final_status: str | None) -> str:
         "no-payload-candidates": "irsr-no-payload-candidates",
         "payloads-nonexact": "irsr-payloads-nonexact",
         "builder-attempted-no-build": "irsr-builder-attempted-no-build",
+        "semiprime-model-mismatch": "irsr-semiprime-model-mismatch",
     }
     return mapping.get(final_status or "", "irsr-no-viable-payload")
 

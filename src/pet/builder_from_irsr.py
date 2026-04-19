@@ -17,6 +17,34 @@ def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> 
     return normalized
 
 
+def _looks_like_semiprime_model_mismatch(result: dict[str, Any], n: int) -> bool:
+    if result.get("final_status") != "payloads-nonexact":
+        return False
+
+    payloads = result.get("payload_candidates") or []
+    if len(payloads) != 1:
+        return False
+
+    payload = payloads[0]
+    if payload.get("support_size") != 2:
+        return False
+    if list(payload.get("exponent_profile") or []) != [1, 1]:
+        return False
+
+    product = 1
+    slots = payload.get("prime_slots") or []
+    if len(slots) != 2:
+        return False
+
+    for slot in slots:
+        candidates = slot.get("candidates") or []
+        if len(candidates) != 1:
+            return False
+        product *= int(candidates[0])
+
+    return product != int(n)
+
+
 def build_from_irsr_pipeline(
     n: int,
     output_dir: str | Path,
@@ -44,6 +72,10 @@ def build_from_irsr_pipeline(
             output_dir=output_dir,
         )
         strategy = "auto-seed"
+
+    if strategy == "auto-seed" and _looks_like_semiprime_model_mismatch(result, n):
+        result = dict(result)
+        result["final_status"] = "semiprime-model-mismatch"
 
     attempted = [item for item in result.get("build_results", []) if item.get("build_attempted")]
     builder_report = attempted[-1]["report"] if attempted else None
