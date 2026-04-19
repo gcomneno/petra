@@ -2118,6 +2118,94 @@ def summarize_irsr_builder_results(build_results: list[dict]) -> dict:
     }
 
 
+def _collect_known_support_from_payload_candidates(payload_candidates: list[dict]) -> list[int]:
+    known_support: set[int] = set()
+
+    for payload in payload_candidates:
+        for slot in payload.get("prime_slots", []):
+            for candidate in slot.get("candidates", []):
+                if isinstance(candidate, int):
+                    known_support.add(candidate)
+
+    return sorted(known_support)
+
+
+def _extract_terminal_constraints(result: dict) -> dict:
+    payload_candidates = result.get("payload_candidates", [])
+    if payload_candidates:
+        first = payload_candidates[0]
+        return {
+            "support_size": first.get("support_size"),
+            "exponent_profile": deepcopy(first.get("exponent_profile")),
+            "joint_pet_constraints": deepcopy(first.get("joint_pet_constraints", [])),
+            "forbidden_patterns": deepcopy(first.get("forbidden_patterns", [])),
+        }
+
+    initial_state = result.get("initial_state", {})
+    skeleton = initial_state.get("skeleton", {})
+    coupling = initial_state.get("coupling", {})
+
+    return {
+        "support_size": skeleton.get("support_size"),
+        "exponent_profile": deepcopy(skeleton.get("exponent_profile")),
+        "joint_pet_constraints": deepcopy(coupling.get("joint_pet_constraints", [])),
+        "forbidden_patterns": deepcopy(coupling.get("forbidden_patterns", [])),
+    }
+
+
+def build_irsr_terminal_state(result: dict) -> dict:
+    final_status = result.get("final_status")
+    input_payload = deepcopy(result.get("input", {}))
+    payload_candidates = result.get("payload_candidates", [])
+    build_results = result.get("build_results", [])
+
+    terminal_state = {
+        "status": "blocked",
+        "reason": final_status,
+        "input": input_payload,
+        "known_support": _collect_known_support_from_payload_candidates(payload_candidates),
+        "unresolved_residual": {
+            "n": input_payload.get("n"),
+        },
+        "constraints": _extract_terminal_constraints(result),
+        "builder_readiness": "not-ready",
+        "next_missing_step": "derive at least one builder-usable payload candidate from raw integer input",
+    }
+
+    if final_status == "no-payload-candidates":
+        return terminal_state
+
+    if final_status == "payloads-nonexact":
+        terminal_state["next_missing_step"] = (
+            "narrow every prime slot to a single exact candidate so the builder can derive an exact factorization spec"
+        )
+        return terminal_state
+
+    attempted = [item for item in build_results if item.get("build_attempted")]
+    last_attempt = attempted[-1] if attempted else None
+
+    if final_status in {"built", "built-exact-match"} and last_attempt is not None:
+        final_build_output = last_attempt["report"]["final_build_output"]
+        built_pet_object = final_build_output.get("built_pet_object", {})
+
+        terminal_state["status"] = "built"
+        terminal_state["builder_readiness"] = "ready"
+        terminal_state["next_missing_step"] = None
+        terminal_state["build_status"] = final_build_output.get("build_status")
+        terminal_state["assembly_status"] = built_pet_object.get("assembly_status")
+        return terminal_state
+
+    if final_status == "builder-attempted-no-build" and last_attempt is not None:
+        final_build_output = last_attempt["report"]["final_build_output"]
+        terminal_state["builder_readiness"] = "ready"
+        terminal_state["build_status"] = final_build_output.get("build_status")
+        terminal_state["next_missing_step"] = (
+            "resolve the exact builder execution gap for the promoted payload candidate"
+        )
+        return terminal_state
+
+    return terminal_state
+
 
 def run_hostile_semiprime_irsr_to_builder_results(
     n: int | str,
@@ -2157,6 +2245,7 @@ def run_hostile_semiprime_irsr_to_builder_results(
         "build_summary": summarize_irsr_builder_results(build_results),
     }
     result["final_status"] = classify_irsr_builder_outcome(result)
+    result["terminal_state"] = build_irsr_terminal_state(result)
     return result
 
 def classify_irsr_builder_outcome(result: dict) -> str:
