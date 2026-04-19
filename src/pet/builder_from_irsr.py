@@ -24,6 +24,21 @@ def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> 
     return normalized
 
 
+def _icbrt_floor(n: int) -> int:
+    lo = 0
+    hi = 1
+    while hi * hi * hi <= n:
+        hi *= 2
+    while lo + 1 < hi:
+        mid = (lo + hi) // 2
+        cube = mid * mid * mid
+        if cube <= n:
+            lo = mid
+        else:
+            hi = mid
+    return lo
+
+
 def _looks_like_semiprime_model_mismatch(result: dict[str, Any], n: int) -> bool:
     if result.get("final_status") != "payloads-nonexact":
         return False
@@ -77,13 +92,7 @@ def _build_summary_from_builder_report(builder_report: dict[str, Any]) -> dict[s
     }
 
 
-def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] | None:
-    root = isqrt(n)
-    if root * root != n:
-        return None
-    if not is_prime(root):
-        return None
-
+def _run_builder_from_factorization(output_dir: str | Path, factors: list[list[int]]) -> dict[str, Any]:
     from pet.builder_from_factorization import build_from_factorization_pipeline
 
     output_dir = Path(output_dir)
@@ -91,13 +100,23 @@ def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] |
 
     with tempfile.TemporaryDirectory() as td:
         td_path = Path(td)
-        spec_path = td_path / "prime_square_factorization.json"
+        spec_path = td_path / "irsr_factorization.json"
         spec_path.write_text(
-            json.dumps({"factors": [[root, 2]]}),
+            json.dumps({"factors": factors}),
             encoding="utf-8",
         )
-        builder_report = build_from_factorization_pipeline(spec_path, output_dir)
+        return build_from_factorization_pipeline(spec_path, output_dir)
 
+
+def _wrap_dedicated_solver_report(
+    *,
+    n: int,
+    kind: str,
+    strategy: str,
+    support: list[int],
+    exponent_profile: list[int],
+    builder_report: dict[str, Any],
+) -> dict[str, Any]:
     final_status = _final_status_from_builder_report(builder_report)
     final_build_output = builder_report.get("final_build_output") or {}
     built_pet_object = final_build_output.get("built_pet_object") or {}
@@ -106,12 +125,12 @@ def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] |
         terminal_state = {
             "status": "built",
             "reason": final_status,
-            "input": {"n": str(n), "kind": "hostile-prime-square"},
-            "known_support": [root],
+            "input": {"n": str(n), "kind": kind},
+            "known_support": sorted(support),
             "unresolved_residual": {"n": str(n)},
             "constraints": {
-                "support_size": 1,
-                "exponent_profile": [2],
+                "support_size": len(exponent_profile),
+                "exponent_profile": list(exponent_profile),
                 "joint_pet_constraints": [],
                 "forbidden_patterns": [],
             },
@@ -124,12 +143,12 @@ def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] |
         terminal_state = {
             "status": "blocked",
             "reason": final_status,
-            "input": {"n": str(n), "kind": "hostile-prime-square"},
-            "known_support": [root],
+            "input": {"n": str(n), "kind": kind},
+            "known_support": sorted(support),
             "unresolved_residual": {"n": str(n)},
             "constraints": {
-                "support_size": 1,
-                "exponent_profile": [2],
+                "support_size": len(exponent_profile),
+                "exponent_profile": list(exponent_profile),
                 "joint_pet_constraints": [],
                 "forbidden_patterns": [],
             },
@@ -141,20 +160,76 @@ def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] |
     return {
         "schema": "pet-builder-from-irsr-v0",
         "input_n": n,
-        "strategy": "prime-square-auto",
+        "strategy": strategy,
         "slot_candidates": {},
         "auto_seed_radii": None,
         "max_steps": 0,
         "irsr_final_status": final_status,
         "payload_summary": {
             "payload_count": 1,
-            "support_sizes": [1],
-            "exponent_profiles": [[2]],
+            "support_sizes": [len(exponent_profile)],
+            "exponent_profiles": [list(exponent_profile)],
         },
         "build_summary": _build_summary_from_builder_report(builder_report),
         "terminal_state": terminal_state,
         "builder_report": builder_report,
     }
+
+
+def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] | None:
+    root = isqrt(n)
+    if root * root != n:
+        return None
+    if not is_prime(root):
+        return None
+
+    builder_report = _run_builder_from_factorization(output_dir, [[root, 2]])
+    return _wrap_dedicated_solver_report(
+        n=n,
+        kind="hostile-prime-square",
+        strategy="prime-square-auto",
+        support=[root],
+        exponent_profile=[2],
+        builder_report=builder_report,
+    )
+
+
+def _run_square_times_prime_solver(
+    n: int,
+    output_dir: str | Path,
+    *,
+    radius: int = 1,
+) -> dict[str, Any] | None:
+    root = _icbrt_floor(n)
+
+    start = max(2, root - radius)
+    stop = root + radius + 1
+
+    for p in range(start, stop + 1):
+        if not is_prime(p):
+            continue
+        p2 = p * p
+        if n % p2 != 0:
+            continue
+
+        q = n // p2
+        if q == p:
+            continue
+        if q < 2 or not is_prime(q):
+            continue
+
+        factors = [[p, 2], [q, 1]]
+        builder_report = _run_builder_from_factorization(output_dir, factors)
+        return _wrap_dedicated_solver_report(
+            n=n,
+            kind="hostile-square-times-prime",
+            strategy="square-times-prime-auto",
+            support=[p, q],
+            exponent_profile=[2, 1],
+            builder_report=builder_report,
+        )
+
+    return None
 
 
 def build_from_irsr_pipeline(
@@ -185,13 +260,18 @@ def build_from_irsr_pipeline(
         )
         strategy = "auto-seed"
 
-    if strategy == "auto-seed" and _looks_like_semiprime_model_mismatch(result, n):
+    if strategy == "auto-seed":
         square_report = _run_prime_square_solver(n, output_dir)
         if square_report is not None:
             return square_report
 
-        result = dict(result)
-        result["final_status"] = "semiprime-model-mismatch"
+        p2q_report = _run_square_times_prime_solver(n, output_dir, radius=1)
+        if p2q_report is not None:
+            return p2q_report
+
+        if _looks_like_semiprime_model_mismatch(result, n):
+            result = dict(result)
+            result["final_status"] = "semiprime-model-mismatch"
 
     attempted = [item for item in result.get("build_results", []) if item.get("build_attempted")]
     builder_report = attempted[-1]["report"] if attempted else None
