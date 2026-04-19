@@ -184,3 +184,6 @@ pytest -q
 ## License
 
 MIT
+## Official showcases
+
+See [`docs/official_showcases.md`](docs/official_showcases.md).
