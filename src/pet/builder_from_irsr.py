@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from itertools import combinations
 from math import isqrt
 from pathlib import Path
 from typing import Any
@@ -24,19 +25,38 @@ def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> 
     return normalized
 
 
-def _icbrt_floor(n: int) -> int:
+def _iroot_floor(n: int, k: int) -> int:
+    if k < 1:
+        raise ValueError("k must be >= 1")
+    if n < 0:
+        raise ValueError("n must be >= 0")
+    if n in (0, 1):
+        return n
+
     lo = 0
     hi = 1
-    while hi * hi * hi <= n:
+    while hi**k <= n:
         hi *= 2
+
     while lo + 1 < hi:
         mid = (lo + hi) // 2
-        cube = mid * mid * mid
-        if cube <= n:
+        power = mid**k
+        if power <= n:
             lo = mid
         else:
             hi = mid
+
     return lo
+
+
+def _icbrt_floor(n: int) -> int:
+    return _iroot_floor(n, 3)
+
+
+def _candidate_primes_near_root(root: int, radius: int) -> list[int]:
+    start = max(2, root - radius)
+    stop = root + radius + 1
+    return [p for p in range(start, stop + 1) if is_prime(p)]
 
 
 def _looks_like_semiprime_model_mismatch(result: dict[str, Any], n: int) -> bool:
@@ -202,12 +222,7 @@ def _run_square_times_prime_solver(
 ) -> dict[str, Any] | None:
     root = _icbrt_floor(n)
 
-    start = max(2, root - radius)
-    stop = root + radius + 1
-
-    for p in range(start, stop + 1):
-        if not is_prime(p):
-            continue
+    for p in _candidate_primes_near_root(root, radius):
         p2 = p * p
         if n % p2 != 0:
             continue
@@ -226,6 +241,44 @@ def _run_square_times_prime_solver(
             strategy="square-times-prime-auto",
             support=[p, q],
             exponent_profile=[2, 1],
+            builder_report=builder_report,
+        )
+
+    return None
+
+
+def _run_squarefree_k_support_solver(
+    n: int,
+    output_dir: str | Path,
+    *,
+    k: int,
+    radius: int = 1,
+) -> dict[str, Any] | None:
+    if k < 2:
+        raise ValueError("k must be >= 2")
+
+    root = _iroot_floor(n, k)
+    primes = _candidate_primes_near_root(root, radius)
+
+    if len(primes) < k:
+        return None
+
+    for combo in combinations(primes, k):
+        product = 1
+        for p in combo:
+            product *= p
+
+        if product != n:
+            continue
+
+        factors = [[p, 1] for p in combo]
+        builder_report = _run_builder_from_factorization(output_dir, factors)
+        return _wrap_dedicated_solver_report(
+            n=n,
+            kind=f"hostile-squarefree-{k}-support",
+            strategy=f"squarefree-{k}-support-auto",
+            support=list(combo),
+            exponent_profile=[1] * k,
             builder_report=builder_report,
         )
 
@@ -268,6 +321,10 @@ def build_from_irsr_pipeline(
         p2q_report = _run_square_times_prime_solver(n, output_dir, radius=1)
         if p2q_report is not None:
             return p2q_report
+
+        k3_report = _run_squarefree_k_support_solver(n, output_dir, k=3, radius=16)
+        if k3_report is not None:
+            return k3_report
 
         if _looks_like_semiprime_model_mismatch(result, n):
             result = dict(result)
