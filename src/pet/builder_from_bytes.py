@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -66,6 +70,66 @@ def _derive_terminal_state_from_irsr_report(irsr_report: dict[str, Any]) -> tupl
     }
 
 
+def _run_direct_builder_with_timeout(
+    n: int,
+    output_dir: str | Path,
+    *,
+    timeout_seconds: float,
+) -> dict[str, Any]:
+    repo_root = Path(__file__).resolve().parents[2]
+    src_path = str(repo_root / "src")
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = src_path + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+
+    cmd = [
+        sys.executable,
+        str(repo_root / "tools" / "pet_builder_from_int.py"),
+        str(n),
+        "--output-dir",
+        str(output_dir),
+    ]
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "timeout",
+            "detail": "direct factoring budget exceeded",
+            "builder_report": None,
+        }
+
+    if proc.returncode != 0:
+        detail = proc.stderr.strip() or proc.stdout.strip() or f"direct builder exited with status {proc.returncode}"
+        return {
+            "status": "error",
+            "detail": detail,
+            "builder_report": None,
+        }
+
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "error",
+            "detail": f"invalid JSON from direct builder: {exc}",
+            "builder_report": None,
+        }
+
+    return {
+        "status": "ok",
+        "detail": None,
+        "builder_report": payload,
+    }
+
+
 def build_from_bytes_pipeline(
     path: str | Path,
     output_dir: str | Path,
@@ -75,6 +139,7 @@ def build_from_bytes_pipeline(
     mode: str = "auto",
     irsr_slot_candidates: dict[str, list[int]] | None = None,
     irsr_max_steps: int = 5,
+    direct_timeout_seconds: float = 1.0,
 ) -> dict[str, Any]:
     if mode not in _ALLOWED_MODES:
         raise ValueError(f"unsupported mode: {mode}")
@@ -155,6 +220,68 @@ def build_from_bytes_pipeline(
         report["builder_report"] = irsr_report.get("builder_report")
         report["terminal_outcome"] = terminal_outcome
         report["terminal_state"] = terminal_state
+        return report
+
+    if mode == "auto":
+        direct = _run_direct_builder_with_timeout(
+            input_n,
+            output_dir,
+            timeout_seconds=direct_timeout_seconds,
+        )
+
+        if direct["status"] == "ok":
+            builder_report = direct["builder_report"]
+            terminal_outcome, terminal_state = _derive_terminal_state(builder_report)
+            report["effective_mode"] = "direct"
+            report["attempts"].append(_attempt("direct", terminal_outcome, None))
+            report["builder_report"] = builder_report
+            report["terminal_outcome"] = terminal_outcome
+            report["terminal_state"] = terminal_state
+            return report
+
+        if direct["status"] == "timeout":
+            report["attempts"].append(_attempt("direct", "timeout", direct["detail"]))
+
+            if not irsr_slot_candidates:
+                report["effective_mode"] = "direct"
+                report["terminal_state"] = {
+                    "terminal_status": "blocked",
+                    "block_reason": "direct-timeout",
+                }
+                return report
+
+            try:
+                irsr_report = build_from_irsr_pipeline(
+                    input_n,
+                    output_dir,
+                    slot_candidates=irsr_slot_candidates,
+                    max_steps=irsr_max_steps,
+                )
+            except Exception as exc:
+                report["effective_mode"] = "irsr"
+                report["attempts"].append(_attempt("irsr", "error", str(exc)))
+                report["terminal_state"] = {
+                    "terminal_status": "blocked",
+                    "block_reason": "irsr-no-viable-payload",
+                }
+                return report
+
+            terminal_outcome, terminal_state = _derive_terminal_state_from_irsr_report(irsr_report)
+            report["effective_mode"] = "irsr"
+            report["attempts"].append(
+                _attempt("irsr", terminal_outcome, None if terminal_outcome != "blocked" else irsr_report.get("irsr_final_status"))
+            )
+            report["builder_report"] = irsr_report.get("builder_report")
+            report["terminal_outcome"] = terminal_outcome
+            report["terminal_state"] = terminal_state
+            return report
+
+        report["effective_mode"] = "direct"
+        report["attempts"].append(_attempt("direct", "error", direct["detail"]))
+        report["terminal_state"] = {
+            "terminal_status": "blocked",
+            "block_reason": "direct-no-viable-path",
+        }
         return report
 
     try:
