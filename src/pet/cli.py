@@ -640,6 +640,8 @@ def _parse_irsr_slot_candidates(raw_specs: list[str]) -> dict[str, list[int]]:
                 raise ValueError("--irsr-slot-candidates values must be integers") from exc
             if value < 2:
                 raise ValueError("--irsr-slot-candidates values must be >= 2")
+            if not is_prime(value):
+                raise ValueError("--irsr-slot-candidates values must be prime")
             bucket.append(value)
 
     return {

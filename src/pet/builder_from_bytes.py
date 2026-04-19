@@ -14,6 +14,15 @@ from pet.builder_from_irsr import build_from_irsr_pipeline
 _ALLOWED_MODES = {"auto", "direct", "irsr"}
 
 
+def _irsr_block_reason_from_final_status(final_status: str | None) -> str:
+    mapping = {
+        "no-payload-candidates": "irsr-no-payload-candidates",
+        "payloads-nonexact": "irsr-payloads-nonexact",
+        "builder-attempted-no-build": "irsr-builder-attempted-no-build",
+    }
+    return mapping.get(final_status or "", "irsr-no-viable-payload")
+
+
 def _attempt(mode: str, status: str, detail: str | None = None) -> dict[str, Any]:
     return {
         "mode": mode,
@@ -66,7 +75,7 @@ def _derive_terminal_state_from_irsr_report(irsr_report: dict[str, Any]) -> tupl
 
     return "blocked", {
         "terminal_status": "blocked",
-        "block_reason": "irsr-no-viable-payload",
+        "block_reason": _irsr_block_reason_from_final_status(irsr_report.get("irsr_final_status")),
     }
 
 
@@ -188,7 +197,7 @@ def build_from_bytes_pipeline(
             report["attempts"].append(
                 _attempt(
                     "irsr",
-                    "no-viable-payload",
+                    "blocked",
                     "no irsr seed candidates provided",
                 )
             )
@@ -209,7 +218,7 @@ def build_from_bytes_pipeline(
             report["attempts"].append(_attempt("irsr", "error", str(exc)))
             report["terminal_state"] = {
                 "terminal_status": "blocked",
-                "block_reason": "irsr-no-viable-payload",
+                "block_reason": _irsr_block_reason_from_final_status(irsr_report.get("irsr_final_status")),
             }
             return report
 
