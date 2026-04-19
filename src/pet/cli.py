@@ -445,7 +445,11 @@ def _dismantle_data(n: int) -> dict:
 def _parse_factor_spec_file(path_str: str) -> tuple[tuple[int, int], ...]:
     payload = json.loads(pathlib.Path(path_str).read_text(encoding="utf-8"))
 
+    trust_primes = False
+
     if isinstance(payload, dict):
+        trust_primes = bool(payload.get("trust_primes", False))
+
         if "factors" not in payload:
             raise ValueError("factor spec dict must contain a 'factors' key")
         payload = payload["factors"]
@@ -467,7 +471,7 @@ def _parse_factor_spec_file(path_str: str) -> tuple[tuple[int, int], ...]:
             raise ValueError("prime must be >= 2")
         if exp < 1:
             raise ValueError("exponent must be >= 1")
-        if not is_prime(prime):
+        if not trust_primes and not is_prime(prime):
             raise ValueError(f"{prime} is not prime")
         if prime in seen:
             raise ValueError(f"duplicate prime in factor spec: {prime}")
