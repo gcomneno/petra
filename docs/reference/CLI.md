@@ -12,7 +12,7 @@ Il CLI è pensato come punto di accesso operativo per:
 - analisi bounded su dataset PET
 
 Per la visione generale del progetto, vedere `../VISION.md`.
-Per lo stato epistemico del progetto, vedere `../STATUS.md`.
+Per lo stato epistemico del progetto, vedere `../reports/STATUS.md`.
 Per il formato e i contratti del dataset, vedere `SPEC.md`.
 
 ## Installazione rapida
@@ -467,7 +467,7 @@ Il CLI di PET non è pensato come shell “magica”.
 
 Le affermazioni forti del progetto non devono vivere nel CLI:
 
-- la parte epistemica sta in `STATUS.md`
+- la parte epistemica sta in `../reports/STATUS.md`
 - la parte formale sta in `SPEC.md`
 - la parte empirica bounded sta nei report sotto `docs/reports/`
 
@@ -475,7 +475,7 @@ Le affermazioni forti del progetto non devono vivere nel CLI:
 
 - `README.md`
 - `VISION.md`
-- `STATUS.md`
+- `../reports/STATUS.md`
 - `SPEC.md`
 - `CHANGELOG.md`
 - `docs/reports/README.md`

@@ -6,7 +6,7 @@ This document defines the current canonical workflow for PET as a bounded,
 reproducible structural laboratory for integers.
 
 It does not define PET semantics, proof status, or future theory.
-Those belong respectively to `docs/reference/SPEC.md`, `docs/STATUS.md`, and research notes.
+Those belong respectively to `docs/reference/SPEC.md`, `docs/reports/STATUS.md`, and research notes.
 
 ## Purpose
 
@@ -180,7 +180,7 @@ In practice:
 Stable entry points currently recognized by the repository:
 
 - `docs/reference/SPEC.md`
-- `docs/STATUS.md`
+- `docs/reports/STATUS.md`
 - `docs/reports/metrics-2-10000.md`
 - `docs/reports/atlas-2-100000.md`
 - `docs/reports/atlas-2-1000000.md`

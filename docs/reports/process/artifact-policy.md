@@ -19,7 +19,7 @@ stable bounded results.
 Examples:
 - `README.md`
 - `docs/reference/SPEC.md`
-- `docs/STATUS.md`
+- `docs/reports/STATUS.md`
 - `docs/reports/canonical-workflow.md`
 - `docs/reports/README.md`
 - bounded report documents under `docs/reports/*.md`

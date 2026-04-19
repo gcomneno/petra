@@ -115,7 +115,7 @@ These are **empirical computational findings**, not proved theorems.
 PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer.
 
 ### Evidence
-- `PET-METICA.md`
+- `../research/notes/PET-METICA.md`
 - `tools/pet_rewrite_metric.py`
 - pair / scan / matrix experiments
 - family reports
@@ -183,4 +183,4 @@ It is a **status map**:
 
 For formal core behavior, see `reference/SPEC.md`.
 For project vision, see `VISION.md`.
-For rewrite-geometric status, see `PET-METICA.md`.
+For rewrite-geometric status, see `../research/notes/PET-METICA.md`.

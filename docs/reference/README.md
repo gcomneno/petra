@@ -36,5 +36,5 @@ This directory is reference material, not the full project vision.
 For broader project context, see:
 
 - `../VISION.md`
-- `../STATUS.md`
-- `../PET-METICA.md`
+- `../reports/STATUS.md`
+- `../research/notes/PET-METICA.md`

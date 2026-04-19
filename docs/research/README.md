@@ -58,6 +58,6 @@ They may contain:
 For current project-wide source of truth, see:
 
 - `../VISION.md`
-- `../STATUS.md`
-- `../PET-METICA.md`
+- `../reports/STATUS.md`
+- `notes/PET-METICA.md`
 - `../reference/SPEC.md`

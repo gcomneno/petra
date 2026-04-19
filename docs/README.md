@@ -7,8 +7,8 @@ This directory is organized by role.
 If you want to understand the project at a high level:
 
 1. `VISION.md`
-2. `PET-METICA.md`
-3. `STATUS.md`
+2. `research/notes/PET-METICA.md`
+3. `reports/STATUS.md`
 
 ## Core reference
 
@@ -34,8 +34,8 @@ Read:
 ### If you want the current rewrite-geometric line
 Read:
 
-1. `PET-METICA.md`
-2. `STATUS.md`
+1. `research/notes/PET-METICA.md`
+2. `reports/STATUS.md`
 
 ### If you want to use the CLI
 Read:
@@ -51,6 +51,6 @@ Start from:
 
 ## Source-of-truth notes
 
-- `PET-METICA.md` is the current source of truth for the rewrite-geometric PET-METICA line.
+- `research/notes/PET-METICA.md` is the current source of truth for the rewrite-geometric PET-METICA line.
 - `reference/SPEC.md` is the source of truth for PET-Base behavior.
-- `STATUS.md` is the source of truth for what is stable, empirical, or exploratory.
+- `reports/STATUS.md` is the source of truth for what is stable, empirical, or exploratory.

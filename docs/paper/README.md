@@ -38,15 +38,15 @@ The paper may contain:
 For project-wide source of truth, see:
 
 - `../VISION.md`
-- `../STATUS.md`
-- `../PET-METICA.md`
+- `../reports/STATUS.md`
+- `../research/notes/PET-METICA.md`
 - `../reference/SPEC.md`
 
 ## Suggested workflow
 
 A reasonable order is:
 
-1. stabilize ideas in `../PET-METICA.md` or `../research/`
+1. stabilize ideas in `../research/notes/PET-METICA.md` or `../research/`
 2. move robust results into `sections/`
 3. keep figures in `figures/`
 4. keep supporting artifacts in `data/`

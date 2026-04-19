@@ -132,8 +132,8 @@ Start here depending on what you need:
 
 - [docs/README.md](docs/README.md) — documentation entry point
 - [docs/VISION.md](docs/VISION.md) — project vision and layer structure
-- [docs/STATUS.md](docs/STATUS.md) — what is stable, empirical, or exploratory
-- [docs/PET-METICA.md](docs/PET-METICA.md) — current rewrite-geometric research line
+- [docs/reports/STATUS.md](docs/reports/STATUS.md) — what is stable, empirical, or exploratory
+- [docs/research/notes/PET-METICA.md](docs/research/notes/PET-METICA.md) — current rewrite-geometric research line
 - [docs/reference/SPEC.md](docs/reference/SPEC.md) — formal PET-Base specification
 - [docs/reference/CLI.md](docs/reference/CLI.md) — command-line usage
 - [docs/reports/README.md](docs/reports/README.md) — reports, generated summaries, and report data
@@ -184,3 +184,6 @@ pytest -q
 ## License
 
 MIT
+## Official showcases
+
+See [`docs/reference/OFFICIAL_SHOWCASES.md`](docs/reference/OFFICIAL_SHOWCASES.md).

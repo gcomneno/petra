@@ -54,6 +54,6 @@ Files in `reports/` are not all equal.
 For project-wide source of truth, see:
 
 - `../VISION.md`
-- `../STATUS.md`
-- `../PET-METICA.md`
+- `STATUS.md`
+- `../research/notes/PET-METICA.md`
 - `../reference/SPEC.md`
