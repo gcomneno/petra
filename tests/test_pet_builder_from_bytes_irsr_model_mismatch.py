@@ -5,12 +5,12 @@ from pathlib import Path
 from pet.builder_from_bytes import build_from_bytes_pipeline
 
 
-PRIME_SQUARE = 1000000007 * 1000000007
+NONPRIME_SQUARE = 1000000008 * 1000000008
 
 
-def test_pet_builder_from_bytes_irsr_auto_seed_prime_square_reports_semiprime_model_mismatch(tmp_path: Path) -> None:
+def test_pet_builder_from_bytes_irsr_auto_seed_nonprime_square_reports_semiprime_model_mismatch(tmp_path: Path) -> None:
     path = tmp_path / "square.bin"
-    path.write_bytes(PRIME_SQUARE.to_bytes(8, "big"))
+    path.write_bytes(NONPRIME_SQUARE.to_bytes(8, "big"))
 
     report = build_from_bytes_pipeline(
         path,
