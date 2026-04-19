@@ -52,4 +52,4 @@ def test_cli_builder_from_bytes_irsr_without_seed_candidates_blocks(tmp_path):
     assert payload["requested_mode"] == "irsr"
     assert payload["effective_mode"] == "irsr"
     assert payload["terminal_outcome"] == "blocked"
-    assert payload["terminal_state"]["block_reason"] == "irsr-no-viable-payload"
+    assert payload["terminal_state"]["block_reason"] == "irsr-no-payload-candidates"

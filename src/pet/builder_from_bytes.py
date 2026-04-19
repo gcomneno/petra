@@ -193,26 +193,13 @@ def build_from_bytes_pipeline(
     if mode == "irsr":
         report["effective_mode"] = "irsr"
 
-        if not irsr_slot_candidates:
-            report["attempts"].append(
-                _attempt(
-                    "irsr",
-                    "blocked",
-                    "no irsr seed candidates provided",
-                )
-            )
-            report["terminal_state"] = {
-                "terminal_status": "blocked",
-                "block_reason": "irsr-no-viable-payload",
-            }
-            return report
-
         try:
             irsr_report = build_from_irsr_pipeline(
                 input_n,
                 output_dir,
                 slot_candidates=irsr_slot_candidates,
                 max_steps=irsr_max_steps,
+                auto_seed_radii=[1],
             )
         except Exception as exc:
             report["attempts"].append(_attempt("irsr", "error", str(exc)))
