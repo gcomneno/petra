@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from pet.core import is_prime, shape_signature_dict
+from pet.core import is_prime, shape_generator_from_factorization
 
 
 def _run_json(cmd: list[str], *, env: dict[str, str] | None = None) -> dict[str, Any]:
@@ -68,13 +68,13 @@ def build_cli_payload_from_factorization_file(file: str | Path) -> dict[str, Any
     for prime, exp in factors:
         input_n *= prime ** exp
 
-    sig = shape_signature_dict(input_n)
+    target_generator = shape_generator_from_factorization(list(factors))
 
     return {
         "schema": "pet-support-realization-input-v0",
         "input_n": input_n,
-        "target_generator": sig["generator"],
-        "shape_signature": sig["signature"],
+        "target_generator": target_generator,
+        "shape_signature": None,
         "slot_count": len(factors),
         "exponent_multiset": sorted((exp for _prime, exp in factors), reverse=True),
         "realization_goal": "exact-target",
