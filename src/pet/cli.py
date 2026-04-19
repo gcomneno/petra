@@ -616,6 +616,38 @@ def _read_int_from_bytes_file(path_str: str, *, byteorder: str, signed: bool) ->
     }
 
 
+def _parse_irsr_slot_candidates(raw_specs: list[str]) -> dict[str, list[int]]:
+    parsed: dict[str, list[int]] = {}
+
+    for raw in raw_specs:
+        if "=" not in raw:
+            raise ValueError("--irsr-slot-candidates must use SLOT=PRIME[,PRIME...]")
+
+        slot_name, raw_values = raw.split("=", 1)
+        slot_name = slot_name.strip()
+        if not slot_name:
+            raise ValueError("--irsr-slot-candidates requires a non-empty slot name")
+
+        parts = [part.strip() for part in raw_values.split(",") if part.strip()]
+        if not parts:
+            raise ValueError("--irsr-slot-candidates requires at least one integer candidate")
+
+        bucket = parsed.setdefault(slot_name, [])
+        for part in parts:
+            try:
+                value = int(part)
+            except ValueError as exc:
+                raise ValueError("--irsr-slot-candidates values must be integers") from exc
+            if value < 2:
+                raise ValueError("--irsr-slot-candidates values must be >= 2")
+            bucket.append(value)
+
+    return {
+        slot_name: sorted(set(values))
+        for slot_name, values in parsed.items()
+    }
+
+
 def _build_from_int_report(n: int) -> dict:
     if n < 2:
         raise ValueError("build-from-int expects an integer >= 2")
@@ -1005,6 +1037,13 @@ def main(argv: list[str] | None = None) -> int:
         choices=("auto", "direct", "irsr"),
         default="auto",
         help="execution mode: direct path, hostile-aware irsr path, or auto policy (default: auto)",
+    )
+    p.add_argument(
+        "--irsr-slot-candidates",
+        action="append",
+        default=[],
+        metavar="SLOT=PRIME[,PRIME...]",
+        help="repeatable IRSR seed candidates, e.g. a=101 or b=113,127",
     )
     p.add_argument(
         "--artifacts-dir",
@@ -2463,6 +2502,7 @@ def main(argv: list[str] | None = None) -> int:
                 byteorder=args.byteorder,
                 signed=args.signed,
                 mode=args.mode,
+                irsr_slot_candidates=_parse_irsr_slot_candidates(args.irsr_slot_candidates),
             )
 
             if args.json:

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from pet.builder_from_int import build_from_int_pipeline
+from pet.builder_from_irsr import build_from_irsr_pipeline
 
 
 _ALLOWED_MODES = {"auto", "direct", "irsr"}
@@ -50,6 +51,21 @@ def _derive_terminal_state(builder_report: dict[str, Any] | None) -> tuple[str, 
     }
 
 
+def _derive_terminal_state_from_irsr_report(irsr_report: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    terminal = irsr_report.get("terminal_state") or {}
+    if terminal.get("status") == "built":
+        return "built", {
+            "terminal_status": "built",
+            "build_status": terminal.get("build_status"),
+            "assembly_status": terminal.get("assembly_status"),
+        }
+
+    return "blocked", {
+        "terminal_status": "blocked",
+        "block_reason": "irsr-no-viable-payload",
+    }
+
+
 def build_from_bytes_pipeline(
     path: str | Path,
     output_dir: str | Path,
@@ -57,6 +73,8 @@ def build_from_bytes_pipeline(
     byteorder: str = "big",
     signed: bool = False,
     mode: str = "auto",
+    irsr_slot_candidates: dict[str, list[int]] | None = None,
+    irsr_max_steps: int = 5,
 ) -> dict[str, Any]:
     if mode not in _ALLOWED_MODES:
         raise ValueError(f"unsupported mode: {mode}")
@@ -100,17 +118,43 @@ def build_from_bytes_pipeline(
 
     if mode == "irsr":
         report["effective_mode"] = "irsr"
-        report["attempts"].append(
-            _attempt(
-                "irsr",
-                "no-viable-payload",
-                "irsr path not implemented in builder-from-bytes yet",
+
+        if not irsr_slot_candidates:
+            report["attempts"].append(
+                _attempt(
+                    "irsr",
+                    "no-viable-payload",
+                    "no irsr seed candidates provided",
+                )
             )
+            report["terminal_state"] = {
+                "terminal_status": "blocked",
+                "block_reason": "irsr-no-viable-payload",
+            }
+            return report
+
+        try:
+            irsr_report = build_from_irsr_pipeline(
+                input_n,
+                output_dir,
+                slot_candidates=irsr_slot_candidates,
+                max_steps=irsr_max_steps,
+            )
+        except Exception as exc:
+            report["attempts"].append(_attempt("irsr", "error", str(exc)))
+            report["terminal_state"] = {
+                "terminal_status": "blocked",
+                "block_reason": "irsr-no-viable-payload",
+            }
+            return report
+
+        terminal_outcome, terminal_state = _derive_terminal_state_from_irsr_report(irsr_report)
+        report["attempts"].append(
+            _attempt("irsr", terminal_outcome, None if terminal_outcome != "blocked" else irsr_report.get("irsr_final_status"))
         )
-        report["terminal_state"] = {
-            "terminal_status": "blocked",
-            "block_reason": "irsr-no-viable-payload",
-        }
+        report["builder_report"] = irsr_report.get("builder_report")
+        report["terminal_outcome"] = terminal_outcome
+        report["terminal_state"] = terminal_state
         return report
 
     try:
