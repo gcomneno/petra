@@ -11,13 +11,16 @@ def test_pet_builder_from_bytes_runs_canonical_case_for_240(tmp_path: Path) -> N
 
     report = build_from_bytes_pipeline(path, tmp_path / "out240")
 
-    assert report["schema"] == "pet-builder-from-bytes-v0"
+    assert report["schema"] == "pet-builder-from-bytes-v1"
     assert report["file"] == str(path)
     assert report["byteorder"] == "big"
     assert report["signed"] is False
     assert report["byte_count"] == 2
     assert report["hex"] == "00f0"
     assert report["input_n"] == 240
+    assert report["requested_mode"] == "auto"
+    assert report["effective_mode"] == "direct"
+    assert report["attempts"][0]["mode"] == "direct"
     assert report["terminal_outcome"] == "built"
 
     builder = report["builder_report"]
@@ -33,10 +36,12 @@ def test_pet_builder_from_bytes_reports_exact_terminal_state_for_11413(tmp_path:
 
     report = build_from_bytes_pipeline(path, tmp_path / "out11413")
 
-    assert report["schema"] == "pet-builder-from-bytes-v0"
+    assert report["schema"] == "pet-builder-from-bytes-v1"
     assert report["input_n"] == 11413
     assert report["byte_count"] == 2
     assert report["hex"] == "2c95"
+    assert report["requested_mode"] == "auto"
+    assert report["effective_mode"] == "direct"
     assert report["terminal_outcome"] == "built"
     assert report["terminal_state"]["terminal_status"] == "built"
 
@@ -54,11 +59,14 @@ def test_pet_builder_from_bytes_blocks_empty_input_cleanly(tmp_path: Path) -> No
 
     report = build_from_bytes_pipeline(path, tmp_path / "out-empty")
 
-    assert report["schema"] == "pet-builder-from-bytes-v0"
+    assert report["schema"] == "pet-builder-from-bytes-v1"
     assert report["file"] == str(path)
     assert report["byte_count"] == 0
     assert report["hex"] == ""
     assert report["input_n"] == 0
+    assert report["requested_mode"] == "auto"
+    assert report["effective_mode"] == "none"
+    assert report["attempts"] == []
     assert report["terminal_outcome"] == "blocked"
     assert report["terminal_state"]["terminal_status"] == "blocked"
     assert report["terminal_state"]["block_reason"] == "empty-input"

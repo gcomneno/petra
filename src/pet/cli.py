@@ -1001,6 +1001,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--json", action="store_true")
     p.add_argument(
+        "--mode",
+        choices=("auto", "direct", "irsr"),
+        default="auto",
+        help="execution mode: direct path, hostile-aware irsr path, or auto policy (default: auto)",
+    )
+    p.add_argument(
         "--artifacts-dir",
         default="/tmp/pet_builder_from_bytes_out",
         help="directory for materialized builder artifacts",
@@ -2456,6 +2462,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.artifacts_dir,
                 byteorder=args.byteorder,
                 signed=args.signed,
+                mode=args.mode,
             )
 
             if args.json:
@@ -2472,6 +2479,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"byte_count = {payload.get('byte_count')}")
                 print(f"hex = {payload.get('hex')}")
                 print(f"input_n = {payload.get('input_n')}")
+                print(f"requested_mode = {payload.get('requested_mode')}")
+                print(f"effective_mode = {payload.get('effective_mode')}")
                 print(f"terminal_outcome = {payload.get('terminal_outcome')}")
                 print(f"terminal_status = {terminal_state.get('terminal_status')}")
                 if 'block_reason' in terminal_state:

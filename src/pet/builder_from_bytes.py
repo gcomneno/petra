@@ -6,9 +6,23 @@ from typing import Any
 from pet.builder_from_int import build_from_int_pipeline
 
 
+_ALLOWED_MODES = {"auto", "direct", "irsr"}
+
+
+def _attempt(mode: str, status: str, detail: str | None = None) -> dict[str, Any]:
+    return {
+        "mode": mode,
+        "status": status,
+        "detail": detail,
+    }
+
+
 def _derive_terminal_state(builder_report: dict[str, Any] | None) -> tuple[str, dict[str, Any]]:
     if not builder_report:
-        return "blocked", {"terminal_status": "blocked", "block_reason": "missing-builder-report"}
+        return "blocked", {
+            "terminal_status": "blocked",
+            "block_reason": "direct-no-viable-path",
+        }
 
     final_build_output = builder_report.get("final_build_output") or {}
     built_pet_object = final_build_output.get("built_pet_object") or {}
@@ -32,8 +46,7 @@ def _derive_terminal_state(builder_report: dict[str, Any] | None) -> tuple[str, 
 
     return "blocked", {
         "terminal_status": "blocked",
-        "build_status": build_status,
-        "assembly_status": assembly_status,
+        "block_reason": "direct-no-viable-path",
     }
 
 
@@ -43,25 +56,35 @@ def build_from_bytes_pipeline(
     *,
     byteorder: str = "big",
     signed: bool = False,
+    mode: str = "auto",
 ) -> dict[str, Any]:
+    if mode not in _ALLOWED_MODES:
+        raise ValueError(f"unsupported mode: {mode}")
+
     file_path = Path(path)
     data = file_path.read_bytes()
     input_n = int.from_bytes(data, byteorder=byteorder, signed=signed) if data else 0
 
     report: dict[str, Any] = {
-        "schema": "pet-builder-from-bytes-v0",
+        "schema": "pet-builder-from-bytes-v1",
         "file": str(file_path),
         "byteorder": byteorder,
         "signed": signed,
         "byte_count": len(data),
         "hex": data.hex(),
         "input_n": input_n,
+        "requested_mode": mode,
+        "effective_mode": "none",
+        "attempts": [],
         "builder_report": None,
-        "terminal_state": None,
+        "terminal_outcome": "blocked",
+        "terminal_state": {
+            "terminal_status": "blocked",
+            "block_reason": "internal-error",
+        },
     }
 
     if len(data) == 0:
-        report["terminal_outcome"] = "blocked"
         report["terminal_state"] = {
             "terminal_status": "blocked",
             "block_reason": "empty-input",
@@ -69,16 +92,42 @@ def build_from_bytes_pipeline(
         return report
 
     if input_n < 2:
-        report["terminal_outcome"] = "blocked"
         report["terminal_state"] = {
             "terminal_status": "blocked",
             "block_reason": "input-too-small",
         }
         return report
 
-    builder_report = build_from_int_pipeline(input_n, output_dir)
+    if mode == "irsr":
+        report["effective_mode"] = "irsr"
+        report["attempts"].append(
+            _attempt(
+                "irsr",
+                "no-viable-payload",
+                "irsr path not implemented in builder-from-bytes yet",
+            )
+        )
+        report["terminal_state"] = {
+            "terminal_status": "blocked",
+            "block_reason": "irsr-no-viable-payload",
+        }
+        return report
+
+    try:
+        builder_report = build_from_int_pipeline(input_n, output_dir)
+    except Exception as exc:
+        report["effective_mode"] = "direct"
+        report["attempts"].append(_attempt("direct", "error", str(exc)))
+        report["terminal_state"] = {
+            "terminal_status": "blocked",
+            "block_reason": "direct-no-viable-path",
+        }
+        return report
+
     terminal_outcome, terminal_state = _derive_terminal_state(builder_report)
 
+    report["effective_mode"] = "direct"
+    report["attempts"].append(_attempt("direct", terminal_outcome, None))
     report["builder_report"] = builder_report
     report["terminal_outcome"] = terminal_outcome
     report["terminal_state"] = terminal_state
