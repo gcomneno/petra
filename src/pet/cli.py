@@ -982,6 +982,30 @@ def main(argv: list[str] | None = None) -> int:
         help="directory for materialized builder artifacts",
     )
 
+    # builder-from-bytes
+    p = subparsers.add_parser(
+        "builder-from-bytes",
+        help="decode a byte stream as an integer and run the end-to-end PET builder pipeline",
+    )
+    p.add_argument("file", metavar="BYTES.bin")
+    p.add_argument(
+        "--byteorder",
+        choices=("big", "little"),
+        default="big",
+        help="byte order used to decode the integer (default: big)",
+    )
+    p.add_argument(
+        "--signed",
+        action="store_true",
+        help="interpret the byte stream as a signed integer",
+    )
+    p.add_argument("--json", action="store_true")
+    p.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_builder_from_bytes_out",
+        help="directory for materialized builder artifacts",
+    )
+
     # builder-from-factors
     p = subparsers.add_parser(
         "builder-from-factors",
@@ -2419,6 +2443,39 @@ def main(argv: list[str] | None = None) -> int:
                 built = final_output.get("built_pet_object", {})
                 print(f"input_n = {payload.get('input_n')}")
                 print(f"schema = {payload.get('schema')}")
+                print(f"build_status = {final_output.get('build_status')}")
+                print(f"assembly_status = {built.get('assembly_status')}")
+                print(f"component_count = {built.get('component_count')}")
+                print(f"artifacts_dir = {args.artifacts_dir}")
+
+        elif args.command == "builder-from-bytes":
+            from pet.builder_from_bytes import build_from_bytes_pipeline
+
+            payload = build_from_bytes_pipeline(
+                args.file,
+                args.artifacts_dir,
+                byteorder=args.byteorder,
+                signed=args.signed,
+            )
+
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+            else:
+                builder_report = payload.get("builder_report") or {}
+                final_output = builder_report.get("final_build_output", {})
+                built = final_output.get("built_pet_object", {})
+                terminal_state = payload.get("terminal_state") or {}
+
+                print(f"file = {payload.get('file')}")
+                print(f"byteorder = {payload.get('byteorder')}")
+                print(f"signed = {'yes' if payload.get('signed') else 'no'}")
+                print(f"byte_count = {payload.get('byte_count')}")
+                print(f"hex = {payload.get('hex')}")
+                print(f"input_n = {payload.get('input_n')}")
+                print(f"terminal_outcome = {payload.get('terminal_outcome')}")
+                print(f"terminal_status = {terminal_state.get('terminal_status')}")
+                if 'block_reason' in terminal_state:
+                    print(f"block_reason = {terminal_state.get('block_reason')}")
                 print(f"build_status = {final_output.get('build_status')}")
                 print(f"assembly_status = {built.get('assembly_status')}")
                 print(f"component_count = {built.get('component_count')}")
