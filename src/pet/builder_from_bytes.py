@@ -238,20 +238,13 @@ def build_from_bytes_pipeline(
         if direct["status"] == "timeout":
             report["attempts"].append(_attempt("direct", "timeout", direct["detail"]))
 
-            if not irsr_slot_candidates:
-                report["effective_mode"] = "direct"
-                report["terminal_state"] = {
-                    "terminal_status": "blocked",
-                    "block_reason": "direct-timeout",
-                }
-                return report
-
             try:
                 irsr_report = build_from_irsr_pipeline(
                     input_n,
                     output_dir,
                     slot_candidates=irsr_slot_candidates,
                     max_steps=irsr_max_steps,
+                    auto_seed_radii=[1],
                 )
             except Exception as exc:
                 report["effective_mode"] = "irsr"
