@@ -7,6 +7,7 @@ from pet.builder_from_bytes import build_from_bytes_pipeline
 
 THREE_SUPPORT = 1000000007 * 1000000009 * 1000000021
 FOUR_SUPPORT = 1000000007 * 1000000009 * 1000000021 * 1000000033
+FIVE_SUPPORT = 1000000007 * 1000000009 * 1000000021 * 1000000033 * 1000000087
 
 
 def test_pet_builder_from_bytes_irsr_three_support_squarefree_builds_with_k_support_solver(tmp_path: Path) -> None:
@@ -44,3 +45,21 @@ def test_pet_builder_from_bytes_irsr_four_support_squarefree_builds_with_k_suppo
     assert report["attempts"][0]["status"] == "built"
     assert report["terminal_outcome"] == "built"
     assert report["terminal_state"]["terminal_status"] == "built"
+
+def test_pet_builder_from_bytes_irsr_five_support_squarefree_builds_with_k_support_solver(tmp_path: Path) -> None:
+    path = tmp_path / "pqrst.bin"
+    path.write_bytes(FIVE_SUPPORT.to_bytes(20, "big"))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-pqrst",
+        mode="irsr",
+    )
+
+    assert report["requested_mode"] == "irsr"
+    assert report["effective_mode"] == "irsr"
+    assert report["attempts"][0]["mode"] == "irsr"
+    assert report["attempts"][0]["status"] == "built"
+    assert report["terminal_outcome"] == "built"
+    assert report["terminal_state"]["terminal_status"] == "built"
+
