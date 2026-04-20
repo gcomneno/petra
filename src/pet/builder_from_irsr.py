@@ -326,6 +326,10 @@ def build_from_irsr_pipeline(
         if k3_report is not None:
             return k3_report
 
+        k4_report = _run_squarefree_k_support_solver(n, output_dir, k=4, radius=16)
+        if k4_report is not None:
+            return k4_report
+
         if _looks_like_semiprime_model_mismatch(result, n):
             result = dict(result)
             result["final_status"] = "semiprime-model-mismatch"

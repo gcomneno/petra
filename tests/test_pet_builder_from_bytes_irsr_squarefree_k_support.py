@@ -28,7 +28,7 @@ def test_pet_builder_from_bytes_irsr_three_support_squarefree_builds_with_k_supp
     assert report["builder_report"] is not None
 
 
-def test_pet_builder_from_bytes_irsr_four_support_squarefree_is_not_accidentally_supported_yet(tmp_path: Path) -> None:
+def test_pet_builder_from_bytes_irsr_four_support_squarefree_builds_with_k_support_solver(tmp_path: Path) -> None:
     path = tmp_path / "pqrs.bin"
     path.write_bytes(FOUR_SUPPORT.to_bytes(15, "big"))
 
@@ -40,4 +40,7 @@ def test_pet_builder_from_bytes_irsr_four_support_squarefree_is_not_accidentally
 
     assert report["requested_mode"] == "irsr"
     assert report["effective_mode"] == "irsr"
-    assert report["terminal_outcome"] == "blocked"
+    assert report["attempts"][0]["mode"] == "irsr"
+    assert report["attempts"][0]["status"] == "built"
+    assert report["terminal_outcome"] == "built"
+    assert report["terminal_state"]["terminal_status"] == "built"
