@@ -20,6 +20,12 @@ SQUAREFREE_BUDGET_V0 = {
     "max_combinations": 256,
 }
 
+SQUAREFREE_ROLLOUT_V0 = [
+    {"k": 3, "radius": 16},
+    {"k": 4, "radius": 16},
+    {"k": 5, "radius": 64},
+]
+
 
 def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> dict[str, list[int]]:
     normalized: dict[str, list[int]] = {}
@@ -351,13 +357,7 @@ def build_from_irsr_pipeline(
         if p2q_report is not None:
             return p2q_report
 
-        squarefree_rollout = [
-            {"k": 3, "radius": 16},
-            {"k": 4, "radius": 16},
-            {"k": 5, "radius": 64},
-        ]
-
-        for spec in squarefree_rollout:
+        for spec in SQUAREFREE_ROLLOUT_V0:
             report = _run_squarefree_k_support_solver(
                 n,
                 output_dir,
