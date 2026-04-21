@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 from itertools import combinations
-from math import isqrt
+from math import comb, isqrt
 from pathlib import Path
 from typing import Any
 
@@ -253,14 +253,27 @@ def _run_squarefree_k_support_solver(
     *,
     k: int,
     radius: int = 1,
+    max_k: int = 5,
+    max_radius: int = 64,
+    max_prime_count: int = 16,
+    max_combinations: int = 256,
 ) -> dict[str, Any] | None:
     if k < 2:
         raise ValueError("k must be >= 2")
 
+    if k > max_k:
+        return None
+    if radius > max_radius:
+        return None
+
     root = _iroot_floor(n, k)
     primes = _candidate_primes_near_root(root, radius)
 
+    if len(primes) > max_prime_count:
+        return None
     if len(primes) < k:
+        return None
+    if comb(len(primes), k) > max_combinations:
         return None
 
     for combo in combinations(primes, k):
