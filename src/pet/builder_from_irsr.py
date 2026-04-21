@@ -13,6 +13,13 @@ from pet.irsr_state import (
     run_hostile_semiprime_irsr_with_seed_candidates,
 )
 
+SQUAREFREE_BUDGET_V0 = {
+    "max_k": 5,
+    "max_radius": 64,
+    "max_prime_count": 16,
+    "max_combinations": 256,
+}
+
 
 def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> dict[str, list[int]]:
     normalized: dict[str, list[int]] = {}
@@ -253,13 +260,22 @@ def _run_squarefree_k_support_solver(
     *,
     k: int,
     radius: int = 1,
-    max_k: int = 5,
-    max_radius: int = 64,
-    max_prime_count: int = 16,
-    max_combinations: int = 256,
+    max_k: int | None = None,
+    max_radius: int | None = None,
+    max_prime_count: int | None = None,
+    max_combinations: int | None = None,
 ) -> dict[str, Any] | None:
     if k < 2:
         raise ValueError("k must be >= 2")
+
+    if max_k is None:
+        max_k = SQUAREFREE_BUDGET_V0["max_k"]
+    if max_radius is None:
+        max_radius = SQUAREFREE_BUDGET_V0["max_radius"]
+    if max_prime_count is None:
+        max_prime_count = SQUAREFREE_BUDGET_V0["max_prime_count"]
+    if max_combinations is None:
+        max_combinations = SQUAREFREE_BUDGET_V0["max_combinations"]
 
     if k > max_k:
         return None
