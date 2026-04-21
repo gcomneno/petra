@@ -322,17 +322,21 @@ def build_from_irsr_pipeline(
         if p2q_report is not None:
             return p2q_report
 
-        k3_report = _run_squarefree_k_support_solver(n, output_dir, k=3, radius=16)
-        if k3_report is not None:
-            return k3_report
+        squarefree_rollout = [
+            {"k": 3, "radius": 16},
+            {"k": 4, "radius": 16},
+            {"k": 5, "radius": 64},
+        ]
 
-        k4_report = _run_squarefree_k_support_solver(n, output_dir, k=4, radius=16)
-        if k4_report is not None:
-            return k4_report
-
-        k5_report = _run_squarefree_k_support_solver(n, output_dir, k=5, radius=64)
-        if k5_report is not None:
-            return k5_report
+        for spec in squarefree_rollout:
+            report = _run_squarefree_k_support_solver(
+                n,
+                output_dir,
+                k=spec["k"],
+                radius=spec["radius"],
+            )
+            if report is not None:
+                return report
 
         if _looks_like_semiprime_model_mismatch(result, n):
             result = dict(result)
