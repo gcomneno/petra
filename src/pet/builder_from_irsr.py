@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import tempfile
-from itertools import combinations
+from itertools import combinations, permutations
 from math import comb, isqrt
 from pathlib import Path
 from typing import Any
@@ -25,6 +25,14 @@ SQUAREFREE_POLICY_V0 = {
         {"k": 4, "radius": 16},
         {"k": 5, "radius": 64},
     ],
+}
+
+EXPONENT_PROFILE_BUDGET_V0 = {
+    "max_k": 4,
+    "max_radius": 8,
+    "max_prime_count": 16,
+    "max_combinations": 256,
+    "max_assignments": 32,
 }
 
 
@@ -318,6 +326,81 @@ def _run_generic_squarefree_profile_solver(
             exponent_profile=[1] * support_size,
             builder_report=builder_report,
         )
+
+    return None
+
+
+
+def _run_generic_exponent_profile_solver(
+    n: int,
+    output_dir: str | Path,
+    *,
+    exponent_profile: list[int],
+    radius: int,
+    max_k: int | None = None,
+    max_radius: int | None = None,
+    max_prime_count: int | None = None,
+    max_combinations: int | None = None,
+    max_assignments: int | None = None,
+) -> dict[str, Any] | None:
+    """Generic profile-driven backend for exponent-bearing support search."""
+    if not exponent_profile:
+        raise ValueError("exponent_profile cannot be empty")
+    if any(exp < 1 for exp in exponent_profile):
+        raise ValueError("all exponents must be >= 1")
+
+    support_size = len(exponent_profile)
+    total_weight = sum(exponent_profile)
+
+    if max_k is None:
+        max_k = EXPONENT_PROFILE_BUDGET_V0["max_k"]
+    if max_radius is None:
+        max_radius = EXPONENT_PROFILE_BUDGET_V0["max_radius"]
+    if max_prime_count is None:
+        max_prime_count = EXPONENT_PROFILE_BUDGET_V0["max_prime_count"]
+    if max_combinations is None:
+        max_combinations = EXPONENT_PROFILE_BUDGET_V0["max_combinations"]
+    if max_assignments is None:
+        max_assignments = EXPONENT_PROFILE_BUDGET_V0["max_assignments"]
+
+    if support_size > max_k:
+        return None
+    if radius > max_radius:
+        return None
+
+    root = _iroot_floor(n, total_weight)
+    primes = _candidate_primes_near_root(root, radius)
+
+    if len(primes) > max_prime_count:
+        return None
+    if len(primes) < support_size:
+        return None
+    if comb(len(primes), support_size) > max_combinations:
+        return None
+
+    assignments = sorted(set(permutations(exponent_profile)))
+    if len(assignments) > max_assignments:
+        return None
+
+    for combo in combinations(primes, support_size):
+        for exps in assignments:
+            product = 1
+            for p, exp in zip(combo, exps):
+                product *= p ** exp
+
+            if product != n:
+                continue
+
+            factors = [[p, exp] for p, exp in zip(combo, exps)]
+            builder_report = _run_builder_from_factorization(output_dir, factors)
+            return _wrap_dedicated_solver_report(
+                n=n,
+                kind="generic-exponent-profile",
+                strategy="generic-exponent-profile-auto",
+                support=list(combo),
+                exponent_profile=list(exps),
+                builder_report=builder_report,
+            )
 
     return None
 
