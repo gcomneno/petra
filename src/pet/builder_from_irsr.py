@@ -261,19 +261,19 @@ def _run_square_times_prime_solver(
     return None
 
 
-def _run_squarefree_k_support_solver(
+def _run_generic_squarefree_profile_solver(
     n: int,
     output_dir: str | Path,
     *,
-    k: int,
-    radius: int = 1,
+    support_size: int,
+    radius: int,
     max_k: int | None = None,
     max_radius: int | None = None,
     max_prime_count: int | None = None,
     max_combinations: int | None = None,
 ) -> dict[str, Any] | None:
-    if k < 2:
-        raise ValueError("k must be >= 2")
+    if support_size < 2:
+        raise ValueError("support_size must be >= 2")
 
     if max_k is None:
         max_k = SQUAREFREE_POLICY_V0["budget"]["max_k"]
@@ -284,22 +284,22 @@ def _run_squarefree_k_support_solver(
     if max_combinations is None:
         max_combinations = SQUAREFREE_POLICY_V0["budget"]["max_combinations"]
 
-    if k > max_k:
+    if support_size > max_k:
         return None
     if radius > max_radius:
         return None
 
-    root = _iroot_floor(n, k)
+    root = _iroot_floor(n, support_size)
     primes = _candidate_primes_near_root(root, radius)
 
     if len(primes) > max_prime_count:
         return None
-    if len(primes) < k:
+    if len(primes) < support_size:
         return None
-    if comb(len(primes), k) > max_combinations:
+    if comb(len(primes), support_size) > max_combinations:
         return None
 
-    for combo in combinations(primes, k):
+    for combo in combinations(primes, support_size):
         product = 1
         for p in combo:
             product *= p
@@ -311,14 +311,37 @@ def _run_squarefree_k_support_solver(
         builder_report = _run_builder_from_factorization(output_dir, factors)
         return _wrap_dedicated_solver_report(
             n=n,
-            kind=f"hostile-squarefree-{k}-support",
-            strategy=f"squarefree-{k}-support-auto",
+            kind="generic-squarefree-profile",
+            strategy=f"generic-squarefree-{support_size}-support",
             support=list(combo),
-            exponent_profile=[1] * k,
+            exponent_profile=[1] * support_size,
             builder_report=builder_report,
         )
 
     return None
+
+
+def _run_squarefree_k_support_solver(
+    n: int,
+    output_dir: str | Path,
+    *,
+    k: int,
+    radius: int = 1,
+    max_k: int | None = None,
+    max_radius: int | None = None,
+    max_prime_count: int | None = None,
+    max_combinations: int | None = None,
+) -> dict[str, Any] | None:
+    return _run_generic_squarefree_profile_solver(
+        n,
+        output_dir,
+        support_size=k,
+        radius=radius,
+        max_k=max_k,
+        max_radius=max_radius,
+        max_prime_count=max_prime_count,
+        max_combinations=max_combinations,
+    )
 
 
 def build_from_irsr_pipeline(
