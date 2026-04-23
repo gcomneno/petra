@@ -272,6 +272,7 @@ def _run_generic_squarefree_profile_solver(
     max_prime_count: int | None = None,
     max_combinations: int | None = None,
 ) -> dict[str, Any] | None:
+    """Canonical squarefree backend for profile-driven support_size search."""
     if support_size < 2:
         raise ValueError("support_size must be >= 2")
 
@@ -332,6 +333,7 @@ def _run_squarefree_k_support_solver(
     max_prime_count: int | None = None,
     max_combinations: int | None = None,
 ) -> dict[str, Any] | None:
+    """Backward-compatible adapter over the canonical generic squarefree backend."""
     return _run_generic_squarefree_profile_solver(
         n,
         output_dir,
@@ -382,10 +384,10 @@ def build_from_irsr_pipeline(
             return p2q_report
 
         for spec in SQUAREFREE_POLICY_V0["rollout"]:
-            report = _run_squarefree_k_support_solver(
+            report = _run_generic_squarefree_profile_solver(
                 n,
                 output_dir,
-                k=spec["k"],
+                support_size=spec["k"],
                 radius=spec["radius"],
             )
             if report is not None:
