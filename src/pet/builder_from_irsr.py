@@ -13,18 +13,19 @@ from pet.irsr_state import (
     run_hostile_semiprime_irsr_with_seed_candidates,
 )
 
-SQUAREFREE_BUDGET_V0 = {
-    "max_k": 5,
-    "max_radius": 64,
-    "max_prime_count": 16,
-    "max_combinations": 256,
+SQUAREFREE_POLICY_V0 = {
+    "budget": {
+        "max_k": 5,
+        "max_radius": 64,
+        "max_prime_count": 16,
+        "max_combinations": 256,
+    },
+    "rollout": [
+        {"k": 3, "radius": 16},
+        {"k": 4, "radius": 16},
+        {"k": 5, "radius": 64},
+    ],
 }
-
-SQUAREFREE_ROLLOUT_V0 = [
-    {"k": 3, "radius": 16},
-    {"k": 4, "radius": 16},
-    {"k": 5, "radius": 64},
-]
 
 
 def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> dict[str, list[int]]:
@@ -275,13 +276,13 @@ def _run_squarefree_k_support_solver(
         raise ValueError("k must be >= 2")
 
     if max_k is None:
-        max_k = SQUAREFREE_BUDGET_V0["max_k"]
+        max_k = SQUAREFREE_POLICY_V0["budget"]["max_k"]
     if max_radius is None:
-        max_radius = SQUAREFREE_BUDGET_V0["max_radius"]
+        max_radius = SQUAREFREE_POLICY_V0["budget"]["max_radius"]
     if max_prime_count is None:
-        max_prime_count = SQUAREFREE_BUDGET_V0["max_prime_count"]
+        max_prime_count = SQUAREFREE_POLICY_V0["budget"]["max_prime_count"]
     if max_combinations is None:
-        max_combinations = SQUAREFREE_BUDGET_V0["max_combinations"]
+        max_combinations = SQUAREFREE_POLICY_V0["budget"]["max_combinations"]
 
     if k > max_k:
         return None
@@ -357,7 +358,7 @@ def build_from_irsr_pipeline(
         if p2q_report is not None:
             return p2q_report
 
-        for spec in SQUAREFREE_ROLLOUT_V0:
+        for spec in SQUAREFREE_POLICY_V0["rollout"]:
             report = _run_squarefree_k_support_solver(
                 n,
                 output_dir,
