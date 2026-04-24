@@ -35,6 +35,14 @@ EXPONENT_PROFILE_BUDGET_V0 = {
     "max_assignments": 32,
 }
 
+STRUCTURAL_PROFILE_POLICY_V0 = [
+    {"backend": "generic-exponent", "exponent_profile": [2], "radius": 1},
+    {"backend": "generic-exponent", "exponent_profile": [2, 1], "radius": 1},
+    {"backend": "generic-squarefree", "support_size": 3, "radius": 16},
+    {"backend": "generic-squarefree", "support_size": 4, "radius": 16},
+    {"backend": "generic-squarefree", "support_size": 5, "radius": 64},
+]
+
 
 def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> dict[str, list[int]]:
     normalized: dict[str, list[int]] = {}
@@ -216,6 +224,37 @@ def _wrap_dedicated_solver_report(
         "terminal_state": terminal_state,
         "builder_report": builder_report,
     }
+
+
+
+def _run_structural_profile_policy_v0(
+    n: int,
+    output_dir: str | Path,
+) -> dict[str, Any] | None:
+    """Run the current structural profile policy over canonical generic backends."""
+    for spec in STRUCTURAL_PROFILE_POLICY_V0:
+        backend = spec["backend"]
+        if backend == "generic-exponent":
+            report = _run_generic_exponent_profile_solver(
+                n,
+                output_dir,
+                exponent_profile=list(spec["exponent_profile"]),
+                radius=spec["radius"],
+            )
+        elif backend == "generic-squarefree":
+            report = _run_generic_squarefree_profile_solver(
+                n,
+                output_dir,
+                support_size=spec["support_size"],
+                radius=spec["radius"],
+            )
+        else:
+            raise ValueError(f"unknown structural backend: {backend!r}")
+
+        if report is not None:
+            return report
+
+    return None
 
 
 def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] | None:
@@ -432,23 +471,9 @@ def build_from_irsr_pipeline(
         strategy = "auto-seed"
 
     if strategy == "auto-seed":
-        square_report = _run_prime_square_solver(n, output_dir)
-        if square_report is not None:
-            return square_report
-
-        p2q_report = _run_square_times_prime_solver(n, output_dir, radius=1)
-        if p2q_report is not None:
-            return p2q_report
-
-        for spec in SQUAREFREE_POLICY_V0["rollout"]:
-            report = _run_generic_squarefree_profile_solver(
-                n,
-                output_dir,
-                support_size=spec["k"],
-                radius=spec["radius"],
-            )
-            if report is not None:
-                return report
+        policy_report = _run_structural_profile_policy_v0(n, output_dir)
+        if policy_report is not None:
+            return policy_report
 
         if _looks_like_semiprime_model_mismatch(result, n):
             result = dict(result)
