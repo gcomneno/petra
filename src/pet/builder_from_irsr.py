@@ -242,31 +242,13 @@ def _run_square_times_prime_solver(
     *,
     radius: int = 1,
 ) -> dict[str, Any] | None:
-    root = _icbrt_floor(n)
-
-    for p in _candidate_primes_near_root(root, radius):
-        p2 = p * p
-        if n % p2 != 0:
-            continue
-
-        q = n // p2
-        if q == p:
-            continue
-        if q < 2 or not is_prime(q):
-            continue
-
-        factors = [[p, 2], [q, 1]]
-        builder_report = _run_builder_from_factorization(output_dir, factors)
-        return _wrap_dedicated_solver_report(
-            n=n,
-            kind="hostile-square-times-prime",
-            strategy="square-times-prime-auto",
-            support=[p, q],
-            exponent_profile=[2, 1],
-            builder_report=builder_report,
-        )
-
-    return None
+    """Backward-compatible adapter over the canonical generic exponent-profile backend."""
+    return _run_generic_exponent_profile_solver(
+        n,
+        output_dir,
+        exponent_profile=[2, 1],
+        radius=radius,
+    )
 
 
 def _run_generic_squarefree_profile_solver(
