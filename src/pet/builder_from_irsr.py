@@ -39,10 +39,6 @@ STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
     "allowed_exponent_profiles": {
         "max_support_size": 2,
         "max_total_weight": 3,
-        "allowed_profiles": [
-            [2],
-            [2, 1],
-        ],
     },
     "squarefree_support_size_range": [3, 5],
     "squarefree_radius_default": 16,
@@ -235,19 +231,64 @@ def _wrap_dedicated_solver_report(
 
 
 
+
+def _generate_allowed_exponent_profiles_v2(
+    *,
+    max_support_size: int,
+    max_total_weight: int,
+) -> list[list[int]]:
+    """Generate the currently allowed non-squarefree exponent profiles in canonical order."""
+    if max_support_size < 1:
+        raise ValueError("max_support_size must be >= 1")
+    if max_total_weight < 1:
+        raise ValueError("max_total_weight must be >= 1")
+
+    profiles: list[list[int]] = []
+
+    def rec(remaining: int, max_part: int, prefix: list[int]) -> None:
+        if prefix:
+            support_size = len(prefix)
+            total_weight = sum(prefix)
+
+            if support_size <= max_support_size and total_weight <= max_total_weight:
+                all_ones = all(part == 1 for part in prefix)
+                monoblock_heavy = (support_size == 1 and prefix[0] >= 3)
+                all_equal_heavy = (support_size >= 2 and len(set(prefix)) == 1 and prefix[0] >= 2)
+
+                if not all_ones and not monoblock_heavy and not all_equal_heavy:
+                    profiles.append(list(prefix))
+
+        if remaining == 0 or len(prefix) >= max_support_size:
+            return
+
+        upper = min(max_part, remaining)
+        for part in range(upper, 0, -1):
+            rec(remaining - part, part, prefix + [part])
+
+    for total in range(1, max_total_weight + 1):
+        rec(total, total, [])
+
+    unique_profiles: list[list[int]] = []
+    seen: set[tuple[int, ...]] = set()
+    for profile in profiles:
+        key = tuple(profile)
+        if key not in seen:
+            seen.add(key)
+            unique_profiles.append(profile)
+
+    return unique_profiles
+
+
 def _generate_structural_profile_candidates_v1() -> list[dict[str, Any]]:
     """Generate structural profile candidates from the current search-space rules."""
     candidates: list[dict[str, Any]] = []
 
     exponent_cfg = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["allowed_exponent_profiles"]
-    max_support_size = exponent_cfg["max_support_size"]
-    max_total_weight = exponent_cfg["max_total_weight"]
 
-    for exponent_profile in exponent_cfg["allowed_profiles"]:
-        if len(exponent_profile) > max_support_size:
-            continue
-        if sum(exponent_profile) > max_total_weight:
-            continue
+    for exponent_profile in _generate_allowed_exponent_profiles_v2(
+        max_support_size=exponent_cfg["max_support_size"],
+        max_total_weight=exponent_cfg["max_total_weight"],
+    ):
         candidates.append(
             {
                 "backend": "generic-exponent",
