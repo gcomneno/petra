@@ -35,11 +35,15 @@ EXPONENT_PROFILE_BUDGET_V0 = {
     "max_assignments": 32,
 }
 
-STRUCTURAL_PROFILE_GENERATOR_POLICY_V0 = {
-    "exponent_profiles": [
-        [2],
-        [2, 1],
-    ],
+STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
+    "allowed_exponent_profiles": {
+        "max_support_size": 2,
+        "max_total_weight": 3,
+        "allowed_profiles": [
+            [2],
+            [2, 1],
+        ],
+    },
     "squarefree_support_size_range": [3, 5],
     "squarefree_radius_default": 16,
     "squarefree_radius_overrides": {
@@ -231,11 +235,19 @@ def _wrap_dedicated_solver_report(
 
 
 
-def _generate_structural_profile_candidates_v0() -> list[dict[str, Any]]:
-    """Generate the current structural profile candidates from policy rules."""
+def _generate_structural_profile_candidates_v1() -> list[dict[str, Any]]:
+    """Generate structural profile candidates from the current search-space rules."""
     candidates: list[dict[str, Any]] = []
 
-    for exponent_profile in STRUCTURAL_PROFILE_GENERATOR_POLICY_V0["exponent_profiles"]:
+    exponent_cfg = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["allowed_exponent_profiles"]
+    max_support_size = exponent_cfg["max_support_size"]
+    max_total_weight = exponent_cfg["max_total_weight"]
+
+    for exponent_profile in exponent_cfg["allowed_profiles"]:
+        if len(exponent_profile) > max_support_size:
+            continue
+        if sum(exponent_profile) > max_total_weight:
+            continue
         candidates.append(
             {
                 "backend": "generic-exponent",
@@ -244,9 +256,9 @@ def _generate_structural_profile_candidates_v0() -> list[dict[str, Any]]:
             }
         )
 
-    lo, hi = STRUCTURAL_PROFILE_GENERATOR_POLICY_V0["squarefree_support_size_range"]
-    default_radius = STRUCTURAL_PROFILE_GENERATOR_POLICY_V0["squarefree_radius_default"]
-    overrides = STRUCTURAL_PROFILE_GENERATOR_POLICY_V0["squarefree_radius_overrides"]
+    lo, hi = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_support_size_range"]
+    default_radius = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_radius_default"]
+    overrides = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_radius_overrides"]
 
     for support_size in range(lo, hi + 1):
         candidates.append(
@@ -260,12 +272,17 @@ def _generate_structural_profile_candidates_v0() -> list[dict[str, Any]]:
     return candidates
 
 
+def _generate_structural_profile_candidates_v0() -> list[dict[str, Any]]:
+    """Backward-compatible wrapper over the current structural search-space generator."""
+    return _generate_structural_profile_candidates_v1()
+
+
 def _run_structural_profile_policy_v0(
     n: int,
     output_dir: str | Path,
 ) -> dict[str, Any] | None:
     """Run the current structural profile policy over canonical generic backends."""
-    for spec in _generate_structural_profile_candidates_v0():
+    for spec in _generate_structural_profile_candidates_v1():
         backend = spec["backend"]
         if backend == "generic-exponent":
             report = _run_generic_exponent_profile_solver(
