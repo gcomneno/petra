@@ -219,20 +219,12 @@ def _wrap_dedicated_solver_report(
 
 
 def _run_prime_square_solver(n: int, output_dir: str | Path) -> dict[str, Any] | None:
-    root = isqrt(n)
-    if root * root != n:
-        return None
-    if not is_prime(root):
-        return None
-
-    builder_report = _run_builder_from_factorization(output_dir, [[root, 2]])
-    return _wrap_dedicated_solver_report(
-        n=n,
-        kind="hostile-prime-square",
-        strategy="prime-square-auto",
-        support=[root],
+    """Backward-compatible adapter over the canonical generic exponent-profile backend."""
+    return _run_generic_exponent_profile_solver(
+        n,
+        output_dir,
         exponent_profile=[2],
-        builder_report=builder_report,
+        radius=1,
     )
 
 
