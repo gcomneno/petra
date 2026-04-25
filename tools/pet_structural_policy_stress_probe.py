@@ -107,8 +107,10 @@ def main() -> int:
     print(f"radius = {radius}")
     print(f"generated_profiles = {generated_profiles}")
 
-    byte_sizes = [8, 12, 16]
-    cases_per_size = 3
+    # Keep defaults intentionally small: wider random inputs can spend a long
+    # time in prime-candidate generation with the current naive primality test.
+    byte_sizes = [8, 12]
+    cases_per_size = 2
     slow_threshold_seconds = 5.0
 
     failures = []
