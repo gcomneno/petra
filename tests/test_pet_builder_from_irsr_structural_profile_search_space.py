@@ -21,8 +21,8 @@ def test_structural_profile_search_space_v1_reproduces_current_profiles() -> Non
     specs = _generate_structural_profile_candidates_v1()
 
     assert _normalize(specs) == [
-        ("generic-exponent", (2,), None, 1),
-        ("generic-exponent", (2, 1), None, 1),
+        ("generic-exponent", (2,), None, 16),
+        ("generic-exponent", (2, 1), None, 16),
         ("generic-squarefree", (), 3, 16),
         ("generic-squarefree", (), 4, 16),
         ("generic-squarefree", (), 5, 64),
