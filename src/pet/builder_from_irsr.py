@@ -54,6 +54,9 @@ STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
         "max_support_size": 3,
         "max_total_weight": 4,
         "radius_default": 16,
+        "deferred_profiles": [
+            [3, 1],
+        ],
     },
     "squarefree_support_size_range": [3, 5],
     "squarefree_radius_default": 16,
@@ -251,6 +254,7 @@ def _generate_allowed_exponent_profiles_v2(
     *,
     max_support_size: int,
     max_total_weight: int,
+    deferred_profiles: list[list[int]] | None = None,
 ) -> list[list[int]]:
     """Generate the currently allowed non-squarefree exponent profiles in canonical order."""
     if max_support_size < 1:
@@ -259,6 +263,10 @@ def _generate_allowed_exponent_profiles_v2(
         raise ValueError("max_total_weight must be >= 1")
 
     profiles: list[list[int]] = []
+    deferred_keys = {
+        tuple(profile)
+        for profile in (deferred_profiles or [])
+    }
 
     def rec(remaining: int, max_part: int, prefix: list[int]) -> None:
         if prefix:
@@ -270,9 +278,7 @@ def _generate_allowed_exponent_profiles_v2(
                 monoblock_heavy = (support_size == 1 and prefix[0] >= 3)
                 all_equal_heavy = (support_size >= 2 and len(set(prefix)) == 1 and prefix[0] >= 2)
 
-                explicitly_deferred = tuple(prefix) in {
-                    (3, 1),
-                }
+                explicitly_deferred = tuple(prefix) in deferred_keys
 
                 if (
                     not all_ones
@@ -316,6 +322,7 @@ def _generate_structural_profile_candidates_v1(
     for exponent_profile in _generate_allowed_exponent_profiles_v2(
         max_support_size=exponent_cfg["max_support_size"],
         max_total_weight=exponent_cfg["max_total_weight"],
+        deferred_profiles=exponent_cfg["deferred_profiles"],
     ):
         candidates.append(
             {
