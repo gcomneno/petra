@@ -558,6 +558,7 @@ def build_from_irsr_pipeline(
     max_steps: int = 5,
     auto_seed_radii: list[int] | None = None,
     structural_radius: int | None = None,
+    structural_policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_slot_candidates = _normalize_slot_candidates(slot_candidates)
 
@@ -584,6 +585,7 @@ def build_from_irsr_pipeline(
             n,
             output_dir,
             structural_radius=structural_radius,
+            policy=structural_policy,
         )
         if policy_report is not None:
             return policy_report
@@ -603,6 +605,7 @@ def build_from_irsr_pipeline(
         "auto_seed_radii": None if normalized_slot_candidates else list(auto_seed_radii or [1]),
         "max_steps": max_steps,
         "structural_radius": structural_radius,
+        "structural_policy": structural_policy,
         "irsr_final_status": result["final_status"],
         "payload_summary": result["payload_summary"],
         "build_summary": result["build_summary"],

@@ -73,3 +73,34 @@ def test_structural_profile_policy_accepts_injected_policy(tmp_path: Path) -> No
 
     assert report is not None
     assert report["builder_report"]["support_report"]["exponent_multiset"] == [2, 1, 1]
+
+
+def test_build_from_irsr_pipeline_accepts_injected_structural_policy(
+    tmp_path: Path,
+) -> None:
+    from pet.builder_from_irsr import build_from_irsr_pipeline
+
+    policy = {
+        "allowed_exponent_profiles": {
+            "max_support_size": 3,
+            "max_total_weight": 4,
+            "radius_default": 16,
+            "deferred_profiles": [],
+        },
+        "squarefree_support_size_range": [3, 3],
+        "squarefree_radius_default": 16,
+        "squarefree_radius_overrides": {},
+    }
+
+    n = 100003**2 * 100019 * 100043
+
+    report = build_from_irsr_pipeline(
+        n,
+        tmp_path / "pipeline-policy-injected",
+        slot_candidates=None,
+        structural_radius=64,
+        structural_policy=policy,
+    )
+
+    assert report["builder_report"] is not None
+    assert report["builder_report"]["support_report"]["exponent_multiset"] == [2, 1, 1]
