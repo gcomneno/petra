@@ -398,54 +398,20 @@ def _run_generic_squarefree_profile_solver(
     max_prime_count: int | None = None,
     max_combinations: int | None = None,
 ) -> dict[str, Any] | None:
-    """Canonical squarefree backend for profile-driven support_size search."""
+    """Compatibility adapter for squarefree profile-driven support search."""
     if support_size < 2:
         raise ValueError("support_size must be >= 2")
 
-    if max_k is None:
-        max_k = SQUAREFREE_POLICY_V0["budget"]["max_k"]
-    if max_radius is None:
-        max_radius = SQUAREFREE_POLICY_V0["budget"]["max_radius"]
-    if max_prime_count is None:
-        max_prime_count = SQUAREFREE_POLICY_V0["budget"]["max_prime_count"]
-    if max_combinations is None:
-        max_combinations = SQUAREFREE_POLICY_V0["budget"]["max_combinations"]
-
-    if support_size > max_k:
-        return None
-    if radius > max_radius:
-        return None
-
-    root = _iroot_floor(n, support_size)
-    primes = _candidate_primes_near_root(root, radius)
-
-    if len(primes) > max_prime_count:
-        return None
-    if len(primes) < support_size:
-        return None
-    if comb(len(primes), support_size) > max_combinations:
-        return None
-
-    for combo in combinations(primes, support_size):
-        product = 1
-        for p in combo:
-            product *= p
-
-        if product != n:
-            continue
-
-        factors = [[p, 1] for p in combo]
-        builder_report = _run_builder_from_factorization(output_dir, factors)
-        return _wrap_dedicated_solver_report(
-            n=n,
-            kind="generic-squarefree-profile",
-            strategy=f"generic-squarefree-{support_size}-support",
-            support=list(combo),
-            exponent_profile=[1] * support_size,
-            builder_report=builder_report,
-        )
-
-    return None
+    return _run_generic_exponent_profile_solver(
+        n,
+        output_dir,
+        exponent_profile=[1] * support_size,
+        radius=radius,
+        max_k=max_k,
+        max_radius=max_radius,
+        max_prime_count=max_prime_count,
+        max_combinations=max_combinations,
+    )
 
 
 
