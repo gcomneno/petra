@@ -66,6 +66,11 @@ STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
 }
 
 
+def _structural_profile_policy_v1() -> dict[str, Any]:
+    """Return the current data-driven structural profile policy."""
+    return dict(STRUCTURAL_PROFILE_SEARCH_SPACE_V1)
+
+
 def _normalize_slot_candidates(slot_candidates: dict[str, list[int]] | None) -> dict[str, list[int]]:
     normalized: dict[str, list[int]] = {}
 
@@ -316,7 +321,8 @@ def _generate_structural_profile_candidates_v1(
     """Generate structural profile candidates from the current search-space rules."""
     candidates: list[dict[str, Any]] = []
 
-    exponent_cfg = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["allowed_exponent_profiles"]
+    policy = _structural_profile_policy_v1()
+    exponent_cfg = policy["allowed_exponent_profiles"]
     exponent_radius = structural_radius or exponent_cfg["radius_default"]
 
     for exponent_profile in _generate_allowed_exponent_profiles_v2(
@@ -332,9 +338,9 @@ def _generate_structural_profile_candidates_v1(
             }
         )
 
-    lo, hi = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_support_size_range"]
-    default_radius = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_radius_default"]
-    overrides = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["squarefree_radius_overrides"]
+    lo, hi = policy["squarefree_support_size_range"]
+    default_radius = policy["squarefree_radius_default"]
+    overrides = policy["squarefree_radius_overrides"]
 
     for support_size in range(lo, hi + 1):
         candidates.append(
