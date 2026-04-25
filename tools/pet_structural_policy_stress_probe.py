@@ -116,6 +116,7 @@ def main() -> int:
     failures = []
     slow_cases = []
     accidental_builds = []
+    results = []
 
     for byte_count in byte_sizes:
         for idx in range(cases_per_size):
@@ -140,6 +141,8 @@ def main() -> int:
             if result["terminal_outcome"] == "built":
                 accidental_builds.append(result)
 
+            results.append(result)
+
             print()
             print(f"{name}")
             print(f"  digits = {result['digits']}")
@@ -149,11 +152,33 @@ def main() -> int:
             print(f"  terminal_state = {result['terminal_state']}")
             print(f"  exponent_multiset = {result['exponent_multiset']}")
 
+    elapsed_values = [item["elapsed_seconds"] for item in results]
+    total_elapsed = round(sum(elapsed_values), 4)
+    average_elapsed = round(total_elapsed / len(elapsed_values), 4) if elapsed_values else 0.0
+    max_elapsed = max(elapsed_values) if elapsed_values else 0.0
+    slowest_cases = sorted(
+        results,
+        key=lambda item: item["elapsed_seconds"],
+        reverse=True,
+    )[:3]
+
     print()
-    print(f"cases = {len(byte_sizes) * cases_per_size}")
+    print(f"cases = {len(results)}")
     print(f"failures = {len(failures)}")
     print(f"slow_cases = {len(slow_cases)}")
     print(f"accidental_builds = {len(accidental_builds)}")
+    print(f"total_elapsed_seconds = {total_elapsed}")
+    print(f"average_elapsed_seconds = {average_elapsed}")
+    print(f"max_elapsed_seconds = {max_elapsed}")
+
+    print()
+    print("Slowest cases:")
+    for item in slowest_cases:
+        print(
+            f"- {item['name']} | bytes={item['byte_count']} "
+            f"| elapsed={item['elapsed_seconds']}s "
+            f"| outcome={item['terminal_outcome']}"
+        )
 
     if accidental_builds:
         print()
