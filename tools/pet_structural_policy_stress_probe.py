@@ -109,7 +109,7 @@ def main() -> int:
 
     # Keep defaults intentionally small: wider random inputs can spend a long
     # time in prime-candidate generation with the current naive primality test.
-    byte_sizes = [8, 12]
+    byte_sizes = [8, 12, 16]
     cases_per_size = 2
     slow_threshold_seconds = 5.0
 
