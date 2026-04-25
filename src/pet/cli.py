@@ -616,6 +616,40 @@ def _read_int_from_bytes_file(path_str: str, *, byteorder: str, signed: bool) ->
     }
 
 
+def _parse_irsr_slot_candidates(raw_specs: list[str]) -> dict[str, list[int]]:
+    parsed: dict[str, list[int]] = {}
+
+    for raw in raw_specs:
+        if "=" not in raw:
+            raise ValueError("--irsr-slot-candidates must use SLOT=PRIME[,PRIME...]")
+
+        slot_name, raw_values = raw.split("=", 1)
+        slot_name = slot_name.strip()
+        if not slot_name:
+            raise ValueError("--irsr-slot-candidates requires a non-empty slot name")
+
+        parts = [part.strip() for part in raw_values.split(",") if part.strip()]
+        if not parts:
+            raise ValueError("--irsr-slot-candidates requires at least one integer candidate")
+
+        bucket = parsed.setdefault(slot_name, [])
+        for part in parts:
+            try:
+                value = int(part)
+            except ValueError as exc:
+                raise ValueError("--irsr-slot-candidates values must be integers") from exc
+            if value < 2:
+                raise ValueError("--irsr-slot-candidates values must be >= 2")
+            if not is_prime(value):
+                raise ValueError("--irsr-slot-candidates values must be prime")
+            bucket.append(value)
+
+    return {
+        slot_name: sorted(set(values))
+        for slot_name, values in parsed.items()
+    }
+
+
 def _build_from_int_report(n: int) -> dict:
     if n < 2:
         raise ValueError("build-from-int expects an integer >= 2")
@@ -979,6 +1013,49 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--artifacts-dir",
         default="/tmp/pet_builder_from_int_out",
+        help="directory for materialized builder artifacts",
+    )
+
+    # builder-from-bytes
+    p = subparsers.add_parser(
+        "builder-from-bytes",
+        help="decode a byte stream as an integer and run the end-to-end PET builder pipeline",
+    )
+    p.add_argument("file", metavar="BYTES.bin")
+    p.add_argument(
+        "--byteorder",
+        choices=("big", "little"),
+        default="big",
+        help="byte order used to decode the integer (default: big)",
+    )
+    p.add_argument(
+        "--signed",
+        action="store_true",
+        help="interpret the byte stream as a signed integer",
+    )
+    p.add_argument("--json", action="store_true")
+    p.add_argument(
+        "--mode",
+        choices=("auto", "direct", "irsr"),
+        default="auto",
+        help="execution mode: direct path, hostile-aware irsr path, or auto policy (default: auto)",
+    )
+    p.add_argument(
+        "--irsr-slot-candidates",
+        action="append",
+        default=[],
+        metavar="SLOT=PRIME[,PRIME...]",
+        help="repeatable IRSR seed candidates, e.g. a=101 or b=113,127",
+    )
+    p.add_argument(
+        "--irsr-structural-radius",
+        type=int,
+        default=None,
+        help="override structural generic-exponent radius for IRSR fallback",
+    )
+    p.add_argument(
+        "--artifacts-dir",
+        default="/tmp/pet_builder_from_bytes_out",
         help="directory for materialized builder artifacts",
     )
 
@@ -2419,6 +2496,44 @@ def main(argv: list[str] | None = None) -> int:
                 built = final_output.get("built_pet_object", {})
                 print(f"input_n = {payload.get('input_n')}")
                 print(f"schema = {payload.get('schema')}")
+                print(f"build_status = {final_output.get('build_status')}")
+                print(f"assembly_status = {built.get('assembly_status')}")
+                print(f"component_count = {built.get('component_count')}")
+                print(f"artifacts_dir = {args.artifacts_dir}")
+
+        elif args.command == "builder-from-bytes":
+            from pet.builder_from_bytes import build_from_bytes_pipeline
+
+            payload = build_from_bytes_pipeline(
+                args.file,
+                args.artifacts_dir,
+                byteorder=args.byteorder,
+                signed=args.signed,
+                mode=args.mode,
+                irsr_slot_candidates=_parse_irsr_slot_candidates(args.irsr_slot_candidates),
+                irsr_structural_radius=args.irsr_structural_radius,
+            )
+
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
+            else:
+                builder_report = payload.get("builder_report") or {}
+                final_output = builder_report.get("final_build_output", {})
+                built = final_output.get("built_pet_object", {})
+                terminal_state = payload.get("terminal_state") or {}
+
+                print(f"file = {payload.get('file')}")
+                print(f"byteorder = {payload.get('byteorder')}")
+                print(f"signed = {'yes' if payload.get('signed') else 'no'}")
+                print(f"byte_count = {payload.get('byte_count')}")
+                print(f"hex = {payload.get('hex')}")
+                print(f"input_n = {payload.get('input_n')}")
+                print(f"requested_mode = {payload.get('requested_mode')}")
+                print(f"effective_mode = {payload.get('effective_mode')}")
+                print(f"terminal_outcome = {payload.get('terminal_outcome')}")
+                print(f"terminal_status = {terminal_state.get('terminal_status')}")
+                if 'block_reason' in terminal_state:
+                    print(f"block_reason = {terminal_state.get('block_reason')}")
                 print(f"build_status = {final_output.get('build_status')}")
                 print(f"assembly_status = {built.get('assembly_status')}")
                 print(f"component_count = {built.get('component_count')}")
