@@ -39,3 +39,25 @@ def test_structural_profile_search_space_v1_excludes_out_of_scope_profiles() -> 
     assert ("generic-exponent", (1, 1), None, 1) not in normalized
     assert ("generic-squarefree", (), 2, 16) not in normalized
     assert ("generic-squarefree", (), 6, 64) not in normalized
+
+
+def test_structural_profile_search_space_accepts_injected_policy() -> None:
+    policy = {
+        "allowed_exponent_profiles": {
+            "max_support_size": 2,
+            "max_total_weight": 3,
+            "radius_default": 7,
+            "deferred_profiles": [],
+        },
+        "squarefree_support_size_range": [3, 3],
+        "squarefree_radius_default": 11,
+        "squarefree_radius_overrides": {},
+    }
+
+    specs = _generate_structural_profile_candidates_v1(policy=policy)
+
+    assert _normalize(specs) == [
+        ("generic-exponent", (2,), None, 7),
+        ("generic-exponent", (2, 1), None, 7),
+        ("generic-squarefree", (), 3, 11),
+    ]

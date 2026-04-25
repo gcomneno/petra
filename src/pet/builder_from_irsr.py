@@ -317,11 +317,12 @@ def _generate_allowed_exponent_profiles_v2(
 def _generate_structural_profile_candidates_v1(
     *,
     structural_radius: int | None = None,
+    policy: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Generate structural profile candidates from the current search-space rules."""
     candidates: list[dict[str, Any]] = []
 
-    policy = _structural_profile_policy_v1()
+    policy = _structural_profile_policy_v1() if policy is None else policy
     exponent_cfg = policy["allowed_exponent_profiles"]
     exponent_radius = structural_radius or exponent_cfg["radius_default"]
 
