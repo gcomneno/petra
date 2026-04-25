@@ -35,6 +35,20 @@ EXPONENT_PROFILE_BUDGET_V0 = {
     "max_assignments": 32,
 }
 
+
+def _default_budget_for_exponent_profile(exponent_profile: list[int]) -> dict[str, int]:
+    """Return profile-aware default budget for the generic exponent backend."""
+    if exponent_profile and all(exp == 1 for exp in exponent_profile):
+        return {
+            "max_k": SQUAREFREE_POLICY_V0["budget"]["max_k"],
+            "max_radius": SQUAREFREE_POLICY_V0["budget"]["max_radius"],
+            "max_prime_count": SQUAREFREE_POLICY_V0["budget"]["max_prime_count"],
+            "max_combinations": SQUAREFREE_POLICY_V0["budget"]["max_combinations"],
+            "max_assignments": 1,
+        }
+
+    return dict(EXPONENT_PROFILE_BUDGET_V0)
+
 STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
     "allowed_exponent_profiles": {
         "max_support_size": 2,
@@ -456,16 +470,18 @@ def _run_generic_exponent_profile_solver(
     support_size = len(exponent_profile)
     total_weight = sum(exponent_profile)
 
+    budget_defaults = _default_budget_for_exponent_profile(exponent_profile)
+
     if max_k is None:
-        max_k = EXPONENT_PROFILE_BUDGET_V0["max_k"]
+        max_k = budget_defaults["max_k"]
     if max_radius is None:
-        max_radius = EXPONENT_PROFILE_BUDGET_V0["max_radius"]
+        max_radius = budget_defaults["max_radius"]
     if max_prime_count is None:
-        max_prime_count = EXPONENT_PROFILE_BUDGET_V0["max_prime_count"]
+        max_prime_count = budget_defaults["max_prime_count"]
     if max_combinations is None:
-        max_combinations = EXPONENT_PROFILE_BUDGET_V0["max_combinations"]
+        max_combinations = budget_defaults["max_combinations"]
     if max_assignments is None:
-        max_assignments = EXPONENT_PROFILE_BUDGET_V0["max_assignments"]
+        max_assignments = budget_defaults["max_assignments"]
 
     if support_size > max_k:
         return None
