@@ -126,3 +126,35 @@ def test_builder_from_bytes_irsr_reports_blocked_for_unsupported_profile(tmp_pat
     assert payload["terminal_outcome"] == "blocked"
     assert payload["builder_report"] is None
     assert payload["terminal_state"]["terminal_status"] == "blocked"
+
+
+def test_builder_from_bytes_irsr_builds_medium_square_times_prime_profile(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    n = 100003**2 * 100019
+    input_file = _write_int_bytes(tmp_path / "medium-square-times-prime.bin", n)
+    artifacts_dir = tmp_path / "artifacts-medium-square-times-prime"
+
+    rc = cli_main(
+        [
+            "pet",
+            "builder-from-bytes",
+            str(input_file),
+            "--mode",
+            "irsr",
+            "--artifacts-dir",
+            str(artifacts_dir),
+            "--json",
+        ]
+    )
+
+    assert rc in (0, None)
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["input_n"] == n
+    assert payload["requested_mode"] == "irsr"
+    assert payload["effective_mode"] == "irsr"
+    assert payload["terminal_outcome"] == "built"
+    assert payload["terminal_state"]["terminal_status"] == "built"
+    assert payload["builder_report"]["support_report"]["exponent_multiset"] == [2, 1]

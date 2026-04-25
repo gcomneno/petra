@@ -29,7 +29,7 @@ SQUAREFREE_POLICY_V0 = {
 
 EXPONENT_PROFILE_BUDGET_V0 = {
     "max_k": 4,
-    "max_radius": 8,
+    "max_radius": 16,
     "max_prime_count": 16,
     "max_combinations": 256,
     "max_assignments": 32,
@@ -53,6 +53,7 @@ STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
     "allowed_exponent_profiles": {
         "max_support_size": 2,
         "max_total_weight": 3,
+        "radius_default": 16,
     },
     "squarefree_support_size_range": [3, 5],
     "squarefree_radius_default": 16,
@@ -307,7 +308,7 @@ def _generate_structural_profile_candidates_v1() -> list[dict[str, Any]]:
             {
                 "backend": "generic-exponent",
                 "exponent_profile": list(exponent_profile),
-                "radius": 1,
+                "radius": exponent_cfg["radius_default"],
             }
         )
 

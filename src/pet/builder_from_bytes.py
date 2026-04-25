@@ -218,7 +218,8 @@ def build_from_bytes_pipeline(
             report["attempts"].append(_attempt("irsr", "error", str(exc)))
             report["terminal_state"] = {
                 "terminal_status": "blocked",
-                "block_reason": _irsr_block_reason_from_final_status(irsr_report.get("irsr_final_status")),
+                "block_reason": "irsr-error",
+                "detail": str(exc),
             }
             return report
 
