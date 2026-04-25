@@ -12,6 +12,7 @@ from pet.builder_from_irsr import build_from_irsr_pipeline
 
 
 _ALLOWED_MODES = {"auto", "direct", "irsr"}
+DEFAULT_IRSR_MAX_INPUT_BYTES = 20
 
 
 def _irsr_block_reason_from_final_status(final_status: str | None) -> str:
@@ -188,6 +189,17 @@ def build_from_bytes_pipeline(
         report["terminal_state"] = {
             "terminal_status": "blocked",
             "block_reason": "input-too-small",
+        }
+        return report
+
+    effective_byte_count = max(1, (input_n.bit_length() + 7) // 8)
+    if mode == "irsr" and effective_byte_count > DEFAULT_IRSR_MAX_INPUT_BYTES:
+        report["terminal_state"] = {
+            "terminal_status": "blocked",
+            "block_reason": "input-too-large-for-default-irsr-budget",
+            "byte_count": len(data),
+            "effective_byte_count": effective_byte_count,
+            "max_input_bytes": DEFAULT_IRSR_MAX_INPUT_BYTES,
         }
         return report
 

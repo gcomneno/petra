@@ -71,3 +71,51 @@ def test_pet_builder_from_bytes_blocks_empty_input_cleanly(tmp_path: Path) -> No
     assert report["terminal_state"]["terminal_status"] == "blocked"
     assert report["terminal_state"]["block_reason"] == "empty-input"
     assert report["builder_report"] is None
+
+
+def test_pet_builder_from_bytes_irsr_blocks_large_input_before_running_irsr(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "large-randomish.bin"
+    path.write_bytes(bytes(range(1, 33)))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-large",
+        mode="irsr",
+    )
+
+    assert report["schema"] == "pet-builder-from-bytes-v1"
+    assert report["byte_count"] == 32
+    assert report["requested_mode"] == "irsr"
+    assert report["effective_mode"] == "none"
+    assert report["attempts"] == []
+    assert report["builder_report"] is None
+    assert report["terminal_outcome"] == "blocked"
+    assert report["terminal_state"] == {
+        "terminal_status": "blocked",
+        "block_reason": "input-too-large-for-default-irsr-budget",
+        "byte_count": 32,
+        "effective_byte_count": 32,
+        "max_input_bytes": 20,
+    }
+
+
+def test_pet_builder_from_bytes_irsr_allows_padded_supported_input(
+    tmp_path: Path,
+) -> None:
+    n = 101 * 103 * 107
+    path = tmp_path / "padded-squarefree.bin"
+    path.write_bytes(n.to_bytes(20, "big"))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-padded-squarefree",
+        mode="irsr",
+    )
+
+    assert report["byte_count"] == 20
+    assert report["input_n"] == n
+    assert report["requested_mode"] == "irsr"
+    assert report["effective_mode"] == "irsr"
+    assert report["terminal_outcome"] == "built"

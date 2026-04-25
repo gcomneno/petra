@@ -50,3 +50,25 @@ def test_builder_from_bytes_v1_contract_direct_mode_declares_itself(tmp_path):
     assert payload["requested_mode"] == "direct"
     assert payload["effective_mode"] == "direct"
     assert payload["attempts"][0]["mode"] == "direct"
+
+
+def test_builder_from_bytes_irsr_blocks_large_input_before_running_irsr(tmp_path):
+    path = tmp_path / "large-randomish.bin"
+    path.write_bytes(bytes(range(1, 33)))
+
+    payload = _run_cli("builder-from-bytes", str(path), "--mode", "irsr", "--json")
+
+    assert payload["schema"] == "pet-builder-from-bytes-v1"
+    assert payload["byte_count"] == 32
+    assert payload["requested_mode"] == "irsr"
+    assert payload["effective_mode"] == "none"
+    assert payload["attempts"] == []
+    assert payload["builder_report"] is None
+    assert payload["terminal_outcome"] == "blocked"
+    assert payload["terminal_state"] == {
+        "terminal_status": "blocked",
+        "block_reason": "input-too-large-for-default-irsr-budget",
+        "byte_count": 32,
+        "effective_byte_count": 32,
+        "max_input_bytes": 20,
+    }
