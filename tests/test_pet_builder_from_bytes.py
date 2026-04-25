@@ -119,3 +119,38 @@ def test_pet_builder_from_bytes_irsr_allows_padded_supported_input(
     assert report["requested_mode"] == "irsr"
     assert report["effective_mode"] == "irsr"
     assert report["terminal_outcome"] == "built"
+
+
+def test_pet_builder_from_bytes_accepts_injected_irsr_structural_policy(
+    tmp_path: Path,
+) -> None:
+    policy = {
+        "allowed_exponent_profiles": {
+            "max_support_size": 3,
+            "max_total_weight": 4,
+            "radius_default": 16,
+            "deferred_profiles": [],
+        },
+        "squarefree_support_size_range": [3, 3],
+        "squarefree_radius_default": 16,
+        "squarefree_radius_overrides": {},
+    }
+
+    n = 100003**2 * 100019 * 100043
+    path = tmp_path / "square-times-two-primes.bin"
+    path.write_bytes(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-policy-injected",
+        mode="irsr",
+        irsr_structural_radius=64,
+        irsr_structural_policy=policy,
+    )
+
+    assert report["input_n"] == n
+    assert report["requested_mode"] == "irsr"
+    assert report["effective_mode"] == "irsr"
+    assert report["terminal_outcome"] == "built"
+    assert report["terminal_state"]["terminal_status"] == "built"
+    assert report["builder_report"]["support_report"]["exponent_multiset"] == [2, 1, 1]
