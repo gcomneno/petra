@@ -46,3 +46,25 @@ def test_log_scale_irsr_probe_builds_asymmetric_semiprime(tmp_path) -> None:
     assert "terminal_build_status = built" in out
     assert "artifact__p71-exp1.json" in out
     assert "artifact__p48815831-exp1.json" in out
+
+
+def test_log_scale_irsr_probe_blocks_cleanly_without_match() -> None:
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_log_scale_irsr_probe.py",
+            "1000000007",
+            "--radius",
+            "16",
+            "--max-denominator",
+            "8",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert "matched = False" in proc.stdout
+    assert "Traceback" not in proc.stdout
+    assert "Traceback" not in proc.stderr
