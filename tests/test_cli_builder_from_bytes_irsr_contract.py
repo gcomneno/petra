@@ -158,3 +158,37 @@ def test_builder_from_bytes_irsr_builds_medium_square_times_prime_profile(
     assert payload["terminal_outcome"] == "built"
     assert payload["terminal_state"]["terminal_status"] == "built"
     assert payload["builder_report"]["support_report"]["exponent_multiset"] == [2, 1]
+
+
+def test_builder_from_bytes_irsr_structural_radius_override_builds_large_square_times_prime(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    n = 10000019**2 * 10000079
+    input_file = _write_int_bytes(tmp_path / "large-square-times-prime.bin", n)
+    artifacts_dir = tmp_path / "artifacts-large-square-times-prime"
+
+    rc = cli_main(
+        [
+            "pet",
+            "builder-from-bytes",
+            str(input_file),
+            "--mode",
+            "irsr",
+            "--irsr-structural-radius",
+            "64",
+            "--artifacts-dir",
+            str(artifacts_dir),
+            "--json",
+        ]
+    )
+
+    assert rc in (0, None)
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["input_n"] == n
+    assert payload["requested_mode"] == "irsr"
+    assert payload["effective_mode"] == "irsr"
+    assert payload["terminal_outcome"] == "built"
+    assert payload["terminal_state"]["terminal_status"] == "built"
+    assert payload["builder_report"]["support_report"]["exponent_multiset"] == [2, 1]

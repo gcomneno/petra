@@ -294,11 +294,15 @@ def _generate_allowed_exponent_profiles_v2(
     return unique_profiles
 
 
-def _generate_structural_profile_candidates_v1() -> list[dict[str, Any]]:
+def _generate_structural_profile_candidates_v1(
+    *,
+    structural_radius: int | None = None,
+) -> list[dict[str, Any]]:
     """Generate structural profile candidates from the current search-space rules."""
     candidates: list[dict[str, Any]] = []
 
     exponent_cfg = STRUCTURAL_PROFILE_SEARCH_SPACE_V1["allowed_exponent_profiles"]
+    exponent_radius = structural_radius or exponent_cfg["radius_default"]
 
     for exponent_profile in _generate_allowed_exponent_profiles_v2(
         max_support_size=exponent_cfg["max_support_size"],
@@ -308,7 +312,7 @@ def _generate_structural_profile_candidates_v1() -> list[dict[str, Any]]:
             {
                 "backend": "generic-exponent",
                 "exponent_profile": list(exponent_profile),
-                "radius": exponent_cfg["radius_default"],
+                "radius": exponent_radius,
             }
         )
 
@@ -336,9 +340,13 @@ def _generate_structural_profile_candidates_v0() -> list[dict[str, Any]]:
 def _run_structural_profile_policy_v0(
     n: int,
     output_dir: str | Path,
+    *,
+    structural_radius: int | None = None,
 ) -> dict[str, Any] | None:
     """Run the current structural profile policy over canonical generic backends."""
-    for spec in _generate_structural_profile_candidates_v1():
+    for spec in _generate_structural_profile_candidates_v1(
+        structural_radius=structural_radius,
+    ):
         backend = spec["backend"]
         if backend == "generic-exponent":
             report = _run_generic_exponent_profile_solver(
@@ -346,6 +354,7 @@ def _run_structural_profile_policy_v0(
                 output_dir,
                 exponent_profile=list(spec["exponent_profile"]),
                 radius=spec["radius"],
+                max_radius=max(spec["radius"], EXPONENT_PROFILE_BUDGET_V0["max_radius"]),
             )
         elif backend == "generic-squarefree":
             report = _run_generic_squarefree_profile_solver(
@@ -523,6 +532,7 @@ def build_from_irsr_pipeline(
     slot_candidates: dict[str, list[int]] | None,
     max_steps: int = 5,
     auto_seed_radii: list[int] | None = None,
+    structural_radius: int | None = None,
 ) -> dict[str, Any]:
     normalized_slot_candidates = _normalize_slot_candidates(slot_candidates)
 
@@ -545,7 +555,11 @@ def build_from_irsr_pipeline(
         strategy = "auto-seed"
 
     if strategy == "auto-seed":
-        policy_report = _run_structural_profile_policy_v0(n, output_dir)
+        policy_report = _run_structural_profile_policy_v0(
+            n,
+            output_dir,
+            structural_radius=structural_radius,
+        )
         if policy_report is not None:
             return policy_report
 
@@ -563,6 +577,7 @@ def build_from_irsr_pipeline(
         "slot_candidates": normalized_slot_candidates,
         "auto_seed_radii": None if normalized_slot_candidates else list(auto_seed_radii or [1]),
         "max_steps": max_steps,
+        "structural_radius": structural_radius,
         "irsr_final_status": result["final_status"],
         "payload_summary": result["payload_summary"],
         "build_summary": result["build_summary"],

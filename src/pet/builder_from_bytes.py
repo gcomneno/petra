@@ -150,6 +150,7 @@ def build_from_bytes_pipeline(
     mode: str = "auto",
     irsr_slot_candidates: dict[str, list[int]] | None = None,
     irsr_max_steps: int = 5,
+    irsr_structural_radius: int | None = None,
     direct_timeout_seconds: float = 1.0,
 ) -> dict[str, Any]:
     if mode not in _ALLOWED_MODES:
@@ -213,6 +214,7 @@ def build_from_bytes_pipeline(
                 slot_candidates=irsr_slot_candidates,
                 max_steps=irsr_max_steps,
                 auto_seed_radii=[1],
+                structural_radius=irsr_structural_radius,
             )
         except Exception as exc:
             report["attempts"].append(_attempt("irsr", "error", str(exc)))
@@ -259,6 +261,7 @@ def build_from_bytes_pipeline(
                     slot_candidates=irsr_slot_candidates,
                     max_steps=irsr_max_steps,
                     auto_seed_radii=[1],
+                    structural_radius=irsr_structural_radius,
                 )
             except Exception as exc:
                 report["effective_mode"] = "irsr"

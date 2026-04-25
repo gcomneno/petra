@@ -1048,6 +1048,12 @@ def main(argv: list[str] | None = None) -> int:
         help="repeatable IRSR seed candidates, e.g. a=101 or b=113,127",
     )
     p.add_argument(
+        "--irsr-structural-radius",
+        type=int,
+        default=None,
+        help="override structural generic-exponent radius for IRSR fallback",
+    )
+    p.add_argument(
         "--artifacts-dir",
         default="/tmp/pet_builder_from_bytes_out",
         help="directory for materialized builder artifacts",
@@ -2505,6 +2511,7 @@ def main(argv: list[str] | None = None) -> int:
                 signed=args.signed,
                 mode=args.mode,
                 irsr_slot_candidates=_parse_irsr_slot_candidates(args.irsr_slot_candidates),
+                irsr_structural_radius=args.irsr_structural_radius,
             )
 
             if args.json:
