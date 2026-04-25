@@ -189,3 +189,43 @@ def test_pet_builder_from_bytes_injected_policy_can_enable_cube_times_prime(
     assert report["terminal_outcome"] == "built"
     assert report["terminal_state"]["terminal_status"] == "built"
     assert report["builder_report"]["support_report"]["exponent_multiset"] == [3, 1]
+
+
+def test_pet_builder_from_bytes_injected_policy_can_enable_broader_profiles(
+    tmp_path: Path,
+) -> None:
+    policy = {
+        "allowed_exponent_profiles": {
+            "max_support_size": 4,
+            "max_total_weight": 5,
+            "radius_default": 16,
+            "deferred_profiles": [],
+        },
+        "squarefree_support_size_range": [3, 5],
+        "squarefree_radius_default": 16,
+        "squarefree_radius_overrides": {
+            5: 64,
+        },
+    }
+
+    cases = [
+        (100003**3 * 100019**2, [3, 2]),
+        (100003**2 * 100019 * 100043 * 100049, [2, 1, 1, 1]),
+    ]
+
+    for idx, (n, expected_profile) in enumerate(cases):
+        path = tmp_path / f"broad-profile-{idx}.bin"
+        path.write_bytes(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+        report = build_from_bytes_pipeline(
+            path,
+            tmp_path / f"out-broad-profile-{idx}",
+            mode="irsr",
+            irsr_structural_radius=64,
+            irsr_structural_policy=policy,
+        )
+
+        assert report["input_n"] == n
+        assert report["terminal_outcome"] == "built"
+        assert report["terminal_state"]["terminal_status"] == "built"
+        assert report["builder_report"]["support_report"]["exponent_multiset"] == expected_profile
