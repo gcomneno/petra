@@ -365,10 +365,12 @@ def _run_structural_profile_policy_v0(
     output_dir: str | Path,
     *,
     structural_radius: int | None = None,
+    policy: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Run the current structural profile policy over canonical generic backends."""
     for spec in _generate_structural_profile_candidates_v1(
         structural_radius=structural_radius,
+        policy=policy,
     ):
         backend = spec["backend"]
         if backend == "generic-exponent":

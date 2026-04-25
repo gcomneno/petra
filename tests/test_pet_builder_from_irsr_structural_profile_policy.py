@@ -47,3 +47,29 @@ def test_structural_profile_policy_returns_none_outside_supported_profiles(tmp_p
         tmp_path / "out-cube",
     )
     assert report is None
+
+
+def test_structural_profile_policy_accepts_injected_policy(tmp_path: Path) -> None:
+    policy = {
+        "allowed_exponent_profiles": {
+            "max_support_size": 3,
+            "max_total_weight": 4,
+            "radius_default": 16,
+            "deferred_profiles": [],
+        },
+        "squarefree_support_size_range": [3, 3],
+        "squarefree_radius_default": 16,
+        "squarefree_radius_overrides": {},
+    }
+
+    n = 100003**2 * 100019 * 100043
+
+    report = _run_structural_profile_policy_v0(
+        n,
+        tmp_path / "policy-injected",
+        structural_radius=64,
+        policy=policy,
+    )
+
+    assert report is not None
+    assert report["builder_report"]["support_report"]["exponent_multiset"] == [2, 1, 1]
