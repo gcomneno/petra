@@ -51,8 +51,8 @@ def _default_budget_for_exponent_profile(exponent_profile: list[int]) -> dict[st
 
 STRUCTURAL_PROFILE_SEARCH_SPACE_V1 = {
     "allowed_exponent_profiles": {
-        "max_support_size": 2,
-        "max_total_weight": 3,
+        "max_support_size": 3,
+        "max_total_weight": 4,
         "radius_default": 16,
     },
     "squarefree_support_size_range": [3, 5],
@@ -270,7 +270,16 @@ def _generate_allowed_exponent_profiles_v2(
                 monoblock_heavy = (support_size == 1 and prefix[0] >= 3)
                 all_equal_heavy = (support_size >= 2 and len(set(prefix)) == 1 and prefix[0] >= 2)
 
-                if not all_ones and not monoblock_heavy and not all_equal_heavy:
+                explicitly_deferred = tuple(prefix) in {
+                    (3, 1),
+                }
+
+                if (
+                    not all_ones
+                    and not monoblock_heavy
+                    and not all_equal_heavy
+                    and not explicitly_deferred
+                ):
                     profiles.append(list(prefix))
 
         if remaining == 0 or len(prefix) >= max_support_size:

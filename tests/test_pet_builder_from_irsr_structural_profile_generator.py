@@ -23,6 +23,7 @@ def test_structural_profile_generator_reproduces_current_profiles() -> None:
     assert _normalize(specs) == [
         ("generic-exponent", (2,), None, 16),
         ("generic-exponent", (2, 1), None, 16),
+        ("generic-exponent", (2, 1, 1), None, 16),
         ("generic-squarefree", (), 3, 16),
         ("generic-squarefree", (), 4, 16),
         ("generic-squarefree", (), 5, 64),
@@ -34,5 +35,6 @@ def test_structural_profile_generator_does_not_emit_unapproved_profiles() -> Non
     normalized = _normalize(specs)
 
     assert ("generic-exponent", (3,), None, 1) not in normalized
+    assert ("generic-exponent", (3, 1), None, 16) not in normalized
     assert ("generic-squarefree", (), 2, 16) not in normalized
     assert ("generic-squarefree", (), 6, 64) not in normalized

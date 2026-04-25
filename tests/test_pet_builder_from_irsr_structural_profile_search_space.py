@@ -23,6 +23,7 @@ def test_structural_profile_search_space_v1_reproduces_current_profiles() -> Non
     assert _normalize(specs) == [
         ("generic-exponent", (2,), None, 16),
         ("generic-exponent", (2, 1), None, 16),
+        ("generic-exponent", (2, 1, 1), None, 16),
         ("generic-squarefree", (), 3, 16),
         ("generic-squarefree", (), 4, 16),
         ("generic-squarefree", (), 5, 64),
@@ -34,6 +35,7 @@ def test_structural_profile_search_space_v1_excludes_out_of_scope_profiles() -> 
     normalized = _normalize(specs)
 
     assert ("generic-exponent", (3,), None, 1) not in normalized
+    assert ("generic-exponent", (3, 1), None, 16) not in normalized
     assert ("generic-exponent", (1, 1), None, 1) not in normalized
     assert ("generic-squarefree", (), 2, 16) not in normalized
     assert ("generic-squarefree", (), 6, 64) not in normalized
