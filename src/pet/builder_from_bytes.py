@@ -12,7 +12,7 @@ from pet.builder_from_irsr import build_from_irsr_pipeline
 
 
 _ALLOWED_MODES = {"auto", "direct", "irsr"}
-DEFAULT_IRSR_MAX_INPUT_BYTES = 20
+DEFAULT_IRSR_MAX_INPUT_BYTES = 22
 
 
 def _irsr_block_reason_from_final_status(final_status: str | None) -> str:

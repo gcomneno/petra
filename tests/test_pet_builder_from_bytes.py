@@ -97,7 +97,7 @@ def test_pet_builder_from_bytes_irsr_blocks_large_input_before_running_irsr(
         "block_reason": "input-too-large-for-default-irsr-budget",
         "byte_count": 32,
         "effective_byte_count": 32,
-        "max_input_bytes": 20,
+        "max_input_bytes": 22,
     }
 
 
@@ -229,3 +229,47 @@ def test_pet_builder_from_bytes_injected_policy_can_enable_broader_profiles(
         assert report["terminal_outcome"] == "built"
         assert report["terminal_state"]["terminal_status"] == "built"
         assert report["builder_report"]["support_report"]["exponent_multiset"] == expected_profile
+
+
+def test_pet_builder_from_bytes_irsr_allows_22_effective_bytes_after_guardrail_bump(
+    tmp_path: Path,
+) -> None:
+    n = (1 << (8 * 21)) + 1
+    path = tmp_path / "twenty-two-effective-bytes.bin"
+    path.write_bytes(n.to_bytes(22, "big"))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-22-effective-bytes",
+        mode="irsr",
+    )
+
+    assert report["byte_count"] == 22
+    assert report["terminal_state"].get("block_reason") != "input-too-large-for-default-irsr-budget"
+    assert report["terminal_state"].get("max_input_bytes") is None
+
+
+def test_pet_builder_from_bytes_irsr_blocks_23_effective_bytes_by_default(
+    tmp_path: Path,
+) -> None:
+    n = 1 << (8 * 22)
+    path = tmp_path / "twenty-three-effective-bytes.bin"
+    path.write_bytes(n.to_bytes(23, "big"))
+
+    report = build_from_bytes_pipeline(
+        path,
+        tmp_path / "out-23-effective-bytes",
+        mode="irsr",
+    )
+
+    assert report["byte_count"] == 23
+    assert report["requested_mode"] == "irsr"
+    assert report["effective_mode"] == "none"
+    assert report["terminal_outcome"] == "blocked"
+    assert report["terminal_state"] == {
+        "terminal_status": "blocked",
+        "block_reason": "input-too-large-for-default-irsr-budget",
+        "byte_count": 23,
+        "effective_byte_count": 23,
+        "max_input_bytes": 22,
+    }

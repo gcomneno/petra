@@ -70,5 +70,5 @@ def test_builder_from_bytes_irsr_blocks_large_input_before_running_irsr(tmp_path
         "block_reason": "input-too-large-for-default-irsr-budget",
         "byte_count": 32,
         "effective_byte_count": 32,
-        "max_input_bytes": 20,
+        "max_input_bytes": 22,
     }
