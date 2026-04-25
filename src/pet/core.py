@@ -64,6 +64,52 @@ def is_prime(n: int) -> bool:
     return True
 
 
+
+def is_prime_fast(n: int) -> bool:
+    """Return whether n is prime using deterministic Miller-Rabin for 64-bit ints.
+
+    This is intended as a faster equivalent to ``is_prime`` for local candidate
+    checks. It does not expand the candidate search space.
+    """
+    if n < 2:
+        return False
+
+    small_primes = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    for prime in small_primes:
+        if n == prime:
+            return True
+        if n % prime == 0:
+            return False
+
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        s += 1
+        d //= 2
+
+    def witness_composite(a: int) -> bool:
+        x = pow(a, d, n)
+        if x in (1, n - 1):
+            return False
+
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                return False
+
+        return True
+
+    # Deterministic for unsigned 64-bit integers.
+    # For larger values, this remains a strong probable-prime test.
+    for base in (2, 3, 5, 7, 11, 13, 17):
+        if base >= n:
+            continue
+        if witness_composite(base):
+            return False
+
+    return True
+
+
 def prime_factorization(n: int) -> List[Tuple[int, int]]:
     """Return the prime factorization of n as a sorted list of (prime, exponent)."""
     if n < 2:

@@ -10,7 +10,7 @@ from pet.builder_from_irsr import (
     _generate_structural_profile_candidates_v1,
     _iroot_floor,
 )
-from pet.core import is_prime
+from pet.core import is_prime_fast
 
 
 def _policy_for(
@@ -48,7 +48,7 @@ def _candidate_prime_metrics(n: int, support_size: int, radius: int) -> dict[str
     stop = root + radius
 
     started = time.perf_counter()
-    primes = [p for p in range(start, stop + 1) if is_prime(p)]
+    primes = [p for p in range(start, stop + 1) if is_prime_fast(p)]
     elapsed = time.perf_counter() - started
 
     return {

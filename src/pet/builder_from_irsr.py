@@ -7,7 +7,7 @@ from math import comb, isqrt
 from pathlib import Path
 from typing import Any
 
-from pet.core import is_prime
+from pet.core import is_prime, is_prime_fast
 from pet.irsr_state import (
     run_hostile_semiprime_irsr_with_auto_seed_portfolios,
     run_hostile_semiprime_irsr_with_seed_candidates,
@@ -113,7 +113,7 @@ def _icbrt_floor(n: int) -> int:
 def _candidate_primes_near_root(root: int, radius: int) -> list[int]:
     start = max(2, root - radius)
     stop = root + radius + 1
-    return [p for p in range(start, stop + 1) if is_prime(p)]
+    return [p for p in range(start, stop + 1) if is_prime_fast(p)]
 
 
 def _looks_like_semiprime_model_mismatch(result: dict[str, Any], n: int) -> bool:
