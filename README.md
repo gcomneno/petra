@@ -137,7 +137,6 @@ Start here depending on what you need:
 - [docs/reference/CLI.md](docs/reference/CLI.md) — command-line usage
 - [docs/reports/README.md](docs/reports/README.md) — reports, generated summaries, and report data
 - [docs/research/README.md](docs/research/README.md) — research notes, experiments, partial-shape material, and datasets
-- [docs/paper/README.md](docs/paper/README.md) — paper-oriented material
 - [ROADMAP.md](ROADMAP.md) — current priorities and next directions
 - [CHANGELOG.md](CHANGELOG.md) — public release history
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guide

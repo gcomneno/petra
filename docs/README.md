@@ -19,7 +19,6 @@ For the stable core and operational reference:
 
 ## Main areas
 
-- `paper/` — paper-oriented material, sections, figures, and paper data
 - `reports/` — process docs, generated reports, and report data
 - `research/` — research notes, experiments, partial-shape material, and datasets that are not part of PET-Base
 
@@ -47,7 +46,6 @@ Start from:
 
 1. `research/`
 2. `reports/`
-3. `paper/`
 
 ## Source-of-truth notes
 

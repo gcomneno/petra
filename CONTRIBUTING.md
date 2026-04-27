@@ -103,7 +103,6 @@ Please preserve the current documentation hierarchy:
 - `docs/reference/` for stable specification and CLI reference
 - `docs/research/` for active research notes, experiments, partial-shape material, and datasets
 - `docs/reports/` for report-oriented process docs, generated summaries, and report data
-- `docs/paper/` for paper-oriented material
 
 If you move or rename docs, update cross-links in the affected README files.
 
