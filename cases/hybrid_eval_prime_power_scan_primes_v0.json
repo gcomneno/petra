@@ -1,7 +1,0 @@
-[
-  {"target": 2036162, "family": "prime-power-scan-primes", "label": "2*1009^2", "kind": "prime_power_scan_prime_only", "form": "2*p^2", "p": 1009, "exp": 2, "probe_schedule": "1"},
-  {"target": 2052323, "family": "prime-power-scan-primes", "label": "2*1013^2", "kind": "prime_power_scan_prime_only", "form": "2*p^2", "p": 1013, "exp": 2, "probe_schedule": "1"},
-  {"target": 2076722, "family": "prime-power-scan-primes", "label": "2*1019^2", "kind": "prime_power_scan_prime_only", "form": "2*p^2", "p": 1019, "exp": 2, "probe_schedule": "1"},
-  {"target": 2084882, "family": "prime-power-scan-primes", "label": "2*1021^2", "kind": "prime_power_scan_prime_only", "form": "2*p^2", "p": 1021, "exp": 2, "probe_schedule": "1"},
-  {"target": 2125922, "family": "prime-power-scan-primes", "label": "2*1031^2", "kind": "prime_power_scan_prime_only", "form": "2*p^2", "p": 1031, "exp": 2, "probe_schedule": "1"}
-]

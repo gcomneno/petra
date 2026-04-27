@@ -21,7 +21,7 @@ For the stable core and operational reference:
 
 - `paper/` — paper-oriented material, sections, figures, and paper data
 - `reports/` — process docs, generated reports, and report data
-- `research/` — active research notes, experiments, workflows, partial-PET material, and datasets
+- `research/` — research notes, experiments, workflows, and datasets that are not part of PET-Base
 
 ## Reading map
 

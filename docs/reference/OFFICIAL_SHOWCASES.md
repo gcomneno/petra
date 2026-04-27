@@ -67,7 +67,7 @@ known_support = [101, 113]
 ### Significato operativo
 
 - parte dall’intero raw `11413`
-- passa per `IRSR -> payload -> builder`
+- passa per un payload strutturale già noto verso il builder
 - arriva a un esito esatto e assemblato
 - costituisce il proof point concreto di `RAW-TO-BUILDER CLOSED`
 

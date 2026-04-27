@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI and research lab for representing integers as recursive prime-exponent trees.
+PET is a Python CLI for building, validating, rendering, and explaining Prime Exponent Tree artifacts.
 
 It treats an integer not only as a value, but also as a structured multiplicative object.
 The project studies that structure at three levels:
@@ -15,7 +15,7 @@ The project studies that structure at three levels:
 - **PET-METICA** — rewrite geometry on canonical PET shapes
 
 PET is not presented as a replacement for classical arithmetic and not as a claimed solution to a major open problem.
-It is best understood as a structural and experimental framework for studying integers.
+It is best understood as an artifact, build, validation, and explanation layer for known PET structures.
 
 ## Why this is interesting
 
@@ -124,7 +124,6 @@ pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
 ### Still exploratory
 - broad mathematical generalization beyond explored ranges
 - shape algebra and related experimental operations
-- partial PET and hybrid reconstruction frontiers
 
 ## Project map
 

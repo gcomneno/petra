@@ -1,6 +1,0 @@
-[
-  {"target": 2310, "family": "with-2", "label": "2*3*5*7*11", "prime_count": 5, "has_two": true, "probe_schedule": "10"},
-  {"target": 15015, "family": "without-2", "label": "3*5*7*11*13", "prime_count": 5, "has_two": false, "probe_schedule": "10"},
-  {"target": 30030, "family": "with-2", "label": "2*3*5*7*11*13", "prime_count": 6, "has_two": true, "probe_schedule": "10"},
-  {"target": 255255, "family": "without-2", "label": "3*5*7*11*13*17", "prime_count": 6, "has_two": false, "probe_schedule": "10"}
-]

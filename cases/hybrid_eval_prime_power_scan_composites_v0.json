@@ -1,8 +1,0 @@
-[
-  {"target": 2056372, "family": "prime-power-scan-composites", "label": "2*1014^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1014, "exp": 2, "probe_schedule": "1"},
-  {"target": 2064488, "family": "prime-power-scan-composites", "label": "2*1016^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1016, "exp": 2, "probe_schedule": "1"},
-  {"target": 2068552, "family": "prime-power-scan-composites", "label": "2*1017^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1017, "exp": 2, "probe_schedule": "1"},
-  {"target": 2097152, "family": "prime-power-scan-composites", "label": "2*1024^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1024, "exp": 2, "probe_schedule": "1"},
-  {"target": 2101250, "family": "prime-power-scan-composites", "label": "2*1025^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1025, "exp": 2, "probe_schedule": "1"},
-  {"target": 2113568, "family": "prime-power-scan-composites", "label": "2*1028^2", "kind": "prime_power_scan_composite_only", "form": "2*p^2", "p": 1028, "exp": 2, "probe_schedule": "1"}
-]
