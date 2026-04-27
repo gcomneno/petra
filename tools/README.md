@@ -1,31 +1,34 @@
 # tools
 
-This directory contains PET research scripts with different stability levels.
+This directory contains operator-side PET utilities.
 
 Presence in `tools/` does **not** imply that a script is part of the canonical
-report-facing workflow or that its interface should be treated as stable.
+PET interface or that its interface is stable.
 
 For the current tooling classification, see
-[`../docs/reports/tooling-classification.md`](../docs/reports/tooling-classification.md).
+[`../docs/reports/process/tooling-classification.md`](../docs/reports/process/tooling-classification.md).
 
-## How to read this directory
+## Scope rule
 
-- **Stable research tooling**: scripts used by the current bounded,
-  report-facing PET lab workflow.
-- **Secondary / non-canonical tooling**: useful scripts that are kept in-repo
-  and may be operationally useful, but are not part of the current canonical
-  workflow.
-- **Exploratory / one-off tooling**: exploratory, plotting, prototype, or
-  historical scripts whose presence here should not be read as a stability
-  guarantee.
+Tools kept in this directory must operate on already-known PET inputs, such as:
 
-## Stable research tooling
+- known integers used for deterministic PET analysis
+- known factorization or factor specifications
+- PET artifacts
+- scan JSONL artifacts
+- known PET shapes or signatures
+
+Tools should not implement structural discovery, opaque-integer reconstruction,
+candidate search, byte-stream discovery, probe pipelines, or target-directed
+search.
+
+## Stable tooling
 
 - `atlas_summary.py` — atlas-style summary generation used by bounded reports
 - `cluster_families_disjoint.py` — compatibility wrapper for the disjoint family
   clustering benchmark tooling; canonical entry point: `pet families benchmark-disjoint`
 
-## Secondary / non-canonical tooling
+## Secondary tooling
 
 - `cluster_families.py` — related family-clustering tooling that is not part of
   the current canonical report-facing path
@@ -37,15 +40,20 @@ For the current tooling classification, see
 - `pet_family_combinations.py` — CLI utility for generating or counting
   combinations across PET families in a range
 - `pet_structural_diff.py` — research-facing structural diff helper for exact
-  multiplicative and divisive PET updates; classifies attached/bumped vs
-  removed/decremented branches on concrete prime-factor updates
+  multiplicative and divisive PET updates
 
-## Exploratory / one-off tooling
+## Exploratory tooling policy
 
-Unless explicitly classified otherwise in
-[`../docs/reports/tooling-classification.md`](../docs/reports/tooling-classification.md),
-the remaining scripts in this directory should be treated as exploratory,
-plotting-oriented, prototype, or otherwise non-canonical tooling.
+Exploratory tooling should not stay in this directory by default.
+
+A script may remain only if it is:
+
+- deterministic
+- documented or tested
+- based on known PET structures or generated scan artifacts
+- not a discovery/search pipeline over opaque inputs
+
+Otherwise it should be removed or moved to a separate research repository.
 
 ## Notes
 

@@ -100,7 +100,6 @@ one-off analysis tools rather than stable workflow interfaces:
 - `tools/distinct_shapes.py`
 - `tools/distinct_shapes_streamed.py`
 - `tools/entropy_growth.py`
-- `tools/explore.py`
 - `tools/exp_vectors.py`
 - `tools/height_distribution.py`
 - `tools/omega_distribution.py`
