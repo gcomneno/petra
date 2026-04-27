@@ -104,7 +104,6 @@ one-off analysis tools rather than stable workflow interfaces:
 - `tools/exp_vectors.py`
 - `tools/height_distribution.py`
 - `tools/omega_distribution.py`
-- `tools/pet_compressor_prototipo.py`
 - `tools/plot_diagonal_law.py`
 - `tools/plot_diagonal_ratio.py`
 - `tools/plot_shape_birth.py`
