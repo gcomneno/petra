@@ -48,8 +48,6 @@ pet --help
 | `pet atlas DATASET.jsonl` | produce statistiche atlas-style su un dataset |
 | `pet shape-generators DATASET.jsonl` | mostra i primi generatori delle shape strutturali |
 | `pet branch-neighbors N` | mostra le mosse PET locali in ordine canonico e deterministico |
-| `pet branch-plan A B` | alias canonico di `plan` per path bounded nel grafo PET |
-| `pet branch-plan-best A B` | alias canonico di `plan-best` per path bounded best-first deterministico |
 
 ## Primo percorso consigliato
 
@@ -371,61 +369,6 @@ pet shape-generators docs/reports/data/scan-2-10000.jsonl --metrics
 Questo comando stampa i primi interi che generano nuove shape strutturali
 e, opzionalmente, alcune metriche associate.
 
-## Planning canonico con `branch-*`
-
-Per i comandi di planning, la corsia consigliata è `branch-*`:
-
-- `branch-neighbors` espone il branching locale in ordine canonico e deterministico
-- `branch-plan` è l'alias canonico del planner BFS bounded
-- `branch-plan-best` è l'alias canonico del planner best-first deterministico
-
-I comandi storici `plan` e `plan-best` restano disponibili per compatibilità,
-ma se vuoi rendere esplicita l'intenzione “usa il percorso canonico e deterministico”,
-usa `branch-*`.
-
-### 12. Ispezionare i vicini canonici di un nodo
-
-```bash
-pet branch-neighbors 12
-pet branch-neighbors 12 --json
-```
-
-Uso tipico:
-
-- vedere l'ordine locale delle mosse PET
-- controllare il branching canonico prima di una search
-- avere una vista stabile e ripetibile dei neighbor
-
-### 13. Cercare un path bounded con il planner canonico BFS
-
-```bash
-pet branch-plan 12 245 --max-depth 10
-pet branch-plan 12 245 --max-depth 10 --json
-```
-
-Questo comando è l'alias canonico di `plan`.
-
-È utile quando vuoi:
-
-- una search bounded semplice
-- un path ripetibile su casi piccoli o medi
-- una facciata CLI coerente con la famiglia `branch-*`
-
-### 14. Cercare un path bounded con il planner canonico best-first
-
-```bash
-pet branch-plan-best 12 245 --max-depth 10
-pet branch-plan-best 12 174272757120000 --max-depth 24 --max-visited 50000
-pet branch-plan-best 12 245 --max-depth 10 --json
-```
-
-Questo comando è l'alias canonico di `plan-best`.
-
-È la scelta consigliata quando vuoi:
-
-- un planner deterministico più forte del BFS puro
-- target canonici grandi o ben strutturati
-- una search esplicitamente allineata alla corsia `branch-*`
 
 ## Workflow minimo da terminale
 
@@ -439,7 +382,6 @@ pet generator 7776
 pet signature 7776
 pet compare 12 18
 pet branch-neighbors 12
-pet branch-plan-best 12 245 --max-depth 10
 pet scan 2 10000 --jsonl docs/reports/data/scan-2-10000.jsonl
 pet query filter docs/reports/data/scan-2-10000.jsonl --where "height=2" --limit 5
 pet atlas docs/reports/data/scan-2-10000.jsonl
@@ -454,8 +396,6 @@ pet atlas docs/reports/data/scan-2-10000.jsonl
 - Usa `signature` quando vuoi vedere la signature canonica della shape e distinguere collisioni che le metriche aggregate non separano.
 - Usa `compare` quando vuoi confrontare due interi come struttura.
 - Usa `branch-neighbors` quando vuoi vedere il branching locale canonico e deterministico.
-- Usa `branch-plan` quando vuoi un BFS bounded esplicito nella corsia `branch-*`.
-- Usa `branch-plan-best` quando vuoi il planner canonico deterministico più forte sui target ben strutturati.
 - Usa `scan` per generare un dataset osservabile.
 - Usa `query` per cercare casi strutturali specifici dentro una scan, incluse signature e generatori canonici.
 - Usa `atlas` quando vuoi una vista aggregata del dataset.

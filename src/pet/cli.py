@@ -398,67 +398,74 @@ def _factor_exp_map(n: int) -> dict[int, int]:
     return dict(prime_factorization(n))
 
 
-def _plan_target_score(n: int, target: int) -> tuple[int, int, int]:
-    cur = _factor_exp_map(n)
-    tgt = _factor_exp_map(target)
-
-    primes = sorted(set(cur) | set(tgt))
-    exp_l1 = sum(abs(cur.get(p, 0) - tgt.get(p, 0)) for p in primes)
-    support_symdiff = len(set(cur) ^ set(tgt))
-    largest_prime_gap = abs((max(cur) if cur else 1) - (max(tgt) if tgt else 1))
-
-    return (exp_l1 + support_symdiff, support_symdiff, largest_prime_gap)
 
 
-def _plan_path_best_first(start: int, target: int, max_depth: int, max_visited: int = 20000):
-    if start == target:
-        return []
+def _branch_move_rows(n: int, *, include_generators: bool = True) -> list[dict]:
+    factors = prime_factorization(n)
+    factor_map = dict(factors)
 
-    heap = []
-    start_score = _plan_target_score(start, target)
-    heapq.heappush(heap, (start_score, 0, start))
+    def target_generator_for(value: int):
+        return shape_signature_dict(value)["generator"] if include_generators else None
 
-    best_depth = {start: 0}
-    parent = {start: None}
-    edge = {}
-    visited = 0
+    rows: list[dict] = []
 
-    while heap:
-        _score, depth, cur = heapq.heappop(heap)
-        visited += 1
-        if visited > max_visited:
-            break
+    new_prime = _next_new_prime(set(factor_map))
+    new_n = n * new_prime
+    rows.append(
+        {
+            "label": f"NEW(p={new_prime})",
+            "source_n": n,
+            "target_n": new_n,
+            "target_generator": target_generator_for(new_n),
+            "prime": new_prime,
+            "kind": "NEW",
+        }
+    )
 
-        if cur == target:
-            path = []
-            node = cur
-            while parent[node] is not None:
-                path.append(edge[node])
-                node = parent[node]
-            path.reverse()
-            return path
+    for prime, exp in factors:
+        inc_n = n * prime
+        rows.append(
+            {
+                "label": f"INC(p={prime},e={exp})",
+                "source_n": n,
+                "target_n": inc_n,
+                "target_generator": target_generator_for(inc_n),
+                "representative_prime": prime,
+                "exponent": exp,
+                "kind": "INC",
+            }
+        )
 
-        if depth >= max_depth:
-            continue
-
-        for row in _sorted_plan_neighbors(cur):
-            nxt = row["target_n"]
-            nd = depth + 1
-
-            prev_best = best_depth.get(nxt)
-            if prev_best is not None and prev_best <= nd:
-                continue
-
-            best_depth[nxt] = nd
-            parent[nxt] = cur
-            edge[nxt] = row
-            heapq.heappush(
-                heap,
-                (_plan_target_score(nxt, target), nd, nxt),
+        if exp > 1:
+            dec_n = n // prime
+            rows.append(
+                {
+                    "label": f"DEC(p={prime},e={exp})",
+                    "source_n": n,
+                    "target_n": dec_n,
+                    "target_generator": target_generator_for(dec_n),
+                    "representative_prime": prime,
+                    "exponent": exp,
+                    "kind": "DEC",
+                }
             )
 
-    return None
+    leaf_primes = [prime for prime, exp in factors if exp == 1]
+    if len(factors) > 1 and leaf_primes:
+        drop_prime = min(leaf_primes)
+        drop_n = n // drop_prime
+        rows.append(
+            {
+                "label": f"DROP(p={drop_prime})",
+                "source_n": n,
+                "target_n": drop_n,
+                "target_generator": target_generator_for(drop_n),
+                "representative_prime": drop_prime,
+                "kind": "DROP",
+            }
+        )
 
+    return rows
 
 def _plan_move_rank(label: str) -> tuple[int, str]:
     if label.startswith("NEW("):
@@ -469,88 +476,19 @@ def _plan_move_rank(label: str) -> tuple[int, str]:
         return (2, label)
     if label.startswith("DEC("):
         return (3, label)
-    return (99, label)
+    return (4, label)
 
 
 def _sorted_plan_neighbors(n: int) -> list[dict]:
+    rows = _branch_move_rows(n, include_generators=False)
     return sorted(
-        _plan_neighbors(n),
+        rows,
         key=lambda row: (_plan_move_rank(row["label"]), row["target_n"], row["label"]),
     )
 
 
-def _plan_neighbors(n: int):
-    moves = _explain_moves(n, include_generators=False)
-
-    new = moves.get("new")
-    if new is not None:
-        yield {
-            "source_n": n,
-            "label": f"NEW(p={new['prime']})",
-            "target_n": new["target_n"],
-        }
-
-    drop = moves.get("drop")
-    if drop is not None:
-        yield {
-            "source_n": n,
-            "label": f"DROP(p={drop['representative_prime']})",
-            "target_n": drop["target_n"],
-        }
-
-    for row in moves.get("inc", []):
-        yield {
-            "source_n": n,
-            "label": f"INC(p={row['representative_prime']},e={row['exponent']})",
-            "target_n": row["target_n"],
-        }
-
-    for row in moves.get("dec", []):
-        yield {
-            "source_n": n,
-            "label": f"DEC(p={row['representative_prime']},e={row['exponent']})",
-            "target_n": row["target_n"],
-        }
-
-
-def _plan_path(start: int, target: int, max_depth: int):
-    if start == target:
-        return []
-
-    queue = deque([start])
-    seen = {start}
-    depth = {start: 0}
-    parent = {start: None}
-    edge = {}
-
-    while queue:
-        cur = queue.popleft()
-        if depth[cur] >= max_depth:
-            continue
-
-        for row in _sorted_plan_neighbors(cur):
-            nxt = row["target_n"]
-            if nxt in seen:
-                continue
-
-            seen.add(nxt)
-            depth[nxt] = depth[cur] + 1
-            parent[nxt] = cur
-            edge[nxt] = row
-
-            if nxt == target:
-                path = []
-                node = nxt
-                while parent[node] is not None:
-                    path.append(edge[node])
-                    node = parent[node]
-                path.reverse()
-                return path
-
-            queue.append(nxt)
-
-    return None
-
+def _plan_neighbors(n: int) -> list[dict]:
+    return _sorted_plan_neighbors(n)
 
 def _load_shape_algebra_module():
     import importlib
@@ -1045,26 +983,6 @@ def main(argv: list[str] | None = None) -> int:
     p_partial_shape_target.add_argument("--json", action="store_true")
 
 
-    # plan
-    p_plan = subparsers.add_parser(
-        "plan",
-        aliases=["branch-plan"],
-        help="find a bounded PET move path from A to B",
-    )
-    p_plan.add_argument("start", type=int, metavar="A")
-    p_plan.add_argument("target", type=int, metavar="B")
-    p_plan.add_argument(
-        "--max-depth",
-        type=int,
-        default=8,
-        help="maximum BFS depth for bounded PET planning (default: 8)",
-    )
-    p_plan.add_argument("--json", action="store_true")
-
-
-
-
-
     # int-from-bytes
     p_int_from_bytes = subparsers.add_parser(
         "int-from-bytes",
@@ -1084,28 +1002,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_int_from_bytes.add_argument("--json", action="store_true")
 
-
-    # plan-best
-    p_plan_best = subparsers.add_parser(
-        "plan-best",
-        aliases=["branch-plan-best"],
-        help="find a bounded deterministic PET path from A to B with best-first search",
-    )
-    p_plan_best.add_argument("start", type=int, metavar="A")
-    p_plan_best.add_argument("target", type=int, metavar="B")
-    p_plan_best.add_argument(
-        "--max-depth",
-        type=int,
-        default=12,
-        help="maximum search depth for bounded best-first PET planning (default: 12)",
-    )
-    p_plan_best.add_argument(
-        "--max-visited",
-        type=int,
-        default=20000,
-        help="maximum popped states before giving up (default: 20000)",
-    )
-    p_plan_best.add_argument("--json", action="store_true")
 
     # branch-neighbors
     p_branch_neighbors = subparsers.add_parser(
@@ -1470,73 +1366,6 @@ def main(argv: list[str] | None = None) -> int:
                 print("---")
                 for row in rows:
                     print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
-        elif args.command in {"plan-best", "branch-plan-best"}:
-            if args.start < 2 or args.target < 2:
-                raise ValueError("plan-best expects integers >= 2")
-            if args.max_depth < 0:
-                raise ValueError("--max-depth must be >= 0")
-            if args.max_visited < 1:
-                raise ValueError("--max-visited must be >= 1")
-
-            path = _plan_path_best_first(
-                args.start,
-                args.target,
-                args.max_depth,
-                max_visited=args.max_visited,
-            )
-
-            if args.json:
-                print(json.dumps({
-                    "start": args.start,
-                    "target": args.target,
-                    "max_depth": args.max_depth,
-                    "max_visited": args.max_visited,
-                    "found": path is not None,
-                    "steps": None if path is None else len(path),
-                    "path": [] if path is None else _jsonable_value(path),
-                }, indent=2, ensure_ascii=False))
-            else:
-                print(f"A = {args.start}")
-                print(f"B = {args.target}")
-                print(f"max_depth = {args.max_depth}")
-                print(f"max_visited = {args.max_visited}")
-                print("---")
-                if path is None:
-                    print("NO PATH FOUND")
-                else:
-                    print(f"steps = {len(path)}")
-                    for row in path:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
-        elif args.command in {"plan", "branch-plan"}:
-            if args.start < 2 or args.target < 2:
-                raise ValueError("plan expects integers >= 2")
-            if args.max_depth < 0:
-                raise ValueError("--max-depth must be >= 0")
-
-            path = _plan_path(args.start, args.target, args.max_depth)
-
-            if args.json:
-                print(json.dumps({
-                    "start": args.start,
-                    "target": args.target,
-                    "max_depth": args.max_depth,
-                    "found": path is not None,
-                    "steps": None if path is None else len(path),
-                    "path": [] if path is None else _jsonable_value(path),
-                }, indent=2, ensure_ascii=False))
-            else:
-                print(f"A = {args.start}")
-                print(f"B = {args.target}")
-                print(f"max_depth = {args.max_depth}")
-                print("---")
-                if path is None:
-                    print("NO PATH FOUND")
-                else:
-                    print(f"steps = {len(path)}")
-                    for row in path:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
 
         elif args.command == "shape-of":
             from pathlib import Path
