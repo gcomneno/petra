@@ -1,7 +1,7 @@
 # PET — Diagonal Growth Experiments
 
 Dataset:
-docs/paper/data/shape_first_occurrence.txt
+original paper-side dataset removed from the repository; this note is kept as historical research material
 
 We study the growth of the generator sequence
 
