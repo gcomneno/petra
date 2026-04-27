@@ -46,7 +46,7 @@ They may contain:
 - partial ideas
 - exploratory formulations
 - outdated hypotheses
-- local workflows
+- local procedures
 - experimental directions not promoted to project-wide source of truth
 
 For current project-wide source of truth, see:

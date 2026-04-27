@@ -2,7 +2,7 @@
 
 Thanks for your interest in PET.
 
-This project is currently a small Python CLI and research/tooling lab for exploring recursive prime-exponent-tree representations of integers.
+This project is currently a small Python CLI and PET artifact/report tooling project for exploring recursive prime-exponent-tree representations of integers.
 
 ## Before you start
 
@@ -53,8 +53,8 @@ If you are changing behavior or documentation, these files are usually the most 
 - `README.md`
 - `docs/README.md`
 - `docs/VISION.md`
-- `docs/STATUS.md`
-- `docs/PET-METICA.md`
+- `docs/reports/STATUS.md`
+- `docs/research/notes/PET-METICA.md`
 - `docs/reference/CLI.md`
 - `docs/reference/SPEC.md`
 - `docs/reports/README.md`
@@ -91,7 +91,7 @@ Please keep that distinction explicit:
 
 - stable definitions, contracts, and behavior belong in the main docs and implementation
 - empirical observations, bounded patterns, and research-facing notes should stay in the appropriate research/report documents
-- rewrite-geometric findings belong in `docs/PET-METICA.md` only when they are stated carefully as empirical or as clearly delimited claims
+- rewrite-geometric findings belong in `docs/research/notes/PET-METICA.md` only when they are stated carefully as empirical or as clearly delimited claims
 
 Do not present exploratory observations as established facts.
 
@@ -101,7 +101,7 @@ Please preserve the current documentation hierarchy:
 
 - root docs for project-wide orientation and source of truth
 - `docs/reference/` for stable specification and CLI reference
-- `docs/research/` for active research notes, experiments, workflows, and datasets
+- `docs/research/` for active research notes, experiments, partial-shape material, and datasets
 - `docs/reports/` for report-oriented process docs, generated summaries, and report data
 - `docs/paper/` for paper-oriented material
 

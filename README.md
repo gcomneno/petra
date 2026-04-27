@@ -136,7 +136,7 @@ Start here depending on what you need:
 - [docs/reference/SPEC.md](docs/reference/SPEC.md) — formal PET-Base specification
 - [docs/reference/CLI.md](docs/reference/CLI.md) — command-line usage
 - [docs/reports/README.md](docs/reports/README.md) — reports, generated summaries, and report data
-- [docs/research/README.md](docs/research/README.md) — research notes, experiments, workflows, and datasets
+- [docs/research/README.md](docs/research/README.md) — research notes, experiments, partial-shape material, and datasets
 - [docs/paper/README.md](docs/paper/README.md) — paper-oriented material
 - [ROADMAP.md](ROADMAP.md) — current priorities and next directions
 - [CHANGELOG.md](CHANGELOG.md) — public release history
@@ -158,7 +158,7 @@ A small practical PET workflow looks like this:
 PET is currently best understood as:
 
 - a small Python CLI
-- a reproducible research/tooling lab
+- a reproducible PET artifact and report tooling project
 - a project for studying structural properties of integers through PET representations
 - an emerging rewrite-geometric framework through PET-METICA
 
@@ -183,4 +183,3 @@ pytest -q
 ## License
 
 MIT
-## Official showcases

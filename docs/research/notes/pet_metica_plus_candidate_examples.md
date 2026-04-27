@@ -1,12 +1,12 @@
-# PET-METICA `⊕` candidate examples
+# PET-METICA `⊕` definition examples
 
 ## Scopo
-Questa nota confronta candidati preliminari di `⊕` su pochi casi-manifesto.
-Non promuove ancora nessuna definizione. Serve a scartare presto i candidati deboli o artificiali.
+Questa nota confronta definizioni preliminari di `⊕` su pochi casi-manifesto.
+Non promuove ancora nessuna definizione. Serve a scartare presto le definizioni deboli o artificiali.
 
 ---
 
-## Candidati testati
+## Definizioni testate
 
 ### A. Composizione di trasporti
 Idea:
@@ -66,7 +66,7 @@ Giudizio preliminare:
 ### A. Composizione di trasporti
 Osservazione iniziale:
 - il passaggio tra stato puramente dyadico e stato misto è già più istruttivo
-- qui si vede se il candidato regge oltre la sola torre del 2
+- qui si vede se la definizione regge oltre la sola torre del 2
 
 Giudizio preliminare:
 - da testare bene
@@ -109,7 +109,7 @@ Giudizio preliminare:
 
 ### C. Target comune / merge
 Osservazione iniziale:
-- `30` sembra un candidato naturale come target comune/esteso rispetto a `6`
+- `30` sembra una scelta naturale come target comune/esteso rispetto a `6`
 - ma attenzione: questo non basta a dire che il merge definisca una buona `⊕` in generale
 
 Giudizio preliminare:
@@ -121,9 +121,9 @@ Giudizio preliminare:
 
 | Candidato | 2,4,8 | 4,12 | 6,30 | Giudizio provvisorio |
 |---|---|---|---|---|
-| Composizione di trasporti | buono | da testare | molto buono | miglior candidato iniziale |
-| Punto base | plausibile | sospetto | debole | candidato fragile |
-| Target comune / merge | plausibile | interessante | promettente | candidato locale da capire meglio |
+| Composizione di trasporti | buono | da testare | molto buono | miglior definizione iniziale |
+| Punto base | plausibile | sospetto | debole | definizione fragile |
+| Target comune / merge | plausibile | interessante | promettente | definizione locale da capire meglio |
 
 ---
 
@@ -134,7 +134,7 @@ La lettura più promettente, allo stato attuale, è:
 - `⊕` come operazione più vicina a una composizione/aggregazione di trasporti
 - oppure, in alternativa, come costruzione di target comune in casi privilegiati
 
-Il candidato via punto base al momento appare più artificiale.
+La definizione via punto base al momento appare più artificiale.
 
 ---
 
@@ -142,7 +142,7 @@ Il candidato via punto base al momento appare più artificiale.
 
 Prima di definire `⊕`, conviene fare un altro passaggio piccolo:
 
-- scegliere una semantica esplicita per il candidato A
-- scegliere una semantica esplicita per il candidato C
+- scegliere una semantica esplicita per la definizione A
+- scegliere una semantica esplicita per la definizione C
 - testarle sugli stessi casi manifesto
 - vedere quale delle due resta leggibile senza introdurre convenzioni troppo arbitrarie

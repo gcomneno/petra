@@ -20,9 +20,9 @@ Examples:
 - `README.md`
 - `docs/reference/SPEC.md`
 - `docs/reports/STATUS.md`
-- `docs/reports/canonical-workflow.md`
+- `docs/reports/process/canonical-workflow.md`
 - `docs/reports/README.md`
-- bounded report documents under `docs/reports/*.md`
+- bounded report documents under `docs/reports/generated/*.md`
 
 ### 2. Local generated datasets
 

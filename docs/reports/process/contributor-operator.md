@@ -10,11 +10,11 @@ reports or add a new one without reverse-engineering repo habits.
 Read these documents in this order:
 
 1. `README.md`
-2. `docs/reports/canonical-workflow.md`
+2. `docs/reports/process/canonical-workflow.md`
 3. `docs/reports/README.md`
-4. `docs/reports/artifact-policy.md`
-5. `docs/reports/tooling-classification.md`
-6. `docs/reports/observation-pipeline.md`
+4. `docs/reports/process/artifact-policy.md`
+5. `docs/reports/process/tooling-classification.md`
+6. `docs/reports/process/observation-pipeline.md`
 
 ## Current canonical lab path
 
@@ -26,9 +26,9 @@ The current canonical PET lab path is:
 4. classify statements correctly before promoting them
 
 Canonical examples already in use:
-- metrics baseline: `docs/reports/metrics-2-10000.md`
-- atlas reports: `docs/reports/atlas-2-100000.md`, `docs/reports/atlas-2-1000000.md`
-- family benchmark: `docs/reports/families-benchmark-disjoint.md`
+- metrics baseline: `docs/reports/generated/metrics-2-10000.md`
+- atlas reports: `docs/reports/generated/atlas-2-100000.md`, `docs/reports/generated/atlas-2-1000000.md`
+- family benchmark: `docs/reports/generated/families-benchmark-disjoint.md`
 
 ## Core commands
 
@@ -87,7 +87,7 @@ Do not write docs that pretend ignored local data files are present in a fresh c
 
 ## Claim classification rule
 
-Use `docs/reports/observation-pipeline.md`.
+Use `docs/reports/process/observation-pipeline.md`.
 
 In practice:
 - bounded facts stay bounded

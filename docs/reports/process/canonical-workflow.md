@@ -44,8 +44,8 @@ This step converts the raw bounded scan into a compact structural summary.
 ### 3. Publish a bounded report tied to explicit inputs
 
 Primary artifacts:
-- `docs/reports/atlas-<start>-<end>.md`
-- other bounded report documents under `docs/reports/`
+- `docs/reports/generated/atlas-<start>-<end>.md`
+- other bounded report documents under `docs/reports/generated/`
 
 A report is canonical only if it states:
 - its bounded range
@@ -72,7 +72,7 @@ Canonical path:
 
 Current example:
 - dataset: `docs/reports/data/scan-2-10000.jsonl`
-- report: `docs/reports/metrics-2-10000.md`
+- report: `docs/reports/generated/metrics-2-10000.md`
 
 Command:
 
@@ -87,7 +87,7 @@ Primary helper:
 - `pet families benchmark-disjoint`
 
 Current example:
-- report: `docs/reports/families-benchmark-disjoint.md`
+- report: `docs/reports/generated/families-benchmark-disjoint.md`
 
 Command:
 
@@ -135,7 +135,7 @@ Stable filename pattern:
 ### Atlas report step
 
 Expected output:
-- committed report at `docs/reports/atlas-<start>-<end>.md`
+- committed report at `docs/reports/generated/atlas-<start>-<end>.md`
 
 Stable filename pattern:
 - `atlas-<start>-<end>.md`
@@ -144,7 +144,7 @@ Stable filename pattern:
 
 Current canonical example:
 - dataset: `docs/reports/data/scan-2-10000.jsonl`
-- report: `docs/reports/metrics-2-10000.md`
+- report: `docs/reports/generated/metrics-2-10000.md`
 
 Expected output:
 - committed bounded metrics report
@@ -160,14 +160,14 @@ Command pattern:
 
 Expected output:
 - stdout from the family benchmark command, to be used when preparing
-  `docs/reports/families-benchmark-disjoint.md`
+  `docs/reports/generated/families-benchmark-disjoint.md`
 
 Current stable report filename:
 - `families-benchmark-disjoint.md`
 
 ### 5. Classify statements before promoting them
 
-Interpretation must follow `docs/reports/observation-pipeline.md`.
+Interpretation must follow `docs/reports/process/observation-pipeline.md`.
 
 In practice:
 - raw bounded facts belong in reports
@@ -181,12 +181,12 @@ Stable entry points currently recognized by the repository:
 
 - `docs/reference/SPEC.md`
 - `docs/reports/STATUS.md`
-- `docs/reports/metrics-2-10000.md`
-- `docs/reports/atlas-2-100000.md`
-- `docs/reports/atlas-2-1000000.md`
-- `docs/reports/signatures-catalog-2-1000000.md`
-- `docs/reports/families-benchmark-disjoint.md`
-- `docs/reports/observation-pipeline.md`
+- `docs/reports/generated/metrics-2-10000.md`
+- `docs/reports/generated/atlas-2-100000.md`
+- `docs/reports/generated/atlas-2-1000000.md`
+- `docs/reports/generated/signatures-catalog-2-1000000.md`
+- `docs/reports/generated/families-benchmark-disjoint.md`
+- `docs/reports/process/observation-pipeline.md`
 
 ## Current stable vs non-canonical boundary
 

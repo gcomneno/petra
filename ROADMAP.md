@@ -9,7 +9,7 @@ It is intentionally short.
 PET currently works best as:
 
 - a small Python CLI
-- a reproducible research/tooling lab
+- a reproducible PET artifact and report tooling project
 - a project for exploring recursive prime-exponent-tree representations of integers
 - an emerging rewrite-geometric framework through PET-METICA
 
@@ -104,8 +104,7 @@ These are possible future directions, not commitments:
 - broader PET-METICA experiments at larger ranges
 - richer structural visualization
 - clearer family atlases and catalogs
-- shape algebra and partial-PET extensions
-- reconstruction and hybrid workflows
+- shape algebra and partial-shape extensions
 - packaging improvements for easier external use
 
 ## What this roadmap is not

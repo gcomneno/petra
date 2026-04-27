@@ -28,16 +28,16 @@ All statements below refer to the first observed generator of a given structural
 
 ## Table of small shape families
 
-| Shape family | First observed generator | Candidate law | Status | Notes |
+| Shape family | First observed generator | Proposed law | Status | Notes |
 |---|---:|---|---|---|
 | `[2]` | `6` | primorial of first 2 primes | exact-by-construction | `6 = 2 * 3` |
 | `[3]` | `30` | primorial of first 3 primes | exact-by-construction | `30 = 2 * 3 * 5` |
 | `[4]` | `210` | primorial of first 4 primes | exact-by-construction | `210 = 2 * 3 * 5 * 7` |
 | `[5]` | `2310` | primorial of first 5 primes | exact-by-construction | `2310 = 2 * 3 * 5 * 7 * 11` |
-| `[2,1]` | `12` | `2 ×` generator of `[2]` | exact-by-construction / minimal constructive pattern | `12 = 2^2 * 3` |
-| `[3,1]` | `60` | `2 ×` generator of `[3]` | exact-by-construction / minimal constructive pattern | `60 = 2^2 * 3 * 5` |
-| `[4,1]` | `420` | `2 ×` generator of `[4]` | exact-by-construction / minimal constructive pattern | `420 = 2^2 * 3 * 5 * 7` |
-| `[5,1]` | `4620` | `2 ×` generator of `[5]` | exact-by-construction / minimal constructive pattern | `4620 = 2^2 * 3 * 5 * 7 * 11` |
+| `[2,1]` | `12` | `2 ×` generator of `[2]` | exact-by-construction / minimal construction pattern | `12 = 2^2 * 3` |
+| `[3,1]` | `60` | `2 ×` generator of `[3]` | exact-by-construction / minimal construction pattern | `60 = 2^2 * 3 * 5` |
+| `[4,1]` | `420` | `2 ×` generator of `[4]` | exact-by-construction / minimal construction pattern | `420 = 2^2 * 3 * 5 * 7` |
+| `[5,1]` | `4620` | `2 ×` generator of `[5]` | exact-by-construction / minimal construction pattern | `4620 = 2^2 * 3 * 5 * 7 * 11` |
 | `[2,2]` | `36` | no closed law claimed here | bounded empirical fact | first balanced binary-recursive profile seen in small scans |
 | `[2,1,1]` | `48` | no closed law claimed here | bounded empirical fact | first deeper hybrid profile seen in small scans |
 | `[1,2]` | `64` | no closed law claimed here | bounded empirical fact | tower-like profile that opens at the next level |
@@ -63,7 +63,7 @@ That is exactly the `k`-prime primorial.
 
 ---
 
-## Why `[k,1]` strongly suggests a minimal constructive law
+## Why `[k,1]` strongly suggests a minimal construction law
 
 The profile `[k,1]` can be read as:
 
@@ -81,7 +81,7 @@ This strongly supports the rule:
 
 `first([k,1]) = 2 × first([k])`
 
-At the current stage this can be treated as a very natural minimal constructive law, but it is still worth separating from fully formalized theorem language unless written out carefully in PET-native terms.
+At the current stage this can be treated as a very natural minimal construction law, but it is still worth separating from fully formalized theorem language unless written out carefully in PET-native terms.
 
 ---
 
@@ -119,6 +119,6 @@ This supports the practical view that PET structural space does not grow chaotic
 Small, concrete next steps that fit the current repo direction:
 
 1. Add a short research-facing note or table of first generators by shape family.
-2. Keep exact constructive families (`[k]`, maybe `[k,1]`) clearly separated from bounded empirical patterns.
+2. Keep exact construction families (`[k]`, maybe `[k,1]`) clearly separated from bounded empirical patterns.
 3. Only after that, decide whether shape-family exploration deserves a dedicated CLI/report helper.
 
