@@ -1100,44 +1100,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_explain.add_argument("--json", action="store_true")
 
-    # partial explain
-    p_partial_explain = subparsers.add_parser(
-        "partial-explain",
-        help="run Partial-PET probe + hybrid synthesis and show the top candidate(s)",
-    )
-    p_partial_explain.add_argument("n", type=int, metavar="N")
-    p_partial_explain.add_argument(
-        "--schedule",
-        default="100,1000,10000",
-        help="comma-separated probe schedule, e.g. 10 or 100,1000,10000",
-    )
-    p_partial_explain.add_argument("--json", action="store_true")
-
-    # preimage search
-    p_preimage_search = subparsers.add_parser(
-        "preimage-search",
-        help="run profiled Partial-PET preimage search from the top ranked seed",
-    )
-    p_preimage_search.add_argument("n", type=int, metavar="N")
-    p_preimage_search.add_argument(
-        "--schedule",
-        default="10",
-        help="comma-separated probe schedule, e.g. 10 or 100,1000,10000",
-    )
-    p_preimage_search.add_argument(
-        "--mode",
-        choices=("quick", "deep"),
-        default="quick",
-        help="search profile mode (default: quick)",
-    )
-    p_preimage_search.add_argument(
-        "--depth",
-        type=int,
-        default=6,
-        help="search depth (default: 6)",
-    )
-    p_preimage_search.add_argument("--json", action="store_true")
-
     # dismantle
     p_dismantle = subparsers.add_parser(
         "dismantle",
@@ -1821,63 +1783,6 @@ def main(argv: list[str] | None = None) -> int:
                             )
                     if neighborhood["truncated"]:
                         print("  [truncated by --max-nodes]")
-
-        elif args.command == "partial-explain":
-            if args.n < 1:
-                raise ValueError("N must be >= 1")
-
-            from pathlib import Path
-
-            repo_root = Path(__file__).resolve().parents[2]
-            if str(repo_root) not in sys.path:
-                sys.path.insert(0, str(repo_root))
-
-            import tools.partial_signature_probe as probe_mod
-            from tools.partial_explain import build_partial_explain, render_human
-
-            schedule = probe_mod.parse_schedule(args.schedule)
-            data = build_partial_explain(args.n, schedule)
-
-            if args.json:
-                print(json.dumps(data, indent=2, ensure_ascii=False))
-            else:
-                print(render_human(data))
-
-        elif args.command == "preimage-search":
-            if args.n < 1:
-                raise ValueError("N must be >= 1")
-            if args.depth < 1:
-                raise ValueError("--depth must be >= 1")
-
-            from pathlib import Path
-
-            repo_root = Path(__file__).resolve().parents[2]
-            if str(repo_root) not in sys.path:
-                sys.path.insert(0, str(repo_root))
-
-            import tools.partial_signature_probe as probe_mod
-            from tools.partial_explain import build_partial_explain
-            from tools.pet_preimage_seed import (
-                build_seed,
-                build_profiled_search_report,
-            )
-
-            schedule = probe_mod.parse_schedule(args.schedule)
-            partial = build_partial_explain(args.n, schedule)
-            seed = build_seed(partial, rank=1)
-            report = build_profiled_search_report(seed, depth=args.depth, mode=args.mode)
-
-            if args.json:
-                print(json.dumps(report, indent=2, ensure_ascii=False))
-            else:
-                print(f"N = {report['source_n']}")
-                print(f"mode = {report['mode']}")
-                print(f"depth = {report['depth']}")
-                print(f"profile = {report['profile']}")
-                print(f"frontier_count = {report['frontier_count']}")
-                print(f"min_n = {report['min_n']}")
-                print(f"max_n = {report['max_n']}")
-                print(f"sample_ns = {report['sample_ns']}")
 
         elif args.command == "dismantle":
             data = _dismantle_data(args.n)
