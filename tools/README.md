@@ -1,51 +1,60 @@
 # tools
 
-This directory contains PET research scripts with different stability levels.
+This directory contains operator-side PET utilities.
 
 Presence in `tools/` does **not** imply that a script is part of the canonical
-report-facing workflow or that its interface should be treated as stable.
+PET CLI interface or that its interface is stable.
 
 For the current tooling classification, see
-[`../docs/reports/tooling-classification.md`](../docs/reports/tooling-classification.md).
+[`../docs/reports/process/tooling-classification.md`](../docs/reports/process/tooling-classification.md).
 
-## How to read this directory
+## Scope rule
 
-- **Stable research tooling**: scripts used by the current bounded,
-  report-facing PET lab workflow.
-- **Secondary / non-canonical tooling**: useful scripts that are kept in-repo
-  and may be operationally useful, but are not part of the current canonical
-  workflow.
-- **Exploratory / one-off tooling**: exploratory, plotting, prototype, or
-  historical scripts whose presence here should not be read as a stability
-  guarantee.
+Tools kept in this directory must operate on already-known PET inputs, such as:
 
-## Stable research tooling
+- known integers used for deterministic PET analysis
+- known factorization or factor specifications
+- PET artifacts
+- scan JSONL artifacts
+- known PET shapes or signatures
+
+Tools must not implement structural discovery over opaque integers, ISS/IRSR
+pipelines, byte-stream discovery, preimage search, probe pipelines, or
+target-directed candidate search.
+
+## Stable tooling
 
 - `atlas_summary.py` — atlas-style summary generation used by bounded reports
 - `cluster_families_disjoint.py` — compatibility wrapper for the disjoint family
-  clustering benchmark tooling; canonical entry point: `pet families benchmark-disjoint`
+  benchmark tooling; canonical entry point: `pet families benchmark-disjoint`
 
-## Secondary / non-canonical tooling
+## Builder and support tooling
 
-- `cluster_families.py` — related family-clustering tooling that is not part of
-  the current canonical report-facing path
-- `scan_query.py` — small operator-side helper for filtering and grouped counts
-  over PET scan JSONL artifacts
-- `pet_table.py` — CLI utility for generating PET tables from integer datasets
-- `pet_profile_range.py` — CLI utility for exploring PET profiles over numeric
-  ranges
-- `pet_family_combinations.py` — CLI utility for generating or counting
-  combinations across PET families in a range
-- `pet_structural_diff.py` — research-facing structural diff helper for exact
-  multiplicative and divisive PET updates; classifies attached/bumped vs
-  removed/decremented branches on concrete prime-factor updates
+- `pet_builder_from_int.py` — wrapper around the PET builder-from-int entry point
+- `pet_builder_plan.py` — derive an execution plan from an existing builder report
+- `pet_builder_execute.py` — materialize builder artifacts from an existing plan
+- `pet_support_realization.py` — validate and restate support-realization payloads
 
-## Exploratory / one-off tooling
+## Dataset and report helpers
 
-Unless explicitly classified otherwise in
-[`../docs/reports/tooling-classification.md`](../docs/reports/tooling-classification.md),
-the remaining scripts in this directory should be treated as exploratory,
-plotting-oriented, prototype, or otherwise non-canonical tooling.
+- `cluster_families.py` — related family-clustering tooling
+- `distinct_shapes.py` — distinct-shape extraction over bounded ranges
+- `height_distribution.py` — PET height distribution over bounded ranges
+- `shape_entropy.py` — entropy-style summaries over PET shape datasets
+- `shape_count_fast.py` — fast shape counting utility
+- `shape_first_occurrence.py` — first-occurrence reporting for PET shapes
+- `scan_query.py` — filtering and grouped counts over PET scan JSONL artifacts
+- `pet_table.py` — PET table generation from integer datasets
+- `pet_profile_range.py` — PET profile exploration over numeric ranges
+- `pet_family_combinations.py` — family-combination generation/counting in ranges
+
+## PET-METICA and shape research tooling
+
+- `pet_rewrite_metric.py` — rewrite-metric helper
+- `pet_shape_algebra.py` — shape algebra helper
+- `pet_structural_diff.py` — structural diff helper for exact PET updates
+- `shape_rewrite_arithmetic_v0.py` — tested v0 arithmetic rewrite helper
+- `exponent_shape_trace.py` — exponent-shape trace reporting over known ranges
 
 ## Notes
 

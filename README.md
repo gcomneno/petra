@@ -184,5 +184,3 @@ pytest -q
 
 MIT
 ## Official showcases
-
-See [`docs/reference/OFFICIAL_SHOWCASES.md`](docs/reference/OFFICIAL_SHOWCASES.md).
