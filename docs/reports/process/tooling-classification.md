@@ -96,23 +96,11 @@ Reason:
 The following scripts are currently exploratory, local, prototype, plotting, or
 one-off analysis tools rather than stable workflow interfaces:
 
-- `tools/analyze_generators.py`
 - `tools/distinct_shapes.py`
-- `tools/distinct_shapes_streamed.py`
-- `tools/entropy_growth.py`
-- `tools/exp_vectors.py`
 - `tools/height_distribution.py`
-- `tools/omega_distribution.py`
-- `tools/plot_diagonal_law.py`
-- `tools/plot_diagonal_ratio.py`
-- `tools/plot_shape_birth.py`
-- `tools/plot_shape_growth_law.py`
 - `tools/shape_count_fast.py`
 - `tools/shape_entropy.py`
-- `tools/shape_evolution_graph.py`
 - `tools/shape_first_occurrence.py`
-- `tools/shape_graph.py`
-- `tools/shapes_growth.py`
 
 Common reasons:
 - not referenced by the current canonical workflow
