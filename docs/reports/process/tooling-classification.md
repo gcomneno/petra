@@ -2,122 +2,251 @@
 
 ## Scope
 
-This document classifies the current `tools/` scripts into stable research
-tooling, secondary/non-canonical tooling, and exploratory scripts.
+This document classifies the current `tools/` scripts after the PET-only scope
+cleanup.
 
-Its goal is to make the PET lab boundary explicit so that workflow documents do
-not accidentally treat one-off scripts as stable interfaces.
+The purpose of this classification is to keep PET focused on already-known
+inputs and PET artifacts. Tools may analyze, build, validate, summarize, or
+explain known PET structures, but they must not reintroduce structural discovery
+over opaque integers.
 
-## Stable research tooling
+## Boundary rule
 
-These scripts are part of the current bounded PET lab workflow and are already
-referenced by stable documentation or committed reports.
+Tools kept in this repository may operate on:
+
+- known integers used for deterministic PET analysis
+- known factorizations or factor specifications
+- PET artifacts
+- scan JSONL artifacts
+- known PET shapes or signatures
+- support-realization payloads
+
+Tools should not implement:
+
+- ISS / IRSR structural search
+- byte-stream-to-structure discovery
+- partial probe or hybrid reconstruction pipelines
+- preimage search
+- target-directed candidate search
+- opaque-integer reconstruction without known structure
+
+## Stable report-facing tooling
+
+These scripts or entry points are part of the current report-facing PET workflow.
 
 ### `tools/atlas_summary.py`
 
 Status:
-- stable research tooling
+- stable report-facing tooling
 
 Reason:
-- explicitly used by atlas reports
-- explicitly referenced by `README.md`
-- explicitly referenced by `docs/reports/canonical-workflow.md`
-- consumes bounded scan JSONL input and produces atlas-style summary output
+- consumes bounded scan JSONL artifacts
+- produces atlas-style summary output
+- referenced by stable reports and workflow docs
 
 ### `pet families benchmark-disjoint`
 
 Status:
-- stable research CLI capability
+- stable report-facing CLI capability
 
 Reason:
-- explicitly used by `docs/reports/families-benchmark-disjoint.md`
-- explicitly referenced by `docs/reports/canonical-workflow.md`
-- currently defines the canonical family benchmark path
+- defines the canonical disjoint family benchmark path
+- used by generated family benchmark reports
 - compatibility wrapper remains available at `tools/cluster_families_disjoint.py`
 
-## Secondary / non-canonical tooling
+### `tools/cluster_families_disjoint.py`
 
-These scripts are useful PET analysis or operator-side utilities, but are not
-currently part of the canonical bounded lab workflow.
+Status:
+- compatibility wrapper
+
+Reason:
+- retained for operator convenience
+- canonical entry point is `pet families benchmark-disjoint`
+
+## Builder and support tooling
+
+These scripts are aligned with PET as a build, artifact, validation, and
+support-realization layer.
+
+### `tools/pet_builder_from_int.py`
+
+Status:
+- builder wrapper
+
+Reason:
+- delegates to the PET builder-from-int entry point
+- does not implement independent discovery logic
+
+### `tools/pet_builder_plan.py`
+
+Status:
+- builder planning helper
+
+Reason:
+- consumes an existing builder report
+- emits an execution plan for known or explicitly missing blocks
+- does not attempt to discover missing structure
+
+### `tools/pet_builder_execute.py`
+
+Status:
+- builder artifact materialization helper
+
+Reason:
+- consumes an existing builder plan
+- materializes builder artifacts from known planned blocks
+
+### `tools/pet_support_realization.py`
+
+Status:
+- support-realization validator/helper
+
+Reason:
+- consumes support-realization payloads or builder reports
+- validates/repackages known and unknown support blocks
+- reports readiness instead of inventing missing structure
+
+## Dataset and report helpers
+
+These scripts are useful PET analysis or operator-side utilities. They are kept
+in-repo, but they are not canonical user-facing CLI interfaces.
 
 ### `tools/cluster_families.py`
 
 Status:
-- secondary/non-canonical tooling
-- not part of the current canonical workflow
+- secondary dataset/report helper
 
 Reason:
-- cited in `docs/reference/SPEC.md`
-- superseded in the current report workflow by `pet families benchmark-disjoint`
-- still meaningful, but not the benchmark path currently promoted by stable lab docs
+- related family-clustering tooling
+- superseded for canonical reports by `pet families benchmark-disjoint`
+
+### `tools/distinct_shapes.py`
+
+Status:
+- secondary dataset/report helper
+
+Reason:
+- extracts distinct PET shapes over bounded ranges
+
+### `tools/height_distribution.py`
+
+Status:
+- secondary dataset/report helper
+
+Reason:
+- summarizes PET height distribution over bounded ranges
+
+### `tools/shape_entropy.py`
+
+Status:
+- secondary dataset/report helper
+
+Reason:
+- computes entropy-style summaries over shape datasets
+
+### `tools/shape_count_fast.py`
+
+Status:
+- secondary dataset/report helper
+
+Reason:
+- fast shape-counting utility over bounded ranges
+
+### `tools/shape_first_occurrence.py`
+
+Status:
+- secondary dataset/report helper
+
+Reason:
+- reports first observed occurrence for PET shapes
 
 ### `tools/scan_query.py`
 
 Status:
-- secondary/non-canonical tooling
+- secondary dataset/report helper
 
 Reason:
-- small operator-side helper for filtering and grouped counts over PET scan JSONL artifacts
-- explicitly called out in `tools/README.md`
-- useful, but not part of the current canonical report-facing path
+- filters and aggregates PET scan JSONL artifacts
 
 ### `tools/pet_table.py`
 
 Status:
-- secondary/non-canonical tooling
+- secondary dataset/report helper
 
 Reason:
-- explicit CLI utility for producing PET tables from integer datasets
-- supports stdin/file input, filtering, sorting, and optional report outputs
-- useful operator-side tooling, but not part of the current canonical bounded workflow
+- generates PET tables from integer datasets
 
 ### `tools/pet_profile_range.py`
 
 Status:
-- secondary/non-canonical tooling
+- secondary dataset/report helper
 
 Reason:
-- explicit CLI utility for exploring PET profiles over numeric ranges
-- useful for family/profile exploration and counting
-- not part of the current canonical report-facing workflow
+- explores PET profiles over explicit numeric ranges
 
 ### `tools/pet_family_combinations.py`
 
 Status:
-- secondary/non-canonical tooling
+- secondary dataset/report helper
 
 Reason:
-- explicit CLI utility for generating/counting combinations across PET families in a range
-- useful for exploratory family analysis
-- not part of the current canonical report-facing workflow
+- generates or counts combinations across PET families in explicit ranges
 
-## Exploratory / one-off tooling
+## PET-METICA and shape research tooling
 
-The following scripts are currently exploratory, local, prototype, plotting, or
-one-off analysis tools rather than stable workflow interfaces:
+These scripts support the currently retained PET-METICA / shape-algebra research
+line. They are research-facing, but they operate on known shapes, known
+integers, or explicit bounded ranges.
 
-- `tools/distinct_shapes.py`
-- `tools/height_distribution.py`
-- `tools/shape_count_fast.py`
-- `tools/shape_entropy.py`
-- `tools/shape_first_occurrence.py`
+### `tools/pet_rewrite_metric.py`
 
-Common reasons:
-- not referenced by the current canonical workflow
-- not used directly by committed bounded reports
-- often rely on hardcoded local paths or local `artifacts/`
-- look like prototypes, exploratory utilities, or plotting helpers
-- no current stability promise should be inferred from their presence in `tools/`
+Status:
+- PET-METICA research helper
+
+Reason:
+- supports rewrite-metric experiments and reports
+
+### `tools/pet_shape_algebra.py`
+
+Status:
+- PET-METICA research helper
+
+Reason:
+- provides shape algebra operations over explicit known shapes
+
+### `tools/pet_structural_diff.py`
+
+Status:
+- PET-METICA research helper
+
+Reason:
+- explains exact multiplicative/divisive PET updates
+
+### `tools/shape_rewrite_arithmetic_v0.py`
+
+Status:
+- tested PET-METICA research helper
+
+Reason:
+- has dedicated test coverage
+- works over explicit shape expressions and bounded shape paths
+
+### `tools/exponent_shape_trace.py`
+
+Status:
+- PET shape research helper
+
+Reason:
+- computes exponent-shape traces over explicit exponent ranges
+- supports the exponent-shape trace research note
 
 ## Usage rule
 
 Workflow docs, contributor docs, and report regeneration notes should treat only
-the current stable research tooling as interface-stable unless this document is
-updated.
+stable report-facing tooling as interface-stable unless this document is updated.
 
-Secondary/non-canonical tooling may still be useful and intentionally kept in
-the repository, but it should not be presented as canonical PET lab commands by
-default.
+Builder/support tooling is allowed to support PET artifact workflows, but it
+should not be presented as general discovery machinery.
 
-Exploratory scripts may still be useful for investigation, but they should not
-be presented as canonical PET lab commands by default.
+Dataset/report helpers and PET-METICA research tools may be useful, but they
+should not be presented as canonical public interfaces by default.
