@@ -136,10 +136,8 @@ for broad generalization beyond explored ranges
 ### Includes
 - shape algebra
 - subtree substitution / grafting
-- partial PET / partial shape workflows
-- reconstruction problems
+- partial shape workflows
 - bounded completion spaces
-- hybrid structural-numeric procedures
 
 ### Current position
 These directions are real and useful, but they are **not** currently the main source of truth for the project architecture.
@@ -167,7 +165,7 @@ They should remain clearly separated from:
 - PET-METICA
 
 ### Still experimental frontier
-- shape algebra / partial / reconstruction / hybrid workflows
+- shape algebra / partial shape workflows
 
 ---
 

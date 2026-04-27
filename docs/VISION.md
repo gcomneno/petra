@@ -171,10 +171,8 @@ Beyond the three active layers above, PET may later support additional experimen
 
 - explicit shape algebra
 - subtree substitution or grafting
-- partial PET / partial shape workflows
-- reconstruction problems
+- partial shape workflows
 - bounded completion spaces
-- hybrid structural-numeric search procedures
 
 These directions are real and worth exploring, but they should be kept clearly separate from the core definition of PET and from the current live rewrite-geometric line of PET-METICA.
 
@@ -224,9 +222,7 @@ It is better understood as a **platform for studying the shape and transformabil
 ### Phase D — expand the experimental frontier carefully
 
 - shape algebra
-- partial PET
-- constructive reconstruction workflows
-- bounded completion and search procedures
+- partial shape workflows
 
 This last phase should remain explicitly experimental and should never blur the boundaries of PET-Base.
 
