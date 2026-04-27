@@ -9,7 +9,7 @@ Ordine concettuale:
 1. manipolare la **shape**
 2. solo dopo, se serve, materializzare un witness numerico compatibile
 
-Questa v0 non prova a risolvere direttamente la ricostruzione esatta di `N` da un partial PET shape.
+Questa v0 non prova a risolvere direttamente la ricostruzione esatta di `N` da un partial shape.
 Il suo obiettivo è fornire una base autonoma e coerente per:
 
 - algebra delle shape

@@ -6,8 +6,7 @@ This directory contains active research material that is **not** part of the sta
 
 - `notes/` — conceptual notes, theory fragments, and structural observations
 - `experiments/` — experiment writeups and scorecards
-- `workflows/` — operational or constructive research workflows
-- `partial/` — partial PET / partial shape material
+- `partial/` — partial shape material
 - `datasets/` — raw datasets, streams, indexes, and large research artifacts
 - `archive/` — historical or superseded research documents kept for reference
 
@@ -23,12 +22,7 @@ Start in:
 
 - `experiments/`
 
-### If you want constructive or hybrid procedures
-Start in:
-
-- `workflows/`
-
-### If you want partial PET material
+### If you want partial shape material
 Start in:
 
 - `partial/`

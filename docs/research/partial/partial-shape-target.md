@@ -6,7 +6,7 @@ Il risultato operativo ufficiale del layer shape-first è una:
 
 **Observed Compatible Decomposition**
 
-cioè una decomposizione osservata del partial PET shape in:
+cioè una decomposizione osservata del partial shape in:
 
 - `observed_core`
 - `observed_core_kind`
