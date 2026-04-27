@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI for building, validating, rendering, and explaining Prime Exponent Tree artifacts.
+PET is a Python CLI for encoding, validating, rendering, measuring, and explaining Prime Exponent Tree artifacts.
 
 It treats an integer not only as a value, but also as a structured multiplicative object.
 The project studies that structure at three levels:
@@ -15,7 +15,7 @@ The project studies that structure at three levels:
 - **PET-METICA** — rewrite geometry on canonical PET shapes
 
 PET is not presented as a replacement for classical arithmetic and not as a claimed solution to a major open problem.
-It is best understood as an artifact, build, validation, and explanation layer for known PET structures.
+It is best understood as an artifact, validation, measurement, and explanation layer for known PET structures.
 
 ## Why this is interesting
 
