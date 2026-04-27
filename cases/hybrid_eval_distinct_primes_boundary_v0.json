@@ -1,6 +1,0 @@
-[
-  {"target": 2310, "family": "distinct-primes-boundary", "label": "2*3*5*7*11", "prime_count": 5, "probe_schedule": "10"},
-  {"target": 30030, "family": "distinct-primes-boundary", "label": "2*3*5*7*11*13", "prime_count": 6, "probe_schedule": "10"},
-  {"target": 510510, "family": "distinct-primes-boundary", "label": "2*3*5*7*11*13*17", "prime_count": 7, "probe_schedule": "10"},
-  {"target": 9699690, "family": "distinct-primes-boundary", "label": "2*3*5*7*11*13*17*19", "prime_count": 8, "probe_schedule": "10"}
-]
