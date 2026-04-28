@@ -122,6 +122,8 @@ Operational PET-METICA CLI core:
 
     pet branch-neighbors 12
     pet rewrite pair 12 9 --overscan 120
+    pet rewrite explain 12 9 --overscan 120
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3
     pet rewrite scan --n-max 20 --overscan 60
     pet rewrite matrix --n-max 10 --overscan 60 --json
 
