@@ -214,6 +214,22 @@ Output concettuale:
 Questo è spesso il comando più utile per rispondere alla domanda:
 “questi due interi sono strutturalmente uguali o solo numericamente diversi?”
 
+### Distanze PET vs rewrite cost
+
+PET espone tre concetti distinti:
+
+- `distance`: distanza PET completa tra due alberi, sensibile anche ai valori dei primi.
+- `structural_distance`: distanza morfologica tra due alberi, ignorando i valori dei primi.
+- `rewrite cost`: costo minimo per trasformare un intero in un altro tramite mosse PET-METICA (`NEW`, `DROP`, `INC`, `DEC`).
+
+In pratica:
+
+- usa `pet compare A B` per confrontare due PET come oggetti statici;
+- usa `pet rewrite pair A B` per studiare il trasporto dinamico da `A` a `B`;
+- usa `pet rewrite explain A B` quando vuoi anche una spiegazione delle mosse.
+
+Nota: `distance` e `structural_distance` sono confronti tra strutture. Il rewrite cost è invece una distanza di cammino in un grafo orientato di trasformazioni.
+
 ### 7. Validare e renderizzare un PET JSON
 
 Partendo da un file JSON:
