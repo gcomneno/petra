@@ -189,7 +189,7 @@ un corrispondente diretto nella fattorizzazione prima classica.
 
 ## Metriche analitiche (pet_metrics)
 
-Le seguenti metriche sono definite in `src/pet_metrics.py` e operano su PET canonici validi.
+Le seguenti metriche sono definite in `src/pet/metrics.py` e operano su PET canonici validi.
 
 ### Admission rule for canonical metrics
 
