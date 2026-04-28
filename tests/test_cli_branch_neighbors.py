@@ -29,12 +29,12 @@ def test_cli_branch_neighbors_json_order_for_12():
     payload = json.loads(_run_cli("branch-neighbors", "12", "--json"))
     assert payload["n"] == 12
     assert payload["count"] == 5
-    assert [(row["label"], row["target_n"]) for row in payload["path"]] == [
-        ("NEW(p=5)", 60),
-        ("DROP(p=3)", 4),
-        ("INC(p=2,e=2)", 24),
-        ("INC(p=3,e=1)", 36),
-        ("DEC(p=2,e=2)", 6),
+    assert [(row["kind"], row["label"], row["target_n"]) for row in payload["path"]] == [
+        ("NEW", "NEW(p=5)", 60),
+        ("DROP", "DROP(p=3)", 4),
+        ("INC", "INC(p=2,e=2)", 24),
+        ("INC", "INC(p=3,e=1)", 36),
+        ("DEC", "DEC(p=2,e=2)", 6),
     ]
 
 
