@@ -631,6 +631,43 @@ def cmd_pair(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_explain(args: argparse.Namespace) -> int:
+    graph = build_graph(overscan=args.overscan)
+    result = pet_rewrite_difference(graph, src=args.src, dst=args.dst)
+
+    if args.json:
+        payload = dict(result)
+        payload["explanations"] = [
+            {
+                "src": step["src"],
+                "dst": step["dst"],
+                "label": step["label"],
+                "meaning": explain_label(step["label"]),
+            }
+            for step in result["path"]
+        ]
+        print(_json_dump(payload))
+        return 0
+
+    print(f"source = {args.src}")
+    print(f"target = {args.dst}")
+    print(f"reachable = {result['reachable']}")
+    print(f"cost = {result['cost']}")
+
+    path = result["path"]
+    if not path:
+        print("path = []")
+        return 0
+
+    print()
+    print("path:")
+    for index, step in enumerate(path, start=1):
+        print(f"  {index}. {step['label']}: {step['src']} -> {step['dst']}")
+        print(f"     meaning: {explain_label(step['label'])}")
+
+    return 0
+
+
 def cmd_matrix(args: argparse.Namespace) -> int:
     graph = build_graph(overscan=args.overscan)
     rows = scan_pairs(graph, n_max=args.n_max)
@@ -790,6 +827,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_pair.add_argument("--json", action="store_true")
     p_pair.add_argument("--explain", action="store_true")
     p_pair.set_defaults(func=cmd_pair)
+
+    p_explain = sub.add_parser("explain", help="Explain a PET-METICA rewrite path between two numbers.")
+    p_explain.add_argument("src", type=int)
+    p_explain.add_argument("dst", type=int)
+    p_explain.add_argument("--overscan", type=int, default=90)
+    p_explain.add_argument("--json", action="store_true")
+    p_explain.set_defaults(func=cmd_explain)
 
     p_scan = sub.add_parser("scan", help="Global scan over 1..N with overscan.")
     p_scan.add_argument("--n-max", type=int, default=30)

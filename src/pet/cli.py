@@ -1032,6 +1032,15 @@ def main(argv: list[str] | None = None) -> int:
     p_rewrite_pair.add_argument("--json", action="store_true")
     p_rewrite_pair.add_argument("--explain", action="store_true")
 
+    p_rewrite_explain = rewrite_subparsers.add_parser(
+        "explain",
+        help="explain a PET-METICA rewrite path between two numbers",
+    )
+    p_rewrite_explain.add_argument("src", type=int, metavar="SRC")
+    p_rewrite_explain.add_argument("dst", type=int, metavar="DST")
+    p_rewrite_explain.add_argument("--overscan", type=int, default=90)
+    p_rewrite_explain.add_argument("--json", action="store_true")
+
     p_rewrite_scan = rewrite_subparsers.add_parser(
         "scan",
         help="global PET-METICA scan over 1..N with overscan",
@@ -1905,6 +1914,8 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.rewrite_command == "pair":
                 return _rewrite_metric.cmd_pair(args)
+            elif args.rewrite_command == "explain":
+                return _rewrite_metric.cmd_explain(args)
             elif args.rewrite_command == "scan":
                 return _rewrite_metric.cmd_scan(args)
             elif args.rewrite_command == "matrix":

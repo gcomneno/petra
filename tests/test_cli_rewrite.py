@@ -140,3 +140,72 @@ def test_cli_rewrite_pair_explain_output():
     assert "meaning: remove p=2 from the support" in out
     assert "3 --INC(p=3,e=1)--> 9" in out
     assert "meaning: increase the exponent structure at p=3,e=1" in out
+
+
+def test_cli_rewrite_explain_human_output():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "rewrite",
+            "explain",
+            "12",
+            "9",
+            "--overscan",
+            "120",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+    assert "source = 12" in out
+    assert "target = 9" in out
+    assert "cost = 3" in out
+    assert "1. DEC(p=2,e=2): 12 -> 6" in out
+    assert "meaning: decrease the exponent structure at p=2,e=2" in out
+    assert "2. DROP(p=2): 6 -> 3" in out
+    assert "meaning: remove p=2 from the support" in out
+    assert "3. INC(p=3,e=1): 3 -> 9" in out
+    assert "meaning: increase the exponent structure at p=3,e=1" in out
+
+
+def test_cli_rewrite_explain_json_contract():
+    data = _run_json("rewrite", "explain", "12", "9", "--overscan", "120")
+
+    assert set(data.keys()) == {
+        "src",
+        "dst",
+        "reachable",
+        "cost",
+        "path",
+        "explanations",
+    }
+
+    assert data["src"] == 12
+    assert data["dst"] == 9
+    assert data["reachable"] is True
+    assert data["cost"] == 3
+
+    assert data["explanations"] == [
+        {
+            "src": 12,
+            "dst": 6,
+            "label": "DEC(p=2,e=2)",
+            "meaning": "decrease the exponent structure at p=2,e=2",
+        },
+        {
+            "src": 6,
+            "dst": 3,
+            "label": "DROP(p=2)",
+            "meaning": "remove p=2 from the support",
+        },
+        {
+            "src": 3,
+            "dst": 9,
+            "label": "INC(p=3,e=1)",
+            "meaning": "increase the exponent structure at p=3,e=1",
+        },
+    ]
