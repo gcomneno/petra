@@ -571,6 +571,37 @@ def compose_transport_v1(
 
 
 # ---------------------------------------------------------------------------
+# LABEL EXPLANATION
+# ---------------------------------------------------------------------------
+
+_MOVE_RE = re.compile(r"^(?P<kind>NEW|DROP|INC|DEC)\((?P<body>.*)\)$")
+
+
+def explain_label(label: str) -> str:
+    match = _MOVE_RE.match(label)
+    if not match:
+        return "unknown rewrite move"
+
+    kind = match.group("kind")
+    body = match.group("body")
+
+    if kind == "NEW":
+        prime = body.removeprefix("x")
+        return f"introduce prime {prime} into the support"
+
+    if kind == "DROP":
+        return f"remove {body} from the support"
+
+    if kind == "INC":
+        return f"increase the exponent structure at {body}"
+
+    if kind == "DEC":
+        return f"decrease the exponent structure at {body}"
+
+    return "unknown rewrite move"
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -595,6 +626,8 @@ def cmd_pair(args: argparse.Namespace) -> int:
     print("path:")
     for step in path:
         print(f"  {step['src']} --{step['label']}--> {step['dst']}")
+        if getattr(args, "explain", False):
+            print(f"    meaning: {explain_label(step['label'])}")
     return 0
 
 
@@ -755,6 +788,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_pair.add_argument("dst", type=int)
     p_pair.add_argument("--overscan", type=int, default=90)
     p_pair.add_argument("--json", action="store_true")
+    p_pair.add_argument("--explain", action="store_true")
     p_pair.set_defaults(func=cmd_pair)
 
     p_scan = sub.add_parser("scan", help="Global scan over 1..N with overscan.")

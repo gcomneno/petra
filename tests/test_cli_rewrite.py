@@ -112,3 +112,31 @@ def test_cli_rewrite_matrix_json_contract():
         "numeric_distance": 0,
         "distance_gap": 0,
     }
+
+
+def test_cli_rewrite_pair_explain_output():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "rewrite",
+            "pair",
+            "12",
+            "9",
+            "--overscan",
+            "120",
+            "--explain",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+    assert "12 --DEC(p=2,e=2)--> 6" in out
+    assert "meaning: decrease the exponent structure at p=2,e=2" in out
+    assert "6 --DROP(p=2)--> 3" in out
+    assert "meaning: remove p=2 from the support" in out
+    assert "3 --INC(p=3,e=1)--> 9" in out
+    assert "meaning: increase the exponent structure at p=3,e=1" in out

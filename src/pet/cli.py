@@ -1030,6 +1030,7 @@ def main(argv: list[str] | None = None) -> int:
     p_rewrite_pair.add_argument("dst", type=int, metavar="DST")
     p_rewrite_pair.add_argument("--overscan", type=int, default=90)
     p_rewrite_pair.add_argument("--json", action="store_true")
+    p_rewrite_pair.add_argument("--explain", action="store_true")
 
     p_rewrite_scan = rewrite_subparsers.add_parser(
         "scan",
