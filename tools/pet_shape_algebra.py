@@ -182,7 +182,7 @@ def shape_dec(shape: Shape, path: PathT) -> Shape:
     return _replace_at(normalize_shape(shape), path, shape_pred)
 
 def is_primitive_shape_op(op: str) -> bool:
-    return op.upper() in PRIMITIVE_SHAPE_OPS
+    return op in PRIMITIVE_SHAPE_OPS
 
 def shape_apply(shape: Shape, op: str, path: PathT=()) -> Shape:
     root = normalize_shape(shape)
