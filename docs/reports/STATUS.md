@@ -113,9 +113,10 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 
 These are **empirical computational findings**, not proved theorems.
 
-PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer.
+PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer. Current core notes, supporting notes, and `⊕` experiments are separated explicitly in the research reading map.
 
 ### Evidence
+- `../research/README.md` — PET-METICA reading map
 - `../research/notes/PET-METICA.md`
 - `pet rewrite`
 - pair / scan / matrix experiments
