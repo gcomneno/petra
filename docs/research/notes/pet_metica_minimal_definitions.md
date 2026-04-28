@@ -128,7 +128,7 @@ La formulazione più onesta, allo stato attuale, è:
 ## 8. Cose non ancora fissate
 
 Questa nota non fissa ancora:
-- una definizione completa di `⊕`
+- eventuali operatori compositivi oltre il trasporto di rewrite
 - una caratterizzazione teorica definitiva dei cammini minimi
 - una teoria assiomatica completa della distanza PET
 - lo status della single free tower policy
