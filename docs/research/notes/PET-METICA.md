@@ -1,4 +1,10 @@
 # PET-aritmetica
+
+> Note: this document contains historical and exploratory PET-METICA material.
+> The current operational core is defined by `pet_metica_minimal_definitions.md`,
+> `pet_metica_operational_semantics.md`, the CLI reference, and bounded reports.
+> Compositional/operator material is non-core unless explicitly promoted later.
+
 ## Storia completa dell'idea, della formalizzazione e dei primi risultati empirici
 
 ## 0. Scopo del documento
