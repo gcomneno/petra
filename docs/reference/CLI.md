@@ -223,6 +223,10 @@ pet render sample.json
 pet decode sample.json
 ```
 
+Output atteso di `pet validate` su un file valido:
+
+    OK
+
 Uso tipico:
 
 - verificare che un file PET sia canonico
