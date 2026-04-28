@@ -5,7 +5,7 @@ Current source of truth for the status of the PET project.
 This document separates:
 
 1. **PET-Base** — what is already defined and stable
-2. **PET-Metrics** — what is implemented/observed but still exploratory
+2. **PET-Metrics** — stable canonical metrics plus exploratory extended metrics
 3. **PET-METICA** — the current rewrite-geometric research line
 4. **Open frontier** — active but not yet stabilized directions
 
@@ -47,7 +47,7 @@ PET-Base is the canonical recursive representation of integers `N >= 2` via prim
 **Active observational layer**
 
 ### Scope
-PET-Metrics studies structural properties of canonical PETs, such as shape, depth, branching, asymmetry, and related derived metrics.
+PET-Metrics studies structural properties of canonical PETs. The canonical metric set is stable and exposed by `pet metrics` and scan JSONL records; extended/research metrics remain exploratory and are exposed separately by `pet xmetrics`.
 
 ### Claims currently treated as established
 
@@ -57,7 +57,8 @@ PET-Metrics studies structural properties of canonical PETs, such as shape, dept
 
 ### Claims currently treated as empirical / exploratory
 
-- some structural metrics may reveal non-trivial regularities
+- canonical structural metrics are stable enough for CLI, scan, query, and bounded reports
+- extended/research metrics may reveal non-trivial regularities but are not part of the canonical metric contract
 - some metric patterns may be stable across large ranges
 - some integer families may have recognizably different PET profiles
 
