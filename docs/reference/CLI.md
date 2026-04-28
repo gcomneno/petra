@@ -416,6 +416,8 @@ Coppia:
     pet rewrite pair 12 9 --overscan 120
     pet rewrite pair 12 9 --overscan 120 --explain
     pet rewrite pair 12 9 --overscan 120 --json
+    pet rewrite explain 12 9 --overscan 120
+    pet rewrite explain 12 9 --overscan 120 --json
 
 Scan bounded:
 
