@@ -141,7 +141,7 @@ The central questions become:
 - which transformations are easy or hard?
 - which nodes act as hubs?
 - where do asymmetries appear?
-- which families of integers are globally favored or disfavored?
+- which families of integers appear favored or disfavored in bounded rewrite scans?
 
 ### Role
 
@@ -152,7 +152,7 @@ It is an experimental but increasingly concrete layer for studying:
 - canonical rewrite paths
 - directed asymmetries
 - local friction of moves
-- global structure of the rewrite graph
+- bounded and large-scale structure of the rewrite graph
 
 The current evidence suggests that this layer has genuine mathematical content and should be treated as a first-class research direction, not as a decorative add-on.
 
@@ -216,7 +216,7 @@ It is better understood as a **platform for studying the shape and transformabil
 - define local rewrite moves cleanly
 - study shortest paths and canonical paths
 - measure asymmetries and rewrite friction
-- identify hubs, favored families, and repulsive families
+- identify hubs and bounded favored/disfavored family behavior
 - understand the large-scale geometry induced by rewrite
 
 ### Phase D — expand the experimental frontier carefully

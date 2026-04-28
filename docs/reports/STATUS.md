@@ -95,7 +95,7 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 - the rewrite graph exhibits real hubs
 - local reversibility depends strongly on the prime involved
 - rewrite asymmetry is real and measurable
-- some multiplicative families behave differently at the global level
+- some multiplicative families behave differently in bounded rewrite scans
 
 ### Empirical conclusions currently supported by experiments
 
@@ -104,10 +104,10 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 - local rewrite friction grows strongly with the prime involved
 - the observed local friction hierarchy is:
   `2 < 3 < 5 < 7`
-- powers of `2` behave as a globally favored family in explored ranges
+- powers of `2` behave as a favored family in explored ranges
 - powers of `3` appear weaker / borderline favorable
-- powers of `5` appear globally repulsive
-- powers of `7` appear strongly repulsive
+- powers of `5` appear repulsive in explored ranges
+- powers of `7` appear strongly repulsive in explored ranges
 
 ### Important caution
 
