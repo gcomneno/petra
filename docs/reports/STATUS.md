@@ -117,7 +117,7 @@ PET-METICA is the most promising current research direction beyond PET-Base, but
 
 ### Evidence
 - `../research/notes/PET-METICA.md`
-- `tools/pet_rewrite_metric.py`
+- `pet rewrite`
 - pair / scan / matrix experiments
 - family reports
 - one-step return cost reports

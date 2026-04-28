@@ -149,7 +149,7 @@ These scripts support the currently retained PET-METICA / shape-algebra research
 line. They are research-facing, but they operate on known shapes, known
 integers, or explicit bounded ranges.
 
-### `tools/pet_rewrite_metric.py`
+### `pet rewrite`
 
 Status:
 - PET-METICA research helper
