@@ -37,7 +37,72 @@ Lettura corrente:
 
 ---
 
-## 4. Diff
+## 4. Operational observables
+
+PET-METICA currently exposes several bounded operational observables.
+
+### Rewrite cost
+
+The rewrite cost from `a` to `b` is the minimum number of local rewrite moves
+needed to transform `a` into `b`.
+
+It is the value reported as `cost` by:
+
+    pet rewrite pair A B
+    pet rewrite explain A B
+
+This cost is directional: in general, `cost(a, b)` may differ from `cost(b, a)`.
+
+### Rewrite friction
+
+The rewrite friction of a one-step move `a -> b` is the minimum rewrite cost
+needed to return from `b` to `a`.
+
+It is used to measure local reversibility.
+
+Example:
+
+    6 --NEW(x5)--> 30
+
+may be a one-step forward move, while the return path from `30` to `6` can
+require multiple moves.
+
+This is the quantity summarized by:
+
+    pet rewrite friction
+
+### Hub score
+
+A hub score counts how often a node appears as an internal node of canonical
+shortest rewrite paths in a bounded scan.
+
+High hub score means that a state frequently acts as a transit point in the
+observed rewrite geometry.
+
+Hub score is bounded by the scan range and overscan parameters.
+
+### Rewrite asymmetry
+
+Rewrite asymmetry compares the two directed costs between a pair:
+
+    cost(a, b) - cost(b, a)
+
+A non-zero value means the transport from `a` to `b` is not equally difficult
+in the reverse direction.
+
+### Attractor score
+
+The attractor score compares average incoming and outgoing rewrite distances
+for a node in a bounded pair scan.
+
+Operationally, it is a bounded heuristic for detecting whether a node is easier
+to reach than to leave, or vice versa.
+
+It should be read as an empirical scan statistic, not as a global invariant.
+
+---
+
+## 5. Diff
 
 Nel v0 operativo:
 
@@ -54,7 +119,7 @@ Stato teorico:
 
 ---
 
-## 5. Esempio minimo
+## 6. Esempio minimo
 
 Se `rhs` e `lhs` differiscono per una sola mossa locale, allora:
 - `distance(rhs, lhs) = 1`
