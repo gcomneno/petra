@@ -37,6 +37,47 @@ Look in:
 
 - `archive/`
 
+## PET-METICA reading map
+
+PET-METICA material is intentionally split by stability level.
+
+### Current PET-METICA core
+
+These files describe the current rewrite-geometric line:
+
+- `notes/PET-METICA.md`
+- `notes/pet_metica_minimal_definitions.md`
+- `notes/pet_metica_operational_semantics.md`
+- `notes/pet_metica_claims_snapshot.md`
+
+### Supporting notes
+
+These notes support the current line with bounded observations, generator
+structure, local rewrite laws, or empirical vocabulary:
+
+- `notes/pet-grammar-note.md`
+- `notes/pet-local-generator-algebra-note.md`
+- `notes/pet-generator-structural-encoding-note.md`
+- `notes/pet-exponent-shape-trace-observed-patterns.md`
+- `notes/pet-shape-families-note.md`
+- `notes/pet-multiplicative-grammar.md`
+- `notes/pet-problem-statement.md`
+
+### Experimental / not core
+
+These files explore PET-METICA `⊕` candidates, comparisons, examples, or
+negative results. They are useful research material, but they are not part of
+the current operational core:
+
+- `notes/pet_metica_plus_design.md`
+- `notes/pet_metica_plus_semantics_v0.md`
+- `notes/pet_metica_plus_av0_counterexamples.md`
+- `notes/pet_metica_plus_av1_semantics.md`
+- `notes/pet_metica_plus_av1_vs_cv0.md`
+- `notes/pet_metica_plus_candidate_examples.md`
+- `notes/pet_metica_plus_case_2_6_30.md`
+- `notes/pet_metica_plus_decision.md`
+
 ## Important note
 
 Files in `research/` are research material.
