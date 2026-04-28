@@ -48,6 +48,7 @@ pet --help
 | `pet atlas DATASET.jsonl` | produce statistiche atlas-style su un dataset |
 | `pet shape-generators DATASET.jsonl` | mostra i primi generatori delle shape strutturali |
 | `pet branch-neighbors N` | mostra le mosse PET locali in ordine canonico e deterministico |
+| `pet rewrite ...` | calcola distanze, scan e matrici di rewrite PET-METICA |
 
 ## Primo percorso consigliato
 
@@ -400,9 +401,39 @@ pet atlas docs/reports/data/scan-2-10000.jsonl
 - Usa `signature` quando vuoi vedere la signature canonica della shape e distinguere collisioni che le metriche aggregate non separano.
 - Usa `compare` quando vuoi confrontare due interi come struttura.
 - Usa `branch-neighbors` quando vuoi vedere il branching locale canonico e deterministico.
+
 - Usa `scan` per generare un dataset osservabile.
 - Usa `query` per cercare casi strutturali specifici dentro una scan, incluse signature e generatori canonici.
 - Usa `atlas` quando vuoi una vista aggregata del dataset.
+
+### 15. PET-METICA rewrite
+
+I comandi `pet rewrite` espongono il layer operativo PET-METICA per lavorare
+su distanze, cammini minimi, scan bounded e matrici di rewrite.
+
+Coppia:
+
+    pet rewrite pair 12 9 --overscan 120
+    pet rewrite pair 12 9 --overscan 120 --json
+
+Scan bounded:
+
+    pet rewrite scan --n-max 20 --overscan 60
+    pet rewrite scan --n-max 20 --overscan 60 --json
+
+Matrice distanze:
+
+    pet rewrite matrix --n-max 10 --overscan 60 --json
+
+Uso tipico:
+
+- calcolare un cammino minimo di rewrite tra due interi
+- osservare hub, asimmetrie e gap tra distanza PET-METICA e distanza numerica
+- produrre dati bounded per analisi research-facing
+
+Nota: `pet rewrite` è operativo, ma resta parte del layer PET-METICA
+sperimentale. I risultati di scan vanno letti come osservazioni bounded, non
+come teoremi generali.
 
 ## Cosa aspettarsi dal CLI
 
