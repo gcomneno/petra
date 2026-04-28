@@ -187,9 +187,33 @@ Esempi: `64 = 2^6` (esponente `6=2·3`), `576 = 2^6·3^2`, `729 = 3^6`.
 Questi invarianti emergono dalla struttura ricorsiva di PET e non hanno
 un corrispondente diretto nella fattorizzazione prima classica.
 
-## Metriche analitiche (pet_metrics)
+## Metriche analitiche
 
-Le seguenti metriche sono definite in `src/pet/metrics.py` e operano su PET canonici validi.
+PET distingue tra metriche canoniche, metriche extended/research e classificatori derivati.
+
+Le metriche canoniche sono definite in `src/pet/core.py`, esposte da
+`metrics_dict(tree)`, mostrate da `pet metrics`, e incluse nei record JSONL
+prodotti da `pet scan`.
+
+Le metriche extended/research e i classificatori derivati sono definiti in
+`src/pet/metrics.py`. Possono essere utili per analisi esplorativa, ma non fanno
+automaticamente parte del contratto canonico di PET-Metrics.
+
+### Metriche canoniche
+
+Il set canonico corrente è:
+
+- `node_count(tree)` — numero totale di nodi PET
+- `leaf_count(tree)` — numero di foglie, cioè nodi con esponente `1`
+- `height(tree)` — altezza del PET in livelli
+- `max_branching(tree)` — massima ampiezza locale osservata nell'albero
+- `branch_profile(tree)` — numero di nodi per livello
+- `recursive_mass(tree)` — numero di nodi non appartenenti al livello radice
+- `average_leaf_depth(tree)` — profondità media delle foglie, con radice a profondità `1`
+- `leaf_depth_variance(tree)` — varianza popolazionale delle profondità delle foglie
+
+Queste metriche sono parte del contratto stabile di `pet metrics` e dello
+schema JSONL corrente.
 
 ### Admission rule for canonical metrics
 
@@ -218,19 +242,25 @@ A metric may be added to the canonical PET metric set only if all of the followi
 
 Metrics that are informative but fail one or more of these criteria should remain in extended, research, or reporting layers rather than in the canonical metric set.
 
-### Metriche scalari
+### Metriche extended / research
+
+Le metriche seguenti sono disponibili per analisi esplorativa, ma non fanno parte
+del set canonico corrente:
 
 - `verticality_ratio(tree)` — rapporto `height / node_count`. Vale `1.0` per catene pure, tende a `0` per alberi piatti.
 - `structural_asymmetry(tree)` — deviazione standard del `branch_profile`. Vale `0.0` per alberi uniformi per livello.
-- `recursive_mass(tree)` — numero di nodi appartenenti a sottoalberi esponenziali (già in PET-Base).
-- `leaf_ratio(tree)` — rapporto `leaf_count / node_count` come `Fraction` esatta. Appartiene a un insieme sparso e discreto di valori razionali.
+- `subtree_mixing_score(tree)` — score sperimentale di mixing locale tra sottoforme.
+- `leaf_ratio(tree)` — rapporto `leaf_count / node_count` come `Fraction` esatta.
 
 ### Classificatori booleani
+
+I classificatori seguenti sono proprietà derivate da PET canonici validi:
 
 - `is_linear(tree)` — `True` se il PET è una catena pura (`max_branching == 1`).
 - `is_level_uniform(tree)` — `True` se tutti i livelli hanno lo stesso numero di nodi.
 - `is_squarefree(tree)` — `True` se `recursive_mass == 0` (tutti gli esponenti sono `1`).
-- `is_expanding(tree)` — `True` se l'ultimo livello ha più nodi del primo (proprietà rara).
+- `is_expanding(tree)` — `True` se l'ultimo livello ha più nodi del primo.
+- `has_root_mixed_simple_pattern(tree)` — helper research per uno specifico pattern root-level.
 
 ### Classificatore morfologico
 
