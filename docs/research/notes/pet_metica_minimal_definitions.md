@@ -2,7 +2,7 @@
 
 ## Scopo
 Questa nota fissa il vocabolario minimo operativo di PET-METICA.
-Non introduce ancora una teoria completa di `⊕`.
+Non introduce ancora una teoria completa di operatori compositivi non-core.
 Serve a stabilizzare i concetti minimi usati nei report empirici e nei futuri strumenti CLI.
 
 ---
@@ -100,17 +100,17 @@ Stato teorico:
 
 ---
 
-## 6. Differenza PET (`⊖`)
+## 6. Differenza PET / trasporto minimo
 
 La faccia attualmente più naturale di una **differenza PET** non è uno scalare.
 
 Lettura corrente:
-- `a ⊖ b` come **cammino minimo** da `a` a `b`
+- differenza PET come **cammino minimo** da `a` a `b`
 - oppure come **trasporto minimo di rewrite** che porta `a` in `b`
 
 Stato teorico:
 - la scelta di una forma pienamente canonica del cammino è ancora aperta
-- quindi `⊖` non va ancora trattato come operatore completamente stabilizzato
+- quindi la differenza PET non va ancora trattata come operatore algebrico completamente stabilizzato
 
 ---
 

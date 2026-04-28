@@ -106,7 +106,7 @@ It should be read as an empirical scan statistic, not as a global invariant.
 
 Nel v0 operativo:
 
-`lhs ⊖ rhs := path(rhs, lhs)`
+`diff(lhs, rhs) := path(rhs, lhs)`
 
 Quindi `diff(lhs, rhs)` non produce ancora un nuovo oggetto algebrico autonomo.
 Produce invece:
@@ -115,7 +115,7 @@ Produce invece:
 
 Stato teorico:
 - questa è una convenzione operativa utile
-- non è ancora una formalizzazione definitiva di `⊖`
+- non è ancora una formalizzazione definitiva di un operatore algebrico di differenza
 
 ---
 
@@ -124,6 +124,6 @@ Stato teorico:
 Se `rhs` e `lhs` differiscono per una sola mossa locale, allora:
 - `distance(rhs, lhs) = 1`
 - `path(rhs, lhs)` contiene una sola mossa
-- `lhs ⊖ rhs` è quel singolo rewrite
+- `diff(lhs, rhs)` è quel singolo rewrite
 
-Questo è il caso-base della lettura di `⊖` come trasporto minimo di rewrite.
+Questo è il caso-base della lettura della differenza PET come trasporto minimo di rewrite.
