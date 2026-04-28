@@ -209,3 +209,78 @@ def test_cli_rewrite_explain_json_contract():
             "meaning": "increase the exponent structure at p=3,e=1",
         },
     ]
+
+
+def test_cli_rewrite_friction_human_output():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "rewrite",
+            "friction",
+            "--n-max",
+            "10",
+            "--overscan",
+            "40",
+            "--limit",
+            "3",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+    assert "n_max = 10" in out
+    assert "overscan = 40" in out
+    assert "by_label:" in out
+    assert "NEW(x3): count=1 min=3 max=3 avg=3.0" in out
+    assert "by_prime:" in out
+    assert "p=3: count=3 min=1 max=3 avg=1.667" in out
+    assert "hardest_returns:" in out
+    assert "2 --NEW(x3)--> 6: return_cost=3" in out
+
+
+def test_cli_rewrite_friction_json_contract():
+    data = _run_json(
+        "rewrite",
+        "friction",
+        "--n-max",
+        "10",
+        "--overscan",
+        "40",
+        "--limit",
+        "3",
+    )
+
+    assert set(data.keys()) == {"n_max", "overscan", "one_step_return_costs"}
+    assert data["n_max"] == 10
+    assert data["overscan"] == 40
+
+    costs = data["one_step_return_costs"]
+    assert set(costs.keys()) == {"hardest_returns", "by_label", "by_prime"}
+
+    by_label = {row["label"]: row for row in costs["by_label"]}
+    assert by_label["NEW(x3)"] == {
+        "label": "NEW(x3)",
+        "count": 1,
+        "min_back_cost": 3,
+        "max_back_cost": 3,
+        "avg_back_cost": 3.0,
+    }
+
+    by_prime = {row["prime"]: row for row in costs["by_prime"]}
+    assert by_prime[3] == {
+        "prime": 3,
+        "count": 3,
+        "min_back_cost": 1,
+        "max_back_cost": 3,
+        "avg_back_cost": 1.667,
+    }
+
+    hardest = costs["hardest_returns"][0]
+    assert hardest["src"] == 2
+    assert hardest["dst"] == 6
+    assert hardest["forward_label"] == "NEW(x3)"
+    assert hardest["back_cost"] == 3

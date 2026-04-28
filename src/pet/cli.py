@@ -1041,6 +1041,15 @@ def main(argv: list[str] | None = None) -> int:
     p_rewrite_explain.add_argument("--overscan", type=int, default=90)
     p_rewrite_explain.add_argument("--json", action="store_true")
 
+    p_rewrite_friction = rewrite_subparsers.add_parser(
+        "friction",
+        help="summarize one-step PET-METICA rewrite return costs",
+    )
+    p_rewrite_friction.add_argument("--n-max", type=int, default=30)
+    p_rewrite_friction.add_argument("--overscan", type=int, default=90)
+    p_rewrite_friction.add_argument("--limit", type=int, default=10)
+    p_rewrite_friction.add_argument("--json", action="store_true")
+
     p_rewrite_scan = rewrite_subparsers.add_parser(
         "scan",
         help="global PET-METICA scan over 1..N with overscan",
@@ -1916,6 +1925,8 @@ def main(argv: list[str] | None = None) -> int:
                 return _rewrite_metric.cmd_pair(args)
             elif args.rewrite_command == "explain":
                 return _rewrite_metric.cmd_explain(args)
+            elif args.rewrite_command == "friction":
+                return _rewrite_metric.cmd_friction(args)
             elif args.rewrite_command == "scan":
                 return _rewrite_metric.cmd_scan(args)
             elif args.rewrite_command == "matrix":

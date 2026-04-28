@@ -683,6 +683,51 @@ def cmd_matrix(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_friction(args: argparse.Namespace) -> int:
+    graph = build_graph(overscan=args.overscan)
+    payload = {
+        "n_max": args.n_max,
+        "overscan": args.overscan,
+        "one_step_return_costs": one_step_return_costs(
+            graph,
+            n_max=args.n_max,
+            limit=args.limit,
+        ),
+    }
+
+    if args.json:
+        print(_json_dump(payload))
+        return 0
+
+    print(f"n_max = {args.n_max}")
+    print(f"overscan = {args.overscan}")
+
+    print("\nby_label:")
+    for row in payload["one_step_return_costs"]["by_label"]:
+        print(
+            f"  {row['label']}: "
+            f"count={row['count']} min={row['min_back_cost']} "
+            f"max={row['max_back_cost']} avg={row['avg_back_cost']}"
+        )
+
+    print("\nby_prime:")
+    for row in payload["one_step_return_costs"]["by_prime"]:
+        print(
+            f"  p={row['prime']}: "
+            f"count={row['count']} min={row['min_back_cost']} "
+            f"max={row['max_back_cost']} avg={row['avg_back_cost']}"
+        )
+
+    print("\nhardest_returns:")
+    for row in payload["one_step_return_costs"]["hardest_returns"]:
+        print(
+            f"  {row['src']} --{row['forward_label']}--> {row['dst']}: "
+            f"return_cost={row['back_cost']}"
+        )
+
+    return 0
+
+
 def cmd_scan(args: argparse.Namespace) -> int:
     graph = build_graph(overscan=args.overscan)
     stats = graph_stats(graph, overscan=args.overscan)
@@ -834,6 +879,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_explain.add_argument("--overscan", type=int, default=90)
     p_explain.add_argument("--json", action="store_true")
     p_explain.set_defaults(func=cmd_explain)
+
+    p_friction = sub.add_parser("friction", help="Summarize one-step rewrite return costs.")
+    p_friction.add_argument("--n-max", type=int, default=30)
+    p_friction.add_argument("--overscan", type=int, default=90)
+    p_friction.add_argument("--limit", type=int, default=10)
+    p_friction.add_argument("--json", action="store_true")
+    p_friction.set_defaults(func=cmd_friction)
 
     p_scan = sub.add_parser("scan", help="Global scan over 1..N with overscan.")
     p_scan.add_argument("--n-max", type=int, default=30)
