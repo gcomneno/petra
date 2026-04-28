@@ -143,6 +143,7 @@ Start here depending on what you need:
 - [docs/README.md](docs/README.md) — documentation entry point
 - [docs/VISION.md](docs/VISION.md) — project vision and layer structure
 - [docs/reports/STATUS.md](docs/reports/STATUS.md) — what is stable, empirical, or exploratory
+- [docs/ROADMAP.md](docs/ROADMAP.md) — post-release development roadmap
 - [docs/research/notes/PET-METICA.md](docs/research/notes/PET-METICA.md) — current rewrite-geometric research line
 - [docs/reference/SPEC.md](docs/reference/SPEC.md) — formal PET-Base specification
 - [docs/reference/CLI.md](docs/reference/CLI.md) — command-line usage
