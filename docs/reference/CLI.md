@@ -418,6 +418,8 @@ Coppia:
     pet rewrite pair 12 9 --overscan 120 --json
     pet rewrite explain 12 9 --overscan 120
     pet rewrite explain 12 9 --overscan 120 --json
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3 --json
 
 Scan bounded:
 
@@ -433,6 +435,7 @@ Uso tipico:
 - calcolare un cammino minimo di rewrite tra due interi
 - spiegare il significato locale delle mosse con `--explain`
 - osservare hub, asimmetrie e gap tra distanza PET-METICA e distanza numerica
+- misurare la frizione di ritorno delle mosse locali con `friction`
 - produrre dati bounded per analisi research-facing
 
 Nota: `pet rewrite` è operativo, ma resta parte del layer PET-METICA
