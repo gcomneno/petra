@@ -18,7 +18,7 @@ generation path, and compact observations separated from interpretation.
 
 - path: `docs/reports/data/scan-2-10000.jsonl`
 - record count: `9999`
-- schema: JSONL scan schema v1
+- schema: JSONL scan schema v2
 
 ## Summary statistics
 
