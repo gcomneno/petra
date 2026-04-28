@@ -117,6 +117,15 @@ pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
 
 ### Live research line
 - PET-METICA as rewrite geometry on canonical PET shapes
+
+Operational PET-METICA CLI core:
+
+    pet branch-neighbors 12
+    pet rewrite pair 12 9 --overscan 120
+    pet rewrite scan --n-max 20 --overscan 60
+    pet rewrite matrix --n-max 10 --overscan 60 --json
+
+PET-METICA is operational but still research-facing: rewrite scans and hub/friction observations are bounded empirical results, not general theorems.
 - local rewrite moves such as `NEW`, `DROP`, `INC`, `DEC`
 - shortest paths, canonical paths, asymmetries, and rewrite friction
 - empirical family behavior in explored ranges
