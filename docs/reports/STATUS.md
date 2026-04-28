@@ -5,7 +5,7 @@ Current source of truth for the status of the PET project.
 This document separates:
 
 1. **PET-Base** — what is already defined and stable
-2. **PET-Metrics** — what is implemented/observed but still exploratory
+2. **PET-Metrics** — stable canonical metrics plus exploratory extended metrics
 3. **PET-METICA** — the current rewrite-geometric research line
 4. **Open frontier** — active but not yet stabilized directions
 
@@ -47,7 +47,7 @@ PET-Base is the canonical recursive representation of integers `N >= 2` via prim
 **Active observational layer**
 
 ### Scope
-PET-Metrics studies structural properties of canonical PETs, such as shape, depth, branching, asymmetry, and related derived metrics.
+PET-Metrics studies structural properties of canonical PETs. The canonical metric set is stable and exposed by `pet metrics` and scan JSONL records; extended/research metrics remain exploratory and are exposed separately by `pet xmetrics`.
 
 ### Claims currently treated as established
 
@@ -57,7 +57,8 @@ PET-Metrics studies structural properties of canonical PETs, such as shape, dept
 
 ### Claims currently treated as empirical / exploratory
 
-- some structural metrics may reveal non-trivial regularities
+- canonical structural metrics are stable enough for CLI, scan, query, and bounded reports
+- extended/research metrics may reveal non-trivial regularities but are not part of the canonical metric contract
 - some metric patterns may be stable across large ranges
 - some integer families may have recognizably different PET profiles
 
@@ -94,7 +95,7 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 - the rewrite graph exhibits real hubs
 - local reversibility depends strongly on the prime involved
 - rewrite asymmetry is real and measurable
-- some multiplicative families behave differently at the global level
+- some multiplicative families behave differently in bounded rewrite scans
 
 ### Empirical conclusions currently supported by experiments
 
@@ -103,20 +104,21 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 - local rewrite friction grows strongly with the prime involved
 - the observed local friction hierarchy is:
   `2 < 3 < 5 < 7`
-- powers of `2` behave as a globally favored family in explored ranges
+- powers of `2` behave as a favored family in explored ranges
 - powers of `3` appear weaker / borderline favorable
-- powers of `5` appear globally repulsive
-- powers of `7` appear strongly repulsive
+- powers of `5` appear repulsive in explored ranges
+- powers of `7` appear strongly repulsive in explored ranges
 
 ### Important caution
 
 These are **empirical computational findings**, not proved theorems.
 
-PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer.
+PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer. Current core notes, supporting notes, and non-core compositional experiments are separated explicitly in the research reading map.
 
 ### Evidence
+- `../research/README.md` — PET-METICA reading map
 - `../research/notes/PET-METICA.md`
-- `tools/pet_rewrite_metric.py`
+- `pet rewrite`
 - pair / scan / matrix experiments
 - family reports
 - one-step return cost reports

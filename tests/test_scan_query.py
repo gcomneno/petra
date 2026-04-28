@@ -84,7 +84,6 @@ def test_scan_query_group_count_branch_profile(tmp_path):
 [2]\t2
 [2, 1]\t1
 """
-    normalized = "\n".join(line.split() for line in [])
     assert "\n".join(" ".join(line.split()) for line in result.stdout.strip().splitlines()) == \
         "\n".join(" ".join(line.split()) for line in expected.strip().splitlines())
 

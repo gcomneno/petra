@@ -571,6 +571,37 @@ def compose_transport_v1(
 
 
 # ---------------------------------------------------------------------------
+# LABEL EXPLANATION
+# ---------------------------------------------------------------------------
+
+_MOVE_RE = re.compile(r"^(?P<kind>NEW|DROP|INC|DEC)\((?P<body>.*)\)$")
+
+
+def explain_label(label: str) -> str:
+    match = _MOVE_RE.match(label)
+    if not match:
+        return "unknown rewrite move"
+
+    kind = match.group("kind")
+    body = match.group("body")
+
+    if kind == "NEW":
+        prime = body.removeprefix("x")
+        return f"introduce prime {prime} into the support"
+
+    if kind == "DROP":
+        return f"remove {body} from the support"
+
+    if kind == "INC":
+        return f"increase the exponent structure at {body}"
+
+    if kind == "DEC":
+        return f"decrease the exponent structure at {body}"
+
+    return "unknown rewrite move"
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -595,6 +626,45 @@ def cmd_pair(args: argparse.Namespace) -> int:
     print("path:")
     for step in path:
         print(f"  {step['src']} --{step['label']}--> {step['dst']}")
+        if getattr(args, "explain", False):
+            print(f"    meaning: {explain_label(step['label'])}")
+    return 0
+
+
+def cmd_explain(args: argparse.Namespace) -> int:
+    graph = build_graph(overscan=args.overscan)
+    result = pet_rewrite_difference(graph, src=args.src, dst=args.dst)
+
+    if args.json:
+        payload = dict(result)
+        payload["explanations"] = [
+            {
+                "src": step["src"],
+                "dst": step["dst"],
+                "label": step["label"],
+                "meaning": explain_label(step["label"]),
+            }
+            for step in result["path"]
+        ]
+        print(_json_dump(payload))
+        return 0
+
+    print(f"source = {args.src}")
+    print(f"target = {args.dst}")
+    print(f"reachable = {result['reachable']}")
+    print(f"cost = {result['cost']}")
+
+    path = result["path"]
+    if not path:
+        print("path = []")
+        return 0
+
+    print()
+    print("path:")
+    for index, step in enumerate(path, start=1):
+        print(f"  {index}. {step['label']}: {step['src']} -> {step['dst']}")
+        print(f"     meaning: {explain_label(step['label'])}")
+
     return 0
 
 
@@ -610,6 +680,51 @@ def cmd_matrix(args: argparse.Namespace) -> int:
     }
 
     print(_json_dump(payload))
+    return 0
+
+
+def cmd_friction(args: argparse.Namespace) -> int:
+    graph = build_graph(overscan=args.overscan)
+    payload = {
+        "n_max": args.n_max,
+        "overscan": args.overscan,
+        "one_step_return_costs": one_step_return_costs(
+            graph,
+            n_max=args.n_max,
+            limit=args.limit,
+        ),
+    }
+
+    if args.json:
+        print(_json_dump(payload))
+        return 0
+
+    print(f"n_max = {args.n_max}")
+    print(f"overscan = {args.overscan}")
+
+    print("\nby_label:")
+    for row in payload["one_step_return_costs"]["by_label"]:
+        print(
+            f"  {row['label']}: "
+            f"count={row['count']} min={row['min_back_cost']} "
+            f"max={row['max_back_cost']} avg={row['avg_back_cost']}"
+        )
+
+    print("\nby_prime:")
+    for row in payload["one_step_return_costs"]["by_prime"]:
+        print(
+            f"  p={row['prime']}: "
+            f"count={row['count']} min={row['min_back_cost']} "
+            f"max={row['max_back_cost']} avg={row['avg_back_cost']}"
+        )
+
+    print("\nhardest_returns:")
+    for row in payload["one_step_return_costs"]["hardest_returns"]:
+        print(
+            f"  {row['src']} --{row['forward_label']}--> {row['dst']}: "
+            f"return_cost={row['back_cost']}"
+        )
+
     return 0
 
 
@@ -755,7 +870,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_pair.add_argument("dst", type=int)
     p_pair.add_argument("--overscan", type=int, default=90)
     p_pair.add_argument("--json", action="store_true")
+    p_pair.add_argument("--explain", action="store_true")
     p_pair.set_defaults(func=cmd_pair)
+
+    p_explain = sub.add_parser("explain", help="Explain a PET-METICA rewrite path between two numbers.")
+    p_explain.add_argument("src", type=int)
+    p_explain.add_argument("dst", type=int)
+    p_explain.add_argument("--overscan", type=int, default=90)
+    p_explain.add_argument("--json", action="store_true")
+    p_explain.set_defaults(func=cmd_explain)
+
+    p_friction = sub.add_parser("friction", help="Summarize one-step rewrite return costs.")
+    p_friction.add_argument("--n-max", type=int, default=30)
+    p_friction.add_argument("--overscan", type=int, default=90)
+    p_friction.add_argument("--limit", type=int, default=10)
+    p_friction.add_argument("--json", action="store_true")
+    p_friction.set_defaults(func=cmd_friction)
 
     p_scan = sub.add_parser("scan", help="Global scan over 1..N with overscan.")
     p_scan.add_argument("--n-max", type=int, default=30)

@@ -48,8 +48,7 @@ pet --help
 | `pet atlas DATASET.jsonl` | produce statistiche atlas-style su un dataset |
 | `pet shape-generators DATASET.jsonl` | mostra i primi generatori delle shape strutturali |
 | `pet branch-neighbors N` | mostra le mosse PET locali in ordine canonico e deterministico |
-| `pet branch-plan A B` | alias canonico di `plan` per path bounded nel grafo PET |
-| `pet branch-plan-best A B` | alias canonico di `plan-best` per path bounded best-first deterministico |
+| `pet rewrite ...` | calcola distanze, scan e matrici di rewrite PET-METICA |
 
 ## Primo percorso consigliato
 
@@ -215,6 +214,22 @@ Output concettuale:
 Questo è spesso il comando più utile per rispondere alla domanda:
 “questi due interi sono strutturalmente uguali o solo numericamente diversi?”
 
+### Distanze PET vs rewrite cost
+
+PET espone tre concetti distinti:
+
+- `distance`: distanza PET completa tra due alberi, sensibile anche ai valori dei primi.
+- `structural_distance`: distanza morfologica tra due alberi, ignorando i valori dei primi.
+- `rewrite cost`: costo minimo per trasformare un intero in un altro tramite mosse PET-METICA (`NEW`, `DROP`, `INC`, `DEC`).
+
+In pratica:
+
+- usa `pet compare A B` per confrontare due PET come oggetti statici;
+- usa `pet rewrite pair A B` per studiare il trasporto dinamico da `A` a `B`;
+- usa `pet rewrite explain A B` quando vuoi anche una spiegazione delle mosse.
+
+Nota: `distance` e `structural_distance` sono confronti tra strutture. Il rewrite cost è invece una distanza di cammino in un grafo orientato di trasformazioni.
+
 ### 7. Validare e renderizzare un PET JSON
 
 Partendo da un file JSON:
@@ -224,6 +239,10 @@ pet validate sample.json
 pet render sample.json
 pet decode sample.json
 ```
+
+Output atteso di `pet validate` su un file valido:
+
+    OK
 
 Uso tipico:
 
@@ -371,61 +390,6 @@ pet shape-generators docs/reports/data/scan-2-10000.jsonl --metrics
 Questo comando stampa i primi interi che generano nuove shape strutturali
 e, opzionalmente, alcune metriche associate.
 
-## Planning canonico con `branch-*`
-
-Per i comandi di planning, la corsia consigliata è `branch-*`:
-
-- `branch-neighbors` espone il branching locale in ordine canonico e deterministico
-- `branch-plan` è l'alias canonico del planner BFS bounded
-- `branch-plan-best` è l'alias canonico del planner best-first deterministico
-
-I comandi storici `plan` e `plan-best` restano disponibili per compatibilità,
-ma se vuoi rendere esplicita l'intenzione “usa il percorso canonico e deterministico”,
-usa `branch-*`.
-
-### 12. Ispezionare i vicini canonici di un nodo
-
-```bash
-pet branch-neighbors 12
-pet branch-neighbors 12 --json
-```
-
-Uso tipico:
-
-- vedere l'ordine locale delle mosse PET
-- controllare il branching canonico prima di una search
-- avere una vista stabile e ripetibile dei neighbor
-
-### 13. Cercare un path bounded con il planner canonico BFS
-
-```bash
-pet branch-plan 12 245 --max-depth 10
-pet branch-plan 12 245 --max-depth 10 --json
-```
-
-Questo comando è l'alias canonico di `plan`.
-
-È utile quando vuoi:
-
-- una search bounded semplice
-- un path ripetibile su casi piccoli o medi
-- una facciata CLI coerente con la famiglia `branch-*`
-
-### 14. Cercare un path bounded con il planner canonico best-first
-
-```bash
-pet branch-plan-best 12 245 --max-depth 10
-pet branch-plan-best 12 174272757120000 --max-depth 24 --max-visited 50000
-pet branch-plan-best 12 245 --max-depth 10 --json
-```
-
-Questo comando è l'alias canonico di `plan-best`.
-
-È la scelta consigliata quando vuoi:
-
-- un planner deterministico più forte del BFS puro
-- target canonici grandi o ben strutturati
-- una search esplicitamente allineata alla corsia `branch-*`
 
 ## Workflow minimo da terminale
 
@@ -439,7 +403,6 @@ pet generator 7776
 pet signature 7776
 pet compare 12 18
 pet branch-neighbors 12
-pet branch-plan-best 12 245 --max-depth 10
 pet scan 2 10000 --jsonl docs/reports/data/scan-2-10000.jsonl
 pet query filter docs/reports/data/scan-2-10000.jsonl --where "height=2" --limit 5
 pet atlas docs/reports/data/scan-2-10000.jsonl
@@ -454,11 +417,46 @@ pet atlas docs/reports/data/scan-2-10000.jsonl
 - Usa `signature` quando vuoi vedere la signature canonica della shape e distinguere collisioni che le metriche aggregate non separano.
 - Usa `compare` quando vuoi confrontare due interi come struttura.
 - Usa `branch-neighbors` quando vuoi vedere il branching locale canonico e deterministico.
-- Usa `branch-plan` quando vuoi un BFS bounded esplicito nella corsia `branch-*`.
-- Usa `branch-plan-best` quando vuoi il planner canonico deterministico più forte sui target ben strutturati.
+
 - Usa `scan` per generare un dataset osservabile.
 - Usa `query` per cercare casi strutturali specifici dentro una scan, incluse signature e generatori canonici.
 - Usa `atlas` quando vuoi una vista aggregata del dataset.
+
+### 15. PET-METICA rewrite
+
+I comandi `pet rewrite` espongono il layer operativo PET-METICA per lavorare
+su distanze, cammini minimi, scan bounded e matrici di rewrite.
+
+Coppia:
+
+    pet rewrite pair 12 9 --overscan 120
+    pet rewrite pair 12 9 --overscan 120 --explain
+    pet rewrite pair 12 9 --overscan 120 --json
+    pet rewrite explain 12 9 --overscan 120
+    pet rewrite explain 12 9 --overscan 120 --json
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3 --json
+
+Scan bounded:
+
+    pet rewrite scan --n-max 20 --overscan 60
+    pet rewrite scan --n-max 20 --overscan 60 --json
+
+Matrice distanze:
+
+    pet rewrite matrix --n-max 10 --overscan 60 --json
+
+Uso tipico:
+
+- calcolare un cammino minimo di rewrite tra due interi
+- spiegare il significato locale delle mosse con `--explain`
+- osservare hub, asimmetrie e gap tra distanza PET-METICA e distanza numerica
+- misurare la frizione di ritorno delle mosse locali con `friction`
+- produrre dati bounded per analisi research-facing
+
+Nota: `pet rewrite` è operativo, ma resta parte del layer PET-METICA
+sperimentale. I risultati di scan vanno letti come osservazioni bounded, non
+come teoremi generali.
 
 ## Cosa aspettarsi dal CLI
 

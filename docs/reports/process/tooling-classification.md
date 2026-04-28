@@ -19,7 +19,6 @@ Tools kept in this repository may operate on:
 - PET artifacts
 - scan JSONL artifacts
 - known PET shapes or signatures
-- support-realization payloads
 
 Tools should not implement:
 
@@ -62,54 +61,6 @@ Status:
 Reason:
 - retained for operator convenience
 - canonical entry point is `pet families benchmark-disjoint`
-
-## Builder and support tooling
-
-These scripts are aligned with PET as a build, artifact, validation, and
-support-realization layer.
-
-### `tools/pet_builder_from_int.py`
-
-Status:
-- builder wrapper
-
-Reason:
-- delegates to the PET builder-from-int entry point
-- does not implement independent discovery logic
-
-### `tools/pet_builder_plan.py`
-
-Status:
-- builder planning helper
-
-Reason:
-- consumes an existing builder report
-- emits an execution plan for known or explicitly missing blocks
-- does not attempt to discover missing structure
-
-### `tools/pet_builder_execute.py`
-
-Status:
-- builder artifact materialization helper
-
-Reason:
-- consumes an existing builder plan
-- materializes builder artifacts from known planned blocks
-
-### `tools/pet_support_realization.py`
-
-Status:
-- support-realization validator/helper
-
-Reason:
-- consumes support-realization payloads or builder reports
-- validates/repackages known and unknown support blocks
-- reports readiness instead of inventing missing structure
-
-## Dataset and report helpers
-
-These scripts are useful PET analysis or operator-side utilities. They are kept
-in-repo, but they are not canonical user-facing CLI interfaces.
 
 ### `tools/cluster_families.py`
 
@@ -198,7 +149,7 @@ These scripts support the currently retained PET-METICA / shape-algebra research
 line. They are research-facing, but they operate on known shapes, known
 integers, or explicit bounded ranges.
 
-### `tools/pet_rewrite_metric.py`
+### `pet rewrite`
 
 Status:
 - PET-METICA research helper
@@ -245,7 +196,6 @@ Reason:
 Workflow docs, contributor docs, and report regeneration notes should treat only
 stable report-facing tooling as interface-stable unless this document is updated.
 
-Builder/support tooling is allowed to support PET artifact workflows, but it
 should not be presented as general discovery machinery.
 
 Dataset/report helpers and PET-METICA research tools may be useful, but they

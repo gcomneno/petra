@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI for building, validating, rendering, and explaining Prime Exponent Tree artifacts.
+PET is a Python CLI for encoding, validating, rendering, measuring, and explaining Prime Exponent Tree artifacts.
 
 It treats an integer not only as a value, but also as a structured multiplicative object.
 The project studies that structure at three levels:
@@ -15,7 +15,7 @@ The project studies that structure at three levels:
 - **PET-METICA** — rewrite geometry on canonical PET shapes
 
 PET is not presented as a replacement for classical arithmetic and not as a claimed solution to a major open problem.
-It is best understood as an artifact, build, validation, and explanation layer for known PET structures.
+It is best understood as an artifact, validation, measurement, and explanation layer for known PET structures.
 
 ## Why this is interesting
 
@@ -117,6 +117,17 @@ pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
 
 ### Live research line
 - PET-METICA as rewrite geometry on canonical PET shapes
+
+Operational PET-METICA CLI core:
+
+    pet branch-neighbors 12
+    pet rewrite pair 12 9 --overscan 120
+    pet rewrite explain 12 9 --overscan 120
+    pet rewrite friction --n-max 10 --overscan 40 --limit 3
+    pet rewrite scan --n-max 20 --overscan 60
+    pet rewrite matrix --n-max 10 --overscan 60 --json
+
+PET-METICA is operational but still research-facing: rewrite scans and hub/friction observations are bounded empirical results, not general theorems.
 - local rewrite moves such as `NEW`, `DROP`, `INC`, `DEC`
 - shortest paths, canonical paths, asymmetries, and rewrite friction
 - empirical family behavior in explored ranges

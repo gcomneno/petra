@@ -460,7 +460,7 @@ def test_is_primitive_shape_op_accepts_only_core_ops():
     assert is_primitive_shape_op("DROP")
     assert is_primitive_shape_op("INC")
     assert is_primitive_shape_op("DEC")
-    assert is_primitive_shape_op("new")
+    assert not is_primitive_shape_op("new")
     assert not is_primitive_shape_op("SUCC")
     assert not is_primitive_shape_op("PRED")
     assert not is_primitive_shape_op("NOPE")

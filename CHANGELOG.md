@@ -7,6 +7,10 @@ Versioning corrente: `0.y.z`.
 
 ## [Unreleased]
 
+### Removed
+- Rimossi esperimenti falliti di builder, support-realization, dismantle, bytes-to-build e pet-friendliness.
+- Rimossi i comandi di planning target-directed `plan`, `branch-plan`, `plan-best` e `branch-plan-best`.
+
 ## [0.1.4] - 2026-04-14
 
 ### Added

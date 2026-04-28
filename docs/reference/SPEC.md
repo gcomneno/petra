@@ -19,6 +19,42 @@ Usiamo:
 - `p` è sempre un numero primo
 - `E` è o `•` oppure un altro PET
 
+## Rappresentazione JSON canonica
+
+La rappresentazione macchina canonica di un PET è un valore JSON composto da:
+
+- una lista non vuota di nodi
+- ogni nodo è un oggetto con esattamente le chiavi `p` ed `e`
+- `p` è un intero primo
+- `e` è `null` quando l'esponente è `1`
+- `e` è un altro PET JSON canonico quando l'esponente è `>= 2`
+- i nodi di ogni lista sono ordinati per `p` crescente
+- ogni primo `p` compare al massimo una volta per livello
+
+Esempi JSON canonici:
+
+PET(2):
+
+    [{"p": 2, "e": null}]
+
+PET(12):
+
+    [
+      {"p": 2, "e": [{"p": 2, "e": null}]},
+      {"p": 3, "e": null}
+    ]
+
+PET(72):
+
+    [
+      {"p": 2, "e": [{"p": 3, "e": null}]},
+      {"p": 3, "e": [{"p": 2, "e": null}]}
+    ]
+
+Questa è la forma serializzata normativa usata da `pet encode --json`,
+`pet decode`, `pet validate`, `pet render` e dai record JSONL prodotti da
+`pet scan`.
+
 ## Forma canonica
 
 Un PET è canonico se e solo se:
@@ -151,9 +187,33 @@ Esempi: `64 = 2^6` (esponente `6=2·3`), `576 = 2^6·3^2`, `729 = 3^6`.
 Questi invarianti emergono dalla struttura ricorsiva di PET e non hanno
 un corrispondente diretto nella fattorizzazione prima classica.
 
-## Metriche analitiche (pet_metrics)
+## Metriche analitiche
 
-Le seguenti metriche sono definite in `src/pet_metrics.py` e operano su PET canonici validi.
+PET distingue tra metriche canoniche, metriche extended/research e classificatori derivati.
+
+Le metriche canoniche sono definite in `src/pet/core.py`, esposte da
+`metrics_dict(tree)`, mostrate da `pet metrics`, e incluse nei record JSONL
+prodotti da `pet scan`.
+
+Le metriche extended/research e i classificatori derivati sono definiti in
+`src/pet/metrics.py`. Possono essere utili per analisi esplorativa, ma non fanno
+automaticamente parte del contratto canonico di PET-Metrics.
+
+### Metriche canoniche
+
+Il set canonico corrente è:
+
+- `node_count(tree)` — numero totale di nodi PET
+- `leaf_count(tree)` — numero di foglie, cioè nodi con esponente `1`
+- `height(tree)` — altezza del PET in livelli
+- `max_branching(tree)` — massima ampiezza locale osservata nell'albero
+- `branch_profile(tree)` — numero di nodi per livello
+- `recursive_mass(tree)` — numero di nodi non appartenenti al livello radice
+- `average_leaf_depth(tree)` — profondità media delle foglie, con radice a profondità `1`
+- `leaf_depth_variance(tree)` — varianza popolazionale delle profondità delle foglie
+
+Queste metriche sono parte del contratto stabile di `pet metrics` e dello
+schema JSONL corrente.
 
 ### Admission rule for canonical metrics
 
@@ -182,19 +242,25 @@ A metric may be added to the canonical PET metric set only if all of the followi
 
 Metrics that are informative but fail one or more of these criteria should remain in extended, research, or reporting layers rather than in the canonical metric set.
 
-### Metriche scalari
+### Metriche extended / research
+
+Le metriche seguenti sono disponibili per analisi esplorativa, ma non fanno parte
+del set canonico corrente:
 
 - `verticality_ratio(tree)` — rapporto `height / node_count`. Vale `1.0` per catene pure, tende a `0` per alberi piatti.
 - `structural_asymmetry(tree)` — deviazione standard del `branch_profile`. Vale `0.0` per alberi uniformi per livello.
-- `recursive_mass(tree)` — numero di nodi appartenenti a sottoalberi esponenziali (già in PET-Base).
-- `leaf_ratio(tree)` — rapporto `leaf_count / node_count` come `Fraction` esatta. Appartiene a un insieme sparso e discreto di valori razionali.
+- `subtree_mixing_score(tree)` — score sperimentale di mixing locale tra sottoforme.
+- `leaf_ratio(tree)` — rapporto `leaf_count / node_count` come `Fraction` esatta.
 
 ### Classificatori booleani
+
+I classificatori seguenti sono proprietà derivate da PET canonici validi:
 
 - `is_linear(tree)` — `True` se il PET è una catena pura (`max_branching == 1`).
 - `is_level_uniform(tree)` — `True` se tutti i livelli hanno lo stesso numero di nodi.
 - `is_squarefree(tree)` — `True` se `recursive_mass == 0` (tutti gli esponenti sono `1`).
-- `is_expanding(tree)` — `True` se l'ultimo livello ha più nodi del primo (proprietà rara).
+- `is_expanding(tree)` — `True` se l'ultimo livello ha più nodi del primo.
+- `has_root_mixed_simple_pattern(tree)` — helper research per uno specifico pattern root-level.
 
 ### Classificatore morfologico
 
@@ -659,7 +725,7 @@ Gli strumenti di analisi sono in `tools/cluster_families.py` (famiglie originali
 e in `pet families benchmark-disjoint` (famiglie disgiunte, con wrapper compatibile
 in `tools/cluster_families_disjoint.py`).
 
-## JSONL scan record schema (v1)
+## JSONL scan record schema (v2)
 
 The `pet scan` command produces one JSON object per line (JSONL).
 Each line represents one integer `n >= 2` together with its canonical PET
@@ -667,11 +733,11 @@ encoding and structural analysis data.
 
 ### Record model
 
-A scan record in schema v1 has the following top-level structure:
+A scan record in schema v2 has the following top-level structure:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "n": 72,
   "pet": [
     {"p": 2, "e": [{"p": 3, "e": null}]},
@@ -721,7 +787,7 @@ Human-oriented renderings are out of scope for the dataset schema.
 
 ### Metrics field
 
-The `metrics` object contains these required fields in schema v1:
+The `metrics` object contains these required fields in schema v2:
 
 - `node_count`: total number of PET nodes
 - `leaf_count`: number of leaves (`e = null`)
@@ -732,13 +798,13 @@ The `metrics` object contains these required fields in schema v1:
 - `average_leaf_depth`: arithmetic mean of leaf depths, with root depth = 1
 - `leaf_depth_variance`: population variance of leaf depths
 
-All metric fields above are mandatory in schema v1.
+All metric fields above are mandatory in schema v2.
 
 ### Labels field
 
 If present, `labels` contains derived structural classifiers.
 
-Schema v1 reserves the following label names:
+Schema v2 reserves the following label names:
 
 - `is_linear`
 - `is_level_uniform`
@@ -752,7 +818,7 @@ These fields are derived convenience values, not the source of truth for PET str
 
 If present, `meta` contains descriptive metadata about record encoding.
 
-Schema v1 defines:
+Schema v2 defines:
 
 - `pet_format`: currently `"canonical-json"`
 
@@ -760,7 +826,7 @@ Arithmetic metadata may be added later, but it is not part of the required base 
 
 ### Stability and future evolution
 
-Schema v1 guarantees the naming and meaning of all required fields above.
+Schema v2 guarantees the naming and meaning of all required fields above.
 
 Compatibility rules:
 
@@ -772,6 +838,6 @@ Compatibility rules:
 ### Example JSONL line
 
 ```json
-{"schema_version":1,"n":72,"pet":[{"p":2,"e":[{"p":3,"e":null}]},{"p":3,"e":[{"p":2,"e":null}]}],"metrics":{"node_count":4,"leaf_count":2,"height":2,"max_branching":2,"branch_profile":[2,2],"recursive_mass":2,"average_leaf_depth":2.0,"leaf_depth_variance":0.0},"meta":{"pet_format":"canonical-json"}}
+{"schema_version":2,"n":72,"pet":[{"p":2,"e":[{"p":3,"e":null}]},{"p":3,"e":[{"p":2,"e":null}]}],"metrics":{"node_count":4,"leaf_count":2,"height":2,"max_branching":2,"branch_profile":[2,2],"recursive_mass":2,"average_leaf_depth":2.0,"leaf_depth_variance":0.0},"meta":{"pet_format":"canonical-json"}}
 ```
 

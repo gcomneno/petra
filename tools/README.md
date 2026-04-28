@@ -28,13 +28,6 @@ target-directed candidate search.
 - `cluster_families_disjoint.py` — compatibility wrapper for the disjoint family
   benchmark tooling; canonical entry point: `pet families benchmark-disjoint`
 
-## Builder and support tooling
-
-- `pet_builder_from_int.py` — wrapper around the PET builder-from-int entry point
-- `pet_builder_plan.py` — derive an execution plan from an existing builder report
-- `pet_builder_execute.py` — materialize builder artifacts from an existing plan
-- `pet_support_realization.py` — validate and restate support-realization payloads
-
 ## Dataset and report helpers
 
 - `cluster_families.py` — related family-clustering tooling

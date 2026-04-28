@@ -149,13 +149,13 @@ Il fatto che i casi duri coinvolgano spesso `7` è robusto.
 Il ranking preciso e il massimo assoluto, invece, cambiano col range.
 
 ### 3. Formalizzazione concettuale della differenza PET
-La faccia attuale più naturale di `⊖` resta:
+La faccia attuale più naturale della differenza PET resta:
 - cammino minimo canonico / trasporto di rewrite
 
 Ma la formalizzazione definitiva è ancora da rifinire.
 
-### 4. Formalizzazione di `⊕`
-Ancora aperta.
+### 4. Operatori compositivi non-core
+Ancora aperti e non parte del core operativo corrente.
 
 ### 5. Single free tower policy
 Ancora aperta:

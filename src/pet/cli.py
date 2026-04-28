@@ -344,58 +344,6 @@ def _pathwise_dot(n: int, depth: int, max_nodes: int | None = None) -> str:
 
 
 
-def _greedy_dismantle(n: int) -> list[dict]:
-    steps: list[dict] = []
-    cur = n
-
-    while True:
-        factors = prime_factorization(cur)
-        cur_g = shape_signature_dict(cur)["generator"]
-        cur_fact = _format_factorization(factors)
-
-        if len(factors) == 1 and factors[0][1] == 1:
-            steps.append(
-                {
-                    "n": cur,
-                    "factorization": cur_fact,
-                    "generator": cur_g,
-                    "op": "STOP",
-                    "note": "prime reached",
-                    "next_n": None,
-                    "next_generator": None,
-                }
-            )
-            break
-
-        exp_gt1 = [(exp, prime) for prime, exp in factors if exp >= 2]
-        if exp_gt1:
-            exp, prime = sorted(exp_gt1, key=lambda item: (-item[0], item[1]))[0]
-            nxt = cur // prime
-            op = "DEC"
-            note = f"prime={prime}, exponent={exp}->{exp - 1}"
-        else:
-            prime = factors[0][0]
-            nxt = cur // prime
-            op = "DROP"
-            note = f"prime={prime}"
-
-        nxt_g = shape_signature_dict(nxt)["generator"]
-        steps.append(
-            {
-                "n": cur,
-                "factorization": cur_fact,
-                "generator": cur_g,
-                "op": op,
-                "note": note,
-                "next_n": nxt,
-                "next_generator": nxt_g,
-            }
-        )
-        cur = nxt
-
-    return steps
-
-
 def _explain_data(
     n: int,
     pathwise_depth: int = 1,
@@ -426,181 +374,11 @@ def _explain_data(
     }
 
 
-def _dismantle_data(n: int) -> dict:
-    factors = prime_factorization(n)
-    signature = shape_signature_dict(n)
-
-    return {
-        "n": n,
-        "factorization": [{"prime": p, "exponent": e} for p, e in factors],
-        "factorization_str": _format_factorization(factors),
-        "generator": signature["generator"],
-        "steps": _greedy_dismantle(n),
-    }
-
-
-
-
-
-def _parse_factor_spec_file(path_str: str) -> tuple[tuple[int, int], ...]:
-    payload = json.loads(pathlib.Path(path_str).read_text(encoding="utf-8"))
-
-    trust_primes = False
-
-    if isinstance(payload, dict):
-        trust_primes = bool(payload.get("trust_primes", False))
-
-        if "factors" not in payload:
-            raise ValueError("factor spec dict must contain a 'factors' key")
-        payload = payload["factors"]
-
-    if not isinstance(payload, list):
-        raise ValueError("factor spec must be a JSON list or an object with a 'factors' list")
-
-    factors = []
-    seen = set()
-
-    for row in payload:
-        if not isinstance(row, (list, tuple)) or len(row) != 2:
-            raise ValueError("each factor row must be a pair [prime, exponent]")
-
-        prime, exp = row
-        if not isinstance(prime, int) or not isinstance(exp, int):
-            raise ValueError("prime and exponent must be integers")
-        if prime < 2:
-            raise ValueError("prime must be >= 2")
-        if exp < 1:
-            raise ValueError("exponent must be >= 1")
-        if not trust_primes and not is_prime(prime):
-            raise ValueError(f"{prime} is not prime")
-        if prime in seen:
-            raise ValueError(f"duplicate prime in factor spec: {prime}")
-
-        seen.add(prime)
-        factors.append((prime, exp))
-
-    factors.sort()
-
-    if not factors:
-        raise ValueError("factor spec cannot be empty")
-    if factors[0][0] != 2:
-        raise ValueError("canonical build-from-factors requires support to start at prime 2")
-
-    support = set()
-    for prime, _exp in factors:
-        expected = _next_new_prime(support)
-        if prime != expected:
-            raise ValueError(
-                f"factor support is not NEW-canonical: expected next prime {expected}, got {prime}"
-            )
-        support.add(prime)
-
-    return tuple(factors)
-
-
 def _factor_exp(n: int, prime: int) -> int:
     for p, exp in prime_factorization(n):
         if p == prime:
             return exp
     return 0
-
-
-def _canonical_build_cost_from_factors(factors: tuple[tuple[int, int], ...]) -> int | None:
-    if not factors:
-        return None
-
-    support = tuple(prime for prime, _exp in factors)
-    present = set(support)
-    max_prime = support[-1]
-
-    candidate = 2
-    while candidate <= max_prime:
-        if is_prime(candidate) and candidate not in present:
-            return None
-        candidate += 1
-
-    return (len(support) - 1) + sum(exp - 1 for _prime, exp in factors)
-
-
-def _canonical_build_cost(n: int) -> int | None:
-    return _canonical_build_cost_from_factors(tuple(prime_factorization(n)))
-
-
-def _pet_friendliness_report(n: int) -> dict:
-    if n < 2:
-        raise ValueError("pet-friendliness expects an integer >= 2")
-
-    factors = tuple(prime_factorization(n))
-    factor_map = dict(factors)
-    support = tuple(prime for prime, _exp in factors)
-    present = set(support)
-    max_prime = support[-1]
-
-    missing = []
-    candidate = 2
-    while candidate <= max_prime:
-        if is_prime(candidate) and candidate not in present:
-            missing.append(candidate)
-        candidate += 1
-
-    canonical_build_cost = _canonical_build_cost_from_factors(factors)
-    strict_pet_friendly = canonical_build_cost is not None
-
-    relaxed_hull_support = []
-    candidate = 2
-    while candidate <= max_prime:
-        if is_prime(candidate):
-            relaxed_hull_support.append(candidate)
-        candidate += 1
-
-    relaxed_hull_factors = tuple(
-        (prime, factor_map.get(prime, 1))
-        for prime in relaxed_hull_support
-    )
-
-    relaxed_hull_n = 1
-    for prime, exp in relaxed_hull_factors:
-        relaxed_hull_n *= prime ** exp
-
-    relaxed_hull_build_cost = (len(relaxed_hull_support) - 1) + sum(
-        exp - 1 for _prime, exp in relaxed_hull_factors
-    )
-    relaxed_exact_extra_drop_lower_bound = len(missing)
-    relaxed_exact_cost_lower_bound = (
-        relaxed_hull_build_cost + relaxed_exact_extra_drop_lower_bound
-    )
-
-    return {
-        "n": n,
-        "factors": factors,
-        "support": support,
-        "support_size": len(support),
-        "max_prime": max_prime,
-        "strict_pet_friendly": strict_pet_friendly,
-        "missing_prime_count": len(missing),
-        "missing_primes_before_max": tuple(missing),
-        "canonical_build_cost": canonical_build_cost,
-        "relaxed_hull_n": relaxed_hull_n,
-        "relaxed_hull_factors": relaxed_hull_factors,
-        "relaxed_hull_support": tuple(relaxed_hull_support),
-        "relaxed_hull_build_cost": relaxed_hull_build_cost,
-        "relaxed_exact_extra_drop_lower_bound": relaxed_exact_extra_drop_lower_bound,
-        "relaxed_exact_cost_lower_bound": relaxed_exact_cost_lower_bound,
-    }
-
-
-def _bytes_to_build_report(path_str: str, *, byteorder: str, signed: bool) -> dict:
-    int_report = _read_int_from_bytes_file(path_str, byteorder=byteorder, signed=signed)
-    build_report = _build_from_int_report(int_report["int"])
-
-    report = dict(build_report)
-    report["file"] = int_report["file"]
-    report["byteorder"] = int_report["byteorder"]
-    report["signed"] = int_report["signed"]
-    report["byte_count"] = int_report["byte_count"]
-    report["hex"] = int_report["hex"]
-    report["input_n"] = int_report["int"]
-    return report
 
 
 def _read_int_from_bytes_file(path_str: str, *, byteorder: str, signed: bool) -> dict:
@@ -616,168 +394,78 @@ def _read_int_from_bytes_file(path_str: str, *, byteorder: str, signed: bool) ->
     }
 
 
-def _build_from_int_report(n: int) -> dict:
-    if n < 2:
-        raise ValueError("build-from-int expects an integer >= 2")
-
-    factors = tuple(prime_factorization(n))
-    if not factors or factors[0][0] != 2:
-        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
-
-    support = [prime for prime, _ in factors]
-    expected_support = []
-    candidate = 2
-    while len(expected_support) < len(support):
-        is_prime = True
-        if candidate < 2:
-            is_prime = False
-        elif candidate % 2 == 0:
-            is_prime = candidate == 2
-        else:
-            d = 3
-            while d * d <= candidate:
-                if candidate % d == 0:
-                    is_prime = False
-                    break
-                d += 2
-        if is_prime:
-            expected_support.append(candidate)
-        candidate += 1
-
-    if support != expected_support:
-        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
-
-    exponents = [exp for _, exp in factors]
-    if any(left < right for left, right in zip(exponents, exponents[1:])):
-        raise ValueError("build-from-int requires NEW-canonical support starting at prime 2")
-
-    report = _build_from_factors_report(factors)
-    report["input_n"] = n
-    return report
-
-
-def _build_from_factors_report(factors: tuple[tuple[int, int], ...]) -> dict:
-    if not factors:
-        raise ValueError("factor spec cannot be empty")
-    if factors[0][0] != 2:
-        raise ValueError("canonical build-from-factors requires support to start at prime 2")
-
-    target_n = 1
-    for prime, exp in factors:
-        target_n *= prime ** exp
-
-    n = 2
-    path = []
-    current_exp: dict[int, int] = {2: 1}
-
-    for i, (prime, target_exp) in enumerate(factors):
-        if i == 0:
-            if prime != 2:
-                raise RuntimeError(f"expected first prime 2, got {prime}")
-        else:
-            prev_n = n
-            n *= prime
-            current_exp[prime] = 1
-            path.append(
-                {
-                    "source_n": prev_n,
-                    "label": f"NEW(p={prime})",
-                    "target_n": n,
-                    "target_generator": None,
-                }
-            )
-
-        while current_exp[prime] < target_exp:
-            prev_n = n
-            prev_exp = current_exp[prime]
-            n *= prime
-            current_exp[prime] = prev_exp + 1
-            path.append(
-                {
-                    "source_n": prev_n,
-                    "label": f"INC(p={prime},e={prev_exp})",
-                    "target_n": n,
-                    "target_generator": None,
-                }
-            )
-
-    if n != target_n:
-        raise RuntimeError(f"builder ended at {n}, expected {target_n}")
-
-    return {
-        "start_n": 2,
-        "factors": factors,
-        "target_n": target_n,
-        "target_generator": shape_generator_from_factorization(list(factors)),
-        "steps": len(path),
-        "path": path,
-    }
-
 def _factor_exp_map(n: int) -> dict[int, int]:
     return dict(prime_factorization(n))
 
 
-def _plan_target_score(n: int, target: int) -> tuple[int, int, int]:
-    cur = _factor_exp_map(n)
-    tgt = _factor_exp_map(target)
-
-    primes = sorted(set(cur) | set(tgt))
-    exp_l1 = sum(abs(cur.get(p, 0) - tgt.get(p, 0)) for p in primes)
-    support_symdiff = len(set(cur) ^ set(tgt))
-    largest_prime_gap = abs((max(cur) if cur else 1) - (max(tgt) if tgt else 1))
-
-    return (exp_l1 + support_symdiff, support_symdiff, largest_prime_gap)
 
 
-def _plan_path_best_first(start: int, target: int, max_depth: int, max_visited: int = 20000):
-    if start == target:
-        return []
+def _branch_move_rows(n: int, *, include_generators: bool = True) -> list[dict]:
+    factors = prime_factorization(n)
+    factor_map = dict(factors)
 
-    heap = []
-    start_score = _plan_target_score(start, target)
-    heapq.heappush(heap, (start_score, 0, start))
+    def target_generator_for(value: int):
+        return shape_signature_dict(value)["generator"] if include_generators else None
 
-    best_depth = {start: 0}
-    parent = {start: None}
-    edge = {}
-    visited = 0
+    rows: list[dict] = []
 
-    while heap:
-        _score, depth, cur = heapq.heappop(heap)
-        visited += 1
-        if visited > max_visited:
-            break
+    new_prime = _next_new_prime(set(factor_map))
+    new_n = n * new_prime
+    rows.append(
+        {
+            "label": f"NEW(p={new_prime})",
+            "source_n": n,
+            "target_n": new_n,
+            "target_generator": target_generator_for(new_n),
+            "prime": new_prime,
+            "kind": "NEW",
+        }
+    )
 
-        if cur == target:
-            path = []
-            node = cur
-            while parent[node] is not None:
-                path.append(edge[node])
-                node = parent[node]
-            path.reverse()
-            return path
+    for prime, exp in factors:
+        inc_n = n * prime
+        rows.append(
+            {
+                "label": f"INC(p={prime},e={exp})",
+                "source_n": n,
+                "target_n": inc_n,
+                "target_generator": target_generator_for(inc_n),
+                "representative_prime": prime,
+                "exponent": exp,
+                "kind": "INC",
+            }
+        )
 
-        if depth >= max_depth:
-            continue
-
-        for row in _sorted_plan_neighbors(cur):
-            nxt = row["target_n"]
-            nd = depth + 1
-
-            prev_best = best_depth.get(nxt)
-            if prev_best is not None and prev_best <= nd:
-                continue
-
-            best_depth[nxt] = nd
-            parent[nxt] = cur
-            edge[nxt] = row
-            heapq.heappush(
-                heap,
-                (_plan_target_score(nxt, target), nd, nxt),
+        if exp > 1:
+            dec_n = n // prime
+            rows.append(
+                {
+                    "label": f"DEC(p={prime},e={exp})",
+                    "source_n": n,
+                    "target_n": dec_n,
+                    "target_generator": target_generator_for(dec_n),
+                    "representative_prime": prime,
+                    "exponent": exp,
+                    "kind": "DEC",
+                }
             )
 
-    return None
+    leaf_primes = [prime for prime, exp in factors if exp == 1]
+    if len(factors) > 1 and leaf_primes:
+        drop_prime = min(leaf_primes)
+        drop_n = n // drop_prime
+        rows.append(
+            {
+                "label": f"DROP(p={drop_prime})",
+                "source_n": n,
+                "target_n": drop_n,
+                "target_generator": target_generator_for(drop_n),
+                "representative_prime": drop_prime,
+                "kind": "DROP",
+            }
+        )
 
+    return rows
 
 def _plan_move_rank(label: str) -> tuple[int, str]:
     if label.startswith("NEW("):
@@ -788,88 +476,19 @@ def _plan_move_rank(label: str) -> tuple[int, str]:
         return (2, label)
     if label.startswith("DEC("):
         return (3, label)
-    return (99, label)
+    return (4, label)
 
 
 def _sorted_plan_neighbors(n: int) -> list[dict]:
+    rows = _branch_move_rows(n, include_generators=False)
     return sorted(
-        _plan_neighbors(n),
+        rows,
         key=lambda row: (_plan_move_rank(row["label"]), row["target_n"], row["label"]),
     )
 
 
-def _plan_neighbors(n: int):
-    moves = _explain_moves(n, include_generators=False)
-
-    new = moves.get("new")
-    if new is not None:
-        yield {
-            "source_n": n,
-            "label": f"NEW(p={new['prime']})",
-            "target_n": new["target_n"],
-        }
-
-    drop = moves.get("drop")
-    if drop is not None:
-        yield {
-            "source_n": n,
-            "label": f"DROP(p={drop['representative_prime']})",
-            "target_n": drop["target_n"],
-        }
-
-    for row in moves.get("inc", []):
-        yield {
-            "source_n": n,
-            "label": f"INC(p={row['representative_prime']},e={row['exponent']})",
-            "target_n": row["target_n"],
-        }
-
-    for row in moves.get("dec", []):
-        yield {
-            "source_n": n,
-            "label": f"DEC(p={row['representative_prime']},e={row['exponent']})",
-            "target_n": row["target_n"],
-        }
-
-
-def _plan_path(start: int, target: int, max_depth: int):
-    if start == target:
-        return []
-
-    queue = deque([start])
-    seen = {start}
-    depth = {start: 0}
-    parent = {start: None}
-    edge = {}
-
-    while queue:
-        cur = queue.popleft()
-        if depth[cur] >= max_depth:
-            continue
-
-        for row in _sorted_plan_neighbors(cur):
-            nxt = row["target_n"]
-            if nxt in seen:
-                continue
-
-            seen.add(nxt)
-            depth[nxt] = depth[cur] + 1
-            parent[nxt] = cur
-            edge[nxt] = row
-
-            if nxt == target:
-                path = []
-                node = nxt
-                while parent[node] is not None:
-                    path.append(edge[node])
-                    node = parent[node]
-                path.reverse()
-                return path
-
-            queue.append(nxt)
-
-    return None
-
+def _plan_neighbors(n: int) -> list[dict]:
+    return _sorted_plan_neighbors(n)
 
 def _load_shape_algebra_module():
     import importlib
@@ -969,46 +588,8 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    # builder-from-int
-    p = subparsers.add_parser(
-        "builder-from-int",
-        help="run the end-to-end PET builder pipeline from an integer input",
-    )
-    p.add_argument("n", type=int, metavar="N")
-    p.add_argument("--json", action="store_true")
-    p.add_argument(
-        "--artifacts-dir",
-        default="/tmp/pet_builder_from_int_out",
-        help="directory for materialized builder artifacts",
-    )
-
-    # builder-from-factors
-    p = subparsers.add_parser(
-        "builder-from-factors",
-        help="run the end-to-end PET builder pipeline from a factor specification file",
-    )
-    p.add_argument("file", metavar="FACTORS.json")
-    p.add_argument("--json", action="store_true")
-    p.add_argument(
-        "--artifacts-dir",
-        default="/tmp/pet_builder_from_factors_out",
-        help="directory for materialized builder artifacts",
-    )
-
-    # builder-from-factorization
-    p = subparsers.add_parser(
-        "builder-from-factorization",
-        help="run the end-to-end PET builder pipeline from a known factorization file",
-    )
-    p.add_argument("file", metavar="FACTORS.json")
-    p.add_argument("--json", action="store_true")
-    p.add_argument(
-        "--artifacts-dir",
-        default="/tmp/pet_builder_from_factorization_out",
-        help="directory for materialized builder artifacts",
-    )
-
-    p_encode = subparsers.add_parser("encode", help="encode N into PET and print JSON")
+    # encode
+    p_encode = subparsers.add_parser("encode", help="encode N as PET")
     p_encode.add_argument("n", type=int, metavar="N")
     p_encode.add_argument("--json", action="store_true")
 
@@ -1099,14 +680,6 @@ def main(argv: list[str] | None = None) -> int:
         help="cap the total number of pathwise neighborhood nodes",
     )
     p_explain.add_argument("--json", action="store_true")
-
-    # dismantle
-    p_dismantle = subparsers.add_parser(
-        "dismantle",
-        help="greedily dismantle N via PET DEC/DROP steps",
-    )
-    p_dismantle.add_argument("n", type=int, metavar="N")
-    p_dismantle.add_argument("--json", action="store_true")
 
     # scan
     p_scan = subparsers.add_parser("scan", help="scan range and output JSONL dataset")
@@ -1410,53 +983,6 @@ def main(argv: list[str] | None = None) -> int:
     p_partial_shape_target.add_argument("--json", action="store_true")
 
 
-    # plan
-    p_plan = subparsers.add_parser(
-        "plan",
-        aliases=["branch-plan"],
-        help="find a bounded PET move path from A to B",
-    )
-    p_plan.add_argument("start", type=int, metavar="A")
-    p_plan.add_argument("target", type=int, metavar="B")
-    p_plan.add_argument(
-        "--max-depth",
-        type=int,
-        default=8,
-        help="maximum BFS depth for bounded PET planning (default: 8)",
-    )
-    p_plan.add_argument("--json", action="store_true")
-
-
-
-
-
-    # pet-friendliness
-    p_pet_friendliness = subparsers.add_parser(
-        "pet-friendliness",
-        help="inspect whether N is PET-friendly under strict NEW-canonical support",
-    )
-    p_pet_friendliness.add_argument("n", type=int, metavar="N")
-    p_pet_friendliness.add_argument("--json", action="store_true")
-
-    # bytes-to-build
-    p_bytes_to_build = subparsers.add_parser(
-        "bytes-to-build",
-        help="decode a byte stream as an integer and build it when support is NEW-canonical",
-    )
-    p_bytes_to_build.add_argument("file", metavar="BYTES.bin")
-    p_bytes_to_build.add_argument(
-        "--byteorder",
-        choices=("big", "little"),
-        default="big",
-        help="byte order used to decode the integer (default: big)",
-    )
-    p_bytes_to_build.add_argument(
-        "--signed",
-        action="store_true",
-        help="interpret the byte stream as a signed integer",
-    )
-    p_bytes_to_build.add_argument("--json", action="store_true")
-
     # int-from-bytes
     p_int_from_bytes = subparsers.add_parser(
         "int-from-bytes",
@@ -1476,50 +1002,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_int_from_bytes.add_argument("--json", action="store_true")
 
-
-    # build-from-int
-    p_build_from_int = subparsers.add_parser(
-        "build-from-int",
-        help="factor an integer and build it from ground generator 2 when support is NEW-canonical",
-    )
-    p_build_from_int.add_argument("n", type=int, metavar="N")
-    p_build_from_int.add_argument("--json", action="store_true")
-    p_build_from_int.add_argument(
-        "--allow-non-canonical-support",
-        action="store_true",
-        help="build canonical shape first, then report pending non-canonical support realization",
-    )
-
-    # build-from-factors
-    p_build_from_factors = subparsers.add_parser(
-        "build-from-factors",
-        help="build a NEW-canonical factorization from ground generator 2",
-    )
-    p_build_from_factors.add_argument("file", metavar="FACTORS.json")
-    p_build_from_factors.add_argument("--json", action="store_true")
-
-
-    # plan-best
-    p_plan_best = subparsers.add_parser(
-        "plan-best",
-        aliases=["branch-plan-best"],
-        help="find a bounded deterministic PET path from A to B with best-first search",
-    )
-    p_plan_best.add_argument("start", type=int, metavar="A")
-    p_plan_best.add_argument("target", type=int, metavar="B")
-    p_plan_best.add_argument(
-        "--max-depth",
-        type=int,
-        default=12,
-        help="maximum search depth for bounded best-first PET planning (default: 12)",
-    )
-    p_plan_best.add_argument(
-        "--max-visited",
-        type=int,
-        default=20000,
-        help="maximum popped states before giving up (default: 20000)",
-    )
-    p_plan_best.add_argument("--json", action="store_true")
 
     # branch-neighbors
     p_branch_neighbors = subparsers.add_parser(
@@ -1548,6 +1030,25 @@ def main(argv: list[str] | None = None) -> int:
     p_rewrite_pair.add_argument("dst", type=int, metavar="DST")
     p_rewrite_pair.add_argument("--overscan", type=int, default=90)
     p_rewrite_pair.add_argument("--json", action="store_true")
+    p_rewrite_pair.add_argument("--explain", action="store_true")
+
+    p_rewrite_explain = rewrite_subparsers.add_parser(
+        "explain",
+        help="explain a PET-METICA rewrite path between two numbers",
+    )
+    p_rewrite_explain.add_argument("src", type=int, metavar="SRC")
+    p_rewrite_explain.add_argument("dst", type=int, metavar="DST")
+    p_rewrite_explain.add_argument("--overscan", type=int, default=90)
+    p_rewrite_explain.add_argument("--json", action="store_true")
+
+    p_rewrite_friction = rewrite_subparsers.add_parser(
+        "friction",
+        help="summarize one-step PET-METICA rewrite return costs",
+    )
+    p_rewrite_friction.add_argument("--n-max", type=int, default=30)
+    p_rewrite_friction.add_argument("--overscan", type=int, default=90)
+    p_rewrite_friction.add_argument("--limit", type=int, default=10)
+    p_rewrite_friction.add_argument("--json", action="store_true")
 
     p_rewrite_scan = rewrite_subparsers.add_parser(
         "scan",
@@ -1784,35 +1285,6 @@ def main(argv: list[str] | None = None) -> int:
                     if neighborhood["truncated"]:
                         print("  [truncated by --max-nodes]")
 
-        elif args.command == "dismantle":
-            data = _dismantle_data(args.n)
-
-            if args.json:
-                print(json.dumps(data, indent=2, ensure_ascii=False))
-            else:
-                print(f"N = {data['n']}")
-                print(f"factorization = {data['factorization_str']}")
-                print(f"generator = {data['generator']}")
-                print("greedy dismantle:")
-                for step in data["steps"]:
-                    if step["op"] == "STOP":
-                        print(
-                            "   ",
-                            f"STOP at N={step['n']}",
-                            f"({step['factorization']})",
-                            f"generator={step['generator']}",
-                        )
-                    else:
-                        print(
-                            "   ",
-                            f"N={step['n']}",
-                            f"({step['factorization']})",
-                            f"[g={step['generator']}]",
-                            f"--{step['op']} {step['note']}-->",
-                            f"{step['next_n']}",
-                            f"[g={step['next_generator']}]",
-                        )
-
         elif args.command == "scan":
             from .scan import scan_range, write_jsonl
 
@@ -1878,183 +1350,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
-        elif args.command == "pet-friendliness":
-            report = _pet_friendliness_report(args.n)
-
-            if args.json:
-                print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
-            else:
-                print(f"N = {report['n']}")
-                print(f"factors = {_format_factorization(report['factors'])}")
-                print(f"support = {report['support']}")
-                print(f"support_size = {report['support_size']}")
-                print(f"max_prime = {report['max_prime']}")
-                print(f"strict_pet_friendly = {'yes' if report['strict_pet_friendly'] else 'no'}")
-                print(f"missing_prime_count = {report['missing_prime_count']}")
-                print(f"missing_primes_before_max = {report['missing_primes_before_max']}")
-                print(
-                    "canonical_build_cost = "
-                    + ("none" if report["canonical_build_cost"] is None else str(report["canonical_build_cost"]))
-                )
-                print(f"relaxed_hull_support = {report['relaxed_hull_support']}")
-                print(f"relaxed_hull_factors = {_format_factorization(report['relaxed_hull_factors'])}")
-                print(f"relaxed_hull_n = {report['relaxed_hull_n']}")
-                print(f"relaxed_hull_build_cost = {report['relaxed_hull_build_cost']}")
-                print(
-                    "relaxed_exact_extra_drop_lower_bound = "
-                    f"{report['relaxed_exact_extra_drop_lower_bound']}"
-                )
-                print(
-                    "relaxed_exact_cost_lower_bound = "
-                    f"{report['relaxed_exact_cost_lower_bound']}"
-                )
-
-        elif args.command == "bytes-to-build":
-            report = _bytes_to_build_report(
-                args.file,
-                byteorder=args.byteorder,
-                signed=args.signed,
-            )
-
-            if args.json:
-                print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
-            else:
-                print(f"file = {report['file']}")
-                print(f"byteorder = {report['byteorder']}")
-                print(f"signed = {'yes' if report['signed'] else 'no'}")
-                print(f"byte_count = {report['byte_count']}")
-                print(f"hex = {report['hex']}")
-                print(f"input_n = {report['input_n']}")
-                print(f"factors = {_format_factorization(report['factors'])}")
-                print(f"target_n = {report['target_n']}")
-                print(f"target_generator = {report['target_generator']}")
-                print(f"steps = {report['steps']}")
-                for row in report["path"]:
-                    print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
-        elif args.command == "builder-from-int":
-            from pet.builder_from_int import build_from_int_pipeline
-
-            payload = build_from_int_pipeline(args.n, args.artifacts_dir)
-
-            if args.json:
-                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
-            else:
-                final_output = payload.get("final_build_output", {})
-                built = final_output.get("built_pet_object", {})
-                print(f"input_n = {payload.get('input_n')}")
-                print(f"schema = {payload.get('schema')}")
-                print(f"build_status = {final_output.get('build_status')}")
-                print(f"assembly_status = {built.get('assembly_status')}")
-                print(f"component_count = {built.get('component_count')}")
-                print(f"artifacts_dir = {args.artifacts_dir}")
-
-        elif args.command == "builder-from-factors":
-            from pet.builder_from_factors import build_from_factors_pipeline
-
-            payload = build_from_factors_pipeline(args.file, args.artifacts_dir)
-
-            if args.json:
-                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
-            else:
-                final_output = payload.get("final_build_output", {})
-                built = final_output.get("built_pet_object", {})
-                print(f"input_n = {payload.get('input_n')}")
-                print(f"schema = {payload.get('schema')}")
-                print(f"build_status = {final_output.get('build_status')}")
-                print(f"assembly_status = {built.get('assembly_status')}")
-                print(f"component_count = {built.get('component_count')}")
-                print(f"artifacts_dir = {args.artifacts_dir}")
-
-        elif args.command == "builder-from-factorization":
-            from pet.builder_from_factorization import build_from_factorization_pipeline
-
-            payload = build_from_factorization_pipeline(args.file, args.artifacts_dir)
-
-            if args.json:
-                print(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True))
-            else:
-                final_output = payload.get("final_build_output", {})
-                built = final_output.get("built_pet_object", {})
-                print(f"input_n = {payload.get('input_n')}")
-                print(f"schema = {payload.get('schema')}")
-                print(f"build_status = {final_output.get('build_status')}")
-                print(f"assembly_status = {built.get('assembly_status')}")
-                print(f"component_count = {built.get('component_count')}")
-                print(f"artifacts_dir = {args.artifacts_dir}")
-
-        elif args.command == "build-from-int":
-            partial_report = None
-
-            try:
-                report = _build_from_int_report(args.n)
-            except (ValueError, RuntimeError) as exc:
-                if not args.allow_non_canonical_support:
-                    raise
-
-                msg = str(exc)
-                if (
-                    "build-from-int requires NEW-canonical support starting at prime 2" not in msg
-                    and "integer factor support is not NEW-canonical:" not in msg
-                    and "builder ended at " not in msg
-                ):
-                    raise
-
-                generator_n = shape_generator(args.n)
-                phase1 = _build_from_int_report(generator_n)
-                partial_report = {
-                    "schema": "pet-build-from-int-v2",
-                    "input_n": args.n,
-                    "factors": tuple(prime_factorization(args.n)),
-                    "target_generator": generator_n,
-                    "mode": "canonical-build+support-realization",
-                    "build_status": "partial",
-                    "phase1": {
-                        "status": "ok",
-                        "target_n": phase1["target_n"],
-                        "target_generator": phase1["target_generator"],
-                        "steps": phase1["steps"],
-                        "path": phase1["path"],
-                    },
-                    "phase2": {
-                        "status": "pending",
-                        "same_pet_shape": True,
-                        "reached_target": False,
-                        "message": "canonical shape build succeeded, but non-canonical support realization is not yet implemented",
-                    },
-                }
-
-            if partial_report is not None:
-                if args.json:
-                    print(json.dumps(_jsonable_value(partial_report), indent=2, ensure_ascii=False))
-                else:
-                    print(f"input_n = {partial_report['input_n']}")
-                    print(f"factorization = {_format_factorization(partial_report['factors'])}")
-                    print(f"target_generator = {partial_report['target_generator']}")
-                    print(f"mode = {partial_report['mode']}")
-                    print(f"build_status = {partial_report['build_status']}")
-                    print()
-                    print("[phase 1: canonical shape build]")
-                    print(f"canonical_steps = {partial_report['phase1']['steps']}")
-                    for row in partial_report["phase1"]["path"]:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-                    print()
-                    print("[phase 2: non-canonical support realization]")
-                    print(f"status = {partial_report['phase2']['status']}")
-                    print(f"same_pet_shape = {str(partial_report['phase2']['same_pet_shape']).lower()}")
-                    print(f"message = {partial_report['phase2']['message']}")
-            else:
-                if args.json:
-                    print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
-                else:
-                    print(f"input_n = {report['input_n']}")
-                    print(f"factors = {_format_factorization(report['factors'])}")
-                    print(f"target_n = {report['target_n']}")
-                    print(f"target_generator = {report['target_generator']}")
-                    print(f"steps = {report['steps']}")
-                    for row in report["path"]:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
         elif args.command == "int-from-bytes":
             report = _read_int_from_bytes_file(
                 args.file,
@@ -2071,21 +1366,6 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"byte_count = {report['byte_count']}")
                 print(f"hex = {report['hex']}")
                 print(f"int = {report['int']}")
-
-        elif args.command == "build-from-factors":
-            factors = _parse_factor_spec_file(args.file)
-            report = _build_from_factors_report(factors)
-
-            if args.json:
-                print(json.dumps(_jsonable_value(report), indent=2, ensure_ascii=False))
-            else:
-                print(f"factors = {_format_factorization(report['factors'])}")
-                print(f"target_n = {report['target_n']}")
-                print(f"target_generator = {report['target_generator']}")
-                print(f"steps = {report['steps']}")
-                for row in report["path"]:
-                    print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
 
         elif args.command == "branch-neighbors":
             if args.n < 2:
@@ -2105,73 +1385,6 @@ def main(argv: list[str] | None = None) -> int:
                 print("---")
                 for row in rows:
                     print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
-        elif args.command in {"plan-best", "branch-plan-best"}:
-            if args.start < 2 or args.target < 2:
-                raise ValueError("plan-best expects integers >= 2")
-            if args.max_depth < 0:
-                raise ValueError("--max-depth must be >= 0")
-            if args.max_visited < 1:
-                raise ValueError("--max-visited must be >= 1")
-
-            path = _plan_path_best_first(
-                args.start,
-                args.target,
-                args.max_depth,
-                max_visited=args.max_visited,
-            )
-
-            if args.json:
-                print(json.dumps({
-                    "start": args.start,
-                    "target": args.target,
-                    "max_depth": args.max_depth,
-                    "max_visited": args.max_visited,
-                    "found": path is not None,
-                    "steps": None if path is None else len(path),
-                    "path": [] if path is None else _jsonable_value(path),
-                }, indent=2, ensure_ascii=False))
-            else:
-                print(f"A = {args.start}")
-                print(f"B = {args.target}")
-                print(f"max_depth = {args.max_depth}")
-                print(f"max_visited = {args.max_visited}")
-                print("---")
-                if path is None:
-                    print("NO PATH FOUND")
-                else:
-                    print(f"steps = {len(path)}")
-                    for row in path:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
-
-        elif args.command in {"plan", "branch-plan"}:
-            if args.start < 2 or args.target < 2:
-                raise ValueError("plan expects integers >= 2")
-            if args.max_depth < 0:
-                raise ValueError("--max-depth must be >= 0")
-
-            path = _plan_path(args.start, args.target, args.max_depth)
-
-            if args.json:
-                print(json.dumps({
-                    "start": args.start,
-                    "target": args.target,
-                    "max_depth": args.max_depth,
-                    "found": path is not None,
-                    "steps": None if path is None else len(path),
-                    "path": [] if path is None else _jsonable_value(path),
-                }, indent=2, ensure_ascii=False))
-            else:
-                print(f"A = {args.start}")
-                print(f"B = {args.target}")
-                print(f"max_depth = {args.max_depth}")
-                print("---")
-                if path is None:
-                    print("NO PATH FOUND")
-                else:
-                    print(f"steps = {len(path)}")
-                    for row in path:
-                        print(f"{row['source_n']} --{row['label']}--> {row['target_n']}")
 
         elif args.command == "shape-of":
             from pathlib import Path
@@ -2710,6 +1923,10 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.rewrite_command == "pair":
                 return _rewrite_metric.cmd_pair(args)
+            elif args.rewrite_command == "explain":
+                return _rewrite_metric.cmd_explain(args)
+            elif args.rewrite_command == "friction":
+                return _rewrite_metric.cmd_friction(args)
             elif args.rewrite_command == "scan":
                 return _rewrite_metric.cmd_scan(args)
             elif args.rewrite_command == "matrix":

@@ -1,4 +1,10 @@
 # PET-aritmetica
+
+> Note: this document contains historical and exploratory PET-METICA material.
+> The current operational core is defined by `pet_metica_minimal_definitions.md`,
+> `pet_metica_operational_semantics.md`, the CLI reference, and bounded reports.
+> Compositional/operator material is non-core unless explicitly promoted later.
+
 ## Storia completa dell'idea, della formalizzazione e dei primi risultati empirici
 
 ## 0. Scopo del documento
@@ -170,7 +176,7 @@ La differenza PET canonica tra `m` e `n` è il **cammino minimo canonico**:
 Per testare l'idea è stato costruito un tool dedicato nel repo:
 
 ```text
-tools/pet_rewrite_metric.py
+pet rewrite
 ```
 
 Il tool è nato con tre comandi principali:
@@ -179,7 +185,7 @@ Il tool è nato con tre comandi principali:
 Per analizzare una coppia:
 
 ```bash
-python tools/pet_rewrite_metric.py pair 12 9
+pet rewrite pair 12 9
 ```
 
 Restituisce:
@@ -192,7 +198,7 @@ Restituisce:
 Per scansione globale su `1..N` con un overscan più ampio:
 
 ```bash
-python tools/pet_rewrite_metric.py scan --n-max 20 --overscan 60
+pet rewrite scan --n-max 20 --overscan 60
 ```
 
 Restituisce:
@@ -249,7 +255,7 @@ Sono emersi anche due aggiustamenti pratici:
 Il primo caso davvero parlante è stato:
 
 ```bash
-python tools/pet_rewrite_metric.py pair 12 9 --overscan 120
+pet rewrite pair 12 9 --overscan 120
 ```
 
 Output osservato:
@@ -808,15 +814,15 @@ E quello che conta, in questa geometria, è:
 Il file di lavoro costruito per questi esperimenti è:
 
 ```text
-tools/pet_rewrite_metric.py
+pet rewrite
 ```
 
 Comandi usati ricorrentemente:
 
 ```bash
-python tools/pet_rewrite_metric.py pair A B
-python tools/pet_rewrite_metric.py scan --n-max N --overscan M
-python tools/pet_rewrite_metric.py matrix --n-max N --overscan M --json
+pet rewrite pair A B
+pet rewrite scan --n-max N --overscan M
+pet rewrite matrix --n-max N --overscan M --json
 ```
 
 Le analisi più utili emerse finora sono state:
