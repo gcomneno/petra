@@ -414,6 +414,7 @@ su distanze, cammini minimi, scan bounded e matrici di rewrite.
 Coppia:
 
     pet rewrite pair 12 9 --overscan 120
+    pet rewrite pair 12 9 --overscan 120 --explain
     pet rewrite pair 12 9 --overscan 120 --json
 
 Scan bounded:
@@ -428,6 +429,7 @@ Matrice distanze:
 Uso tipico:
 
 - calcolare un cammino minimo di rewrite tra due interi
+- spiegare il significato locale delle mosse con `--explain`
 - osservare hub, asimmetrie e gap tra distanza PET-METICA e distanza numerica
 - produrre dati bounded per analisi research-facing
 
