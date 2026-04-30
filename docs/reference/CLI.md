@@ -434,6 +434,8 @@ Coppia:
     pet rewrite pair 12 9 --overscan 120 --json
     pet rewrite explain 12 9 --overscan 120
     pet rewrite explain 12 9 --overscan 120 --json
+    pet rewrite explain 2 10 --overscan 120 --target-aware
+    pet rewrite explain 2 10 --overscan 120 --target-aware --json
     pet rewrite friction --n-max 10 --overscan 40 --limit 3
     pet rewrite friction --n-max 10 --overscan 40 --limit 3 --json
 
@@ -466,6 +468,39 @@ del cammino in quattro classi operative:
 Questa sintesi descrive il delta strutturale del cammino trovato. Non è una
 nuova prova matematica e non sostituisce la fattorizzazione: rende più leggibile
 come cambia l'anatomia PET lungo un rewrite bounded.
+
+`pet rewrite explain A B --target-aware` attiva una modalità esplicita
+target-aware. Questa modalità usa la struttura del target quando disponibile per
+produrre una spiegazione strutturale ottimizzata. Il comportamento predefinito
+resta il rewrite canonico locale.
+
+La modalità target-aware:
+
+- espone `mode = target-aware`
+- mantiene `canonical_cost` separato da `target_aware_cost`
+- espone `optimization_gap` quando il costo canonico è disponibile
+- dichiara esplicitamente `target_used = True`
+- dichiara esplicitamente `factorization_used = True`
+- ottimizza i cambiamenti di supporto, ma mantiene unitari gli step sugli
+  esponenti
+
+Esempio:
+
+    pet rewrite explain 2 10 --overscan 120 --target-aware
+
+Output essenziale:
+
+    mode = target-aware
+    canonical_cost = 3
+    target_aware_cost = 1
+    optimization_gap = 2
+    target_used = True
+    factorization_used = True
+    NEW_TARGET(p=5): 2 -> 10
+
+Questa modalità non sostituisce la distanza canonica PET-METICA: fornisce una
+spiegazione strutturale diretta, utile quando il cammino canonico è più lungo o
+non disponibile nel grafo bounded.
 
 Nota: `pet rewrite` è operativo, ma resta parte del layer PET-METICA
 sperimentale. I risultati di scan vanno letti come osservazioni bounded, non
