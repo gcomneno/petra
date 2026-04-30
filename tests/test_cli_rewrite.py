@@ -158,6 +158,116 @@ def test_cli_rewrite_explain_uses_complete_branch_inc_edges():
     }
 
 
+def test_cli_rewrite_explain_target_aware_optimizes_missing_support_prime():
+    data = _run_json(
+        "rewrite",
+        "explain",
+        "2",
+        "10",
+        "--overscan",
+        "120",
+        "--target-aware",
+    )
+
+    assert data["mode"] == "target-aware"
+    assert data["canonical_reachable"] is True
+    assert data["canonical_cost"] == 3
+    assert data["target_aware_reachable"] is True
+    assert data["target_aware_cost"] == 1
+    assert data["optimization_gap"] == 2
+    assert data["target_used"] is True
+    assert data["factorization_used"] is True
+    assert data["path"] == [
+        {"src": 2, "dst": 10, "label": "NEW_TARGET(p=5)"},
+    ]
+    assert data["structural_delta"] == {
+        "removed_primes": [],
+        "introduced_primes": ["5"],
+        "strengthened_branches": [],
+        "weakened_branches": [],
+    }
+
+
+def test_cli_rewrite_explain_target_aware_handles_canonical_unreachable():
+    data = _run_json(
+        "rewrite",
+        "explain",
+        "2",
+        "14",
+        "--overscan",
+        "200",
+        "--target-aware",
+    )
+
+    assert data["mode"] == "target-aware"
+    assert data["canonical_reachable"] is False
+    assert data["canonical_cost"] is None
+    assert data["target_aware_reachable"] is True
+    assert data["target_aware_cost"] == 1
+    assert data["optimization_gap"] is None
+    assert data["path"] == [
+        {"src": 2, "dst": 14, "label": "NEW_TARGET(p=7)"},
+    ]
+    assert data["structural_delta"]["introduced_primes"] == ["7"]
+
+
+def test_cli_rewrite_explain_target_aware_keeps_unit_exponent_steps():
+    data = _run_json(
+        "rewrite",
+        "explain",
+        "2",
+        "16",
+        "--overscan",
+        "200",
+        "--target-aware",
+    )
+
+    assert data["mode"] == "target-aware"
+    assert data["canonical_cost"] == 3
+    assert data["target_aware_cost"] == 3
+    assert data["optimization_gap"] == 0
+    assert data["path"] == [
+        {"src": 2, "dst": 4, "label": "INC(p=2,e=1)"},
+        {"src": 4, "dst": 8, "label": "INC(p=2,e=2)"},
+        {"src": 8, "dst": 16, "label": "INC(p=2,e=3)"},
+    ]
+    assert data["structural_delta"] == {
+        "removed_primes": [],
+        "introduced_primes": [],
+        "strengthened_branches": ["p=2,e=1", "p=2,e=2", "p=2,e=3"],
+        "weakened_branches": [],
+    }
+
+
+def test_cli_rewrite_explain_target_aware_human_output():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "rewrite",
+            "explain",
+            "2",
+            "10",
+            "--overscan",
+            "120",
+            "--target-aware",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+    assert "mode = target-aware" in out
+    assert "canonical_cost = 3" in out
+    assert "target_aware_cost = 1" in out
+    assert "optimization_gap = 2" in out
+    assert "introduced_primes = ['5']" in out
+    assert "1. NEW_TARGET(p=5): 2 -> 10" in out
+    assert "meaning: introduce target prime 5 into the support" in out
+
+
 def test_cli_rewrite_explain_human_output():
     result = subprocess.run(
         [

@@ -8,6 +8,8 @@ from collections import Counter, deque
 from dataclasses import dataclass, asdict
 from typing import Any
 
+from pet.core import prime_factorization
+
 
 @dataclass(frozen=True)
 class Edge:
@@ -632,6 +634,86 @@ def summarize_structural_delta(path: list[dict[str, object]]) -> dict[str, list[
     return summary
 
 
+def _factor_map(n: int) -> dict[int, int]:
+    return dict(prime_factorization(n))
+
+
+def _target_aware_path(src: int, dst: int) -> list[dict[str, object]]:
+    # Target-aware mode optimizes support changes against the target,
+    # while keeping exponent changes as unit INC/DEC steps.
+    src_factors = _factor_map(src)
+    dst_factors = _factor_map(dst)
+
+    current = src
+    path: list[dict[str, object]] = []
+
+    for prime in sorted(set(src_factors) - set(dst_factors)):
+        next_n = current // prime
+        path.append({"src": current, "dst": next_n, "label": f"DROP(p={prime})"})
+        current = next_n
+
+    for prime in sorted(set(dst_factors) - set(src_factors)):
+        next_n = current * prime
+        path.append({"src": current, "dst": next_n, "label": f"NEW_TARGET(p={prime})"})
+        current = next_n
+
+    for prime in sorted(set(src_factors) & set(dst_factors)):
+        src_exp = src_factors[prime]
+        dst_exp = dst_factors[prime]
+
+        while src_exp < dst_exp:
+            next_n = current * prime
+            path.append(
+                {
+                    "src": current,
+                    "dst": next_n,
+                    "label": f"INC(p={prime},e={src_exp})",
+                }
+            )
+            current = next_n
+            src_exp += 1
+
+        while src_exp > dst_exp:
+            next_n = current // prime
+            path.append(
+                {
+                    "src": current,
+                    "dst": next_n,
+                    "label": f"DEC(p={prime},e={src_exp})",
+                }
+            )
+            current = next_n
+            src_exp -= 1
+
+    if current != dst:
+        raise RuntimeError(f"target-aware path ended at {current}, expected {dst}")
+
+    return path
+
+
+def explain_target_aware_label(label: str) -> str:
+    if label.startswith("NEW_TARGET("):
+        body = label.removeprefix("NEW_TARGET(").removesuffix(")")
+        prime = body.removeprefix("p=")
+        return f"introduce target prime {prime} into the support"
+
+    return explain_label(label)
+
+
+def summarize_target_aware_structural_delta(
+    path: list[dict[str, object]],
+) -> dict[str, list[str]]:
+    summary = summarize_structural_delta(path)
+
+    for step in path:
+        label = str(step["label"])
+        if label.startswith("NEW_TARGET("):
+            body = label.removeprefix("NEW_TARGET(").removesuffix(")")
+            summary["introduced_primes"].append(body.removeprefix("p="))
+
+    return summary
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -665,6 +747,67 @@ def cmd_pair(args: argparse.Namespace) -> int:
 def cmd_explain(args: argparse.Namespace) -> int:
     graph = build_graph(overscan=args.overscan)
     result = pet_rewrite_difference(graph, src=args.src, dst=args.dst)
+
+    if getattr(args, "target_aware", False):
+        path = _target_aware_path(args.src, args.dst)
+        structural_delta = summarize_target_aware_structural_delta(path)
+        target_cost = len(path)
+        canonical_cost = result["cost"]
+        optimization_gap = (
+            canonical_cost - target_cost if canonical_cost is not None else None
+        )
+
+        if args.json:
+            payload = {
+                "src": args.src,
+                "dst": args.dst,
+                "mode": "target-aware",
+                "canonical_reachable": result["reachable"],
+                "canonical_cost": canonical_cost,
+                "target_aware_reachable": True,
+                "target_aware_cost": target_cost,
+                "optimization_gap": optimization_gap,
+                "target_used": True,
+                "factorization_used": True,
+                "path": path,
+                "structural_delta": structural_delta,
+                "explanations": [
+                    {
+                        "src": step["src"],
+                        "dst": step["dst"],
+                        "label": step["label"],
+                        "meaning": explain_target_aware_label(str(step["label"])),
+                    }
+                    for step in path
+                ],
+            }
+            print(_json_dump(payload))
+            return 0
+
+        print(f"source = {args.src}")
+        print(f"target = {args.dst}")
+        print("mode = target-aware")
+        print(f"canonical_reachable = {result['reachable']}")
+        print(f"canonical_cost = {canonical_cost}")
+        print("target_aware_reachable = True")
+        print(f"target_aware_cost = {target_cost}")
+        print(f"optimization_gap = {optimization_gap}")
+        print("target_used = True")
+        print("factorization_used = True")
+
+        print()
+        print("structural_delta:")
+        print(f"  removed_primes = {structural_delta['removed_primes']}")
+        print(f"  introduced_primes = {structural_delta['introduced_primes']}")
+        print(f"  strengthened_branches = {structural_delta['strengthened_branches']}")
+        print(f"  weakened_branches = {structural_delta['weakened_branches']}")
+
+        print()
+        print("path:")
+        for index, step in enumerate(path, start=1):
+            print(f"  {index}. {step['label']}: {step['src']} -> {step['dst']}")
+            print(f"     meaning: {explain_target_aware_label(str(step['label']))}")
+        return 0
 
     if args.json:
         payload = dict(result)
