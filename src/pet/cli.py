@@ -1049,6 +1049,11 @@ def main(argv: list[str] | None = None) -> int:
     p_rewrite_explain.add_argument("src", type=int, metavar="SRC")
     p_rewrite_explain.add_argument("dst", type=int, metavar="DST")
     p_rewrite_explain.add_argument("--overscan", type=int, default=90)
+    p_rewrite_explain.add_argument(
+        "--target-aware",
+        action="store_true",
+        help="compute an explicit target-aware structural explanation",
+    )
     p_rewrite_explain.add_argument("--json", action="store_true")
 
     p_rewrite_friction = rewrite_subparsers.add_parser(
