@@ -217,6 +217,35 @@ def test_cli_rewrite_explain_target_aware_strengthens_new_target_prime():
     }
 
 
+def test_cli_rewrite_explain_target_aware_weakens_dropped_source_prime():
+    data = _run_json(
+        "rewrite",
+        "explain",
+        "18",
+        "2",
+        "--overscan",
+        "200",
+        "--target-aware",
+    )
+
+    assert data["mode"] == "target-aware"
+    assert data["canonical_reachable"] is True
+    assert data["canonical_cost"] == 2
+    assert data["target_aware_reachable"] is True
+    assert data["target_aware_cost"] == 2
+    assert data["optimization_gap"] == 0
+    assert data["path"] == [
+        {"src": 18, "dst": 6, "label": "DEC(p=3,e=2)"},
+        {"src": 6, "dst": 2, "label": "DROP(p=3)"},
+    ]
+    assert data["structural_delta"] == {
+        "removed_primes": ["p=3"],
+        "introduced_primes": [],
+        "strengthened_branches": [],
+        "weakened_branches": ["p=3,e=2"],
+    }
+
+
 def test_cli_rewrite_explain_target_aware_handles_canonical_unreachable():
     data = _run_json(
         "rewrite",
