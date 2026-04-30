@@ -5,6 +5,38 @@ This roadmap describes the next development directions after `v0.1.0`.
 It is intentionally conservative: PET distinguishes stable implementation work,
 bounded empirical work, and exploratory research.
 
+## PET-METICA v0.2.0 focus
+
+PET-METICA v0.2.0 should complete the toolkit as a bounded,
+research-facing layer for analyzing structural change.
+
+The main conceptual distinction for this milestone is between
+quantitative delta and structural delta.
+
+- Quantitative delta measures how much a numeric value changes.
+- Structural delta measures how the recursive PET anatomy changes across
+  prime-exponent branches.
+
+This distinction keeps PET-METICA focused on what it can safely observe:
+not only how much a value changes, but where and how its structure changes.
+
+Two values may be numerically close while being structurally distant,
+because nearby integers can have very different prime-exponent anatomies.
+Conversely, a larger numeric change may still be structurally simple when
+it corresponds to a small number of PET-core branch operations.
+
+PET-METICA does not directly model business domains. It models recursive
+structures of measures. When those structures are projected onto a domain
+model, PET-METICA can describe systems where observed values are not only
+numeric quantities, but recursively analyzable structural states.
+
+This supports future bounded experiments such as event-system or IoT-style
+analysis, where stable event dimensions may be encoded as prime axes and
+observed counts or severities may be represented as exponent vectors.
+
+This is a non-core projection layer: it must not claim that PET-METICA
+solves factorization, primality, or domain modeling by itself.
+
 ## Current release
 
 ### `v0.1.0`
