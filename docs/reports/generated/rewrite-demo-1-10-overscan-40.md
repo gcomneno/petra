@@ -53,6 +53,12 @@ Output:
     reachable = True
     cost = 3
     
+    structural_delta:
+      removed_primes = ['p=2']
+      introduced_primes = []
+      strengthened_branches = ['p=3,e=1']
+      weakened_branches = ['p=2,e=2']
+    
     path:
       1. DEC(p=2,e=2): 12 -> 6
          meaning: decrease the exponent structure at p=2,e=2
@@ -63,7 +69,9 @@ Output:
 
 This demonstrates PET-METICA as a rewrite debugger: the transition `12 -> 9`
 is explained as a minimal path of local structural moves, not as ordinary
-numeric subtraction.
+numeric subtraction. The `structural_delta` block summarizes the same bounded
+path in terms of removed primes, introduced primes, strengthened branches, and
+weakened branches.
 
 ## 3. Rewrite friction
 
