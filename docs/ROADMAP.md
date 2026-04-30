@@ -55,7 +55,22 @@ Included:
 
 Theme: make PET-METICA more useful as an operational research-facing toolkit.
 
-Candidate work:
+Status: PET-METICA is now complete as a bounded operational/research-facing
+layer. The remaining items below are v0.2.x enhancements, not blockers for
+operational completeness.
+
+Completed operational layer:
+
+- rewrite distance
+- rewrite path explanation
+- `structural_delta` summary in `pet rewrite explain`
+- rewrite friction reports
+- bounded rewrite scans
+- bounded rewrite matrices
+- canonical bounded demo report
+- claim-safe ROADMAP, CLI, STATUS, and report documentation
+
+Enhancement candidates:
 
 1. Add dedicated PET-METICA hub reporting
 
@@ -81,19 +96,24 @@ Candidate work:
    - highlight pairs where `cost(a,b) != cost(b,a)`
    - support bounded asymmetry reports
 
-3. Improve `pet rewrite explain`
+3. Continue improving `pet rewrite explain`
 
-   Candidate additions:
+   Completed:
 
-   - support summary before/after
+   - `structural_delta` summary
    - removed primes
    - introduced primes
    - strengthened branches
    - weakened branches
+   - human and JSON output
+
+   Future optional additions:
+
+   - support summary before/after
 
    Goal:
 
-   - make rewrite explanations more useful as a structural debugger
+   - keep rewrite explanations useful as a structural debugger
    - keep the output readable and deterministic
 
 4. Improve PET-METICA reports
