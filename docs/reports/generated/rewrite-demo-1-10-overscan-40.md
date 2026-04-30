@@ -73,7 +73,41 @@ numeric subtraction. The `structural_delta` block summarizes the same bounded
 path in terms of removed primes, introduced primes, strengthened branches, and
 weakened branches.
 
-## 3. Rewrite friction
+## 3. Target-aware rewrite explanation
+
+Command:
+
+    pet rewrite explain 2 10 --overscan 120 --target-aware
+
+Output:
+
+    source = 2
+    target = 10
+    mode = target-aware
+    canonical_reachable = True
+    canonical_cost = 3
+    target_aware_reachable = True
+    target_aware_cost = 1
+    optimization_gap = 2
+    target_used = True
+    factorization_used = True
+    
+    structural_delta:
+      removed_primes = []
+      introduced_primes = ['5']
+      strengthened_branches = []
+      weakened_branches = []
+    
+    path:
+      1. NEW_TARGET(p=5): 2 -> 10
+         meaning: introduce target prime 5 into the support
+
+This demonstrates the explicit target-aware mode. The default rewrite remains
+canonical local rewrite; target-aware mode uses the target structure to produce
+an optimized structural explanation when available. It keeps `canonical_cost`
+separate from `target_aware_cost` and exposes the `optimization_gap`.
+
+## 4. Rewrite friction
 
 Command:
 
@@ -107,7 +141,7 @@ Output:
 This demonstrates local reversibility analysis. The key point is that a one-step
 forward move may require a longer return path.
 
-## 4. Bounded rewrite scan
+## 5. Bounded rewrite scan
 
 Command:
 
