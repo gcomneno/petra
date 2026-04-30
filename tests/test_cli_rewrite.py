@@ -142,6 +142,22 @@ def test_cli_rewrite_pair_explain_output():
     assert "meaning: increase the exponent structure at p=3,e=1" in out
 
 
+def test_cli_rewrite_explain_uses_complete_branch_inc_edges():
+    data = _run_json("rewrite", "explain", "30", "90", "--overscan", "200")
+
+    assert data["reachable"] is True
+    assert data["cost"] == 1
+    assert data["path"] == [
+        {"src": 30, "dst": 90, "label": "INC(p=3,e=1)"},
+    ]
+    assert data["structural_delta"] == {
+        "removed_primes": [],
+        "introduced_primes": [],
+        "strengthened_branches": ["p=3,e=1"],
+        "weakened_branches": [],
+    }
+
+
 def test_cli_rewrite_explain_human_output():
     result = subprocess.run(
         [
@@ -247,11 +263,11 @@ def test_cli_rewrite_friction_human_output():
     assert "n_max = 10" in out
     assert "overscan = 40" in out
     assert "by_label:" in out
-    assert "NEW(x3): count=1 min=3 max=3 avg=3.0" in out
+    assert "NEW(x3): count=1 min=1 max=1 avg=1.0" in out
     assert "by_prime:" in out
-    assert "p=3: count=3 min=1 max=3 avg=1.667" in out
+    assert "p=3: count=4 min=1 max=1 avg=1.0" in out
     assert "hardest_returns:" in out
-    assert "2 --NEW(x3)--> 6: return_cost=3" in out
+    assert "10 --DROP(p=5)--> 2: return_cost=3" in out
 
 
 def test_cli_rewrite_friction_json_contract():
@@ -277,22 +293,22 @@ def test_cli_rewrite_friction_json_contract():
     assert by_label["NEW(x3)"] == {
         "label": "NEW(x3)",
         "count": 1,
-        "min_back_cost": 3,
-        "max_back_cost": 3,
-        "avg_back_cost": 3.0,
+        "min_back_cost": 1,
+        "max_back_cost": 1,
+        "avg_back_cost": 1.0,
     }
 
     by_prime = {row["prime"]: row for row in costs["by_prime"]}
     assert by_prime[3] == {
         "prime": 3,
-        "count": 3,
+        "count": 4,
         "min_back_cost": 1,
-        "max_back_cost": 3,
-        "avg_back_cost": 1.667,
+        "max_back_cost": 1,
+        "avg_back_cost": 1.0,
     }
 
     hardest = costs["hardest_returns"][0]
-    assert hardest["src"] == 2
-    assert hardest["dst"] == 6
-    assert hardest["forward_label"] == "NEW(x3)"
+    assert hardest["src"] == 10
+    assert hardest["dst"] == 2
+    assert hardest["forward_label"] == "DROP(p=5)"
     assert hardest["back_cost"] == 3

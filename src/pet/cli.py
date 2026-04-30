@@ -184,31 +184,41 @@ def _pathwise_edges_for_number(n: int) -> list[dict]:
 
     drop_move = moves["drop"]
     if drop_move is not None:
-        edges.append(
-            {
-                "label": f"DROP(p={drop_move['representative_prime']})",
-                "target_n": drop_move["target_n"],
-                "target_generator": drop_move["target_generator"],
-            }
-        )
+        for prime in drop_move["primes"]:
+            target_n = n // prime
+            if target_n >= 2:
+                edges.append(
+                    {
+                        "label": f"DROP(p={prime})",
+                        "target_n": target_n,
+                        "target_generator": None,
+                    }
+                )
 
     for row in moves["inc"]:
-        edges.append(
-            {
-                "label": f"INC(p={row['representative_prime']},e={row['exponent']})",
-                "target_n": row["target_n"],
-                "target_generator": row["target_generator"],
-            }
-        )
+        exponent = row["exponent"]
+        for prime in row["primes"]:
+            target_n = n * prime
+            edges.append(
+                {
+                    "label": f"INC(p={prime},e={exponent})",
+                    "target_n": target_n,
+                    "target_generator": None,
+                }
+            )
 
     for row in moves["dec"]:
-        edges.append(
-            {
-                "label": f"DEC(p={row['representative_prime']},e={row['exponent']})",
-                "target_n": row["target_n"],
-                "target_generator": row["target_generator"],
-            }
-        )
+        exponent = row["exponent"]
+        for prime in row["primes"]:
+            target_n = n // prime
+            if target_n >= 2:
+                edges.append(
+                    {
+                        "label": f"DEC(p={prime},e={exponent})",
+                        "target_n": target_n,
+                        "target_generator": None,
+                    }
+                )
 
     return edges
 
