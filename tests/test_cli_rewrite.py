@@ -164,6 +164,11 @@ def test_cli_rewrite_explain_human_output():
     assert "source = 12" in out
     assert "target = 9" in out
     assert "cost = 3" in out
+    assert "structural_delta:" in out
+    assert "removed_primes = ['p=2']" in out
+    assert "introduced_primes = []" in out
+    assert "strengthened_branches = ['p=3,e=1']" in out
+    assert "weakened_branches = ['p=2,e=2']" in out
     assert "1. DEC(p=2,e=2): 12 -> 6" in out
     assert "meaning: decrease the exponent structure at p=2,e=2" in out
     assert "2. DROP(p=2): 6 -> 3" in out
@@ -182,12 +187,19 @@ def test_cli_rewrite_explain_json_contract():
         "cost",
         "path",
         "explanations",
+        "structural_delta",
     }
 
     assert data["src"] == 12
     assert data["dst"] == 9
     assert data["reachable"] is True
     assert data["cost"] == 3
+    assert data["structural_delta"] == {
+        "removed_primes": ["p=2"],
+        "introduced_primes": [],
+        "strengthened_branches": ["p=3,e=1"],
+        "weakened_branches": ["p=2,e=2"],
+    }
 
     assert data["explanations"] == [
         {

@@ -601,6 +601,37 @@ def explain_label(label: str) -> str:
     return "unknown rewrite move"
 
 
+def summarize_structural_delta(path: list[dict[str, object]]) -> dict[str, list[str]]:
+    """Summarize a rewrite path as PET-METICA structural delta classes."""
+
+    summary: dict[str, list[str]] = {
+        "removed_primes": [],
+        "introduced_primes": [],
+        "strengthened_branches": [],
+        "weakened_branches": [],
+    }
+
+    for step in path:
+        label = str(step["label"])
+        match = _MOVE_RE.match(label)
+        if not match:
+            continue
+
+        kind = match.group("kind")
+        body = match.group("body")
+
+        if kind == "NEW":
+            summary["introduced_primes"].append(body.removeprefix("x"))
+        elif kind == "DROP":
+            summary["removed_primes"].append(body)
+        elif kind == "INC":
+            summary["strengthened_branches"].append(body)
+        elif kind == "DEC":
+            summary["weakened_branches"].append(body)
+
+    return summary
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -646,6 +677,7 @@ def cmd_explain(args: argparse.Namespace) -> int:
             }
             for step in result["path"]
         ]
+        payload["structural_delta"] = summarize_structural_delta(result["path"])
         print(_json_dump(payload))
         return 0
 
@@ -658,6 +690,15 @@ def cmd_explain(args: argparse.Namespace) -> int:
     if not path:
         print("path = []")
         return 0
+
+    structural_delta = summarize_structural_delta(path)
+
+    print()
+    print("structural_delta:")
+    print(f"  removed_primes = {structural_delta['removed_primes']}")
+    print(f"  introduced_primes = {structural_delta['introduced_primes']}")
+    print(f"  strengthened_branches = {structural_delta['strengthened_branches']}")
+    print(f"  weakened_branches = {structural_delta['weakened_branches']}")
 
     print()
     print("path:")
