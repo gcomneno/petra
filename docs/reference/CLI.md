@@ -450,9 +450,22 @@ Uso tipico:
 
 - calcolare un cammino minimo di rewrite tra due interi
 - spiegare il significato locale delle mosse con `--explain`
+- leggere il delta strutturale di `rewrite explain`
 - osservare hub, asimmetrie e gap tra distanza PET-METICA e distanza numerica
 - misurare la frizione di ritorno delle mosse locali con `friction`
 - produrre dati bounded per analisi research-facing
+
+`pet rewrite explain` espone anche `structural_delta`, una sintesi bounded
+del cammino in quattro classi operative:
+
+- `removed_primes`: rami primi rimossi dal supporto
+- `introduced_primes`: nuovi rami primi introdotti nel supporto
+- `strengthened_branches`: rami primo-esponente incrementati
+- `weakened_branches`: rami primo-esponente decrementati
+
+Questa sintesi descrive il delta strutturale del cammino trovato. Non è una
+nuova prova matematica e non sostituisce la fattorizzazione: rende più leggibile
+come cambia l'anatomia PET lungo un rewrite bounded.
 
 Nota: `pet rewrite` è operativo, ma resta parte del layer PET-METICA
 sperimentale. I risultati di scan vanno letti come osservazioni bounded, non
