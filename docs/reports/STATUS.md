@@ -92,6 +92,7 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 
 - PET rewrite paths can be computed operationally in bounded settings
 - `pet rewrite explain` exposes a bounded `structural_delta` summary for rewrite paths
+- `pet rewrite explain --target-aware` exposes an explicit target-aware optimized structural explanation
 - PET distance does not collapse to ordinary numeric distance
 - PET-METICA distinguishes quantitative delta from structural delta at the operational-reporting level
 - the rewrite graph exhibits real hubs
@@ -115,6 +116,9 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 
 These are **empirical computational findings**, not proved theorems.
 
+The target-aware mode is explicit and non-default. It uses the target structure
+and reports that fact; it does not replace canonical PET-METICA rewrite distance.
+
 PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer. Current core notes, supporting notes, and non-core compositional experiments are separated explicitly in the research reading map.
 
 ### Evidence
@@ -122,6 +126,7 @@ PET-METICA is the most promising current research direction beyond PET-Base, but
 - `../research/notes/PET-METICA.md`
 - `pet rewrite`
 - `pet rewrite explain` human and JSON output
+- `pet rewrite explain --target-aware` human and JSON output
 - pair / scan / matrix experiments
 - family reports
 - one-step return cost reports
