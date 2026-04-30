@@ -91,7 +91,9 @@ and with paths, shortest paths, canonical paths, asymmetries, and rewrite fricti
 ### Claims currently treated as established at the experimental level
 
 - PET rewrite paths can be computed operationally in bounded settings
+- `pet rewrite explain` exposes a bounded `structural_delta` summary for rewrite paths
 - PET distance does not collapse to ordinary numeric distance
+- PET-METICA distinguishes quantitative delta from structural delta at the operational-reporting level
 - the rewrite graph exhibits real hubs
 - local reversibility depends strongly on the prime involved
 - rewrite asymmetry is real and measurable
@@ -119,6 +121,7 @@ PET-METICA is the most promising current research direction beyond PET-Base, but
 - `../research/README.md` — PET-METICA reading map
 - `../research/notes/PET-METICA.md`
 - `pet rewrite`
+- `pet rewrite explain` human and JSON output
 - pair / scan / matrix experiments
 - family reports
 - one-step return cost reports
