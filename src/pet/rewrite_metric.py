@@ -657,6 +657,20 @@ def _target_aware_path(src: int, dst: int) -> list[dict[str, object]]:
         path.append({"src": current, "dst": next_n, "label": f"NEW_TARGET(p={prime})"})
         current = next_n
 
+        current_exp = 1
+        dst_exp = dst_factors[prime]
+        while current_exp < dst_exp:
+            next_n = current * prime
+            path.append(
+                {
+                    "src": current,
+                    "dst": next_n,
+                    "label": f"INC(p={prime},e={current_exp})",
+                }
+            )
+            current = next_n
+            current_exp += 1
+
     for prime in sorted(set(src_factors) & set(dst_factors)):
         src_exp = src_factors[prime]
         dst_exp = dst_factors[prime]

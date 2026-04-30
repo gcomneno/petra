@@ -188,6 +188,35 @@ def test_cli_rewrite_explain_target_aware_optimizes_missing_support_prime():
     }
 
 
+def test_cli_rewrite_explain_target_aware_strengthens_new_target_prime():
+    data = _run_json(
+        "rewrite",
+        "explain",
+        "2",
+        "18",
+        "--overscan",
+        "200",
+        "--target-aware",
+    )
+
+    assert data["mode"] == "target-aware"
+    assert data["canonical_reachable"] is True
+    assert data["canonical_cost"] == 2
+    assert data["target_aware_reachable"] is True
+    assert data["target_aware_cost"] == 2
+    assert data["optimization_gap"] == 0
+    assert data["path"] == [
+        {"src": 2, "dst": 6, "label": "NEW_TARGET(p=3)"},
+        {"src": 6, "dst": 18, "label": "INC(p=3,e=1)"},
+    ]
+    assert data["structural_delta"] == {
+        "removed_primes": [],
+        "introduced_primes": ["3"],
+        "strengthened_branches": ["p=3,e=1"],
+        "weakened_branches": [],
+    }
+
+
 def test_cli_rewrite_explain_target_aware_handles_canonical_unreachable():
     data = _run_json(
         "rewrite",
