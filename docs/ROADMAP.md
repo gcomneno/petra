@@ -72,7 +72,41 @@ Completed operational layer:
 
 Enhancement candidates:
 
-1. Add dedicated PET-METICA hub reporting
+1. Add target-aware structural rewrite optimization
+
+   Possible flag:
+
+       pet rewrite explain A B --target-aware
+
+   Goal:
+
+   - keep the default rewrite mode as canonical local rewrite
+   - provide an explicit target-aware explanation mode when the target PET
+     structure is available
+   - compute an optimized structural delta using the target support and
+     exponent profile
+   - expose that the target structure was used
+   - keep target-aware cost separate from canonical PET-METICA distance
+   - allow the gap between canonical cost and target-aware cost to become an
+     observable
+
+   This mode would support cases where canonical local rewrite is longer or
+   unavailable in the bounded graph, while a direct target-aware structural
+   explanation is available.
+
+   Example motivation:
+
+       pet rewrite explain 2 10 --overscan 120
+
+   Canonical local rewrite currently explains `2 -> 10` as a longer path through
+   intermediate canonical introductions. A target-aware mode could explain the
+   same structural delta directly as introducing the missing target branch `5`.
+
+   This must remain an explicit non-default mode. It must not replace canonical
+   rewrite distance, and it must state when target structure / factorization was
+   used.
+
+2. Add dedicated PET-METICA hub reporting
 
    Possible command:
 
