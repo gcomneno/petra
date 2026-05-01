@@ -861,6 +861,88 @@ def _print_opaque_state_summary(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_report(
+    n: int,
+    *,
+    trial_limit: int | None,
+    window_start: int | None,
+    window_end: int | None,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-report expects integers >= 1")
+
+    low_peel = None
+    window_probe = None
+
+    if trial_limit is not None:
+        low_peel = _trial_division_partial(n, trial_limit=trial_limit)
+
+    if window_start is not None or window_end is not None:
+        if window_start is None or window_end is None:
+            raise ValueError("--window-start and --window-end must be used together")
+        window_probe = _opaque_window_probe(n, start=window_start, end=window_end)
+
+    if low_peel is None and window_probe is None:
+        raise ValueError("opaque-report needs --trial-limit and/or --window-start/--window-end")
+
+    found_low = low_peel is not None and low_peel["known_factorization"] != "1"
+    found_window = window_probe is not None and window_probe["known_factorization"] != "1"
+    fully_low = low_peel is not None and low_peel["fully_factored"]
+    fully_window = window_probe is not None and window_probe["fully_factored"]
+
+    if fully_low or fully_window:
+        verdict = "fully peeled under the selected bounded analysis"
+    elif found_low or found_window:
+        verdict = "partially peeled; an opaque residual remains"
+    else:
+        verdict = "no factors found under the selected bounded analysis"
+
+    return {
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "low_peel": low_peel,
+        "window_probe": window_probe,
+        "verdict": verdict,
+        "claim": "monkey-friendly bounded opaque report only; this does not solve general factorization",
+    }
+
+
+def _print_opaque_report(data: dict) -> None:
+    print("PET OPAQUE REPORT")
+    print()
+    print("N")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+
+    low = data["low_peel"]
+    if low is not None:
+        print()
+        print("1) Low peel")
+        print(f"  checked backbone primes up to = {low['trial_limit']}")
+        print(f"  known PET part = {low['known_factorization']}")
+        print(f"  opaque residual digits = {low['opaque_residual_digits']}")
+        print(f"  opaque residual status = {low['opaque_residual_status']}")
+        print(f"  fully factored = {'yes' if low['fully_factored'] else 'no'}")
+
+    window = data["window_probe"]
+    if window is not None:
+        print()
+        print("2) Window probe")
+        print(f"  window = [{window['window_start']}, {window['window_end']}]")
+        print(f"  tested prime candidates = {window['tested_prime_count']}")
+        print(f"  window factors found = {window['known_factorization']}")
+        print(f"  opaque residual digits = {window['opaque_residual_digits']}")
+        print(f"  opaque residual status = {window['opaque_residual_status']}")
+        print(f"  fully factored = {'yes' if window['fully_factored'] else 'no'}")
+
+    print()
+    print("Verdict")
+    print(f"  {data['verdict']}")
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1633,6 +1715,17 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_state_summarize.add_argument("state", metavar="STATE.json")
     p_opaque_state_summarize.add_argument("--json", action="store_true")
 
+    # opaque-report
+    p_opaque_report = subparsers.add_parser(
+        "opaque-report",
+        help="print a monkey-friendly bounded opaque analysis report",
+    )
+    p_opaque_report.add_argument("n", type=int, metavar="N")
+    p_opaque_report.add_argument("--trial-limit", type=int)
+    p_opaque_report.add_argument("--window-start", type=int)
+    p_opaque_report.add_argument("--window-end", type=int)
+    p_opaque_report.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2345,6 +2438,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_state_summary(data)
+
+        elif args.command == "opaque-report":
+            data = _opaque_report(
+                args.n,
+                trial_limit=args.trial_limit,
+                window_start=args.window_start,
+                window_end=args.window_end,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_report(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
