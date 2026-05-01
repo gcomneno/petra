@@ -42,3 +42,34 @@ def test_cli_opaque_synthetic_profile_generates_bounded_monster_profile():
     assert data["rows"][-1]["opaque_residual_status"] == "one"
     assert data["rows"][-1]["fully_factored"] is True
     assert "does not solve general factorization" in data["claim"]
+
+
+def test_cli_opaque_synthetic_profile_full_fry_uses_all_synthetic_primes():
+    data = _run_json(
+        "opaque-synthetic-profile",
+        "--target-digits",
+        "50",
+        "--start-prime",
+        "1000000",
+        "--full-fry",
+    )
+
+    assert data["full_fry"] is True
+    assert data["prime_count"] == 8
+    assert data["limits"] == [
+        100000,
+        1000000,
+        1000003,
+        1000033,
+        1000037,
+        1000039,
+        1000081,
+        1000099,
+        1000117,
+        1000121,
+    ]
+    assert [row["opaque_residual_status"] for row in data["rows"]][-2:] == [
+        "probable_prime",
+        "one",
+    ]
+    assert data["rows"][-1]["fully_factored"] is True

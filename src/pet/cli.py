@@ -665,6 +665,7 @@ def _opaque_synthetic_profile(
     target_digits: int,
     start_prime: int,
     base: int,
+    full_fry: bool = False,
 ) -> dict:
     if target_digits < 1:
         raise ValueError("--target-digits must be >= 1")
@@ -685,27 +686,32 @@ def _opaque_synthetic_profile(
         n *= prime
         candidate = prime + 1
 
-    checkpoint_indexes = sorted(
-        {
-            index
-            for index in [
-                0,
-                1,
-                9,
-                24,
-                49,
-                99,
-                len(primes) // 2,
-                len(primes) - 2,
-                len(primes) - 1,
-            ]
-            if 0 <= index < len(primes)
-        }
-    )
+    if full_fry:
+        limits = [100_000, start_prime]
+        limits.extend(primes)
+        limits = list(dict.fromkeys(limits))
+    else:
+        checkpoint_indexes = sorted(
+            {
+                index
+                for index in [
+                    0,
+                    1,
+                    9,
+                    24,
+                    49,
+                    99,
+                    len(primes) // 2,
+                    len(primes) - 2,
+                    len(primes) - 1,
+                ]
+                if 0 <= index < len(primes)
+            }
+        )
 
-    limits = [100_000, start_prime]
-    limits.extend(primes[index] for index in checkpoint_indexes)
-    limits = list(dict.fromkeys(limits))
+        limits = [100_000, start_prime]
+        limits.extend(primes[index] for index in checkpoint_indexes)
+        limits = list(dict.fromkeys(limits))
 
     profile = _opaque_profile(n, limits=limits)
 
@@ -713,6 +719,7 @@ def _opaque_synthetic_profile(
         "base": base,
         "target_digits": target_digits,
         "start_prime": start_prime,
+        "full_fry": full_fry,
         "prime_count": len(primes),
         "first_prime": primes[0] if primes else None,
         "last_prime": primes[-1] if primes else None,
@@ -1379,6 +1386,7 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_synthetic_profile.add_argument("--target-digits", type=int, required=True)
     p_opaque_synthetic_profile.add_argument("--start-prime", type=int, default=1_000_000)
     p_opaque_synthetic_profile.add_argument("--base", type=int, default=72)
+    p_opaque_synthetic_profile.add_argument("--full-fry", action="store_true")
     p_opaque_synthetic_profile.add_argument("--json", action="store_true")
 
     # signature
@@ -2038,6 +2046,7 @@ def main(argv: list[str] | None = None) -> int:
                 target_digits=args.target_digits,
                 start_prime=args.start_prime,
                 base=args.base,
+                full_fry=args.full_fry,
             )
 
             if args.json:
@@ -2046,6 +2055,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"base = {data['base']}")
                 print(f"target_digits = {data['target_digits']}")
                 print(f"start_prime = {data['start_prime']}")
+                print(f"full_fry = {'yes' if data['full_fry'] else 'no'}")
                 print(f"prime_count = {data['prime_count']}")
                 print(f"first_prime = {data['first_prime']}")
                 print(f"last_prime = {data['last_prime']}")
