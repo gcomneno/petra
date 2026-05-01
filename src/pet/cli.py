@@ -95,13 +95,20 @@ def _format_factorization(factors):
 
 
 _OPAQUE_RESIDUAL_BACKBONE_LOOKUP_LIMIT = 10_000_000
+_BACKBONE_PRIME_CACHE_KIND = "pet-backbone-prime-cache"
 
 
-@lru_cache(maxsize=32)
-def _backbone_prime_cache(limit: int) -> tuple[tuple[int, ...], frozenset[int]]:
-    """Return PET backbone prime generators up to ``limit`` and a lookup set."""
+def _backbone_cache_dir() -> pathlib.Path:
+    return pathlib.Path(".pet-cache")
+
+
+def _backbone_cache_path(limit: int) -> pathlib.Path:
+    return _backbone_cache_dir() / f"backbone-primes-up-to-{limit}.json"
+
+
+def _generate_backbone_prime_tuple(limit: int) -> tuple[int, ...]:
     if limit < 2:
-        return (), frozenset()
+        return ()
 
     sieve = bytearray(b"\x01") * (limit + 1)
     sieve[0:2] = b"\x00\x00"
@@ -115,7 +122,117 @@ def _backbone_prime_cache(limit: int) -> tuple[tuple[int, ...], frozenset[int]]:
             )
         candidate += 1
 
-    primes = tuple(candidate for candidate in range(2, limit + 1) if sieve[candidate])
+    return tuple(candidate for candidate in range(2, limit + 1) if sieve[candidate])
+
+
+def _read_backbone_prime_cache(limit: int) -> tuple[int, tuple[int, ...], pathlib.Path] | None:
+    cache_dir = _backbone_cache_dir()
+    if not cache_dir.exists():
+        return None
+
+    best: tuple[int, tuple[int, ...], pathlib.Path] | None = None
+
+    for path in cache_dir.glob("backbone-primes-up-to-*.json"):
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+
+        if data.get("kind") != _BACKBONE_PRIME_CACHE_KIND:
+            continue
+
+        cache_limit = int(data.get("limit", -1))
+        if cache_limit < limit:
+            continue
+
+        primes = tuple(int(prime) for prime in data.get("primes", []))
+        if not primes and limit >= 2:
+            continue
+
+        if best is None or cache_limit < best[0]:
+            best = (cache_limit, primes, path)
+
+    if best is None:
+        return None
+
+    cache_limit, primes, path = best
+    if cache_limit != limit:
+        primes = tuple(prime for prime in primes if prime <= limit)
+
+    return cache_limit, primes, path
+
+
+def _write_backbone_prime_cache(limit: int, primes: tuple[int, ...]) -> pathlib.Path:
+    cache_dir = _backbone_cache_dir()
+    cache_dir.mkdir(exist_ok=True)
+
+    path = _backbone_cache_path(limit)
+    data = {
+        "kind": _BACKBONE_PRIME_CACHE_KIND,
+        "limit": limit,
+        "prime_count": len(primes),
+        "first_prime": primes[0] if primes else None,
+        "last_prime": primes[-1] if primes else None,
+        "primes": list(primes),
+    }
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    return path
+
+
+def _build_backbone_prime_cache(limit: int) -> dict:
+    if limit < 2:
+        raise ValueError("--limit must be >= 2")
+
+    primes = _generate_backbone_prime_tuple(limit)
+    path = _write_backbone_prime_cache(limit, primes)
+    _backbone_prime_cache.cache_clear()
+
+    return {
+        "cache_path": str(path),
+        "limit": limit,
+        "prime_count": len(primes),
+        "first_prime": primes[0] if primes else None,
+        "last_prime": primes[-1] if primes else None,
+    }
+
+
+def _inspect_backbone_prime_cache(limit: int) -> dict:
+    if limit < 2:
+        raise ValueError("--limit must be >= 2")
+
+    cached = _read_backbone_prime_cache(limit)
+    if cached is None:
+        return {
+            "cache_exists": False,
+            "requested_limit": limit,
+            "cache_path": None,
+            "cache_limit": None,
+            "prime_count": 0,
+            "first_prime": None,
+            "last_prime": None,
+        }
+
+    cache_limit, primes, path = cached
+    return {
+        "cache_exists": True,
+        "requested_limit": limit,
+        "cache_path": str(path),
+        "cache_limit": cache_limit,
+        "prime_count": len(primes),
+        "first_prime": primes[0] if primes else None,
+        "last_prime": primes[-1] if primes else None,
+    }
+
+
+@lru_cache(maxsize=32)
+def _backbone_prime_cache(limit: int) -> tuple[tuple[int, ...], frozenset[int]]:
+    """Return PET backbone prime generators up to ``limit`` and a lookup set."""
+    cached = _read_backbone_prime_cache(limit)
+    if cached is not None:
+        _, primes, _ = cached
+    else:
+        primes = _generate_backbone_prime_tuple(limit)
+
     return primes, frozenset(primes)
 
 
@@ -916,6 +1033,31 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_generator.add_argument("n", type=int, metavar="N")
 
+    # backbone-cache
+    p_backbone_cache = subparsers.add_parser(
+        "backbone-cache",
+        help="build or inspect persistent PET backbone prime cache",
+    )
+    backbone_cache_subparsers = p_backbone_cache.add_subparsers(
+        dest="backbone_cache_command",
+        metavar="COMMAND",
+    )
+    backbone_cache_subparsers.required = True
+
+    p_backbone_cache_build = backbone_cache_subparsers.add_parser(
+        "build",
+        help="build persistent PET backbone prime cache up to a limit",
+    )
+    p_backbone_cache_build.add_argument("--limit", type=int, required=True)
+    p_backbone_cache_build.add_argument("--json", action="store_true")
+
+    p_backbone_cache_inspect = backbone_cache_subparsers.add_parser(
+        "inspect",
+        help="inspect persistent PET backbone prime cache for a requested limit",
+    )
+    p_backbone_cache_inspect.add_argument("--limit", type=int, required=True)
+    p_backbone_cache_inspect.add_argument("--json", action="store_true")
+
     # opaque-probe
     p_opaque_probe = subparsers.add_parser(
         "opaque-probe",
@@ -1452,6 +1594,32 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "generator":
             print(shape_generator(args.n))
+
+        elif args.command == "backbone-cache":
+            if args.backbone_cache_command == "build":
+                data = _build_backbone_prime_cache(args.limit)
+            elif args.backbone_cache_command == "inspect":
+                data = _inspect_backbone_prime_cache(args.limit)
+            else:
+                raise ValueError("unsupported backbone-cache command")
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                if args.backbone_cache_command == "build":
+                    print(f"cache_path = {data['cache_path']}")
+                    print(f"limit = {data['limit']}")
+                    print(f"prime_count = {data['prime_count']}")
+                    print(f"first_prime = {data['first_prime']}")
+                    print(f"last_prime = {data['last_prime']}")
+                else:
+                    print(f"cache_exists = {'yes' if data['cache_exists'] else 'no'}")
+                    print(f"requested_limit = {data['requested_limit']}")
+                    print(f"cache_path = {data['cache_path']}")
+                    print(f"cache_limit = {data['cache_limit']}")
+                    print(f"prime_count = {data['prime_count']}")
+                    print(f"first_prime = {data['first_prime']}")
+                    print(f"last_prime = {data['last_prime']}")
 
         elif args.command == "opaque-probe":
             data = _trial_division_partial(args.n, trial_limit=args.trial_limit)
