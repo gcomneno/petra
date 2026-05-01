@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
 import ast
 import json
 import heapq
@@ -93,10 +94,14 @@ def _format_factorization(factors):
     return " * ".join(parts)
 
 
-def _iter_backbone_prime_candidates(limit: int):
-    """Yield prime candidates that extend the PET backbone up to ``limit``."""
+_OPAQUE_RESIDUAL_BACKBONE_LOOKUP_LIMIT = 10_000_000
+
+
+@lru_cache(maxsize=32)
+def _backbone_prime_cache(limit: int) -> tuple[tuple[int, ...], frozenset[int]]:
+    """Return PET backbone prime generators up to ``limit`` and a lookup set."""
     if limit < 2:
-        return
+        return (), frozenset()
 
     sieve = bytearray(b"\x01") * (limit + 1)
     sieve[0:2] = b"\x00\x00"
@@ -110,9 +115,31 @@ def _iter_backbone_prime_candidates(limit: int):
             )
         candidate += 1
 
-    for candidate in range(2, limit + 1):
-        if sieve[candidate]:
-            yield candidate
+    primes = tuple(candidate for candidate in range(2, limit + 1) if sieve[candidate])
+    return primes, frozenset(primes)
+
+
+def _iter_backbone_prime_candidates(limit: int):
+    """Yield prime candidates that extend the PET backbone up to ``limit``."""
+    primes, _ = _backbone_prime_cache(limit)
+    yield from primes
+
+
+def _opaque_residual_status(residual: int, *, backbone_limit: int) -> str:
+    if residual == 1:
+        return "one"
+
+    if residual <= _OPAQUE_RESIDUAL_BACKBONE_LOOKUP_LIMIT:
+        lookup_limit = max(backbone_limit, residual)
+    else:
+        lookup_limit = backbone_limit
+
+    if residual <= lookup_limit:
+        _, prime_lookup = _backbone_prime_cache(lookup_limit)
+        if residual in prime_lookup:
+            return "probable_prime"
+
+    return "composite_or_unknown"
 
 
 def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
@@ -137,12 +164,10 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
         if exponent:
             known_factors.append({"prime": candidate, "exponent": exponent})
 
-    if residual == 1:
-        residual_status = "one"
-    elif is_prime(residual):
-        residual_status = "probable_prime"
-    else:
-        residual_status = "composite_or_unknown"
+    residual_status = _opaque_residual_status(
+        residual,
+        backbone_limit=trial_limit,
+    )
 
     return {
         "n": original,
@@ -194,12 +219,10 @@ def _opaque_profile(n: int, *, limits: list[int]) -> dict:
     rows_by_limit: dict[int, dict] = {}
 
     def make_row(limit: int) -> dict:
-        if residual == 1:
-            residual_status = "one"
-        elif is_prime(residual):
-            residual_status = "probable_prime"
-        else:
-            residual_status = "composite_or_unknown"
+        residual_status = _opaque_residual_status(
+            residual,
+            backbone_limit=max_limit,
+        )
 
         return {
             "trial_limit": limit,
