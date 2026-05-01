@@ -243,6 +243,20 @@ def _iter_backbone_prime_candidates(limit: int):
     yield from primes
 
 
+def _iter_backbone_prime_window_candidates(start: int, end: int):
+    """Yield PET backbone prime generators in the inclusive window [start, end]."""
+    if end < start or end < 2:
+        return
+
+    start = max(2, start)
+    primes, _ = _backbone_prime_cache(end)
+
+    for candidate in primes:
+        if candidate < start:
+            continue
+        yield candidate
+
+
 def _opaque_residual_status(residual: int, *, backbone_limit: int) -> str:
     if residual == 1:
         return "one"
@@ -598,10 +612,7 @@ def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
     known_factors: list[dict[str, int]] = []
     tested_prime_count = 0
 
-    for candidate in _iter_backbone_prime_candidates(end):
-        if candidate < start:
-            continue
-
+    for candidate in _iter_backbone_prime_window_candidates(start, end):
         tested_prime_count += 1
 
         if residual == 1:
