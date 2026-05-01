@@ -338,9 +338,10 @@ def _opaque_resume_peel(
     if trial_limit < checked_until:
         raise ValueError("--trial-limit must be >= checked_until")
 
-    for candidate in _iter_backbone_prime_candidates(trial_limit):
-        if candidate <= checked_until:
-            continue
+    for candidate in _iter_backbone_prime_window_candidates(
+        checked_until + 1,
+        trial_limit,
+    ):
         if residual == 1:
             break
 
