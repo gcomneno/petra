@@ -471,6 +471,33 @@ def _opaque_benchmark_probe(n: int, *, trial_limit: int) -> dict:
     }
 
 
+def _opaque_benchmark_resume(*, trial_limit: int, state_path: pathlib.Path) -> dict:
+    state = _read_opaque_resume_state(state_path)
+    previous_checked_until = int(state["checked_until"])
+
+    started = time.perf_counter()
+    data = _opaque_resume_continue(
+        trial_limit=trial_limit,
+        state_path=state_path,
+    )
+    elapsed = time.perf_counter() - started
+
+    return {
+        "mode": "resume",
+        "elapsed_seconds": elapsed,
+        "previous_checked_until": previous_checked_until,
+        "checked_until": data["checked_until"],
+        "digits": data["digits"],
+        "bit_length": data["bit_length"],
+        "known_factorization": data["known_factorization"],
+        "opaque_residual_digits": data["opaque_residual_digits"],
+        "opaque_residual_bit_length": data["opaque_residual_bit_length"],
+        "opaque_residual_status": data["opaque_residual_status"],
+        "fully_factored": data["fully_factored"],
+        "claim": "opaque benchmark only; this does not solve general factorization",
+    }
+
+
 def _print_opaque_benchmark(data: dict) -> None:
     print(f"mode = {data['mode']}")
     print(f"elapsed_seconds = {data['elapsed_seconds']:.6f}")
@@ -478,6 +505,10 @@ def _print_opaque_benchmark(data: dict) -> None:
     print(f"bit_length = {data['bit_length']}")
     if "trial_limit" in data:
         print(f"trial_limit = {data['trial_limit']}")
+    if "previous_checked_until" in data:
+        print(f"previous_checked_until = {data['previous_checked_until']}")
+    if "checked_until" in data:
+        print(f"checked_until = {data['checked_until']}")
     print(f"known_factorization = {data['known_factorization']}")
     print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
     print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
@@ -1745,6 +1776,14 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_benchmark_probe.add_argument("--trial-limit", type=int, required=True)
     p_opaque_benchmark_probe.add_argument("--json", action="store_true")
 
+    p_opaque_benchmark_resume = opaque_benchmark_subparsers.add_parser(
+        "resume",
+        help="benchmark opaque-resume continue",
+    )
+    p_opaque_benchmark_resume.add_argument("--trial-limit", type=int, required=True)
+    p_opaque_benchmark_resume.add_argument("--state", required=True)
+    p_opaque_benchmark_resume.add_argument("--json", action="store_true")
+
     # opaque-synthetic-profile
     p_opaque_synthetic_profile = subparsers.add_parser(
         "opaque-synthetic-profile",
@@ -2457,6 +2496,11 @@ def main(argv: list[str] | None = None) -> int:
                 data = _opaque_benchmark_probe(
                     args.n,
                     trial_limit=args.trial_limit,
+                )
+            elif args.opaque_benchmark_command == "resume":
+                data = _opaque_benchmark_resume(
+                    trial_limit=args.trial_limit,
+                    state_path=pathlib.Path(args.state),
                 )
             else:
                 raise ValueError("unsupported opaque-benchmark command")
