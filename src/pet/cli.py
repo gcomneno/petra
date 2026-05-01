@@ -144,6 +144,52 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
     }
 
 
+def _parse_trial_limits(raw: str) -> list[int]:
+    limits: list[int] = []
+
+    for chunk in raw.split(","):
+        value = chunk.strip()
+        if not value:
+            continue
+
+        limit = int(value)
+        if limit < 2:
+            raise ValueError("--limits values must be >= 2")
+
+        limits.append(limit)
+
+    if not limits:
+        raise ValueError("--limits must contain at least one integer >= 2")
+
+    return limits
+
+
+def _opaque_profile(n: int, *, limits: list[int]) -> dict:
+    rows = []
+
+    for limit in limits:
+        data = _trial_division_partial(n, trial_limit=limit)
+        rows.append(
+            {
+                "trial_limit": data["trial_limit"],
+                "known_count": len(data["known_factors"]),
+                "opaque_residual_digits": data["opaque_residual_digits"],
+                "opaque_residual_bit_length": data["opaque_residual_bit_length"],
+                "opaque_residual_status": data["opaque_residual_status"],
+                "fully_factored": data["fully_factored"],
+            }
+        )
+
+    return {
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "limits": limits,
+        "rows": rows,
+        "claim": "bounded opaque residual profiling only; this does not solve general factorization",
+    }
+
+
 def _next_new_prime(support: set[int]) -> int:
     candidate = 2
     while True:
@@ -682,6 +728,15 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_probe.add_argument("--trial-limit", type=int, default=1000)
     p_opaque_probe.add_argument("--json", action="store_true")
 
+    # opaque-profile
+    p_opaque_profile = subparsers.add_parser(
+        "opaque-profile",
+        help="profile opaque residuals across multiple trial limits",
+    )
+    p_opaque_profile.add_argument("n", type=int, metavar="N")
+    p_opaque_profile.add_argument("--limits", required=True)
+    p_opaque_profile.add_argument("--json", action="store_true")
+
     # signature
     p_signature = subparsers.add_parser(
         "signature",
@@ -1194,6 +1249,28 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
                 print(f"opaque_residual_status = {data['opaque_residual_status']}")
                 print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+                print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-profile":
+            limits = _parse_trial_limits(args.limits)
+            data = _opaque_profile(args.n, limits=limits)
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                print(f"N = {data['n']}")
+                print(f"digits = {data['digits']}")
+                print(f"bit_length = {data['bit_length']}")
+                print("limit | known_count | residual_digits | residual_bits | status | fully")
+                for row in data["rows"]:
+                    print(
+                        f"{row['trial_limit']} | "
+                        f"{row['known_count']} | "
+                        f"{row['opaque_residual_digits']} | "
+                        f"{row['opaque_residual_bit_length']} | "
+                        f"{row['opaque_residual_status']} | "
+                        f"{str(row['fully_factored']).lower()}"
+                    )
                 print(f"claim = {data['claim']}")
 
         elif args.command == "signature":
