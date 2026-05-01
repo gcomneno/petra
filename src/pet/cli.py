@@ -529,6 +529,60 @@ def _opaque_window_plan(n: int, *, policy: str) -> dict:
     }
 
 
+def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
+    if n < 1:
+        raise ValueError("opaque-window-probe expects integers >= 1")
+    if start < 2:
+        raise ValueError("--start must be >= 2")
+    if end < start:
+        raise ValueError("--end must be >= --start")
+
+    residual = n
+    known_factors: list[dict[str, int]] = []
+    tested_prime_count = 0
+
+    for candidate in _iter_backbone_prime_candidates(end):
+        if candidate < start:
+            continue
+
+        tested_prime_count += 1
+
+        if residual == 1:
+            break
+
+        exponent = 0
+        while residual % candidate == 0:
+            residual //= candidate
+            exponent += 1
+
+        if exponent:
+            known_factors.append({"prime": candidate, "exponent": exponent})
+
+    residual_status = _opaque_residual_status(
+        residual,
+        backbone_limit=end,
+    )
+
+    return {
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "window_start": start,
+        "window_end": end,
+        "tested_prime_count": tested_prime_count,
+        "known_factors": known_factors,
+        "known_factorization": _format_factorization(
+            [(row["prime"], row["exponent"]) for row in known_factors]
+        ),
+        "opaque_residual": residual,
+        "opaque_residual_digits": len(str(residual)),
+        "opaque_residual_bit_length": residual.bit_length(),
+        "opaque_residual_status": residual_status,
+        "fully_factored": residual == 1,
+        "claim": "bounded backbone-window probing only; this does not solve general factorization",
+    }
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1227,6 +1281,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_window_plan.add_argument("--json", action="store_true")
 
+    # opaque-window-probe
+    p_opaque_window_probe = subparsers.add_parser(
+        "opaque-window-probe",
+        help="probe an opaque N using backbone prime candidates inside a bounded window",
+    )
+    p_opaque_window_probe.add_argument("n", type=int, metavar="N")
+    p_opaque_window_probe.add_argument("--start", type=int, required=True)
+    p_opaque_window_probe.add_argument("--end", type=int, required=True)
+    p_opaque_window_probe.add_argument("--json", action="store_true")
+
     # opaque-synthetic-profile
     p_opaque_synthetic_profile = subparsers.add_parser(
         "opaque-synthetic-profile",
@@ -1843,6 +1907,30 @@ def main(argv: list[str] | None = None) -> int:
                     f"[{data['secondary_decimal_window_low']}, "
                     f"{data['secondary_decimal_window_high']})"
                 )
+                print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-window-probe":
+            data = _opaque_window_probe(
+                args.n,
+                start=args.start,
+                end=args.end,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                print(f"N = {data['n']}")
+                print(f"digits = {data['digits']}")
+                print(f"bit_length = {data['bit_length']}")
+                print(f"window_start = {data['window_start']}")
+                print(f"window_end = {data['window_end']}")
+                print(f"tested_prime_count = {data['tested_prime_count']}")
+                print(f"known_factorization = {data['known_factorization']}")
+                print(f"opaque_residual = {data['opaque_residual']}")
+                print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+                print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+                print(f"opaque_residual_status = {data['opaque_residual_status']}")
+                print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
                 print(f"claim = {data['claim']}")
 
         elif args.command == "opaque-synthetic-profile":
