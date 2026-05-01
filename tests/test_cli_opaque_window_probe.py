@@ -49,3 +49,24 @@ def test_cli_opaque_window_probe_reports_empty_window_hit():
     assert data["opaque_residual"] == 147184848
     assert data["opaque_residual_status"] == "composite_or_unknown"
     assert data["fully_factored"] is False
+
+
+def test_cli_opaque_window_probe_can_probe_around_sqrt():
+    data = _run_json(
+        "opaque-window-probe",
+        "10403",
+        "--around-sqrt",
+        "--radius",
+        "0",
+    )
+
+    assert data["window_start"] == 101
+    assert data["window_end"] == 101
+    assert data["tested_prime_count"] == 1
+    assert data["known_factors"] == [
+        {"prime": 101, "exponent": 1},
+    ]
+    assert data["known_factorization"] == "101"
+    assert data["opaque_residual"] == 103
+    assert data["opaque_residual_status"] == "probable_prime"
+    assert data["fully_factored"] is False

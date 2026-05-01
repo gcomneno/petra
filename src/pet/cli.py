@@ -4,6 +4,7 @@ import argparse
 from functools import lru_cache
 import ast
 import json
+import math
 import heapq
 import pathlib
 import subprocess
@@ -607,6 +608,7 @@ def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
         raise ValueError("--start must be >= 2")
     if end < start:
         raise ValueError("--end must be >= --start")
+    # Window is already resolved by the CLI layer.
 
     residual = n
     known_factors: list[dict[str, int]] = []
@@ -1365,8 +1367,14 @@ def main(argv: list[str] | None = None) -> int:
         help="probe an opaque N using backbone prime candidates inside a bounded window",
     )
     p_opaque_window_probe.add_argument("n", type=int, metavar="N")
-    p_opaque_window_probe.add_argument("--start", type=int, required=True)
-    p_opaque_window_probe.add_argument("--end", type=int, required=True)
+    p_opaque_window_probe.add_argument("--start", type=int)
+    p_opaque_window_probe.add_argument("--end", type=int)
+    p_opaque_window_probe.add_argument(
+        "--around-sqrt",
+        action="store_true",
+        help="probe a bounded window centered around floor(sqrt(N))",
+    )
+    p_opaque_window_probe.add_argument("--radius", type=int, default=1000)
     p_opaque_window_probe.add_argument("--json", action="store_true")
     p_opaque_window_probe.add_argument("--summary", action="store_true")
 
@@ -2013,10 +2021,22 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"claim = {data['claim']}")
 
         elif args.command == "opaque-window-probe":
+            if args.around_sqrt:
+                if args.radius < 0:
+                    raise ValueError("--radius must be >= 0")
+                center = math.isqrt(args.n)
+                start = max(2, center - args.radius)
+                end = center + args.radius
+            else:
+                if args.start is None or args.end is None:
+                    raise ValueError("--start and --end are required unless --around-sqrt is used")
+                start = args.start
+                end = args.end
+
             data = _opaque_window_probe(
                 args.n,
-                start=args.start,
-                end=args.end,
+                start=start,
+                end=end,
             )
 
             if args.json:
