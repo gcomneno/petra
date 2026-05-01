@@ -119,6 +119,13 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
 
         candidate += 1
 
+    if residual == 1:
+        residual_status = "one"
+    elif is_prime(residual):
+        residual_status = "probable_prime"
+    else:
+        residual_status = "composite_or_unknown"
+
     return {
         "n": original,
         "digits": len(str(original)),
@@ -131,6 +138,7 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
         "opaque_residual": residual,
         "opaque_residual_digits": len(str(residual)),
         "opaque_residual_bit_length": residual.bit_length(),
+        "opaque_residual_status": residual_status,
         "fully_factored": residual == 1,
         "claim": "partial factor peeling only; this does not solve general factorization",
     }
@@ -1184,6 +1192,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"opaque_residual = {data['opaque_residual']}")
                 print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
                 print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+                print(f"opaque_residual_status = {data['opaque_residual_status']}")
                 print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
                 print(f"claim = {data['claim']}")
 
