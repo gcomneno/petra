@@ -93,6 +93,49 @@ def _format_factorization(factors):
     return " * ".join(parts)
 
 
+def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
+    if n < 1:
+        raise ValueError("opaque-probe expects integers >= 1")
+    if trial_limit < 2:
+        raise ValueError("--trial-limit must be >= 2")
+
+    original = n
+    residual = n
+    known_factors: list[dict[str, int]] = []
+
+    candidate = 2
+    while candidate <= trial_limit and residual > 1:
+        if not is_prime(candidate):
+            candidate += 1
+            continue
+
+        exponent = 0
+        while residual % candidate == 0:
+            residual //= candidate
+            exponent += 1
+
+        if exponent:
+            known_factors.append({"prime": candidate, "exponent": exponent})
+
+        candidate += 1
+
+    return {
+        "n": original,
+        "digits": len(str(original)),
+        "bit_length": original.bit_length(),
+        "trial_limit": trial_limit,
+        "known_factors": known_factors,
+        "known_factorization": _format_factorization(
+            [(row["prime"], row["exponent"]) for row in known_factors]
+        ),
+        "opaque_residual": residual,
+        "opaque_residual_digits": len(str(residual)),
+        "opaque_residual_bit_length": residual.bit_length(),
+        "fully_factored": residual == 1,
+        "claim": "partial factor peeling only; this does not solve general factorization",
+    }
+
+
 def _next_new_prime(support: set[int]) -> int:
     candidate = 2
     while True:
@@ -622,6 +665,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_generator.add_argument("n", type=int, metavar="N")
 
+    # opaque-probe
+    p_opaque_probe = subparsers.add_parser(
+        "opaque-probe",
+        help="extract small known factors and report an opaque residual",
+    )
+    p_opaque_probe.add_argument("n", type=int, metavar="N")
+    p_opaque_probe.add_argument("--trial-limit", type=int, default=1000)
+    p_opaque_probe.add_argument("--json", action="store_true")
+
     # signature
     p_signature = subparsers.add_parser(
         "signature",
@@ -1117,6 +1169,23 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "generator":
             print(shape_generator(args.n))
+
+        elif args.command == "opaque-probe":
+            data = _trial_division_partial(args.n, trial_limit=args.trial_limit)
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                print(f"N = {data['n']}")
+                print(f"digits = {data['digits']}")
+                print(f"bit_length = {data['bit_length']}")
+                print(f"trial_limit = {data['trial_limit']}")
+                print(f"known_factorization = {data['known_factorization']}")
+                print(f"opaque_residual = {data['opaque_residual']}")
+                print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+                print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+                print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+                print(f"claim = {data['claim']}")
 
         elif args.command == "signature":
             data = shape_signature_dict(args.n)
