@@ -258,6 +258,27 @@ def _iter_backbone_prime_window_candidates(start: int, end: int):
         yield candidate
 
 
+def _iter_scanned_prime_window_candidates(start: int, end: int):
+    """Yield prime candidates by scanning only the inclusive window [start, end]."""
+    if end < start or end < 2:
+        return
+
+    candidate = max(2, start)
+    while candidate <= end:
+        if is_prime(candidate):
+            yield candidate
+        candidate += 1
+
+
+def _iter_prime_window_candidates(start: int, end: int, *, strategy: str):
+    if strategy == "backbone":
+        yield from _iter_backbone_prime_window_candidates(start, end)
+    elif strategy == "scan":
+        yield from _iter_scanned_prime_window_candidates(start, end)
+    else:
+        raise ValueError("unsupported prime window candidate strategy")
+
+
 def _opaque_residual_status(residual: int, *, backbone_limit: int) -> str:
     if residual == 1:
         return "one"
@@ -633,7 +654,13 @@ def _opaque_window_plan(n: int, *, policy: str) -> dict:
     }
 
 
-def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
+def _opaque_window_probe(
+    n: int,
+    *,
+    start: int,
+    end: int,
+    candidate_strategy: str = "backbone",
+) -> dict:
     if n < 1:
         raise ValueError("opaque-window-probe expects integers >= 1")
     if start < 2:
@@ -646,7 +673,11 @@ def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
     known_factors: list[dict[str, int]] = []
     tested_prime_count = 0
 
-    for candidate in _iter_backbone_prime_window_candidates(start, end):
+    for candidate in _iter_prime_window_candidates(
+        start,
+        end,
+        strategy=candidate_strategy,
+    ):
         tested_prime_count += 1
 
         if residual == 1:
@@ -671,6 +702,7 @@ def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
         "bit_length": n.bit_length(),
         "window_start": start,
         "window_end": end,
+        "candidate_strategy": candidate_strategy,
         "tested_prime_count": tested_prime_count,
         "known_factors": known_factors,
         "known_factorization": _format_factorization(
@@ -1697,6 +1729,11 @@ def main(argv: list[str] | None = None) -> int:
         help="probe a bounded window centered around floor(sqrt(N))",
     )
     p_opaque_window_probe.add_argument("--radius", type=int, default=1000)
+    p_opaque_window_probe.add_argument(
+        "--candidate-strategy",
+        choices=["backbone", "scan"],
+        default="backbone",
+    )
     p_opaque_window_probe.add_argument("--json", action="store_true")
     p_opaque_window_probe.add_argument("--summary", action="store_true")
 
@@ -2425,6 +2462,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.n,
                 start=start,
                 end=end,
+                candidate_strategy=args.candidate_strategy,
             )
 
             if args.json:
@@ -2437,6 +2475,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"bit_length = {data['bit_length']}")
                 print(f"window_start = {data['window_start']}")
                 print(f"window_end = {data['window_end']}")
+                print(f"candidate_strategy = {data['candidate_strategy']}")
                 print(f"tested_prime_count = {data['tested_prime_count']}")
                 print(f"known_factorization = {data['known_factorization']}")
                 print(f"opaque_residual = {data['opaque_residual']}")

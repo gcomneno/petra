@@ -37,3 +37,36 @@ def test_iter_backbone_prime_window_candidates_handles_empty_window():
     from pet.cli import _iter_backbone_prime_window_candidates
 
     assert list(_iter_backbone_prime_window_candidates(1011, 1012)) == []
+
+
+def test_iter_scanned_prime_window_candidates_scans_only_window():
+    from pet.cli import _iter_scanned_prime_window_candidates
+
+    assert list(_iter_scanned_prime_window_candidates(100, 110)) == [
+        101,
+        103,
+        107,
+        109,
+    ]
+
+
+def test_iter_scanned_prime_window_candidates_scans_only_window():
+    from pet.cli import _iter_scanned_prime_window_candidates
+
+    assert list(_iter_scanned_prime_window_candidates(100, 110)) == [
+        101,
+        103,
+        107,
+        109,
+    ]
+
+
+def test_iter_scanned_prime_window_candidates_scans_only_window():
+    from pet.cli import _iter_scanned_prime_window_candidates
+
+    assert list(_iter_scanned_prime_window_candidates(100, 110)) == [
+        101,
+        103,
+        107,
+        109,
+    ]
