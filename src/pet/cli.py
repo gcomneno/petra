@@ -8,6 +8,7 @@ import heapq
 import pathlib
 import subprocess
 import sys
+import time
 from collections import Counter, deque
 
 from .atlas import atlas, draw_shape, extract_shape, print_atlas
@@ -427,6 +428,41 @@ def _print_opaque_summary(data: dict, *, include_window: bool = False) -> None:
         print(f"window_end = {data['window_end']}")
         print(f"tested_prime_count = {data['tested_prime_count']}")
 
+    print(f"known_factorization = {data['known_factorization']}")
+    print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+    print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+    print(f"opaque_residual_status = {data['opaque_residual_status']}")
+    print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+    print(f"claim = {data['claim']}")
+
+
+def _opaque_benchmark_probe(n: int, *, trial_limit: int) -> dict:
+    started = time.perf_counter()
+    data = _trial_division_partial(n, trial_limit=trial_limit)
+    elapsed = time.perf_counter() - started
+
+    return {
+        "mode": "probe",
+        "elapsed_seconds": elapsed,
+        "digits": data["digits"],
+        "bit_length": data["bit_length"],
+        "trial_limit": data["trial_limit"],
+        "known_factorization": data["known_factorization"],
+        "opaque_residual_digits": data["opaque_residual_digits"],
+        "opaque_residual_bit_length": data["opaque_residual_bit_length"],
+        "opaque_residual_status": data["opaque_residual_status"],
+        "fully_factored": data["fully_factored"],
+        "claim": "opaque benchmark only; this does not solve general factorization",
+    }
+
+
+def _print_opaque_benchmark(data: dict) -> None:
+    print(f"mode = {data['mode']}")
+    print(f"elapsed_seconds = {data['elapsed_seconds']:.6f}")
+    print(f"digits = {data['digits']}")
+    print(f"bit_length = {data['bit_length']}")
+    if "trial_limit" in data:
+        print(f"trial_limit = {data['trial_limit']}")
     print(f"known_factorization = {data['known_factorization']}")
     print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
     print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
@@ -1316,6 +1352,25 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_window_probe.add_argument("--json", action="store_true")
     p_opaque_window_probe.add_argument("--summary", action="store_true")
 
+    # opaque-benchmark
+    p_opaque_benchmark = subparsers.add_parser(
+        "opaque-benchmark",
+        help="benchmark bounded opaque analysis commands",
+    )
+    opaque_benchmark_subparsers = p_opaque_benchmark.add_subparsers(
+        dest="opaque_benchmark_command",
+        metavar="COMMAND",
+    )
+    opaque_benchmark_subparsers.required = True
+
+    p_opaque_benchmark_probe = opaque_benchmark_subparsers.add_parser(
+        "probe",
+        help="benchmark opaque-probe",
+    )
+    p_opaque_benchmark_probe.add_argument("n", type=int, metavar="N")
+    p_opaque_benchmark_probe.add_argument("--trial-limit", type=int, required=True)
+    p_opaque_benchmark_probe.add_argument("--json", action="store_true")
+
     # opaque-synthetic-profile
     p_opaque_synthetic_profile = subparsers.add_parser(
         "opaque-synthetic-profile",
@@ -1963,6 +2018,20 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"opaque_residual_status = {data['opaque_residual_status']}")
                 print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
                 print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-benchmark":
+            if args.opaque_benchmark_command == "probe":
+                data = _opaque_benchmark_probe(
+                    args.n,
+                    trial_limit=args.trial_limit,
+                )
+            else:
+                raise ValueError("unsupported opaque-benchmark command")
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_benchmark(data)
 
         elif args.command == "opaque-synthetic-profile":
             data = _opaque_synthetic_profile(
