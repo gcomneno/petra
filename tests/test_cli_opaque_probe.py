@@ -25,6 +25,7 @@ def test_cli_opaque_probe_reports_full_known_factorization():
     ]
     assert data["known_factorization"] == "2^3 * 5^3 * 37"
     assert data["opaque_residual"] == 1
+    assert data["opaque_residual_status"] == "one"
     assert data["fully_factored"] is True
 
 
@@ -38,5 +39,16 @@ def test_cli_opaque_probe_leaves_unfactored_residual():
     assert data["opaque_residual"] == 97
     assert data["opaque_residual_digits"] == 2
     assert data["opaque_residual_bit_length"] == 7
+    assert data["opaque_residual_status"] == "probable_prime"
     assert data["fully_factored"] is False
     assert "does not solve general factorization" in data["claim"]
+
+
+def test_cli_opaque_probe_marks_composite_or_unknown_residual():
+    data = _run_json("opaque-probe", "8051", "--trial-limit", "50")
+
+    assert data["known_factors"] == []
+    assert data["known_factorization"] == "1"
+    assert data["opaque_residual"] == 8051
+    assert data["opaque_residual_status"] == "composite_or_unknown"
+    assert data["fully_factored"] is False
