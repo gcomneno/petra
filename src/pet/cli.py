@@ -93,6 +93,28 @@ def _format_factorization(factors):
     return " * ".join(parts)
 
 
+def _iter_backbone_prime_candidates(limit: int):
+    """Yield prime candidates that extend the PET backbone up to ``limit``."""
+    if limit < 2:
+        return
+
+    sieve = bytearray(b"\x01") * (limit + 1)
+    sieve[0:2] = b"\x00\x00"
+
+    candidate = 2
+    while candidate * candidate <= limit:
+        if sieve[candidate]:
+            start = candidate * candidate
+            sieve[start : limit + 1 : candidate] = b"\x00" * (
+                ((limit - start) // candidate) + 1
+            )
+        candidate += 1
+
+    for candidate in range(2, limit + 1):
+        if sieve[candidate]:
+            yield candidate
+
+
 def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
     if n < 1:
         raise ValueError("opaque-probe expects integers >= 1")
@@ -103,11 +125,9 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
     residual = n
     known_factors: list[dict[str, int]] = []
 
-    candidate = 2
-    while candidate <= trial_limit and residual > 1:
-        if not is_prime(candidate):
-            candidate += 1
-            continue
+    for candidate in _iter_backbone_prime_candidates(trial_limit):
+        if residual == 1:
+            break
 
         exponent = 0
         while residual % candidate == 0:
@@ -116,8 +136,6 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
 
         if exponent:
             known_factors.append({"prime": candidate, "exponent": exponent})
-
-        candidate += 1
 
     if residual == 1:
         residual_status = "one"
@@ -193,24 +211,32 @@ def _opaque_profile(n: int, *, limits: list[int]) -> dict:
         }
 
     checkpoint_index = 0
-    candidate = 2
+
+    for candidate in _iter_backbone_prime_candidates(max_limit):
+        while (
+            checkpoint_index < len(checkpoint_limits)
+            and candidate > checkpoint_limits[checkpoint_index]
+        ):
+            rows_by_limit[checkpoint_limits[checkpoint_index]] = make_row(
+                checkpoint_limits[checkpoint_index]
+            )
+            checkpoint_index += 1
+
+        if residual == 1:
+            break
+
+        exponent = 0
+        while residual % candidate == 0:
+            residual //= candidate
+            exponent += 1
+
+        if exponent:
+            known_factors.append({"prime": candidate, "exponent": exponent})
 
     while checkpoint_index < len(checkpoint_limits):
-        next_checkpoint = checkpoint_limits[checkpoint_index]
-
-        while candidate <= next_checkpoint and candidate <= max_limit and residual > 1:
-            if is_prime(candidate):
-                exponent = 0
-                while residual % candidate == 0:
-                    residual //= candidate
-                    exponent += 1
-
-                if exponent:
-                    known_factors.append({"prime": candidate, "exponent": exponent})
-
-            candidate += 1
-
-        rows_by_limit[next_checkpoint] = make_row(next_checkpoint)
+        rows_by_limit[checkpoint_limits[checkpoint_index]] = make_row(
+            checkpoint_limits[checkpoint_index]
+        )
         checkpoint_index += 1
 
     rows = [rows_by_limit[limit] for limit in limits]
