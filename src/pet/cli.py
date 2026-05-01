@@ -225,6 +225,34 @@ def _opaque_profile(n: int, *, limits: list[int]) -> dict:
     }
 
 
+def _opaque_window_plan(n: int, *, policy: str) -> dict:
+    if n < 1:
+        raise ValueError("opaque-window-plan expects integers >= 1")
+    if policy != "balanced-semiprime":
+        raise ValueError("unsupported opaque-window-plan policy")
+
+    digits = len(str(n))
+    low_digits = (digits + 1) // 2
+    high_digits = low_digits + 1
+
+    return {
+        "n": n,
+        "digits": digits,
+        "bit_length": n.bit_length(),
+        "policy": policy,
+        "candidate_factor_digits": low_digits,
+        "low_digits": low_digits,
+        "high_digits": high_digits,
+        "decimal_window_low_power": low_digits - 1,
+        "decimal_window_high_power": low_digits,
+        "decimal_window_low": f"10^{low_digits - 1}",
+        "decimal_window_high": f"10^{low_digits}",
+        "secondary_decimal_window_low": f"10^{low_digits - 1}",
+        "secondary_decimal_window_high": f"10^{high_digits}",
+        "claim": "structural candidate window only; this does not factor N",
+    }
+
+
 def _next_new_prime(support: set[int]) -> int:
     candidate = 2
     while True:
@@ -772,6 +800,19 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_profile.add_argument("--limits", required=True)
     p_opaque_profile.add_argument("--json", action="store_true")
 
+    # opaque-window-plan
+    p_opaque_window_plan = subparsers.add_parser(
+        "opaque-window-plan",
+        help="plan a structural candidate factor window for an opaque N",
+    )
+    p_opaque_window_plan.add_argument("n", type=int, metavar="N")
+    p_opaque_window_plan.add_argument(
+        "--policy",
+        choices=["balanced-semiprime"],
+        default="balanced-semiprime",
+    )
+    p_opaque_window_plan.add_argument("--json", action="store_true")
+
     # signature
     p_signature = subparsers.add_parser(
         "signature",
@@ -1306,6 +1347,31 @@ def main(argv: list[str] | None = None) -> int:
                         f"{row['opaque_residual_status']} | "
                         f"{str(row['fully_factored']).lower()}"
                     )
+                print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-window-plan":
+            data = _opaque_window_plan(args.n, policy=args.policy)
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                print(f"N = {data['n']}")
+                print(f"digits = {data['digits']}")
+                print(f"bit_length = {data['bit_length']}")
+                print(f"policy = {data['policy']}")
+                print(
+                    "balanced_semiprime_candidate_factor_digits = "
+                    f"{data['candidate_factor_digits']}"
+                )
+                print(
+                    "decimal_window = "
+                    f"[{data['decimal_window_low']}, {data['decimal_window_high']})"
+                )
+                print(
+                    "secondary_decimal_window = "
+                    f"[{data['secondary_decimal_window_low']}, "
+                    f"{data['secondary_decimal_window_high']})"
+                )
                 print(f"claim = {data['claim']}")
 
         elif args.command == "signature":
