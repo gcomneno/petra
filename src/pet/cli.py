@@ -799,6 +799,68 @@ def _print_opaque_window_resume_state(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_state_summary(path: pathlib.Path) -> dict:
+    data = json.loads(path.read_text())
+    kind = data.get("kind")
+
+    if kind == _OPAQUE_RESUME_STATE_KIND:
+        checked_ranges = [
+            {
+                "kind": "low-peel",
+                "start": 2,
+                "end": int(data["checked_until"]),
+            }
+        ]
+    elif kind == _OPAQUE_WINDOW_RESUME_STATE_KIND:
+        checked_ranges = [
+            {
+                "kind": str(row["kind"]),
+                "start": int(row["start"]),
+                "end": int(row["end"]),
+            }
+            for row in data["checked_ranges"]
+        ]
+    else:
+        raise ValueError("unsupported opaque state file")
+
+    return {
+        "kind": kind,
+        "state_path": str(path),
+        "n": int(data["n"]),
+        "digits": int(data["digits"]),
+        "bit_length": int(data["bit_length"]),
+        "known_factors": data["known_factors"],
+        "known_factorization": data["known_factorization"],
+        "opaque_residual": int(data["opaque_residual"]),
+        "opaque_residual_digits": int(data["opaque_residual_digits"]),
+        "opaque_residual_bit_length": int(data["opaque_residual_bit_length"]),
+        "opaque_residual_status": data["opaque_residual_status"],
+        "fully_factored": bool(data["fully_factored"]),
+        "checked_ranges": checked_ranges,
+        "checked_range_count": len(checked_ranges),
+        "claim": "unified opaque state summary only; this does not solve general factorization",
+    }
+
+
+def _print_opaque_state_summary(data: dict) -> None:
+    print(f"kind = {data['kind']}")
+    print(f"state_path = {data['state_path']}")
+    print(f"digits = {data['digits']}")
+    print(f"bit_length = {data['bit_length']}")
+    print(f"known_factorization = {data['known_factorization']}")
+    print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+    print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+    print(f"opaque_residual_status = {data['opaque_residual_status']}")
+    print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+    print(f"checked_range_count = {data['checked_range_count']}")
+    for index, row in enumerate(data["checked_ranges"], start=1):
+        print(
+            f"checked_range_{index} = "
+            f"{row['kind']}[{row['start']},{row['end']}]"
+        )
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1553,6 +1615,24 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_window_resume_continue.add_argument("--state", required=True)
     p_opaque_window_resume_continue.add_argument("--json", action="store_true")
 
+    # opaque-state
+    p_opaque_state = subparsers.add_parser(
+        "opaque-state",
+        help="summarize opaque analysis state files",
+    )
+    opaque_state_subparsers = p_opaque_state.add_subparsers(
+        dest="opaque_state_command",
+        metavar="COMMAND",
+    )
+    opaque_state_subparsers.required = True
+
+    p_opaque_state_summarize = opaque_state_subparsers.add_parser(
+        "summarize",
+        help="summarize an opaque analysis state file",
+    )
+    p_opaque_state_summarize.add_argument("state", metavar="STATE.json")
+    p_opaque_state_summarize.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2254,6 +2334,17 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_window_resume_state(data)
+
+        elif args.command == "opaque-state":
+            if args.opaque_state_command == "summarize":
+                data = _opaque_state_summary(pathlib.Path(args.state))
+            else:
+                raise ValueError("unsupported opaque-state command")
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_state_summary(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
