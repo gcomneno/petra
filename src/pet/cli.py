@@ -414,6 +414,27 @@ def _print_opaque_resume_state(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _print_opaque_summary(data: dict, *, include_window: bool = False) -> None:
+    print(f"digits = {data['digits']}")
+    print(f"bit_length = {data['bit_length']}")
+
+    if "trial_limit" in data:
+        print(f"trial_limit = {data['trial_limit']}")
+    if "checked_until" in data:
+        print(f"checked_until = {data['checked_until']}")
+    if include_window:
+        print(f"window_start = {data['window_start']}")
+        print(f"window_end = {data['window_end']}")
+        print(f"tested_prime_count = {data['tested_prime_count']}")
+
+    print(f"known_factorization = {data['known_factorization']}")
+    print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+    print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+    print(f"opaque_residual_status = {data['opaque_residual_status']}")
+    print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+    print(f"claim = {data['claim']}")
+
+
 def _parse_trial_limits(raw: str) -> list[int]:
     limits: list[int] = []
 
@@ -1230,6 +1251,7 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_probe.add_argument("n", type=int, metavar="N")
     p_opaque_probe.add_argument("--trial-limit", type=int, default=1000)
     p_opaque_probe.add_argument("--json", action="store_true")
+    p_opaque_probe.add_argument("--summary", action="store_true")
 
     # opaque-resume
     p_opaque_resume = subparsers.add_parser(
@@ -1250,6 +1272,7 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_resume_start.add_argument("--trial-limit", type=int, required=True)
     p_opaque_resume_start.add_argument("--state", required=True)
     p_opaque_resume_start.add_argument("--json", action="store_true")
+    p_opaque_resume_start.add_argument("--summary", action="store_true")
 
     p_opaque_resume_continue = opaque_resume_subparsers.add_parser(
         "continue",
@@ -1258,6 +1281,7 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_resume_continue.add_argument("--trial-limit", type=int, required=True)
     p_opaque_resume_continue.add_argument("--state", required=True)
     p_opaque_resume_continue.add_argument("--json", action="store_true")
+    p_opaque_resume_continue.add_argument("--summary", action="store_true")
 
     # opaque-profile
     p_opaque_profile = subparsers.add_parser(
@@ -1290,6 +1314,7 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_window_probe.add_argument("--start", type=int, required=True)
     p_opaque_window_probe.add_argument("--end", type=int, required=True)
     p_opaque_window_probe.add_argument("--json", action="store_true")
+    p_opaque_window_probe.add_argument("--summary", action="store_true")
 
     # opaque-synthetic-profile
     p_opaque_synthetic_profile = subparsers.add_parser(
@@ -1828,6 +1853,8 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.json:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
+            elif args.summary:
+                _print_opaque_summary(data)
             else:
                 print(f"N = {data['n']}")
                 print(f"digits = {data['digits']}")
@@ -1859,6 +1886,8 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.json:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
+            elif args.summary:
+                _print_opaque_summary(data)
             else:
                 _print_opaque_resume_state(data)
 
@@ -1918,6 +1947,8 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.json:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
+            elif args.summary:
+                _print_opaque_summary(data, include_window=True)
             else:
                 print(f"N = {data['n']}")
                 print(f"digits = {data['digits']}")
