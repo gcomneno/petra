@@ -262,6 +262,17 @@ def _next_prime_at_or_after(n: int) -> int:
     return candidate
 
 
+def _ensure_int_string_digit_capacity(required_digits: int) -> None:
+    if not hasattr(sys, "set_int_max_str_digits"):
+        return
+
+    current_limit = sys.get_int_max_str_digits()
+    if current_limit == 0 or current_limit >= required_digits:
+        return
+
+    sys.set_int_max_str_digits(required_digits)
+
+
 def _opaque_synthetic_profile(
     *,
     target_digits: int,
@@ -270,6 +281,8 @@ def _opaque_synthetic_profile(
 ) -> dict:
     if target_digits < 1:
         raise ValueError("--target-digits must be >= 1")
+
+    _ensure_int_string_digit_capacity(target_digits + 1000)
     if start_prime < 2:
         raise ValueError("--start-prime must be >= 2")
     if base < 1:
