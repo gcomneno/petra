@@ -304,6 +304,116 @@ def _trial_division_partial(n: int, *, trial_limit: int) -> dict:
     }
 
 
+_OPAQUE_RESUME_STATE_KIND = "pet-opaque-resume-state"
+
+
+def _opaque_resume_peel(
+    *,
+    n: int,
+    residual: int,
+    known_factors: list[dict[str, int]],
+    checked_until: int,
+    trial_limit: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-resume expects integers >= 1")
+    if trial_limit < 2:
+        raise ValueError("--trial-limit must be >= 2")
+    if trial_limit < checked_until:
+        raise ValueError("--trial-limit must be >= checked_until")
+
+    for candidate in _iter_backbone_prime_candidates(trial_limit):
+        if candidate <= checked_until:
+            continue
+        if residual == 1:
+            break
+
+        exponent = 0
+        while residual % candidate == 0:
+            residual //= candidate
+            exponent += 1
+
+        if exponent:
+            known_factors.append({"prime": candidate, "exponent": exponent})
+
+    residual_status = _opaque_residual_status(
+        residual,
+        backbone_limit=trial_limit,
+    )
+
+    return {
+        "kind": _OPAQUE_RESUME_STATE_KIND,
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "checked_until": trial_limit,
+        "known_factors": known_factors,
+        "known_factorization": _format_factorization(
+            [(row["prime"], row["exponent"]) for row in known_factors]
+        ),
+        "opaque_residual": residual,
+        "opaque_residual_digits": len(str(residual)),
+        "opaque_residual_bit_length": residual.bit_length(),
+        "opaque_residual_status": residual_status,
+        "fully_factored": residual == 1,
+        "claim": "resumable bounded factor peeling only; this does not solve general factorization",
+    }
+
+
+def _write_opaque_resume_state(path: pathlib.Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+def _read_opaque_resume_state(path: pathlib.Path) -> dict:
+    data = json.loads(path.read_text())
+    if data.get("kind") != _OPAQUE_RESUME_STATE_KIND:
+        raise ValueError("invalid opaque-resume state file")
+    return data
+
+
+def _opaque_resume_start(n: int, *, trial_limit: int, state_path: pathlib.Path) -> dict:
+    data = _opaque_resume_peel(
+        n=n,
+        residual=n,
+        known_factors=[],
+        checked_until=1,
+        trial_limit=trial_limit,
+    )
+    _write_opaque_resume_state(state_path, data)
+    return data
+
+
+def _opaque_resume_continue(*, trial_limit: int, state_path: pathlib.Path) -> dict:
+    state = _read_opaque_resume_state(state_path)
+    data = _opaque_resume_peel(
+        n=int(state["n"]),
+        residual=int(state["opaque_residual"]),
+        known_factors=[
+            {"prime": int(row["prime"]), "exponent": int(row["exponent"])}
+            for row in state["known_factors"]
+        ],
+        checked_until=int(state["checked_until"]),
+        trial_limit=trial_limit,
+    )
+    _write_opaque_resume_state(state_path, data)
+    return data
+
+
+def _print_opaque_resume_state(data: dict) -> None:
+    print(f"N = {data['n']}")
+    print(f"digits = {data['digits']}")
+    print(f"bit_length = {data['bit_length']}")
+    print(f"checked_until = {data['checked_until']}")
+    print(f"known_factorization = {data['known_factorization']}")
+    print(f"opaque_residual = {data['opaque_residual']}")
+    print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+    print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+    print(f"opaque_residual_status = {data['opaque_residual_status']}")
+    print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+    print(f"claim = {data['claim']}")
+
+
 def _parse_trial_limits(raw: str) -> list[int]:
     limits: list[int] = []
 
@@ -1067,6 +1177,34 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_probe.add_argument("--trial-limit", type=int, default=1000)
     p_opaque_probe.add_argument("--json", action="store_true")
 
+    # opaque-resume
+    p_opaque_resume = subparsers.add_parser(
+        "opaque-resume",
+        help="start or continue resumable bounded factor peeling",
+    )
+    opaque_resume_subparsers = p_opaque_resume.add_subparsers(
+        dest="opaque_resume_command",
+        metavar="COMMAND",
+    )
+    opaque_resume_subparsers.required = True
+
+    p_opaque_resume_start = opaque_resume_subparsers.add_parser(
+        "start",
+        help="start a resumable opaque peeling state",
+    )
+    p_opaque_resume_start.add_argument("n", type=int, metavar="N")
+    p_opaque_resume_start.add_argument("--trial-limit", type=int, required=True)
+    p_opaque_resume_start.add_argument("--state", required=True)
+    p_opaque_resume_start.add_argument("--json", action="store_true")
+
+    p_opaque_resume_continue = opaque_resume_subparsers.add_parser(
+        "continue",
+        help="continue a resumable opaque peeling state",
+    )
+    p_opaque_resume_continue.add_argument("--trial-limit", type=int, required=True)
+    p_opaque_resume_continue.add_argument("--state", required=True)
+    p_opaque_resume_continue.add_argument("--json", action="store_true")
+
     # opaque-profile
     p_opaque_profile = subparsers.add_parser(
         "opaque-profile",
@@ -1638,6 +1776,27 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"opaque_residual_status = {data['opaque_residual_status']}")
                 print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
                 print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-resume":
+            state_path = pathlib.Path(args.state)
+            if args.opaque_resume_command == "start":
+                data = _opaque_resume_start(
+                    args.n,
+                    trial_limit=args.trial_limit,
+                    state_path=state_path,
+                )
+            elif args.opaque_resume_command == "continue":
+                data = _opaque_resume_continue(
+                    trial_limit=args.trial_limit,
+                    state_path=state_path,
+                )
+            else:
+                raise ValueError("unsupported opaque-resume command")
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_resume_state(data)
 
         elif args.command == "opaque-profile":
             limits = _parse_trial_limits(args.limits)
