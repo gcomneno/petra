@@ -165,20 +165,55 @@ def _parse_trial_limits(raw: str) -> list[int]:
 
 
 def _opaque_profile(n: int, *, limits: list[int]) -> dict:
-    rows = []
+    if n < 1:
+        raise ValueError("opaque-profile expects integers >= 1")
 
-    for limit in limits:
-        data = _trial_division_partial(n, trial_limit=limit)
-        rows.append(
-            {
-                "trial_limit": data["trial_limit"],
-                "known_count": len(data["known_factors"]),
-                "opaque_residual_digits": data["opaque_residual_digits"],
-                "opaque_residual_bit_length": data["opaque_residual_bit_length"],
-                "opaque_residual_status": data["opaque_residual_status"],
-                "fully_factored": data["fully_factored"],
-            }
-        )
+    checkpoint_limits = sorted(set(limits))
+    max_limit = checkpoint_limits[-1]
+
+    residual = n
+    known_factors: list[dict[str, int]] = []
+    rows_by_limit: dict[int, dict] = {}
+
+    def make_row(limit: int) -> dict:
+        if residual == 1:
+            residual_status = "one"
+        elif is_prime(residual):
+            residual_status = "probable_prime"
+        else:
+            residual_status = "composite_or_unknown"
+
+        return {
+            "trial_limit": limit,
+            "known_count": len(known_factors),
+            "opaque_residual_digits": len(str(residual)),
+            "opaque_residual_bit_length": residual.bit_length(),
+            "opaque_residual_status": residual_status,
+            "fully_factored": residual == 1,
+        }
+
+    checkpoint_index = 0
+    candidate = 2
+
+    while checkpoint_index < len(checkpoint_limits):
+        next_checkpoint = checkpoint_limits[checkpoint_index]
+
+        while candidate <= next_checkpoint and candidate <= max_limit and residual > 1:
+            if is_prime(candidate):
+                exponent = 0
+                while residual % candidate == 0:
+                    residual //= candidate
+                    exponent += 1
+
+                if exponent:
+                    known_factors.append({"prime": candidate, "exponent": exponent})
+
+            candidate += 1
+
+        rows_by_limit[next_checkpoint] = make_row(next_checkpoint)
+        checkpoint_index += 1
+
+    rows = [rows_by_limit[limit] for limit in limits]
 
     return {
         "n": n,

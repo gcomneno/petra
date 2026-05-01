@@ -57,3 +57,35 @@ def test_cli_opaque_profile_reports_progressive_residual_status():
         },
     ]
     assert "does not solve general factorization" in data["claim"]
+
+
+def test_cli_opaque_profile_preserves_requested_limit_order_and_duplicates():
+    data = _run_json(
+        "opaque-profile",
+        "147184848",
+        "--limits",
+        "1013,100,1010,100,1013",
+    )
+
+    assert data["limits"] == [1013, 100, 1010, 100, 1013]
+    assert [row["trial_limit"] for row in data["rows"]] == [
+        1013,
+        100,
+        1010,
+        100,
+        1013,
+    ]
+    assert [row["opaque_residual_status"] for row in data["rows"]] == [
+        "one",
+        "composite_or_unknown",
+        "probable_prime",
+        "composite_or_unknown",
+        "one",
+    ]
+    assert [row["fully_factored"] for row in data["rows"]] == [
+        True,
+        False,
+        False,
+        False,
+        True,
+    ]
