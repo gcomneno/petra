@@ -653,6 +653,152 @@ def _opaque_window_probe(n: int, *, start: int, end: int) -> dict:
     }
 
 
+_OPAQUE_WINDOW_RESUME_STATE_KIND = "pet-opaque-window-resume-state"
+
+
+def _opaque_window_resume_probe(
+    *,
+    n: int,
+    residual: int,
+    known_factors: list[dict[str, int]],
+    checked_ranges: list[dict[str, int]],
+    start: int,
+    end: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-window-resume expects integers >= 1")
+    if start < 2:
+        raise ValueError("--start must be >= 2")
+    if end < start:
+        raise ValueError("--end must be >= --start")
+
+    tested_prime_count = 0
+
+    for candidate in _iter_backbone_prime_window_candidates(start, end):
+        tested_prime_count += 1
+
+        if residual == 1:
+            break
+
+        exponent = 0
+        while residual % candidate == 0:
+            residual //= candidate
+            exponent += 1
+
+        if exponent:
+            known_factors.append({"prime": candidate, "exponent": exponent})
+
+    checked_ranges = [
+        *checked_ranges,
+        {"kind": "window", "start": start, "end": end},
+    ]
+
+    residual_status = _opaque_residual_status(
+        residual,
+        backbone_limit=end,
+    )
+
+    return {
+        "kind": _OPAQUE_WINDOW_RESUME_STATE_KIND,
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "window_start": start,
+        "window_end": end,
+        "tested_prime_count": tested_prime_count,
+        "checked_ranges": checked_ranges,
+        "known_factors": known_factors,
+        "known_factorization": _format_factorization(
+            [(row["prime"], row["exponent"]) for row in known_factors]
+        ),
+        "opaque_residual": residual,
+        "opaque_residual_digits": len(str(residual)),
+        "opaque_residual_bit_length": residual.bit_length(),
+        "opaque_residual_status": residual_status,
+        "fully_factored": residual == 1,
+        "claim": "resumable bounded backbone-window probing only; this does not solve general factorization",
+    }
+
+
+def _write_opaque_window_resume_state(path: pathlib.Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+def _read_opaque_window_resume_state(path: pathlib.Path) -> dict:
+    data = json.loads(path.read_text())
+    if data.get("kind") != _OPAQUE_WINDOW_RESUME_STATE_KIND:
+        raise ValueError("invalid opaque-window-resume state file")
+    return data
+
+
+def _opaque_window_resume_start(
+    n: int,
+    *,
+    start: int,
+    end: int,
+    state_path: pathlib.Path,
+) -> dict:
+    data = _opaque_window_resume_probe(
+        n=n,
+        residual=n,
+        known_factors=[],
+        checked_ranges=[],
+        start=start,
+        end=end,
+    )
+    _write_opaque_window_resume_state(state_path, data)
+    return data
+
+
+def _opaque_window_resume_continue(
+    *,
+    end: int,
+    state_path: pathlib.Path,
+) -> dict:
+    state = _read_opaque_window_resume_state(state_path)
+    previous_end = int(state["window_end"])
+    start = previous_end + 1
+
+    data = _opaque_window_resume_probe(
+        n=int(state["n"]),
+        residual=int(state["opaque_residual"]),
+        known_factors=[
+            {"prime": int(row["prime"]), "exponent": int(row["exponent"])}
+            for row in state["known_factors"]
+        ],
+        checked_ranges=[
+            {
+                "kind": str(row["kind"]),
+                "start": int(row["start"]),
+                "end": int(row["end"]),
+            }
+            for row in state["checked_ranges"]
+        ],
+        start=start,
+        end=end,
+    )
+    _write_opaque_window_resume_state(state_path, data)
+    return data
+
+
+def _print_opaque_window_resume_state(data: dict) -> None:
+    print(f"N = {data['n']}")
+    print(f"digits = {data['digits']}")
+    print(f"bit_length = {data['bit_length']}")
+    print(f"window_start = {data['window_start']}")
+    print(f"window_end = {data['window_end']}")
+    print(f"tested_prime_count = {data['tested_prime_count']}")
+    print(f"checked_range_count = {len(data['checked_ranges'])}")
+    print(f"known_factorization = {data['known_factorization']}")
+    print(f"opaque_residual = {data['opaque_residual']}")
+    print(f"opaque_residual_digits = {data['opaque_residual_digits']}")
+    print(f"opaque_residual_bit_length = {data['opaque_residual_bit_length']}")
+    print(f"opaque_residual_status = {data['opaque_residual_status']}")
+    print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1378,6 +1524,35 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_window_probe.add_argument("--json", action="store_true")
     p_opaque_window_probe.add_argument("--summary", action="store_true")
 
+    # opaque-window-resume
+    p_opaque_window_resume = subparsers.add_parser(
+        "opaque-window-resume",
+        help="start or continue resumable bounded backbone-window probing",
+    )
+    opaque_window_resume_subparsers = p_opaque_window_resume.add_subparsers(
+        dest="opaque_window_resume_command",
+        metavar="COMMAND",
+    )
+    opaque_window_resume_subparsers.required = True
+
+    p_opaque_window_resume_start = opaque_window_resume_subparsers.add_parser(
+        "start",
+        help="start a resumable opaque window probing state",
+    )
+    p_opaque_window_resume_start.add_argument("n", type=int, metavar="N")
+    p_opaque_window_resume_start.add_argument("--start", type=int, required=True)
+    p_opaque_window_resume_start.add_argument("--end", type=int, required=True)
+    p_opaque_window_resume_start.add_argument("--state", required=True)
+    p_opaque_window_resume_start.add_argument("--json", action="store_true")
+
+    p_opaque_window_resume_continue = opaque_window_resume_subparsers.add_parser(
+        "continue",
+        help="continue a resumable opaque window probing state",
+    )
+    p_opaque_window_resume_continue.add_argument("--end", type=int, required=True)
+    p_opaque_window_resume_continue.add_argument("--state", required=True)
+    p_opaque_window_resume_continue.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2057,6 +2232,28 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"opaque_residual_status = {data['opaque_residual_status']}")
                 print(f"fully_factored = {'yes' if data['fully_factored'] else 'no'}")
                 print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-window-resume":
+            state_path = pathlib.Path(args.state)
+            if args.opaque_window_resume_command == "start":
+                data = _opaque_window_resume_start(
+                    args.n,
+                    start=args.start,
+                    end=args.end,
+                    state_path=state_path,
+                )
+            elif args.opaque_window_resume_command == "continue":
+                data = _opaque_window_resume_continue(
+                    end=args.end,
+                    state_path=state_path,
+                )
+            else:
+                raise ValueError("unsupported opaque-window-resume command")
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_window_resume_state(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
