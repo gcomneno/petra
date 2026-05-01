@@ -253,6 +253,78 @@ def _opaque_window_plan(n: int, *, policy: str) -> dict:
     }
 
 
+def _next_prime_at_or_after(n: int) -> int:
+    candidate = max(2, n)
+
+    while not is_prime(candidate):
+        candidate += 1
+
+    return candidate
+
+
+def _opaque_synthetic_profile(
+    *,
+    target_digits: int,
+    start_prime: int,
+    base: int,
+) -> dict:
+    if target_digits < 1:
+        raise ValueError("--target-digits must be >= 1")
+    if start_prime < 2:
+        raise ValueError("--start-prime must be >= 2")
+    if base < 1:
+        raise ValueError("--base must be >= 1")
+
+    primes: list[int] = []
+    n = base
+    candidate = start_prime
+
+    while len(str(n)) < target_digits:
+        prime = _next_prime_at_or_after(candidate)
+        primes.append(prime)
+        n *= prime
+        candidate = prime + 1
+
+    checkpoint_indexes = sorted(
+        {
+            index
+            for index in [
+                0,
+                1,
+                9,
+                24,
+                49,
+                99,
+                len(primes) // 2,
+                len(primes) - 2,
+                len(primes) - 1,
+            ]
+            if 0 <= index < len(primes)
+        }
+    )
+
+    limits = [100_000, start_prime]
+    limits.extend(primes[index] for index in checkpoint_indexes)
+    limits = list(dict.fromkeys(limits))
+
+    profile = _opaque_profile(n, limits=limits)
+
+    return {
+        "base": base,
+        "target_digits": target_digits,
+        "start_prime": start_prime,
+        "prime_count": len(primes),
+        "first_prime": primes[0] if primes else None,
+        "last_prime": primes[-1] if primes else None,
+        "n": n,
+        "n_digits": len(str(n)),
+        "n_bit_length": n.bit_length(),
+        "limits": limits,
+        "rows": profile["rows"],
+        "claim": "synthetic bounded opaque residual profiling only; this does not solve general factorization",
+    }
+
+
 def _next_new_prime(support: set[int]) -> int:
     candidate = 2
     while True:
@@ -813,6 +885,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_window_plan.add_argument("--json", action="store_true")
 
+    # opaque-synthetic-profile
+    p_opaque_synthetic_profile = subparsers.add_parser(
+        "opaque-synthetic-profile",
+        help="generate a synthetic opaque N and profile bounded residual peeling",
+    )
+    p_opaque_synthetic_profile.add_argument("--target-digits", type=int, required=True)
+    p_opaque_synthetic_profile.add_argument("--start-prime", type=int, default=1_000_000)
+    p_opaque_synthetic_profile.add_argument("--base", type=int, default=72)
+    p_opaque_synthetic_profile.add_argument("--json", action="store_true")
+
     # signature
     p_signature = subparsers.add_parser(
         "signature",
@@ -1372,6 +1454,38 @@ def main(argv: list[str] | None = None) -> int:
                     f"[{data['secondary_decimal_window_low']}, "
                     f"{data['secondary_decimal_window_high']})"
                 )
+                print(f"claim = {data['claim']}")
+
+        elif args.command == "opaque-synthetic-profile":
+            data = _opaque_synthetic_profile(
+                target_digits=args.target_digits,
+                start_prime=args.start_prime,
+                base=args.base,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                print(f"base = {data['base']}")
+                print(f"target_digits = {data['target_digits']}")
+                print(f"start_prime = {data['start_prime']}")
+                print(f"prime_count = {data['prime_count']}")
+                print(f"first_prime = {data['first_prime']}")
+                print(f"last_prime = {data['last_prime']}")
+                print(f"N_digits = {data['n_digits']}")
+                print(f"N_bit_length = {data['n_bit_length']}")
+                print("limits = " + ",".join(str(limit) for limit in data["limits"]))
+                print()
+                print("limit | known_count | residual_digits | residual_bits | status | fully")
+                for row in data["rows"]:
+                    print(
+                        f"{row['trial_limit']} | "
+                        f"{row['known_count']} | "
+                        f"{row['opaque_residual_digits']} | "
+                        f"{row['opaque_residual_bit_length']} | "
+                        f"{row['opaque_residual_status']} | "
+                        f"{str(row['fully_factored']).lower()}"
+                    )
                 print(f"claim = {data['claim']}")
 
         elif args.command == "signature":
