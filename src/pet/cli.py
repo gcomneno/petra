@@ -2165,6 +2165,72 @@ def _opaque_focused_peel_decode(n: int, peel_lift: dict | None) -> dict:
     }
 
 
+def _opaque_focused_peel_center_lens(pet_decode: dict | None) -> dict:
+    if not pet_decode or not pet_decode.get("decode_available"):
+        return {
+            "center_lens_available": False,
+            "reason": "focused peel decode is not available",
+        }
+
+    constraints = pet_decode["decoded_constraints"]
+    projected = constraints["projected_center_pet_form"]
+    edge = constraints["local_edge_hypothesis"]
+
+    edge_k = int(edge["k"])
+    center_shape_text = projected["pet_shape_text"]
+    center_signature = projected["pet_signature"]
+    center_generator = int(projected["pet_generator"])
+
+    if center_signature == [[], [], []]:
+        lens_kind = "flat-three-leaf-center"
+        next_focus = "edge stability with preserved flat three-leaf center"
+    elif center_signature == [[], []]:
+        lens_kind = "flat-two-leaf-center"
+        next_focus = "edge stability with preserved flat two-leaf center"
+    elif center_signature == [[]]:
+        lens_kind = "single-leaf-center"
+        next_focus = "edge stability with preserved single-leaf center"
+    else:
+        lens_kind = "projected-center-shape"
+        next_focus = "edge stability with preserved projected center shape"
+
+    suggested_start = max(1, edge_k - 2)
+    suggested_end = edge_k
+
+    return {
+        "center_lens_available": True,
+        "source": "projected_center_pet_form",
+        "lens_kind": lens_kind,
+        "edge_k": edge_k,
+        "boundary": edge["boundary"],
+        "preserve_edge_k": True,
+        "preserve_center_shape": True,
+        "center_nearest_integer": projected["nearest_integer"],
+        "center_shape": center_shape_text,
+        "center_signature": center_signature,
+        "center_generator": center_generator,
+        "center_child_generators": projected["pet_child_generators"],
+        "center_bits": projected["nearest_integer_bits"],
+        "center_digits": projected["nearest_integer_digits"],
+        "suggested_window": {
+            "k_start": suggested_start,
+            "k_end": suggested_end,
+            "k_range": f"{suggested_start}..{suggested_end}",
+        },
+        "next_focus": next_focus,
+        "recommended_next_lens": (
+            "rescan-suggested-window-preserving-edge-and-center-shape"
+        ),
+        "interpretation": [
+            "The center lens uses the projected center PET form as a guide for the next local scan.",
+            "It preserves the decoded edge and center shape instead of treating the center as a value-level factor.",
+            "The suggested window is a PET-local refinement around the decoded edge.",
+        ],
+        "claim": "PET decoded-center lens only; this does not factor N",
+    }
+
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2178,6 +2244,7 @@ def _opaque_focused_peel(
     slice_: bool = False,
     lift: bool = False,
     decode: bool = False,
+    center_lens: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2188,6 +2255,8 @@ def _opaque_focused_peel(
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
 
+    if center_lens:
+        decode = True
     if decode:
         lift = True
     if lift:
@@ -2264,6 +2333,11 @@ def _opaque_focused_peel(
     )
     peel_lift = _opaque_focused_peel_lift(peel_slice) if lift else None
     pet_decode = _opaque_focused_peel_decode(n, peel_lift) if decode else None
+    decoded_center_lens = (
+        _opaque_focused_peel_center_lens(pet_decode)
+        if center_lens
+        else None
+    )
 
     return {
         "n": n,
@@ -2281,6 +2355,7 @@ def _opaque_focused_peel(
         "slice": slice_,
         "lift": lift,
         "decode": decode,
+        "center_lens": center_lens,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
@@ -2288,6 +2363,7 @@ def _opaque_focused_peel(
         "peel_slice": peel_slice,
         "peel_lift": peel_lift,
         "pet_decode": pet_decode,
+        "decoded_center_lens": decoded_center_lens,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -2296,6 +2372,7 @@ def _opaque_focused_peel(
             "When enabled, the slice partitions local PET shape-space across the selected boundary.",
             "When enabled, the lift exposes the visible PET form of the retained partition.",
             "When enabled, the decode translates the visible PET form into local structural constraints.",
+            "When enabled, the center lens builds the next PET-local lens from the projected center shape.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2524,6 +2601,36 @@ def _print_opaque_focused_peel(data: dict) -> None:
             )
             print(f"    center_role = {projected['center_role']}")
             print(f"    claim = {decode_data['claim']}")
+
+    if data.get("center_lens"):
+        lens = data["decoded_center_lens"]
+        print()
+        print("PET decoded-center lens")
+        if not lens or not lens["center_lens_available"]:
+            reason = "unknown" if not lens else lens["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            window = lens["suggested_window"]
+            print(f"  source = {lens['source']}")
+            print(f"  lens_kind = {lens['lens_kind']}")
+            print(f"  edge_k = {lens['edge_k']}")
+            print(f"  boundary = {lens['boundary']}")
+            print(f"  preserve_edge_k = {'yes' if lens['preserve_edge_k'] else 'no'}")
+            print(
+                "  preserve_center_shape = "
+                f"{'yes' if lens['preserve_center_shape'] else 'no'}"
+            )
+            print(f"  center_nearest_integer = {lens['center_nearest_integer']}")
+            print(f"  center_shape = {lens['center_shape']}")
+            print(f"  center_signature = {lens['center_signature']}")
+            print(f"  center_generator = {lens['center_generator']}")
+            print(f"  center_child_generators = {lens['center_child_generators']}")
+            print(f"  center_bits = {lens['center_bits']}")
+            print(f"  center_digits = {lens['center_digits']}")
+            print(f"  suggested_window = k[{window['k_start']},{window['k_end']}]")
+            print(f"  next_focus = {lens['next_focus']}")
+            print(f"  recommended_next_lens = {lens['recommended_next_lens']}")
+            print(f"  claim = {lens['claim']}")
 
     print()
     print("PET interpretation")
@@ -3461,6 +3568,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="decode the lifted visible PET form into local structural constraints",
     )
+    p_opaque_focused_peel.add_argument(
+        "--center-lens",
+        action="store_true",
+        help="build the next PET-local lens from the decoded projected center shape",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -4265,6 +4377,7 @@ def main(argv: list[str] | None = None) -> int:
                 slice_=args.slice,
                 lift=args.lift,
                 decode=args.decode,
+                center_lens=args.center_lens,
             )
 
             if args.json:

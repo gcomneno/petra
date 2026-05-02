@@ -439,3 +439,66 @@ def test_opaque_focused_peel_decode_text_is_monkey_friendly() -> None:
     assert "pet_shape = ((), (), ())" in result.stdout
     assert "pet_signature = [[], [], []]" in result.stdout
     assert "pet_generator = 30" in result.stdout
+
+
+def test_opaque_focused_peel_center_lens_builds_next_lens() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--center-lens",
+    )
+
+    assert data["cut"] is True
+    assert data["peel_step"] is True
+    assert data["slice"] is True
+    assert data["lift"] is True
+    assert data["decode"] is True
+    assert data["center_lens"] is True
+
+    lens = data["decoded_center_lens"]
+    assert lens["center_lens_available"] is True
+    assert lens["source"] == "projected_center_pet_form"
+    assert lens["lens_kind"] == "flat-three-leaf-center"
+    assert lens["edge_k"] == 2
+    assert lens["boundary"] == "2/3"
+    assert lens["preserve_edge_k"] is True
+    assert lens["preserve_center_shape"] is True
+    assert lens["center_nearest_integer"] == 102
+    assert lens["center_shape"] == "((), (), ())"
+    assert lens["center_signature"] == [[], [], []]
+    assert lens["center_generator"] == 30
+    assert lens["center_child_generators"] == [1, 1, 1]
+    assert lens["suggested_window"]["k_range"] == "1..2"
+    assert lens["recommended_next_lens"] == (
+        "rescan-suggested-window-preserving-edge-and-center-shape"
+    )
+    assert "does not factor N" in lens["claim"]
+
+
+def test_opaque_focused_peel_center_lens_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--center-lens",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET visible-form decode" in result.stdout
+    assert "PET decoded-center lens" in result.stdout
+    assert "lens_kind = flat-three-leaf-center" in result.stdout
+    assert "preserve_edge_k = yes" in result.stdout
+    assert "preserve_center_shape = yes" in result.stdout
+    assert "center_shape = ((), (), ())" in result.stdout
+    assert "suggested_window = k[1,2]" in result.stdout
