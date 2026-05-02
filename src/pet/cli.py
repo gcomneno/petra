@@ -1225,6 +1225,127 @@ def _print_opaque_shape_rank(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_mass_center_zone(margin_bits: float) -> str:
+    if margin_bits < 0:
+        return "pressured"
+    if margin_bits < 16:
+        return "boundary-informative"
+    if margin_bits < 64:
+        return "informative"
+    return "deep-opaque"
+
+
+def _opaque_mass_center_signal(margin_bits: float) -> str:
+    if margin_bits < 0:
+        return "critical"
+    if margin_bits < 16:
+        return "strong"
+    if margin_bits < 64:
+        return "medium"
+    return "weak"
+
+
+def _opaque_mass_center_information_weight(margin_bits: float) -> float:
+    distance_from_boundary = abs(margin_bits)
+    return 1.0 / (1.0 + distance_from_boundary)
+
+
+def _opaque_mass_centers(
+    n: int,
+    *,
+    max_generator_count: int,
+    excluded_support_limit: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-mass-centers expects integers >= 1")
+    if max_generator_count < 1:
+        raise ValueError("--max-generator-count expects integers >= 1")
+    if excluded_support_limit < 1:
+        raise ValueError("--excluded-support-limit expects integers >= 1")
+
+    digits = len(str(n))
+    bit_length = n.bit_length()
+    mass_bits = bit_length
+    excluded_support_bits = excluded_support_limit.bit_length()
+    excluded_support_digits = len(str(excluded_support_limit))
+
+    centers = []
+    for k in range(1, max_generator_count + 1):
+        center_bits = mass_bits / k
+        center_digits = digits / k
+        margin_bits = center_bits - excluded_support_bits
+        centers.append(
+            {
+                "family": f"balanced-{k}-generator",
+                "k": k,
+                "center_bits": center_bits,
+                "center_digits": center_digits,
+                "excluded_support_bits": excluded_support_bits,
+                "excluded_support_digits": excluded_support_digits,
+                "margin_bits": margin_bits,
+                "zone": _opaque_mass_center_zone(margin_bits),
+                "signal": _opaque_mass_center_signal(margin_bits),
+                "information_weight": _opaque_mass_center_information_weight(
+                    margin_bits
+                ),
+            }
+        )
+
+    return {
+        "n": n,
+        "digits": digits,
+        "bit_length": bit_length,
+        "mass_bits": mass_bits,
+        "excluded_support_limit": excluded_support_limit,
+        "excluded_support_bits": excluded_support_bits,
+        "excluded_support_digits": excluded_support_digits,
+        "mass_centers": centers,
+        "interpretation": [
+            "Deep opaque centers are compatible but weakly discriminating.",
+            "Boundary centers are informative because they sit near the excluded backbone.",
+            "Pressured centers are critical because their average mass falls inside or below the excluded low-support range.",
+            "PET does not identify the true support here; it marks which mass centers deserve attention.",
+        ],
+        "claim": "PET mass-center analysis only; this does not factor N",
+    }
+
+
+def _print_opaque_mass_centers(data: dict) -> None:
+    print("PET OPAQUE MASS CENTERS")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  mass_bits = {data['mass_bits']}")
+    print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
+    print(f"  excluded_support_bits = {data['excluded_support_bits']}")
+
+    print()
+    print("Mass centers")
+    print(
+        "  family                  | center_bits | center_digits | "
+        "margin_bits | zone                 | signal   | info_weight"
+    )
+    for row in data["mass_centers"]:
+        print(
+            f"  {row['family']:<23} | "
+            f"{row['center_bits']:>11.2f} | "
+            f"{row['center_digits']:>13.2f} | "
+            f"{row['margin_bits']:>11.2f} | "
+            f"{row['zone']:<20} | "
+            f"{row['signal']:<8} | "
+            f"{row['information_weight']:.4f}"
+        )
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -2054,6 +2175,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_shape_rank.add_argument("--json", action="store_true")
 
+    # opaque-mass-centers
+    p_opaque_mass_centers = subparsers.add_parser(
+        "opaque-mass-centers",
+        help="analyze informative PET mass centers against an excluded backbone range",
+    )
+    p_opaque_mass_centers.add_argument("n", type=int, metavar="N")
+    p_opaque_mass_centers.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=20,
+    )
+    p_opaque_mass_centers.add_argument(
+        "--excluded-support-limit",
+        type=int,
+        required=True,
+    )
+    p_opaque_mass_centers.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2815,6 +2954,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_shape_rank(data)
+
+        elif args.command == "opaque-mass-centers":
+            data = _opaque_mass_centers(
+                args.n,
+                max_generator_count=args.max_generator_count,
+                excluded_support_limit=args.excluded_support_limit,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_mass_centers(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
