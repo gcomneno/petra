@@ -1129,6 +1129,102 @@ def _print_opaque_shape_families(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_shape_opacity(margin_bits: float) -> str:
+    if margin_bits >= 64:
+        return "high"
+    if margin_bits >= 16:
+        return "medium"
+    if margin_bits >= 0:
+        return "low"
+    return "pressured"
+
+
+def _opaque_shape_rank(
+    n: int,
+    *,
+    max_generator_count: int,
+    excluded_support_limit: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-shape-rank expects integers >= 1")
+    if max_generator_count < 1:
+        raise ValueError("--max-generator-count expects integers >= 1")
+    if excluded_support_limit < 1:
+        raise ValueError("--excluded-support-limit expects integers >= 1")
+
+    digits = len(str(n))
+    bit_length = n.bit_length()
+    mass_bits = bit_length
+    excluded_support_bits = excluded_support_limit.bit_length()
+    excluded_support_digits = len(str(excluded_support_limit))
+
+    families = []
+    for k in range(1, max_generator_count + 1):
+        avg_generator_bits = mass_bits / k
+        avg_generator_digits = digits / k
+        margin_bits = avg_generator_bits - excluded_support_bits
+        families.append(
+            {
+                "family": f"balanced-{k}-generator",
+                "k": k,
+                "avg_generator_bits": avg_generator_bits,
+                "avg_generator_digits": avg_generator_digits,
+                "excluded_support_bits": excluded_support_bits,
+                "excluded_support_digits": excluded_support_digits,
+                "margin_bits": margin_bits,
+                "opacity": _opaque_shape_opacity(margin_bits),
+            }
+        )
+
+    return {
+        "n": n,
+        "digits": digits,
+        "bit_length": bit_length,
+        "mass_bits": mass_bits,
+        "excluded_support_limit": excluded_support_limit,
+        "excluded_support_bits": excluded_support_bits,
+        "excluded_support_digits": excluded_support_digits,
+        "ranked_families": families,
+        "interpretation": [
+            "Families with average generator size far above the excluded low backbone remain more opaque.",
+            "Families whose expected generators approach the excluded support range become less opaque.",
+            "PET still does not identify the support; it ranks shape hypotheses only.",
+        ],
+        "claim": "PET shape-family ranking only; this does not factor N",
+    }
+
+
+def _print_opaque_shape_rank(data: dict) -> None:
+    print("PET OPAQUE SHAPE RANK")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  mass_bits = {data['mass_bits']}")
+    print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
+    print(f"  excluded_support_bits = {data['excluded_support_bits']}")
+
+    print()
+    print("Ranked compatible families")
+    print("  family                  | avg_bits | avg_digits | margin_bits | opacity")
+    for row in data["ranked_families"]:
+        print(
+            f"  {row['family']:<23} | "
+            f"{row['avg_generator_bits']:>8.2f} | "
+            f"{row['avg_generator_digits']:>10.2f} | "
+            f"{row['margin_bits']:>11.2f} | "
+            f"{row['opacity']}"
+        )
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1939,6 +2035,25 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_shape_families.add_argument("--json", action="store_true")
 
+
+    # opaque-shape-rank
+    p_opaque_shape_rank = subparsers.add_parser(
+        "opaque-shape-rank",
+        help="rank PET shape-family hypotheses against an excluded backbone range",
+    )
+    p_opaque_shape_rank.add_argument("n", type=int, metavar="N")
+    p_opaque_shape_rank.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=20,
+    )
+    p_opaque_shape_rank.add_argument(
+        "--excluded-support-limit",
+        type=int,
+        required=True,
+    )
+    p_opaque_shape_rank.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2687,6 +2802,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_shape_families(data)
+
+
+        elif args.command == "opaque-shape-rank":
+            data = _opaque_shape_rank(
+                args.n,
+                max_generator_count=args.max_generator_count,
+                excluded_support_limit=args.excluded_support_limit,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_shape_rank(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
