@@ -172,5 +172,6 @@ if [[ "$RUN_RECURSIVE" -eq 1 ]]; then
     --max-move-span "$MAX_MOVE_SPAN" \
     --depth "$DEPTH" \
     --terminal-reduction \
+    --branch-recursion "$FORK_FOLLOW" \
     "${JSON_ARG[@]}"
 fi
