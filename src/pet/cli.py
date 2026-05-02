@@ -3242,6 +3242,7 @@ def _opaque_recursive_lens(
     max_generator_count: int,
     max_move_span: int,
     depth: int,
+    terminal_reduction: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -3422,7 +3423,7 @@ def _opaque_recursive_lens(
         "status": stop_reason,
     }
 
-    return {
+    data = {
         "n": n,
         "digits": len(str(n)),
         "bit_length": n.bit_length(),
@@ -3441,6 +3442,37 @@ def _opaque_recursive_lens(
         ],
         "claim": "PET recursive zoom lens only; this does not factor N",
     }
+
+    if terminal_reduction:
+        available_levels = [level for level in levels if level.get("available")]
+        last_available = available_levels[-1] if available_levels else None
+        terminal_reduction_payload = {
+            "available": False,
+            "reason": "recursive lens did not stop at a terminal window",
+            "claim": "PET reduction lens only; this does not factor N",
+        }
+
+        if recurrence["status"] == "terminal-window" and last_available is not None:
+            suggested = last_available["center_lens"]["suggested_window"]
+            terminal_reduction_payload = {
+                "available": True,
+                "status": "proposal",
+                "claim": "PET reduction lens only; this does not factor N",
+                "source_status": "terminal-window",
+                "source_edge_k": last_available["edge_k"],
+                "source_window": suggested,
+                "source_visible_form": last_available["visible_form"],
+                "source_visible_shape": last_available["visible_shape"],
+                "source_center_shape": last_available["center_lens"]["center_shape"],
+                "source_center_generator": last_available["center_lens"]["center_generator"],
+                "target_edge_k": 2,
+                "reduction_kind": "semiprime-projection",
+                "recommended_classic_handoff": False,
+            }
+
+        data["terminal_reduction"] = terminal_reduction_payload
+
+    return data
 
 
 def _print_opaque_recursive_lens(data: dict) -> None:
@@ -3527,6 +3559,34 @@ def _print_opaque_recursive_lens(data: dict) -> None:
         f"{'yes' if recurrence['stable_center_generator'] else 'no'}"
     )
     print(f"  stable_edge = {'yes' if recurrence['stable_edge'] else 'no'}")
+
+    if "terminal_reduction" in data:
+        reduction = data["terminal_reduction"]
+        print()
+        print("PET terminal reduction lens")
+        print(f"  available = {'yes' if reduction['available'] else 'no'}")
+        if not reduction["available"]:
+            print(f"  reason = {reduction['reason']}")
+        else:
+            source_window = reduction["source_window"]
+            print(f"  status = {reduction['status']}")
+            print(f"  source_status = {reduction['source_status']}")
+            print(f"  source_edge_k = {reduction['source_edge_k']}")
+            print(
+                "  source_window = "
+                f"k[{source_window['k_start']},{source_window['k_end']}]"
+            )
+            print(f"  source_visible_form = {reduction['source_visible_form']}")
+            print(f"  source_visible_shape = {reduction['source_visible_shape']}")
+            print(f"  source_center_shape = {reduction['source_center_shape']}")
+            print(f"  source_center_generator = {reduction['source_center_generator']}")
+            print(f"  target_edge_k = {reduction['target_edge_k']}")
+            print(f"  reduction_kind = {reduction['reduction_kind']}")
+            print(
+                "  recommended_classic_handoff = "
+                f"{'yes' if reduction['recommended_classic_handoff'] else 'no'}"
+            )
+        print(f"  claim = {reduction['claim']}")
 
     print()
     print("PET interpretation")
@@ -4518,6 +4578,10 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=3,
     )
+    p_opaque_recursive_lens.add_argument(
+        "--terminal-reduction",
+        action="store_true",
+    )
     p_opaque_recursive_lens.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -5341,6 +5405,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_generator_count=args.max_generator_count,
                 max_move_span=args.max_move_span,
                 depth=args.depth,
+                terminal_reduction=args.terminal_reduction,
             )
 
             if args.json:

@@ -127,3 +127,88 @@ def test_opaque_recursive_lens_keeps_zoom_inside_suggested_window() -> None:
         assert data["recurrence"]["status"] == "terminal-window"
         assert data["levels"][1]["available"] is False
         assert data["levels"][1]["reason"] == "no magnetic band overlaps active window"
+
+def test_opaque_recursive_lens_terminal_reduction_proposes_semiprime_projection() -> None:
+    rsa250 = (
+        "2140324650240744961264423072839333563008614715144755017797754920881418023447140136643345519095804679610992851872470914587687396261921557363047454770520805119056493106687691590019759405693457452230589325976697471681738069364894699871578494975937497937"
+    )
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        rsa250,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "2",
+        "--terminal-reduction",
+    )
+
+    reduction = data["terminal_reduction"]
+    assert reduction["available"] is True
+    assert reduction["status"] == "proposal"
+    assert reduction["source_status"] == "terminal-window"
+    assert reduction["source_edge_k"] == 30
+    assert reduction["source_window"]["k_range"] == "28..30"
+    assert reduction["source_visible_form"] == "pre-pressure-edge"
+    assert reduction["source_visible_shape"] == "ramp-band"
+    assert reduction["target_edge_k"] == 2
+    assert reduction["reduction_kind"] == "semiprime-projection"
+    assert reduction["recommended_classic_handoff"] is False
+    assert "does not factor N" in reduction["claim"]
+
+
+def test_opaque_recursive_lens_terminal_reduction_reports_unavailable_when_not_terminal() -> None:
+    data = _run_json(
+        "opaque-recursive-lens",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--depth",
+        "3",
+        "--terminal-reduction",
+    )
+
+    reduction = data["terminal_reduction"]
+    assert reduction["available"] is False
+    assert reduction["reason"] == "recursive lens did not stop at a terminal window"
+    assert "does not factor N" in reduction["claim"]
+
+
+def test_opaque_recursive_lens_terminal_reduction_text_is_explicitly_non_factorizing() -> None:
+    rsa250 = (
+        "2140324650240744961264423072839333563008614715144755017797754920881418023447140136643345519095804679610992851872470914587687396261921557363047454770520805119056493106687691590019759405693457452230589325976697471681738069364894699871578494975937497937"
+    )
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        rsa250,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "2",
+        "--terminal-reduction",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET terminal reduction lens" in result.stdout
+    assert "available = yes" in result.stdout
+    assert "status = proposal" in result.stdout
+    assert "source_edge_k = 30" in result.stdout
+    assert "source_window = k[28,30]" in result.stdout
+    assert "target_edge_k = 2" in result.stdout
+    assert "reduction_kind = semiprime-projection" in result.stdout
+    assert "recommended_classic_handoff = no" in result.stdout
+    assert "claim = PET reduction lens only; this does not factor N" in result.stdout
+
