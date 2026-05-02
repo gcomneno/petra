@@ -2650,6 +2650,126 @@ def _same_k_window(left: dict | None, right: dict | None) -> bool:
     )
 
 
+def _parse_k_range(k_range: str) -> tuple[int, int]:
+    start_text, end_text = k_range.split("..", 1)
+    return int(start_text), int(end_text)
+
+
+def _k_range_overlaps_window(k_range: str, window: dict | None) -> bool:
+    if window is None:
+        return True
+
+    start, end = _parse_k_range(k_range)
+    window_start = int(window["k_start"])
+    window_end = int(window["k_end"])
+    return start <= window_end and end >= window_start
+
+
+def _k_range_inside_window(k_range: str, window: dict | None) -> bool:
+    if window is None:
+        return True
+
+    start, end = _parse_k_range(k_range)
+    window_start = int(window["k_start"])
+    window_end = int(window["k_end"])
+    return start >= window_start and end <= window_end
+
+
+def _select_windowed_recursive_peel(
+    n: int,
+    *,
+    active_window: dict | None,
+    excluded_support_limit: int,
+    max_generator_count: int,
+    max_move_span: int,
+) -> dict:
+    effective_max_generator_count = max_generator_count
+    if active_window is not None:
+        effective_max_generator_count = min(
+            max_generator_count,
+            int(active_window["k_end"]),
+        )
+
+    peel = _opaque_focused_peel(
+        n,
+        max_generator_count=effective_max_generator_count,
+        excluded_support_limit=excluded_support_limit,
+        max_move_span=max_move_span,
+        center_lens=True,
+    )
+
+    if active_window is None:
+        return {
+            "peel": peel,
+            "effective_max_generator_count": effective_max_generator_count,
+            "window_filter": "full",
+            "window_match": True,
+        }
+
+    selected_range = peel["selected_band"]["k_range"]
+    if _k_range_overlaps_window(selected_range, active_window):
+        return {
+            "peel": peel,
+            "effective_max_generator_count": effective_max_generator_count,
+            "window_filter": "overlap",
+            "window_match": True,
+        }
+
+    response = _opaque_mass_response(
+        n,
+        max_generator_count=effective_max_generator_count,
+        excluded_support_limit=excluded_support_limit,
+        max_move_span=max_move_span,
+        include_bands=True,
+    )
+
+    matching_bands = [
+        band
+        for band in response["magnetic_bands"]
+        if _k_range_overlaps_window(band["k_range"], active_window)
+    ]
+    if not matching_bands:
+        return {
+            "peel": peel,
+            "effective_max_generator_count": effective_max_generator_count,
+            "window_filter": "overlap",
+            "window_match": False,
+            "reason": "no magnetic band overlaps active window",
+        }
+
+    best = sorted(
+        matching_bands,
+        key=lambda band: (
+            -int(band["focus_score"]),
+            int(band["min_trigger_span"]),
+            abs(int(band["closest_k"]) - int(active_window["k_end"])),
+        ),
+    )[0]
+
+    windowed_peel = _opaque_focused_peel(
+        n,
+        max_generator_count=effective_max_generator_count,
+        excluded_support_limit=excluded_support_limit,
+        max_move_span=max_move_span,
+        kind=best["kind"],
+        move=best["move"],
+        center_lens=True,
+    )
+
+    return {
+        "peel": windowed_peel,
+        "effective_max_generator_count": effective_max_generator_count,
+        "window_filter": "overlap",
+        "window_match": True,
+        "forced_band": {
+            "kind": best["kind"],
+            "move": best["move"],
+            "k_range": best["k_range"],
+        },
+    }
+
+
+
 def _opaque_recursive_lens(
     n: int,
     *,
@@ -2686,13 +2806,29 @@ def _opaque_recursive_lens(
             break
 
         try:
-            peel = _opaque_focused_peel(
+            selection = _select_windowed_recursive_peel(
                 n,
-                max_generator_count=effective_max_generator_count,
+                active_window=active_window,
+                max_generator_count=max_generator_count,
                 excluded_support_limit=excluded_support_limit,
                 max_move_span=max_move_span,
-                center_lens=True,
             )
+            effective_max_generator_count = selection["effective_max_generator_count"]
+
+            if not selection["window_match"]:
+                levels.append(
+                    {
+                        "level": level_index,
+                        "input_window": active_window,
+                        "effective_max_generator_count": effective_max_generator_count,
+                        "available": False,
+                        "reason": selection["reason"],
+                    }
+                )
+                stop_reason = "collapsed"
+                break
+
+            peel = selection["peel"]
         except ValueError as exc:
             levels.append(
                 {
@@ -2735,6 +2871,8 @@ def _opaque_recursive_lens(
             "input_window": active_window,
             "effective_max_generator_count": effective_max_generator_count,
             "available": True,
+            "window_filter": selection.get("window_filter"),
+            "forced_band": selection.get("forced_band"),
             "visible_form": visible["form"],
             "visible_shape": visible["shape"],
             "edge_k": center_lens["edge_k"],
@@ -2877,6 +3015,13 @@ def _print_opaque_recursive_lens(data: dict) -> None:
             band = level["selected_band"]
             lens = level["center_lens"]
             suggested = lens["suggested_window"]
+            print(f"    window_filter = {level.get('window_filter')}")
+            if level.get("forced_band"):
+                forced = level["forced_band"]
+                print(
+                    "    forced_band = "
+                    f"{forced['kind']} {forced['move']} k[{forced['k_range']}]"
+                )
             print(f"    visible_form = {level['visible_form']}")
             print(f"    visible_shape = {level['visible_shape']}")
             print(f"    edge_k = {level['edge_k']}")

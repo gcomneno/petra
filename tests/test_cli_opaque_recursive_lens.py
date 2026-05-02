@@ -91,3 +91,35 @@ def test_opaque_recursive_lens_rejects_non_positive_depth() -> None:
 
     assert result.returncode != 0
     assert "--depth expects integers >= 1" in result.stderr
+
+
+def test_opaque_recursive_lens_keeps_zoom_inside_suggested_window() -> None:
+    rsa250 = (
+        "2140324650240744961264423072839333563008614715144755017797754920881418023447140136643345519095804679610992851872470914587687396261921557363047454770520805119056493106687691590019759405693457452230589325976697471681738069364894699871578494975937497937"
+    )
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        rsa250,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "2",
+    )
+
+    assert data["levels"][0]["center_lens"]["suggested_window"]["k_range"] == "28..30"
+
+    if len(data["levels"]) > 1 and data["levels"][1]["available"]:
+        level1 = data["levels"][1]
+        assert level1["input_window"]["k_range"] == "28..30"
+        selected_start, selected_end = [
+            int(part)
+            for part in level1["selected_band"]["k_range"].split("..")
+        ]
+        assert selected_start <= 30
+        assert selected_end >= 28
+        assert level1["window_filter"] == "overlap"
