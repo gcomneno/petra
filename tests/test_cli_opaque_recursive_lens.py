@@ -596,3 +596,223 @@ def test_opaque_recursive_lens_composite_subedge_recursion_text_is_monkey_friend
     assert "converged_edge_k = 2" in result.stdout
     assert "converged_center_generator = 430080" in result.stdout
     assert "claim = PET composite-subedge recursion only; this does not factor N" in result.stdout
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_fails_when_radius_too_small() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "100",
+    )
+
+    probe = data["diagnostic_classic_probe_payload"]
+    assert data["diagnostic_classic_probe"] is True
+    assert probe["available"] is True
+    assert probe["source"] == "single-subedge-anchor-candidate"
+    assert probe["probe_kind"] == "diagnostic-only-small-range"
+    assert probe["method"] == "fermat-center-scan"
+    assert probe["center"] == 79658
+    assert probe["radius"] == 100
+    assert probe["scan_start"] == 79558
+    assert probe["scan_end"] == 79758
+    assert probe["candidates_checked_count"] == 201
+    assert probe["divisor_found"] is None
+    assert probe["cofactor"] is None
+    assert probe["verified"] is False
+    assert probe["classic_bridge_recommendation"] == "diagnostic-only"
+    assert "does not factor N unless verified" in probe["claim"]
+
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_verifies_small_semiprime() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    probe = data["diagnostic_classic_probe_payload"]
+    assert data["diagnostic_classic_probe"] is True
+    assert probe["available"] is True
+    assert probe["method"] == "fermat-center-scan"
+    assert probe["center"] == 79658
+    assert probe["radius"] == 1000
+    assert probe["scan_start"] == 78658
+    assert probe["scan_end"] == 80658
+    assert probe["divisor_found"] == 70139
+    assert probe["cofactor"] == 90469
+    assert probe["verified"] is True
+    assert probe["divisor_found"] * probe["cofactor"] == int(n10)
+
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_text_is_monkey_friendly() -> None:
+    n10 = "6345405191"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET diagnostic classic probe" in result.stdout
+    assert "probe_kind = diagnostic-only-small-range" in result.stdout
+    assert "method = fermat-center-scan" in result.stdout
+    assert "center = 79658" in result.stdout
+    assert "radius = 1000" in result.stdout
+    assert "scan_window = [78658,80658]" in result.stdout
+    assert "divisor_found = 70139" in result.stdout
+    assert "cofactor = 90469" in result.stdout
+    assert "verified = yes" in result.stdout
+    assert "claim = PET diagnostic classic probe only; this does not factor N unless verified" in result.stdout
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_fails_when_radius_too_small() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "100",
+    )
+
+    probe = data["diagnostic_classic_probe_payload"]
+    assert data["diagnostic_classic_probe"] is True
+    assert probe["available"] is True
+    assert probe["source"] == "single-subedge-anchor-candidate"
+    assert probe["probe_kind"] == "diagnostic-only-small-range"
+    assert probe["method"] == "fermat-center-scan"
+    assert probe["center"] == 79658
+    assert probe["radius"] == 100
+    assert probe["scan_start"] == 79558
+    assert probe["scan_end"] == 79758
+    assert probe["candidates_checked_count"] == 201
+    assert probe["divisor_found"] is None
+    assert probe["cofactor"] is None
+    assert probe["verified"] is False
+    assert probe["classic_bridge_recommendation"] == "diagnostic-only"
+    assert "does not factor N unless verified" in probe["claim"]
+
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_verifies_small_semiprime() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    probe = data["diagnostic_classic_probe_payload"]
+    assert data["diagnostic_classic_probe"] is True
+    assert probe["available"] is True
+    assert probe["method"] == "fermat-center-scan"
+    assert probe["center"] == 79658
+    assert probe["radius"] == 1000
+    assert probe["scan_start"] == 78658
+    assert probe["scan_end"] == 80658
+    assert probe["divisor_found"] == 70139
+    assert probe["cofactor"] == 90469
+    assert probe["verified"] is True
+    assert probe["divisor_found"] * probe["cofactor"] == int(n10)
+
+
+def test_opaque_recursive_lens_diagnostic_fermat_probe_text_is_monkey_friendly() -> None:
+    n10 = "6345405191"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET diagnostic classic probe" in result.stdout
+    assert "probe_kind = diagnostic-only-small-range" in result.stdout
+    assert "method = fermat-center-scan" in result.stdout
+    assert "center = 79658" in result.stdout
+    assert "radius = 1000" in result.stdout
+    assert "scan_window = [78658,80658]" in result.stdout
+    assert "divisor_found = 70139" in result.stdout
+    assert "cofactor = 90469" in result.stdout
+    assert "verified = yes" in result.stdout
+    assert "claim = PET diagnostic classic probe only; this does not factor N unless verified" in result.stdout

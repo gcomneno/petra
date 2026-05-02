@@ -3858,6 +3858,62 @@ def _opaque_recursive_lens_subedge_recursion(
             ),
         }
 
+    single_anchor_candidates = [
+        result
+        for result in available_results
+        if result.get("subedge_k") == 2
+        and result.get("edge_k") == 2
+        and result.get("center_lens_available")
+        and result.get("center_lens_kind") in {
+            "flat-two-leaf-center",
+            "flat-three-leaf-center",
+        }
+    ]
+
+    if single_anchor_candidates:
+        best_single = sorted(
+            single_anchor_candidates,
+            key=lambda result: (
+                0 if result["center_lens_kind"] == "flat-two-leaf-center" else 1,
+                int(result["center_generator"]),
+            ),
+        )[0]
+        single_subedge_anchor_candidate = {
+            "available": True,
+            "source": "single-subedge-recursion",
+            "subedge_k": best_single["subedge_k"],
+            "target_window": best_single["target_window"],
+            "selected_band": best_single["selected_band"],
+            "visible_form": best_single["visible_form"],
+            "visible_shape": best_single["visible_shape"],
+            "edge_k": best_single["edge_k"],
+            "center_lens_kind": best_single["center_lens_kind"],
+            "center_generator": best_single["center_generator"],
+            "center_nearest_integer": best_single["center_nearest_integer"],
+            "center_shape": best_single["center_shape"],
+            "anchor_status": "unresolved",
+            "binding_strength": "medium",
+            "classic_bridge_recommendation": "diagnostic-only",
+            "classic_bridge_kind": "small-range-verification",
+            "reason": (
+                "single k=2 subedge exposes a flat local center, "
+                "but no subedge convergence confirms it"
+            ),
+            "claim": (
+                "PET single-subedge anchor candidate only; "
+                "this does not factor N"
+            ),
+        }
+    else:
+        single_subedge_anchor_candidate = {
+            "available": False,
+            "reason": "no single k=2 flat local subedge anchor candidate is available",
+            "claim": (
+                "PET single-subedge anchor candidate only; "
+                "this does not factor N"
+            ),
+        }
+
     return {
         "available": bool(subedge_results),
         "source": "composite-edge-peel",
@@ -3868,6 +3924,7 @@ def _opaque_recursive_lens_subedge_recursion(
         "subedge_results": subedge_results,
         "convergence": convergence,
         "refined_anchor_candidate": refined_anchor_candidate,
+        "single_subedge_anchor_candidate": single_subedge_anchor_candidate,
         "claim": claim,
     }
 
@@ -3926,6 +3983,24 @@ def _opaque_recursive_lens_branch_verdict(
                 "claim": claim,
             }
 
+        single_anchor = subedge_recursion_payload.get(
+            "single_subedge_anchor_candidate"
+        )
+        if single_anchor and single_anchor.get("available"):
+            return {
+                "available": True,
+                "classic_ready": False,
+                "best_signal": "single-subedge-anchor-candidate",
+                "anchor_status": single_anchor["anchor_status"],
+                "binding_strength": single_anchor["binding_strength"],
+                "classic_bridge_recommendation": single_anchor[
+                    "classic_bridge_recommendation"
+                ],
+                "source": single_anchor["source"],
+                "reason": single_anchor["reason"],
+                "claim": claim,
+            }
+
         if subedge_recursion_payload.get("subedge_count", 0) > 0:
             return {
                 "available": True,
@@ -3937,7 +4012,7 @@ def _opaque_recursive_lens_branch_verdict(
                 "source": "subedge-recursion",
                 "reason": (
                     "composite edge produced subedges, but no subedge produced "
-                    "a repeated PET field"
+                    "a repeated PET field or single-subedge anchor candidate"
                 ),
                 "claim": claim,
             }
@@ -4007,6 +4082,111 @@ def _opaque_recursive_lens_branch_verdict(
     }
 
 
+def _opaque_recursive_lens_diagnostic_classic_probe(
+    n: int,
+    subedge_recursion_payload: dict | None,
+    *,
+    radius: int,
+) -> dict:
+    claim = "PET diagnostic classic probe only; this does not factor N unless verified"
+
+    if radius < 0:
+        raise ValueError("--handoff-radius expects integers >= 0")
+
+    if (
+        not subedge_recursion_payload
+        or not subedge_recursion_payload.get("available")
+    ):
+        return {
+            "available": False,
+            "reason": "subedge recursion is not available",
+            "claim": claim,
+        }
+
+    single = subedge_recursion_payload.get("single_subedge_anchor_candidate")
+    if not single or not single.get("available"):
+        return {
+            "available": False,
+            "reason": "single-subedge anchor candidate is not available",
+            "claim": claim,
+        }
+
+    if single["classic_bridge_recommendation"] != "diagnostic-only":
+        return {
+            "available": False,
+            "reason": "single-subedge anchor candidate is not diagnostic-only",
+            "claim": claim,
+        }
+
+    center = int(single["center_nearest_integer"])
+    start = max(2, center - radius)
+    end = max(start, center + radius)
+
+    candidates_checked = []
+    divisor_found = None
+    cofactor = None
+    verified = False
+    method = "local-divisibility-scan"
+
+    if single["center_lens_kind"] == "flat-two-leaf-center":
+        method = "fermat-center-scan"
+        for candidate_center in range(start, end + 1):
+            candidates_checked.append(candidate_center)
+            delta_square = candidate_center * candidate_center - n
+            if delta_square < 0:
+                continue
+
+            delta = math.isqrt(delta_square)
+            if delta * delta != delta_square:
+                continue
+
+            left = candidate_center - delta
+            right = candidate_center + delta
+            if left > 1 and right > 1 and left * right == n:
+                divisor_found = left
+                cofactor = right
+                verified = True
+                break
+    else:
+        for candidate in range(start, end + 1):
+            candidates_checked.append(candidate)
+            if n % candidate == 0:
+                divisor_found = candidate
+                cofactor = n // candidate
+                break
+
+        verified = (
+            divisor_found is not None
+            and cofactor is not None
+            and divisor_found * cofactor == n
+        )
+
+    return {
+        "available": True,
+        "source": "single-subedge-anchor-candidate",
+        "probe_kind": "diagnostic-only-small-range",
+        "method": method,
+        "center": center,
+        "radius": radius,
+        "scan_start": start,
+        "scan_end": end,
+        "candidates_checked": candidates_checked,
+        "candidates_checked_count": len(candidates_checked),
+        "divisor_found": divisor_found,
+        "cofactor": cofactor,
+        "verified": verified,
+        "anchor_status": single["anchor_status"],
+        "classic_bridge_recommendation": single[
+            "classic_bridge_recommendation"
+        ],
+        "reason": (
+            "single-subedge anchor candidate allows a bounded diagnostic "
+            "classic probe"
+        ),
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens(
     n: int,
     *,
@@ -4020,6 +4200,7 @@ def _opaque_recursive_lens(
     handoff_radius: int = 5,
     anchor_field: bool = False,
     composite_edge_peel: bool = False,
+    diagnostic_classic_probe: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -4299,6 +4480,15 @@ def _opaque_recursive_lens(
         composite_edge_peel_payload=composite_edge_peel_payload,
         subedge_recursion_payload=subedge_recursion_payload,
     )
+    diagnostic_classic_probe_payload = (
+        _opaque_recursive_lens_diagnostic_classic_probe(
+            n,
+            subedge_recursion_payload,
+            radius=handoff_radius,
+        )
+        if diagnostic_classic_probe
+        else None
+    )
 
     data = {
         "n": n,
@@ -4319,6 +4509,8 @@ def _opaque_recursive_lens(
         "composite_edge_peel_payload": composite_edge_peel_payload,
         "subedge_recursion_payload": subedge_recursion_payload,
         "branch_verdict": branch_verdict,
+        "diagnostic_classic_probe": diagnostic_classic_probe,
+        "diagnostic_classic_probe_payload": diagnostic_classic_probe_payload,
         "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
@@ -4668,6 +4860,49 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 print(f"    reason = {refined['reason']}")
                 print(f"    claim = {refined['claim']}")
 
+            single = recursion["single_subedge_anchor_candidate"]
+            print()
+            print("  Single-subedge anchor candidate")
+            if not single["available"]:
+                print("    available = no")
+                print(f"    reason = {single['reason']}")
+            else:
+                target = single["target_window"]
+                band = single["selected_band"]
+                print("    available = yes")
+                print(f"    source = {single['source']}")
+                print(f"    subedge_k = {single['subedge_k']}")
+                print(
+                    "    target_window = "
+                    f"k[{target['k_start']},{target['k_end']}]"
+                )
+                print(
+                    "    selected_band = "
+                    f"{band['kind']} {band['move']} k[{band['k_range']}]"
+                )
+                print(f"    visible_form = {single['visible_form']}")
+                print(f"    visible_shape = {single['visible_shape']}")
+                print(f"    edge_k = {single['edge_k']}")
+                print(f"    center_lens_kind = {single['center_lens_kind']}")
+                print(f"    center_generator = {single['center_generator']}")
+                print(
+                    "    center_nearest_integer = "
+                    f"{single['center_nearest_integer']}"
+                )
+                print(f"    center_shape = {single['center_shape']}")
+                print(f"    anchor_status = {single['anchor_status']}")
+                print(f"    binding_strength = {single['binding_strength']}")
+                print(
+                    "    classic_bridge_recommendation = "
+                    f"{single['classic_bridge_recommendation']}"
+                )
+                print(
+                    "    classic_bridge_kind = "
+                    f"{single['classic_bridge_kind']}"
+                )
+                print(f"    reason = {single['reason']}")
+                print(f"    claim = {single['claim']}")
+
             print(f"  claim = {recursion['claim']}")
 
     if data.get("anchor_field"):
@@ -4746,6 +4981,35 @@ def _print_opaque_recursive_lens(data: dict) -> None:
             print(f"  source = {verdict['source']}")
             print(f"  reason = {verdict['reason']}")
         print(f"  claim = {verdict['claim']}")
+
+    if data.get("diagnostic_classic_probe"):
+        probe = data["diagnostic_classic_probe_payload"]
+        print()
+        print("PET diagnostic classic probe")
+        if not probe or not probe["available"]:
+            reason = "unknown" if not probe else probe["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {probe['source']}")
+            print(f"  probe_kind = {probe['probe_kind']}")
+            print(f"  method = {probe.get('method', 'unknown')}")
+            print(f"  anchor_status = {probe['anchor_status']}")
+            print(
+                "  classic_bridge_recommendation = "
+                f"{probe['classic_bridge_recommendation']}"
+            )
+            print(f"  center = {probe['center']}")
+            print(f"  radius = {probe['radius']}")
+            print(f"  scan_window = [{probe['scan_start']},{probe['scan_end']}]")
+            print(
+                "  candidates_checked_count = "
+                f"{probe.get('candidates_checked_count', len(probe['candidates_checked']))}"
+            )
+            print(f"  divisor_found = {probe['divisor_found']}")
+            print(f"  cofactor = {probe['cofactor']}")
+            print(f"  verified = {'yes' if probe['verified'] else 'no'}")
+            print(f"  reason = {probe['reason']}")
+            print(f"  claim = {probe['claim']}")
 
     print()
     print("PET interpretation")
@@ -5762,6 +6026,11 @@ def main(argv: list[str] | None = None) -> int:
         help="decompose stable composite recursive edge_k values as PET-side symbolic subedges",
     )
     p_opaque_recursive_lens.add_argument(
+        "--diagnostic-classic-probe",
+        action="store_true",
+        help="run a bounded diagnostic classic probe from PET diagnostic-only anchors",
+    )
+    p_opaque_recursive_lens.add_argument(
         "--classic-handoff",
         action="store_true",
         help="use the recursive center lens as a classic divisibility anchor",
@@ -6602,6 +6871,7 @@ def main(argv: list[str] | None = None) -> int:
                 handoff_radius=args.handoff_radius,
                 anchor_field=args.anchor_field,
                 composite_edge_peel=args.composite_edge_peel,
+                diagnostic_classic_probe=args.diagnostic_classic_probe,
             )
 
             if args.json:
