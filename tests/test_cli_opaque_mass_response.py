@@ -39,12 +39,14 @@ def test_opaque_mass_response_json_reports_hotspots() -> None:
     assert k2["margin_bits"] == 2.0
     assert k2["zone"] == "boundary-informative"
     assert k2["new_zone"] == "pressured"
-    assert k2["drop_zone"] == "boundary-informative"
+    assert k2["drop_zone"] is None
     assert k2["response_moves"] == ["NEW"]
     assert k2["response"] == "NEW"
     assert k2["threshold_crossings"] == [
-        "NEW:boundary-informative->pressured"
+        "NEW(1):boundary-informative->pressured"
     ]
+    assert k2["new_trigger_span"] == 1
+    assert k2["minimal_trigger_span"] == 1
     assert k2["hotspot_kind"] == "pressure-entry"
     assert k2["hotspot_kinds"] == ["pressure-entry"]
     assert k2["focus_score"] == 4
@@ -54,8 +56,10 @@ def test_opaque_mass_response_json_reports_hotspots() -> None:
     assert k3["drop_zone"] == "boundary-informative"
     assert k3["response_moves"] == ["DROP"]
     assert k3["threshold_crossings"] == [
-        "DROP:pressured->boundary-informative"
+        "DROP(1):pressured->boundary-informative"
     ]
+    assert k3["drop_trigger_span"] == 1
+    assert k3["minimal_trigger_span"] == 1
     assert k3["hotspot_kind"] == "recovery"
     assert k3["focus_score"] == 3
 
@@ -77,6 +81,7 @@ def test_opaque_mass_response_text_is_monkey_friendly() -> None:
     assert "PET OPAQUE MASS RESPONSE" in result.stdout
     assert "Observed projection" in result.stdout
     assert "Response hotspots" in result.stdout
+    assert "min_span" in result.stdout
     assert "threshold" in result.stdout
     assert "pressure-entry" in result.stdout
     assert "recovery" in result.stdout
@@ -124,3 +129,42 @@ def test_opaque_mass_response_requires_positive_excluded_support_limit() -> None
 
     assert result.returncode != 0
     assert "--excluded-support-limit expects integers >= 1" in result.stderr
+
+
+def test_opaque_mass_response_uses_larger_trigger_span_when_needed() -> None:
+    data = _run_json(
+        "opaque-mass-response",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+    )
+
+    k1 = next(row for row in data["hotspots"] if row["k"] == 1)
+    assert k1["zone"] == "boundary-informative"
+    assert k1["new_k"] == 3
+    assert k1["new_zone"] == "pressured"
+    assert k1["new_trigger_span"] == 2
+    assert k1["minimal_trigger_span"] == 2
+    assert k1["threshold_crossings"] == [
+        "NEW(2):boundary-informative->pressured"
+    ]
+
+
+def test_opaque_mass_response_rejects_non_positive_move_span() -> None:
+    result = _run_cli(
+        "opaque-mass-response",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "0",
+    )
+
+    assert result.returncode != 0
+    assert "--max-move-span expects integers >= 1" in result.stderr

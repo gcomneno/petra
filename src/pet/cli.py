@@ -1377,6 +1377,7 @@ def _opaque_mass_response(
     *,
     max_generator_count: int,
     excluded_support_limit: int,
+    max_move_span: int = 1,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-mass-response expects integers >= 1")
@@ -1384,6 +1385,8 @@ def _opaque_mass_response(
         raise ValueError("--max-generator-count expects integers >= 2")
     if excluded_support_limit < 1:
         raise ValueError("--excluded-support-limit expects integers >= 1")
+    if max_move_span < 1:
+        raise ValueError("--max-move-span expects integers >= 1")
 
     digits = len(str(n))
     bit_length = n.bit_length()
@@ -1407,42 +1410,74 @@ def _opaque_mass_response(
     for k in range(1, max_generator_count + 1):
         current = center_for(k)
 
-        new_center = center_for(k + 1) if k < max_generator_count else None
-        drop_center = center_for(k - 1) if k > 1 else None
-
         response_moves = []
         threshold_crossings = []
         hotspot_kinds = []
         focus_scores = []
+        trigger_spans = []
+        new_trigger = None
+        drop_trigger = None
 
-        if new_center is not None and new_center["zone"] != current["zone"]:
-            kind = _opaque_mass_response_hotspot_kind(
-                current["zone"],
-                new_center["zone"],
-            )
-            response_moves.append("NEW")
-            threshold_crossings.append(
-                f"NEW:{current['zone']}->{new_center['zone']}"
-            )
-            hotspot_kinds.append(kind)
-            focus_scores.append(_opaque_mass_response_focus_score(kind))
+        for span in range(1, max_move_span + 1):
+            new_k = k + span
+            if new_k <= max_generator_count:
+                new_center = center_for(new_k)
+                if new_center["zone"] != current["zone"]:
+                    kind = _opaque_mass_response_hotspot_kind(
+                        current["zone"],
+                        new_center["zone"],
+                    )
+                    new_trigger = {
+                        "move": "NEW",
+                        "span": span,
+                        "target_k": new_k,
+                        "target_zone": new_center["zone"],
+                        "threshold_crossing": (
+                            f"NEW({span}):"
+                            f"{current['zone']}->{new_center['zone']}"
+                        ),
+                        "hotspot_kind": kind,
+                        "focus_score": _opaque_mass_response_focus_score(kind),
+                    }
+                    break
 
-        if drop_center is not None and drop_center["zone"] != current["zone"]:
-            kind = _opaque_mass_response_hotspot_kind(
-                current["zone"],
-                drop_center["zone"],
-            )
-            response_moves.append("DROP")
-            threshold_crossings.append(
-                f"DROP:{current['zone']}->{drop_center['zone']}"
-            )
-            hotspot_kinds.append(kind)
-            focus_scores.append(_opaque_mass_response_focus_score(kind))
+        for span in range(1, max_move_span + 1):
+            drop_k = k - span
+            if drop_k >= 1:
+                drop_center = center_for(drop_k)
+                if drop_center["zone"] != current["zone"]:
+                    kind = _opaque_mass_response_hotspot_kind(
+                        current["zone"],
+                        drop_center["zone"],
+                    )
+                    drop_trigger = {
+                        "move": "DROP",
+                        "span": span,
+                        "target_k": drop_k,
+                        "target_zone": drop_center["zone"],
+                        "threshold_crossing": (
+                            f"DROP({span}):"
+                            f"{current['zone']}->{drop_center['zone']}"
+                        ),
+                        "hotspot_kind": kind,
+                        "focus_score": _opaque_mass_response_focus_score(kind),
+                    }
+                    break
+
+        for trigger in (new_trigger, drop_trigger):
+            if trigger is None:
+                continue
+            response_moves.append(trigger["move"])
+            threshold_crossings.append(trigger["threshold_crossing"])
+            hotspot_kinds.append(trigger["hotspot_kind"])
+            focus_scores.append(trigger["focus_score"])
+            trigger_spans.append(trigger["span"])
 
         if not response_moves:
             continue
 
         focus_score = max(focus_scores)
+        minimal_trigger_span = min(trigger_spans)
 
         hotspots.append(
             {
@@ -1452,10 +1487,23 @@ def _opaque_mass_response(
                 "center_digits": current["center_digits"],
                 "margin_bits": current["margin_bits"],
                 "zone": current["zone"],
-                "new_k": None if new_center is None else new_center["k"],
-                "new_zone": None if new_center is None else new_center["zone"],
-                "drop_k": None if drop_center is None else drop_center["k"],
-                "drop_zone": None if drop_center is None else drop_center["zone"],
+                "new_k": None if new_trigger is None else new_trigger["target_k"],
+                "new_zone": None
+                if new_trigger is None
+                else new_trigger["target_zone"],
+                "new_trigger_span": None
+                if new_trigger is None
+                else new_trigger["span"],
+                "drop_k": None
+                if drop_trigger is None
+                else drop_trigger["target_k"],
+                "drop_zone": None
+                if drop_trigger is None
+                else drop_trigger["target_zone"],
+                "drop_trigger_span": None
+                if drop_trigger is None
+                else drop_trigger["span"],
+                "minimal_trigger_span": minimal_trigger_span,
                 "response_moves": response_moves,
                 "response": ",".join(response_moves),
                 "threshold_crossings": threshold_crossings,
@@ -1476,11 +1524,13 @@ def _opaque_mass_response(
         "excluded_support_bits": excluded_support_bits,
         "excluded_support_digits": excluded_support_digits,
         "max_generator_count": max_generator_count,
+        "max_move_span": max_move_span,
         "hotspots": hotspots,
         "hotspot_count": len(hotspots),
         "interpretation": [
             "Hotspots are mass centers where symbolic PET NEW/DROP moves change the information zone.",
-            "Threshold crossings classify which representation-scale boundary was crossed.",
+            "Move span is the symbolic stimulus strength applied to the support-count hypothesis.",
+            "Minimal trigger span is the smallest NEW/DROP stimulus that crosses a representation-scale threshold.",
             "Focus score is a PET heuristic for prioritizing reactive frontiers, not a probability.",
             "PET still does not identify the true support; it marks reactive mass-center boundaries.",
         ],
@@ -1498,6 +1548,7 @@ def _print_opaque_mass_response(data: dict) -> None:
     print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
     print(f"  excluded_support_bits = {data['excluded_support_bits']}")
     print(f"  max_generator_count = {data['max_generator_count']}")
+    print(f"  max_move_span = {data['max_move_span']}")
 
     print()
     print("Response hotspots")
@@ -1506,7 +1557,7 @@ def _print_opaque_mass_response(data: dict) -> None:
     else:
         print(
             "  k | center_bits | margin_bits | zone                 | "
-            "response | kind             | focus | threshold"
+            "response | min_span | kind             | focus | threshold"
         )
         for row in data["hotspots"]:
             thresholds = ";".join(row["threshold_crossings"])
@@ -1516,6 +1567,7 @@ def _print_opaque_mass_response(data: dict) -> None:
                 f"{row['margin_bits']:>11.2f} | "
                 f"{row['zone']:<20} | "
                 f"{row['response']:<8} | "
+                f"{row['minimal_trigger_span']:>8} | "
                 f"{row['hotspot_kind']:<16} | "
                 f"{row['focus_score']:>5} | "
                 f"{thresholds}"
@@ -2393,6 +2445,11 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         required=True,
     )
+    p_opaque_mass_response.add_argument(
+        "--max-move-span",
+        type=int,
+        default=1,
+    )
     p_opaque_mass_response.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3174,6 +3231,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.n,
                 max_generator_count=args.max_generator_count,
                 excluded_support_limit=args.excluded_support_limit,
+                max_move_span=args.max_move_span,
             )
 
             if args.json:
