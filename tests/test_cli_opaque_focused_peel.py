@@ -577,3 +577,79 @@ def test_opaque_focused_peel_realize_text_is_monkey_friendly() -> None:
     assert "Realized shape" in result.stdout
     assert "shape = ((), (), ())" in result.stdout
     assert "generator = 30" in result.stdout
+
+
+def test_opaque_focused_peel_classic_handoff_finds_local_divisor() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--classic-handoff",
+        "--handoff-radius",
+        "2",
+    )
+
+    assert data["realize"] is True
+    assert data["classic_handoff"] is True
+
+    handoff = data["pet_classic_handoff"]
+    assert handoff["handoff_available"] is True
+    assert handoff["recommended"] is True
+    assert handoff["edge_k"] == 2
+    assert handoff["center"] == 102
+    assert handoff["radius"] == 2
+    assert handoff["scan_start"] == 100
+    assert handoff["scan_end"] == 104
+    assert handoff["divisor_found"] == 101
+    assert handoff["cofactor"] == 103
+    assert handoff["verified"] is True
+    assert "classic divisibility check performed" in handoff["claim"]
+
+
+def test_opaque_focused_peel_classic_handoff_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--classic-handoff",
+        "--handoff-radius",
+        "2",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET realization payload" in result.stdout
+    assert "PET classic handoff" in result.stdout
+    assert "method = local-divisibility-scan" in result.stdout
+    assert "recommended = yes" in result.stdout
+    assert "center = 102" in result.stdout
+    assert "scan_window = [100,104]" in result.stdout
+    assert "divisor_found = 101" in result.stdout
+    assert "cofactor = 103" in result.stdout
+    assert "verified = yes" in result.stdout
+
+
+def test_opaque_focused_peel_classic_handoff_rejects_negative_radius() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--classic-handoff",
+        "--handoff-radius",
+        "-1",
+    )
+
+    assert result.returncode != 0
+    assert "--handoff-radius expects integers >= 0" in result.stderr

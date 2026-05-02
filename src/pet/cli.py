@@ -2278,6 +2278,81 @@ def _opaque_focused_peel_realization(pet_decode: dict | None) -> dict:
 
 
 
+def _opaque_focused_peel_classic_handoff(
+    n: int,
+    pet_realization: dict | None,
+    *,
+    radius: int,
+) -> dict:
+    if radius < 0:
+        raise ValueError("--handoff-radius expects integers >= 0")
+
+    if not pet_realization or not pet_realization.get("realization_available"):
+        return {
+            "handoff_available": False,
+            "reason": "PET realization payload is not available",
+        }
+
+    edge_k = int(pet_realization["edge_k"])
+    center = int(pet_realization["nearest_integer"])
+
+    if edge_k != 2:
+        return {
+            "handoff_available": True,
+            "source": "PET realization payload",
+            "method": "local-divisibility-scan",
+            "recommended": False,
+            "reason": "direct divisor handoff is only recommended for edge_k=2",
+            "edge_k": edge_k,
+            "center": center,
+            "radius": radius,
+            "candidates_checked": [],
+            "divisor_found": None,
+            "cofactor": None,
+            "verified": False,
+            "claim": "PET-guided classic handoff only; skipped direct divisor search",
+        }
+
+    start = max(2, center - radius)
+    end = max(start, center + radius)
+
+    candidates_checked = []
+    divisor_found = None
+    cofactor = None
+
+    for candidate in range(start, end + 1):
+        candidates_checked.append(candidate)
+        if candidate > 1 and n % candidate == 0:
+            divisor_found = candidate
+            cofactor = n // candidate
+            break
+
+    verified = (
+        divisor_found is not None
+        and cofactor is not None
+        and divisor_found * cofactor == n
+    )
+
+    return {
+        "handoff_available": True,
+        "source": "PET realization payload",
+        "method": "local-divisibility-scan",
+        "recommended": True,
+        "reason": "edge_k=2 supports local divisor scan around realized center",
+        "edge_k": edge_k,
+        "center": center,
+        "radius": radius,
+        "scan_start": start,
+        "scan_end": end,
+        "candidates_checked": candidates_checked,
+        "divisor_found": divisor_found,
+        "cofactor": cofactor,
+        "verified": verified,
+        "claim": "PET-guided classic handoff only; classic divisibility check performed",
+    }
+
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2293,6 +2368,8 @@ def _opaque_focused_peel(
     decode: bool = False,
     center_lens: bool = False,
     realize: bool = False,
+    classic_handoff: bool = False,
+    handoff_radius: int = 5,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2302,7 +2379,11 @@ def _opaque_focused_peel(
         raise ValueError("--excluded-support-limit expects integers >= 1")
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
+    if handoff_radius < 0:
+        raise ValueError("--handoff-radius expects integers >= 0")
 
+    if classic_handoff:
+        realize = True
     if realize:
         center_lens = True
     if center_lens:
@@ -2393,6 +2474,15 @@ def _opaque_focused_peel(
         if realize
         else None
     )
+    pet_classic_handoff = (
+        _opaque_focused_peel_classic_handoff(
+            n,
+            pet_realization,
+            radius=handoff_radius,
+        )
+        if classic_handoff
+        else None
+    )
 
     return {
         "n": n,
@@ -2412,6 +2502,8 @@ def _opaque_focused_peel(
         "decode": decode,
         "center_lens": center_lens,
         "realize": realize,
+        "classic_handoff": classic_handoff,
+        "handoff_radius": handoff_radius,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
@@ -2421,6 +2513,7 @@ def _opaque_focused_peel(
         "pet_decode": pet_decode,
         "decoded_center_lens": decoded_center_lens,
         "pet_realization": pet_realization,
+        "pet_classic_handoff": pet_classic_handoff,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -2431,6 +2524,7 @@ def _opaque_focused_peel(
             "When enabled, the decode translates the visible PET form into local structural constraints.",
             "When enabled, the center lens builds the next PET-local lens from the projected center shape.",
             "When enabled, the realization payload bridges the projected center back to PET encode/decode.",
+            "When enabled, the classic handoff uses the realized center as an explicit external divisibility anchor.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2724,6 +2818,29 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"    child_generators = {realized_shape['child_generators']}")
             print(f"    role = {realization['role']}")
             print(f"    claim = {realization['claim']}")
+
+    if data.get("classic_handoff"):
+        handoff = data["pet_classic_handoff"]
+        print()
+        print("PET classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
 
     print()
     print("PET interpretation")
@@ -4102,6 +4219,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="materialize the projected center through canonical PET encode/decode",
     )
+    p_opaque_focused_peel.add_argument(
+        "--classic-handoff",
+        action="store_true",
+        help="use the realized PET center as an explicit classic divisibility anchor",
+    )
+    p_opaque_focused_peel.add_argument(
+        "--handoff-radius",
+        type=int,
+        default=5,
+        help="radius around the realized center for classic handoff scans",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-recursive-lens
@@ -4936,6 +5064,8 @@ def main(argv: list[str] | None = None) -> int:
                 decode=args.decode,
                 center_lens=args.center_lens,
                 realize=args.realize,
+                classic_handoff=args.classic_handoff,
+                handoff_radius=args.handoff_radius,
             )
 
             if args.json:
