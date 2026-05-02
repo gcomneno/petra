@@ -1346,6 +1346,133 @@ def _print_opaque_mass_centers(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_mass_response(
+    n: int,
+    *,
+    max_generator_count: int,
+    excluded_support_limit: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-mass-response expects integers >= 1")
+    if max_generator_count < 2:
+        raise ValueError("--max-generator-count expects integers >= 2")
+    if excluded_support_limit < 1:
+        raise ValueError("--excluded-support-limit expects integers >= 1")
+
+    digits = len(str(n))
+    bit_length = n.bit_length()
+    mass_bits = bit_length
+    excluded_support_bits = excluded_support_limit.bit_length()
+    excluded_support_digits = len(str(excluded_support_limit))
+
+    def center_for(k: int) -> dict:
+        center_bits = mass_bits / k
+        center_digits = digits / k
+        margin_bits = center_bits - excluded_support_bits
+        return {
+            "k": k,
+            "center_bits": center_bits,
+            "center_digits": center_digits,
+            "margin_bits": margin_bits,
+            "zone": _opaque_mass_center_zone(margin_bits),
+        }
+
+    hotspots = []
+    for k in range(1, max_generator_count + 1):
+        current = center_for(k)
+
+        new_center = center_for(k + 1) if k < max_generator_count else None
+        drop_center = center_for(k - 1) if k > 1 else None
+
+        response_moves = []
+        if new_center is not None and new_center["zone"] != current["zone"]:
+            response_moves.append("NEW")
+        if drop_center is not None and drop_center["zone"] != current["zone"]:
+            response_moves.append("DROP")
+
+        if not response_moves:
+            continue
+
+        hotspots.append(
+            {
+                "family": f"balanced-{k}-generator",
+                "k": k,
+                "center_bits": current["center_bits"],
+                "center_digits": current["center_digits"],
+                "margin_bits": current["margin_bits"],
+                "zone": current["zone"],
+                "new_k": None if new_center is None else new_center["k"],
+                "new_zone": None if new_center is None else new_center["zone"],
+                "drop_k": None if drop_center is None else drop_center["k"],
+                "drop_zone": None if drop_center is None else drop_center["zone"],
+                "response_moves": response_moves,
+                "response": ",".join(response_moves),
+            }
+        )
+
+    return {
+        "n": n,
+        "digits": digits,
+        "bit_length": bit_length,
+        "mass_bits": mass_bits,
+        "excluded_support_limit": excluded_support_limit,
+        "excluded_support_bits": excluded_support_bits,
+        "excluded_support_digits": excluded_support_digits,
+        "max_generator_count": max_generator_count,
+        "hotspots": hotspots,
+        "hotspot_count": len(hotspots),
+        "interpretation": [
+            "Hotspots are mass centers where symbolic PET NEW/DROP moves change the information zone.",
+            "These frontiers are candidate regions for focused PET lenses.",
+            "PET still does not identify the true support; it marks reactive mass-center boundaries.",
+        ],
+        "claim": "PET mass-response analysis only; this does not factor N",
+    }
+
+
+def _print_opaque_mass_response(data: dict) -> None:
+    print("PET OPAQUE MASS RESPONSE")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  mass_bits = {data['mass_bits']}")
+    print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
+    print(f"  excluded_support_bits = {data['excluded_support_bits']}")
+    print(f"  max_generator_count = {data['max_generator_count']}")
+
+    print()
+    print("Response hotspots")
+    if not data["hotspots"]:
+        print("  none")
+    else:
+        print(
+            "  k | center_bits | center_digits | margin_bits | "
+            "zone                 | new_zone             | drop_zone            | response"
+        )
+        for row in data["hotspots"]:
+            new_zone = "-" if row["new_zone"] is None else row["new_zone"]
+            drop_zone = "-" if row["drop_zone"] is None else row["drop_zone"]
+            print(
+                f"  {row['k']:>2} | "
+                f"{row['center_bits']:>11.2f} | "
+                f"{row['center_digits']:>13.2f} | "
+                f"{row['margin_bits']:>11.2f} | "
+                f"{row['zone']:<20} | "
+                f"{new_zone:<20} | "
+                f"{drop_zone:<20} | "
+                f"{row['response']}"
+            )
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -2193,6 +2320,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_mass_centers.add_argument("--json", action="store_true")
 
+    # opaque-mass-response
+    p_opaque_mass_response = subparsers.add_parser(
+        "opaque-mass-response",
+        help="find reactive PET mass-center frontiers under symbolic NEW/DROP moves",
+    )
+    p_opaque_mass_response.add_argument("n", type=int, metavar="N")
+    p_opaque_mass_response.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=30,
+    )
+    p_opaque_mass_response.add_argument(
+        "--excluded-support-limit",
+        type=int,
+        required=True,
+    )
+    p_opaque_mass_response.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2966,6 +3111,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_mass_centers(data)
+
+        elif args.command == "opaque-mass-response":
+            data = _opaque_mass_response(
+                args.n,
+                max_generator_count=args.max_generator_count,
+                excluded_support_limit=args.excluded_support_limit,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_mass_response(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
