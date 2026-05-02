@@ -300,3 +300,64 @@ def test_opaque_focused_peel_slice_text_is_monkey_friendly() -> None:
     assert "Separated partition" in result.stdout
     assert "boundary-informative-side" in result.stdout
     assert "pressured-side" in result.stdout
+
+
+def test_opaque_focused_peel_lift_exposes_visible_pet_form() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--lift",
+    )
+
+    assert data["cut"] is True
+    assert data["peel_step"] is True
+    assert data["slice"] is True
+    assert data["lift"] is True
+
+    lift = data["peel_lift"]
+    assert lift["lift_available"] is True
+    assert lift["lift_target"]["name"] == "boundary-informative-side"
+    assert lift["lifted_against"]["name"] == "pressured-side"
+
+    profile = lift["lift_profile"]
+    assert profile["selected_width"] == 2
+    assert profile["separated_width"] == 2
+    assert profile["local_shape"] == "thin-ramp"
+    assert profile["emergent_form"] == "pre-pressure-edge"
+    assert profile["edge_k"] == 2
+    assert profile["slice_boundary"] == "2/3"
+
+    visible = lift["visible_pet_form"]
+    assert visible["form"] == "pre-pressure-edge"
+    assert visible["shape"] == "thin-ramp"
+    assert visible["edge_k"] == 2
+    assert visible["boundary"] == "2/3"
+
+
+def test_opaque_focused_peel_lift_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--lift",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Focused peel cut" in result.stdout
+    assert "Focused peel step" in result.stdout
+    assert "Focused peel slice" in result.stdout
+    assert "Focused peel lift" in result.stdout
+    assert "Visible PET form" in result.stdout
+    assert "emergent_form = pre-pressure-edge" in result.stdout
+    assert "local_shape = thin-ramp" in result.stdout

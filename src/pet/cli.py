@@ -1990,6 +1990,73 @@ def _opaque_focused_peel_slice(
     }
 
 
+def _opaque_focused_peel_lift(peel_slice: dict | None) -> dict:
+    if not peel_slice or not peel_slice.get("slice_available"):
+        return {
+            "lift_available": False,
+            "reason": "focused peel slice is not available",
+        }
+
+    selected = peel_slice["selected_partition"]
+    separated = peel_slice["separated_partition"]
+    decision = peel_slice["slice_decision"]
+
+    selected_width = int(selected["k_end"]) - int(selected["k_start"]) + 1
+    separated_width = int(separated["k_end"]) - int(separated["k_start"]) + 1
+
+    if selected_width == 1:
+        local_shape = "edge-point"
+    elif selected_width <= 3:
+        local_shape = "thin-ramp"
+    else:
+        local_shape = "ramp-band"
+
+    if peel_slice["target_kind"] == "pressure-entry":
+        emergent_form = "pre-pressure-edge"
+    elif peel_slice["target_kind"] == "boundary-entry":
+        emergent_form = "boundary-entry-ramp"
+    elif peel_slice["target_kind"] == "recovery":
+        emergent_form = "recovery-edge"
+    elif peel_slice["target_kind"] == "decompression":
+        emergent_form = "decompression-edge"
+    else:
+        emergent_form = "scale-transition-edge"
+
+    lift_profile = {
+        "selected_width": selected_width,
+        "separated_width": separated_width,
+        "local_shape": local_shape,
+        "emergent_form": emergent_form,
+        "edge_k": peel_slice["edge_k"],
+        "slice_boundary": peel_slice["slice_boundary"],
+        "retained_side": selected["name"],
+        "separated_side": separated["name"],
+        "next_action": decision["next_action"],
+    }
+
+    return {
+        "lift_available": True,
+        "lift_target": selected,
+        "lifted_against": separated,
+        "lift_profile": lift_profile,
+        "visible_pet_form": {
+            "form": emergent_form,
+            "shape": local_shape,
+            "edge_k": peel_slice["edge_k"],
+            "boundary": peel_slice["slice_boundary"],
+            "description": (
+                f"{local_shape} on {selected['name']} ending at edge "
+                f"k={peel_slice['edge_k']} before {separated['name']}"
+            ),
+        },
+        "interpretation": [
+            "The lift inspects the retained local shape-space partition after the slice.",
+            "The visible PET form is a structural profile of the lifted side.",
+            "This lift does not identify hidden support; it exposes the local PET shape of the cut.",
+        ],
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2001,6 +2068,7 @@ def _opaque_focused_peel(
     cut: bool = False,
     peel_step: bool = False,
     slice_: bool = False,
+    lift: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2011,6 +2079,8 @@ def _opaque_focused_peel(
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
 
+    if lift:
+        slice_ = True
     if slice_:
         cut = True
         peel_step = True
@@ -2081,6 +2151,7 @@ def _opaque_focused_peel(
         if slice_
         else None
     )
+    peel_lift = _opaque_focused_peel_lift(peel_slice) if lift else None
 
     return {
         "n": n,
@@ -2096,17 +2167,20 @@ def _opaque_focused_peel(
         "cut": cut,
         "peel_step": peel_step,
         "slice": slice_,
+        "lift": lift,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
         "peel_step_result": peel_step_result,
         "peel_slice": peel_slice,
+        "peel_lift": peel_lift,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
             "When enabled, the cut separates the focused band into local PET layers.",
             "When enabled, the peel step selects the next structural layer to lift.",
             "When enabled, the slice partitions local PET shape-space across the selected boundary.",
+            "When enabled, the lift exposes the visible PET form of the retained partition.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2257,6 +2331,31 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"    separate = {decision['separate']}")
             print(f"    next_action = {decision['next_action']}")
             print(f"    reason = {decision['reason']}")
+
+    if data.get("lift"):
+        lift_data = data["peel_lift"]
+        print()
+        print("Focused peel lift")
+        if not lift_data or not lift_data["lift_available"]:
+            reason = "unknown" if not lift_data else lift_data["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            profile = lift_data["lift_profile"]
+            visible = lift_data["visible_pet_form"]
+            print(f"  lift_target = {lift_data['lift_target']['name']}")
+            print(f"  lifted_against = {lift_data['lifted_against']['name']}")
+            print(f"  selected_width = {profile['selected_width']}")
+            print(f"  separated_width = {profile['separated_width']}")
+            print(f"  local_shape = {profile['local_shape']}")
+            print(f"  emergent_form = {profile['emergent_form']}")
+            print(f"  edge_k = {profile['edge_k']}")
+            print(f"  slice_boundary = {profile['slice_boundary']}")
+            print()
+            print("  Visible PET form")
+            print(f"    form = {visible['form']}")
+            print(f"    shape = {visible['shape']}")
+            print(f"    boundary = {visible['boundary']}")
+            print(f"    description = {visible['description']}")
 
     print()
     print("PET interpretation")
@@ -3184,6 +3283,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="partition local PET shape-space across the selected peel boundary",
     )
+    p_opaque_focused_peel.add_argument(
+        "--lift",
+        action="store_true",
+        help="lift the retained partition and expose its visible PET form",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3986,6 +4090,7 @@ def main(argv: list[str] | None = None) -> int:
                 cut=args.cut,
                 peel_step=args.peel_step,
                 slice_=args.slice,
+                lift=args.lift,
             )
 
             if args.json:
