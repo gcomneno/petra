@@ -123,3 +123,7 @@ def test_opaque_recursive_lens_keeps_zoom_inside_suggested_window() -> None:
         assert selected_start <= 30
         assert selected_end >= 28
         assert level1["window_filter"] == "overlap"
+    else:
+        assert data["recurrence"]["status"] == "terminal-window"
+        assert data["levels"][1]["available"] is False
+        assert data["levels"][1]["reason"] == "no magnetic band overlaps active window"

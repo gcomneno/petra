@@ -2825,7 +2825,7 @@ def _opaque_recursive_lens(
                         "reason": selection["reason"],
                     }
                 )
-                stop_reason = "collapsed"
+                stop_reason = "terminal-window"
                 break
 
             peel = selection["peel"]
