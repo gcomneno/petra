@@ -1698,6 +1698,156 @@ def _print_opaque_mass_response(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_focused_peel(
+    n: int,
+    *,
+    max_generator_count: int,
+    excluded_support_limit: int,
+    max_move_span: int,
+    kind: str | None = None,
+    move: str | None = None,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-focused-peel expects integers >= 1")
+    if max_generator_count < 2:
+        raise ValueError("--max-generator-count expects integers >= 2")
+    if excluded_support_limit < 1:
+        raise ValueError("--excluded-support-limit expects integers >= 1")
+    if max_move_span < 1:
+        raise ValueError("--max-move-span expects integers >= 1")
+
+    requested_move = None if move is None else move.upper()
+
+    response = _opaque_mass_response(
+        n,
+        max_generator_count=max_generator_count,
+        excluded_support_limit=excluded_support_limit,
+        max_move_span=max_move_span,
+        include_bands=True,
+    )
+
+    bands = response["magnetic_bands"]
+    if kind is not None:
+        bands = [band for band in bands if band["kind"] == kind]
+    if requested_move is not None:
+        bands = [band for band in bands if band["move"] == requested_move]
+
+    if not bands:
+        raise ValueError("opaque-focused-peel found no matching magnetic bands")
+
+    selected = sorted(
+        bands,
+        key=lambda band: (
+            -int(band["focus_score"]),
+            int(band["min_trigger_span"]),
+            -int(band["band_width"]),
+            int(band["k_start"]),
+        ),
+    )[0]
+
+    local_hotspots = [
+        row
+        for row in response["hotspots"]
+        if selected["k_start"] <= row["k"] <= selected["k_end"]
+        and row["hotspot_kind"] == selected["kind"]
+        and row["response"] == selected["move"]
+    ]
+
+    peel_lens = {
+        "kind": selected["kind"],
+        "move": selected["move"],
+        "signal": selected["signal"],
+        "focus_score": selected["focus_score"],
+        "k_start": selected["k_start"],
+        "k_end": selected["k_end"],
+        "k_range": selected["k_range"],
+        "band_width": selected["band_width"],
+        "closest_k": selected["closest_k"],
+        "boundary": selected["boundary"],
+        "min_trigger_span": selected["min_trigger_span"],
+        "max_trigger_span": selected["max_trigger_span"],
+        "span_range": selected["span_range"],
+        "local_hotspot_count": len(local_hotspots),
+        "local_hotspots": local_hotspots,
+    }
+
+    return {
+        "n": n,
+        "digits": response["digits"],
+        "bit_length": response["bit_length"],
+        "mass_bits": response["mass_bits"],
+        "excluded_support_limit": excluded_support_limit,
+        "excluded_support_bits": response["excluded_support_bits"],
+        "max_generator_count": max_generator_count,
+        "max_move_span": max_move_span,
+        "requested_kind": kind,
+        "requested_move": requested_move,
+        "selected_band": selected,
+        "peel_lens": peel_lens,
+        "interpretation": [
+            "The focused peel lens is selected from magnetic bands, not from raw value probing.",
+            "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
+            "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
+        ],
+        "claim": "PET focused peel lens only; this does not factor N",
+    }
+
+
+def _print_opaque_focused_peel(data: dict) -> None:
+    print("PET OPAQUE FOCUSED PEEL")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  mass_bits = {data['mass_bits']}")
+    print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
+    print(f"  excluded_support_bits = {data['excluded_support_bits']}")
+    print(f"  max_generator_count = {data['max_generator_count']}")
+    print(f"  max_move_span = {data['max_move_span']}")
+
+    band = data["selected_band"]
+    print()
+    print("Selected magnetic band")
+    print(f"  kind = {band['kind']}")
+    print(f"  move = {band['move']}")
+    print(f"  k_range = {band['k_range']}")
+    print(f"  boundary = {band['boundary']}")
+    print(f"  span_range = {band['span_range']}")
+    print(f"  focus_score = {band['focus_score']}")
+    print(f"  signal = {band['signal']}")
+
+    lens = data["peel_lens"]
+    print()
+    print("Peel lens")
+    print(f"  peel_window = k[{lens['k_start']},{lens['k_end']}]")
+    print(f"  closest_k = {lens['closest_k']}")
+    print(f"  boundary = {lens['boundary']}")
+    print(f"  minimal_trigger_span = {lens['min_trigger_span']}")
+    print(f"  local_hotspot_count = {lens['local_hotspot_count']}")
+
+    print()
+    print("Local hotspots")
+    for row in lens["local_hotspots"]:
+        thresholds = ";".join(row["threshold_crossings"])
+        print(
+            f"  k={row['k']} "
+            f"center_bits={row['center_bits']:.2f} "
+            f"margin_bits={row['margin_bits']:.2f} "
+            f"response={row['response']} "
+            f"min_span={row['minimal_trigger_span']} "
+            f"kind={row['hotspot_kind']} "
+            f"threshold={thresholds}"
+        )
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -2573,6 +2723,35 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_mass_response.add_argument("--json", action="store_true")
 
+
+    # opaque-focused-peel
+    p_opaque_focused_peel = subparsers.add_parser(
+        "opaque-focused-peel",
+        help="select a focused PET peel lens from opaque mass-response magnetic bands",
+    )
+    p_opaque_focused_peel.add_argument("n", type=int, metavar="N")
+    p_opaque_focused_peel.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=40,
+    )
+    p_opaque_focused_peel.add_argument(
+        "--excluded-support-limit",
+        type=int,
+        required=True,
+    )
+    p_opaque_focused_peel.add_argument(
+        "--max-move-span",
+        type=int,
+        default=5,
+    )
+    p_opaque_focused_peel.add_argument("--kind")
+    p_opaque_focused_peel.add_argument(
+        "--move",
+        choices=["NEW", "DROP", "new", "drop"],
+    )
+    p_opaque_focused_peel.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -3360,6 +3539,22 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_mass_response(data)
+
+
+        elif args.command == "opaque-focused-peel":
+            data = _opaque_focused_peel(
+                args.n,
+                max_generator_count=args.max_generator_count,
+                excluded_support_limit=args.excluded_support_limit,
+                max_move_span=args.max_move_span,
+                kind=args.kind,
+                move=args.move,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_focused_peel(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
