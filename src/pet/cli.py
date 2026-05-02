@@ -1917,7 +1917,6 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_report.add_argument("--window-end", type=int)
     p_opaque_report.add_argument("--json", action="store_true")
 
-
     # opaque-shape-families
     p_opaque_shape_families = subparsers.add_parser(
         "opaque-shape-families",
@@ -2675,7 +2674,6 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_report(data)
-
 
         elif args.command == "opaque-shape-families":
             data = _opaque_shape_families(
