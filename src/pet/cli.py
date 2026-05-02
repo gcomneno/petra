@@ -1007,6 +1007,128 @@ def _print_opaque_report(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_shape_families(
+    n: int,
+    *,
+    max_generator_count: int,
+    max_exponent: int,
+    excluded_support_limit: int | None = None,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-shape-families expects integers >= 1")
+    if max_generator_count < 1:
+        raise ValueError("--max-generator-count expects integers >= 1")
+    if max_exponent < 2:
+        raise ValueError("--max-exponent expects integers >= 2")
+
+    digits = len(str(n))
+    bit_length = n.bit_length()
+    mass_bits = bit_length
+
+    balanced_families = [
+        {
+            "family": f"balanced-{k}-generator",
+            "k": k,
+            "mass_bits_per_generator": mass_bits / k,
+            "digits_per_generator": digits / k,
+        }
+        for k in range(1, max_generator_count + 1)
+    ]
+
+    prime_power_families = [
+        {
+            "family": "prime-power-like",
+            "exponent": exponent,
+            "base_mass_bits": mass_bits / exponent,
+            "base_digits": digits / exponent,
+        }
+        for exponent in range(2, max_exponent + 1)
+    ]
+
+    if excluded_support_limit is None:
+        excluded_backbone_support = None
+    else:
+        if excluded_support_limit < 1:
+            raise ValueError("--excluded-support-limit expects integers >= 1")
+        excluded_backbone_support = excluded_support_limit
+
+    return {
+        "n": n,
+        "digits": digits,
+        "bit_length": bit_length,
+        "mass_bits": mass_bits,
+        "balanced_families": balanced_families,
+        "prime_power_families": prime_power_families,
+        "known_constraints": {
+            "known_body": "1",
+            "excluded_backbone_support": excluded_backbone_support,
+            "low_visible_support": [],
+        },
+        "interpretation": [
+            "The projection is compatible with many shape families.",
+            "Current PET-visible body is empty.",
+            "Any compatible shape must hide its support beyond the observed low backbone range, or belong to a family not visible under current PET lenses.",
+        ],
+        "claim": "PET shape-family constraints only; this does not factor N",
+    }
+
+
+def _print_opaque_shape_families(data: dict) -> None:
+    print("PET OPAQUE SHAPE FAMILIES")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  mass_bits = {data['mass_bits']}")
+
+    print()
+    print("Balanced generator families")
+    print("  k | mass_bits_per_generator | digits_per_generator")
+    for row in data["balanced_families"]:
+        print(
+            f"  {row['k']} | "
+            f"{row['mass_bits_per_generator']:.2f}                  | "
+            f"{row['digits_per_generator']:.2f}"
+        )
+
+    print()
+    print("Prime-power-like families")
+    print("  exponent | base_mass_bits | base_digits")
+    for row in data["prime_power_families"]:
+        print(
+            f"  {row['exponent']}        | "
+            f"{row['base_mass_bits']:.2f}         | "
+            f"{row['base_digits']:.2f}"
+        )
+
+    constraints = data["known_constraints"]
+    excluded = constraints["excluded_backbone_support"]
+    if excluded is None:
+        excluded_text = "unknown"
+    else:
+        excluded_text = f"<= {excluded}"
+
+    low_visible = constraints["low_visible_support"]
+    if low_visible:
+        low_visible_text = ", ".join(str(item) for item in low_visible)
+    else:
+        low_visible_text = "none"
+
+    print()
+    print("Known PET constraints")
+    print(f"  known_body = {constraints['known_body']}")
+    print(f"  excluded_backbone_support = {excluded_text}")
+    print(f"  low visible support = {low_visible_text}")
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -1795,6 +1917,29 @@ def main(argv: list[str] | None = None) -> int:
     p_opaque_report.add_argument("--window-end", type=int)
     p_opaque_report.add_argument("--json", action="store_true")
 
+
+    # opaque-shape-families
+    p_opaque_shape_families = subparsers.add_parser(
+        "opaque-shape-families",
+        help="describe PET shape-family constraints for an opaque projection",
+    )
+    p_opaque_shape_families.add_argument("n", type=int, metavar="N")
+    p_opaque_shape_families.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=20,
+    )
+    p_opaque_shape_families.add_argument(
+        "--max-exponent",
+        type=int,
+        default=20,
+    )
+    p_opaque_shape_families.add_argument(
+        "--excluded-support-limit",
+        type=int,
+    )
+    p_opaque_shape_families.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -2530,6 +2675,20 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_report(data)
+
+
+        elif args.command == "opaque-shape-families":
+            data = _opaque_shape_families(
+                args.n,
+                max_generator_count=args.max_generator_count,
+                max_exponent=args.max_exponent,
+                excluded_support_limit=args.excluded_support_limit,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_shape_families(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
