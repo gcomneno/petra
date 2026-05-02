@@ -771,3 +771,69 @@ def test_opaque_focused_peel_fork_text_is_monkey_friendly() -> None:
     assert "DROP-side" in result.stdout
     assert "side_window = k[13,17]" in result.stdout
     assert "side_window = k[4,7]" in result.stdout
+
+def test_opaque_focused_peel_fork_follow_drop_proposes_branch_window_lens() -> None:
+    n50 = "10000000000000002222222837000000121932694075600849"
+
+    data = _run_json(
+        "opaque-focused-peel",
+        n50,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--fork-follow",
+        "DROP",
+    )
+
+    assert data["fork"] is True
+    assert data["fork_follow"] == "DROP"
+
+    fork = data["peel_fork"]
+    assert fork["fork_available"] is True
+    assert fork["source_band"]["k_range"] == "4..6"
+
+    followup = data["peel_fork_followup"]
+    assert followup["available"] is True
+    assert followup["status"] == "proposal"
+    assert followup["requested_branch"] == "DROP"
+    assert followup["source_branch"] == "DROP-side"
+    assert followup["source_role"] == "informative-side"
+    assert followup["source_window"]["k_range"] == "2..3"
+    assert followup["target_edge_hint"] == 2
+    assert followup["reduction_kind"] == "branch-window-collapse"
+    assert followup["recommended_next_lens"] == "rescan-branch-window"
+    assert "does not factor N" in followup["claim"]
+
+
+def test_opaque_focused_peel_fork_follow_text_is_monkey_friendly() -> None:
+    n50 = "10000000000000002222222837000000121932694075600849"
+
+    result = _run_cli(
+        "opaque-focused-peel",
+        n50,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--fork-follow",
+        "DROP",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET multi-threshold fork" in result.stdout
+    assert "PET fork follow-up lens" in result.stdout
+    assert "available = yes" in result.stdout
+    assert "requested_branch = DROP" in result.stdout
+    assert "source_branch = DROP-side" in result.stdout
+    assert "source_role = informative-side" in result.stdout
+    assert "source_window = k[2,3]" in result.stdout
+    assert "target_edge_hint = 2" in result.stdout
+    assert "reduction_kind = branch-window-collapse" in result.stdout
+    assert "recommended_next_lens = rescan-branch-window" in result.stdout
+    assert "claim = PET fork follow-up lens only; this does not factor N" in result.stdout
+

@@ -1159,6 +1159,39 @@ def _print_opaque_shape_families(data: dict) -> None:
 
             print(f"  claim = {fork['claim']}")
 
+    if data.get("fork_follow"):
+        followup = data["peel_fork_followup"]
+        print()
+        print("PET fork follow-up lens")
+        if not followup or not followup["available"]:
+            reason = "unknown" if not followup else followup["reason"]
+            print("  available = no")
+            print(f"  reason = {reason}")
+        else:
+            source_window = followup["source_window"]
+            retained_window = followup["retained_window"]
+            print("  available = yes")
+            print(f"  status = {followup['status']}")
+            print(f"  requested_branch = {followup['requested_branch']}")
+            print(f"  source_branch = {followup['source_branch']}")
+            print(f"  source_move = {followup['source_move']}")
+            print(f"  source_direction = {followup['source_direction']}")
+            print(f"  source_role = {followup['source_role']}")
+            print(
+                "  retained_window = "
+                f"k[{retained_window['k_start']},{retained_window['k_end']}]"
+            )
+            print(
+                "  source_window = "
+                f"k[{source_window['k_start']},{source_window['k_end']}]"
+            )
+            print(f"  target_edge_hint = {followup['target_edge_hint']}")
+            print(f"  reduction_kind = {followup['reduction_kind']}")
+            print(f"  recommended_next_lens = {followup['recommended_next_lens']}")
+            print(f"  next_action = {followup['next_action']}")
+            print(f"  reason = {followup['reason']}")
+            print(f"  claim = {followup['claim']}")
+
     print()
     print("PET interpretation")
     for line in data["interpretation"]:
@@ -2555,6 +2588,65 @@ def _opaque_focused_peel_multi_fork(peel_cut: dict | None, response_data: dict) 
 
 
 
+def _opaque_focused_peel_fork_followup(
+    peel_fork: dict | None,
+    fork_follow: str | None,
+) -> dict | None:
+    if fork_follow is None:
+        return None
+
+    claim = "PET fork follow-up lens only; this does not factor N"
+
+    if not peel_fork or not peel_fork.get("fork_available"):
+        return {
+            "available": False,
+            "reason": "multi-threshold fork is not available",
+            "requested_branch": fork_follow,
+            "claim": claim,
+        }
+
+    branch_name = f"{fork_follow}-side"
+    branch = next(
+        (
+            branch
+            for branch in peel_fork["branches"]
+            if branch["name"] == branch_name
+        ),
+        None,
+    )
+
+    if branch is None:
+        return {
+            "available": False,
+            "reason": f"branch {branch_name} is not available",
+            "requested_branch": fork_follow,
+            "claim": claim,
+        }
+
+    side_window = branch["side_window"]
+    k_start = int(side_window["k_start"])
+    k_end = int(side_window["k_end"])
+    target_edge_hint = 2 if k_start <= 2 <= k_end else k_start
+
+    return {
+        "available": True,
+        "status": "proposal",
+        "requested_branch": fork_follow,
+        "source_branch": branch["name"],
+        "source_move": branch["move"],
+        "source_direction": branch["direction"],
+        "source_role": branch["side_role"],
+        "source_window": side_window,
+        "retained_window": branch["retained_window"],
+        "target_edge_hint": target_edge_hint,
+        "reduction_kind": "branch-window-collapse",
+        "recommended_next_lens": "rescan-branch-window",
+        "next_action": branch["next_action"],
+        "reason": branch["reason"],
+        "claim": claim,
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2573,6 +2665,7 @@ def _opaque_focused_peel(
     classic_handoff: bool = False,
     handoff_radius: int = 5,
     fork: bool = False,
+    fork_follow: str | None = None,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2689,10 +2782,18 @@ def _opaque_focused_peel(
         if classic_handoff
         else None
     )
+    effective_fork = fork or fork_follow is not None
+    if effective_fork and peel_cut is None:
+        peel_cut = _opaque_focused_peel_cut(selected, local_hotspots)
+
     peel_fork = (
         _opaque_focused_peel_multi_fork(peel_cut, response)
-        if fork
+        if effective_fork
         else None
+    )
+    peel_fork_followup = _opaque_focused_peel_fork_followup(
+        peel_fork,
+        fork_follow,
     )
 
     return {
@@ -2715,7 +2816,8 @@ def _opaque_focused_peel(
         "realize": realize,
         "classic_handoff": classic_handoff,
         "handoff_radius": handoff_radius,
-        "fork": fork,
+        "fork": effective_fork,
+        "fork_follow": fork_follow,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
@@ -2727,6 +2829,7 @@ def _opaque_focused_peel(
         "pet_realization": pet_realization,
         "pet_classic_handoff": pet_classic_handoff,
         "peel_fork": peel_fork,
+        "peel_fork_followup": peel_fork_followup,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -3096,6 +3199,39 @@ def _print_opaque_focused_peel(data: dict) -> None:
                 print(f"      reason = {branch['reason']}")
 
             print(f"  claim = {fork['claim']}")
+
+    if data.get("fork_follow"):
+        followup = data["peel_fork_followup"]
+        print()
+        print("PET fork follow-up lens")
+        if not followup or not followup["available"]:
+            reason = "unknown" if not followup else followup["reason"]
+            print("  available = no")
+            print(f"  reason = {reason}")
+        else:
+            source_window = followup["source_window"]
+            retained_window = followup["retained_window"]
+            print("  available = yes")
+            print(f"  status = {followup['status']}")
+            print(f"  requested_branch = {followup['requested_branch']}")
+            print(f"  source_branch = {followup['source_branch']}")
+            print(f"  source_move = {followup['source_move']}")
+            print(f"  source_direction = {followup['source_direction']}")
+            print(f"  source_role = {followup['source_role']}")
+            print(
+                "  retained_window = "
+                f"k[{retained_window['k_start']},{retained_window['k_end']}]"
+            )
+            print(
+                "  source_window = "
+                f"k[{source_window['k_start']},{source_window['k_end']}]"
+            )
+            print(f"  target_edge_hint = {followup['target_edge_hint']}")
+            print(f"  reduction_kind = {followup['reduction_kind']}")
+            print(f"  recommended_next_lens = {followup['recommended_next_lens']}")
+            print(f"  next_action = {followup['next_action']}")
+            print(f"  reason = {followup['reason']}")
+            print(f"  claim = {followup['claim']}")
 
     print()
     print("PET interpretation")
@@ -4545,6 +4681,11 @@ def main(argv: list[str] | None = None) -> int:
         help="open multi-threshold bands into explicit NEW/DROP peel branches",
     )
     p_opaque_focused_peel.add_argument(
+        "--fork-follow",
+        choices=["NEW", "DROP"],
+        help="propose a follow-up lens for a selected multi-threshold fork branch",
+    )
+    p_opaque_focused_peel.add_argument(
         "--handoff-radius",
         type=int,
         default=5,
@@ -5391,6 +5532,7 @@ def main(argv: list[str] | None = None) -> int:
                 classic_handoff=args.classic_handoff,
                 handoff_radius=args.handoff_radius,
                 fork=args.fork,
+                fork_follow=args.fork_follow,
             )
 
             if args.json:
