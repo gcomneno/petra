@@ -212,3 +212,69 @@ def test_opaque_recursive_lens_terminal_reduction_text_is_explicitly_non_factori
     assert "recommended_classic_handoff = no" in result.stdout
     assert "claim = PET reduction lens only; this does not factor N" in result.stdout
 
+def test_opaque_recursive_lens_branch_recursion_reuses_fork_follow_window() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "3",
+        "--branch-recursion",
+        "DROP",
+    )
+
+    level0 = data["levels"][0]
+    assert level0["available"] is True
+    assert level0["recursion_source"] == "fork-follow"
+    assert level0["branch_followup"]["source_branch"] == "DROP-side"
+    assert level0["branch_window"]["k_range"] == "2..3"
+    assert level0["edge_k"] == 2
+    assert level0["visible_form"] == "fork-follow"
+    assert level0["visible_shape"] == "branch-window-collapse"
+
+    level1 = data["levels"][1]
+    assert level1["available"] is True
+    assert level1["input_window"]["k_range"] == "2..3"
+    assert level1["edge_k"] == 2
+    assert level1["selected_band"]["k_range"] == "2..3"
+    assert level1["center_lens"]["lens_kind"] == "projected-center-shape"
+
+    assert data["recurrence"]["status"] == "minimal-window"
+    assert data["recurrence"]["edge_sequence"] == [2, 2]
+
+
+def test_opaque_recursive_lens_branch_recursion_text_is_monkey_friendly() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "3",
+        "--branch-recursion",
+        "DROP",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "recursion_source = fork-follow" in result.stdout
+    assert "source_branch = DROP-side" in result.stdout
+    assert "branch_window = k[2,3]" in result.stdout
+    assert "input_window = k[2,3]" in result.stdout
+    assert "visible_shape = edge-point" in result.stdout
+    assert "edge_k = 2" in result.stdout
+    assert "selected_band = fog-return DROP k[2..3]" in result.stdout
+    assert "status = minimal-window" in result.stdout
+

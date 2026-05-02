@@ -3379,6 +3379,7 @@ def _opaque_recursive_lens(
     max_move_span: int,
     depth: int,
     terminal_reduction: bool = False,
+    branch_recursion: str | None = None,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -3446,6 +3447,46 @@ def _opaque_recursive_lens(
 
         center_lens = peel["decoded_center_lens"]
         if not center_lens or not center_lens["center_lens_available"]:
+            if branch_recursion is not None:
+                branch_peel = _opaque_focused_peel(
+                    n,
+                    max_generator_count=effective_max_generator_count,
+                    excluded_support_limit=excluded_support_limit,
+                    max_move_span=max_move_span,
+                    kind=peel["selected_band"]["kind"],
+                    move=peel["selected_band"]["move"],
+                    fork_follow=branch_recursion,
+                )
+                branch_followup = branch_peel["peel_fork_followup"]
+
+                if branch_followup and branch_followup["available"]:
+                    branch_window = branch_followup["source_window"]
+                    levels.append(
+                        {
+                            "level": level_index,
+                            "input_window": active_window,
+                            "effective_max_generator_count": effective_max_generator_count,
+                            "available": True,
+                            "recursion_source": "fork-follow",
+                            "window_filter": selection.get("window_filter"),
+                            "forced_band": selection.get("forced_band"),
+                            "selected_band": {
+                                "kind": peel["selected_band"]["kind"],
+                                "move": peel["selected_band"]["move"],
+                                "k_range": peel["selected_band"]["k_range"],
+                                "focus_score": peel["selected_band"]["focus_score"],
+                                "signal": peel["selected_band"]["signal"],
+                            },
+                            "branch_followup": branch_followup,
+                            "branch_window": branch_window,
+                            "edge_k": branch_followup["target_edge_hint"],
+                            "visible_form": "fork-follow",
+                            "visible_shape": branch_followup["reduction_kind"],
+                        }
+                    )
+                    active_window = branch_window
+                    continue
+
             levels.append(
                 {
                     "level": level_index,
@@ -3524,12 +3565,12 @@ def _opaque_recursive_lens(
     center_shapes = [
         level["center_lens"]["center_shape"]
         for level in levels
-        if level.get("available")
+        if level.get("available") and "center_lens" in level
     ]
     center_generators = [
         level["center_lens"]["center_generator"]
         for level in levels
-        if level.get("available")
+        if level.get("available") and "center_lens" in level
     ]
     edges = [
         level["edge_k"]
@@ -3646,9 +3687,29 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 continue
 
             band = level["selected_band"]
+            print(f"    window_filter = {level.get('window_filter')}")
+
+            if level.get("recursion_source") == "fork-follow":
+                followup = level["branch_followup"]
+                branch_window = level["branch_window"]
+                print(f"    visible_form = {level['visible_form']}")
+                print(f"    visible_shape = {level['visible_shape']}")
+                print(f"    edge_k = {level['edge_k']}")
+                print(f"    recursion_source = {level['recursion_source']}")
+                print(f"    source_branch = {followup['source_branch']}")
+                print(
+                    "    branch_window = "
+                    f"k[{branch_window['k_start']},{branch_window['k_end']}]"
+                )
+                print(f"    recommended_next_lens = {followup['recommended_next_lens']}")
+                print(
+                    "    selected_band = "
+                    f"{band['kind']} {band['move']} k[{band['k_range']}]"
+                )
+                continue
+
             lens = level["center_lens"]
             suggested = lens["suggested_window"]
-            print(f"    window_filter = {level.get('window_filter')}")
             if level.get("forced_band"):
                 forced = level["forced_band"]
                 print(
@@ -4723,6 +4784,11 @@ def main(argv: list[str] | None = None) -> int:
         "--terminal-reduction",
         action="store_true",
     )
+    p_opaque_recursive_lens.add_argument(
+        "--branch-recursion",
+        choices=["NEW", "DROP"],
+        help="continue recursive zoom through a selected fork-follow branch when center lens is unavailable",
+    )
     p_opaque_recursive_lens.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -5548,6 +5614,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_move_span=args.max_move_span,
                 depth=args.depth,
                 terminal_reduction=args.terminal_reduction,
+                branch_recursion=args.branch_recursion,
             )
 
             if args.json:
