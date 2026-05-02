@@ -1192,6 +1192,31 @@ def _print_opaque_shape_families(data: dict) -> None:
             print(f"  reason = {followup['reason']}")
             print(f"  claim = {followup['claim']}")
 
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
+
     print()
     print("PET interpretation")
     for line in data["interpretation"]:
@@ -1287,6 +1312,31 @@ def _print_opaque_shape_rank(data: dict) -> None:
             f"{row['margin_bits']:>11.2f} | "
             f"{row['opacity']}"
         )
+
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
 
     print()
     print("PET interpretation")
@@ -1522,6 +1572,31 @@ def _print_opaque_mass_centers(data: dict) -> None:
             f"{row['signal']:<8} | "
             f"{row['information_weight']:.4f}"
         )
+
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
 
     print()
     print("PET interpretation")
@@ -1760,6 +1835,31 @@ def _print_opaque_mass_response(data: dict) -> None:
                     f"{band['focus_score']:>5} | "
                     f"{band['signal']}"
                 )
+
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
 
     print()
     print("PET interpretation")
@@ -3233,6 +3333,31 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"  reason = {followup['reason']}")
             print(f"  claim = {followup['claim']}")
 
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
+
     print()
     print("PET interpretation")
     for line in data["interpretation"]:
@@ -3371,6 +3496,60 @@ def _select_windowed_recursive_peel(
 
 
 
+def _opaque_recursive_lens_classic_handoff(
+    n: int,
+    levels: list[dict],
+    *,
+    radius: int,
+) -> dict:
+    if radius < 0:
+        raise ValueError("--handoff-radius expects integers >= 0")
+
+    candidate_level = None
+    for level in reversed(levels):
+        if not level.get("available"):
+            continue
+        if int(level.get("edge_k", -1)) != 2:
+            continue
+        if "center_lens" not in level:
+            continue
+        candidate_level = level
+        break
+
+    if candidate_level is None:
+        return {
+            "handoff_available": False,
+            "reason": "no recursive center lens with edge_k=2 is available",
+        }
+
+    lens = candidate_level["center_lens"]
+    pet_realization = {
+        "realization_available": True,
+        "source": "recursive-center-lens",
+        "source_form": (
+            f"{candidate_level['visible_form']}:"
+            f"{candidate_level['visible_shape']}"
+        ),
+        "edge_k": candidate_level["edge_k"],
+        "boundary": candidate_level["boundary"],
+        "nearest_integer": lens["center_nearest_integer"],
+    }
+
+    handoff = _opaque_focused_peel_classic_handoff(
+        n,
+        pet_realization,
+        radius=radius,
+    )
+    handoff["source"] = "recursive-center-lens"
+    handoff["level"] = candidate_level["level"]
+    handoff["anchor_useful"] = bool(handoff.get("verified"))
+    handoff["claim"] = (
+        "PET-guided recursive classic handoff only; "
+        "classic divisibility check performed"
+    )
+    return handoff
+
+
 def _opaque_recursive_lens(
     n: int,
     *,
@@ -3380,6 +3559,8 @@ def _opaque_recursive_lens(
     depth: int,
     terminal_reduction: bool = False,
     branch_recursion: str | None = None,
+    classic_handoff: bool = False,
+    handoff_radius: int = 5,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -3600,6 +3781,16 @@ def _opaque_recursive_lens(
         "status": stop_reason,
     }
 
+    recursive_classic_handoff = (
+        _opaque_recursive_lens_classic_handoff(
+            n,
+            levels,
+            radius=handoff_radius,
+        )
+        if classic_handoff
+        else None
+    )
+
     data = {
         "n": n,
         "digits": len(str(n)),
@@ -3609,7 +3800,10 @@ def _opaque_recursive_lens(
         "max_generator_count": max_generator_count,
         "max_move_span": max_move_span,
         "depth": depth,
+        "classic_handoff": classic_handoff,
+        "handoff_radius": handoff_radius,
         "levels": levels,
+        "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
             "The recursive lens re-enters PET-local windows suggested by decoded center lenses.",
@@ -3784,6 +3978,31 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 f"{'yes' if reduction['recommended_classic_handoff'] else 'no'}"
             )
         print(f"  claim = {reduction['claim']}")
+
+    if data.get("classic_handoff"):
+        handoff = data["recursive_classic_handoff"]
+        print()
+        print("PET recursive classic handoff")
+        if not handoff or not handoff["handoff_available"]:
+            reason = "unknown" if not handoff else handoff["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {handoff['source']}")
+            print(f"  level = {handoff.get('level')}")
+            print(f"  method = {handoff['method']}")
+            print(f"  recommended = {'yes' if handoff['recommended'] else 'no'}")
+            print(f"  reason = {handoff['reason']}")
+            print(f"  edge_k = {handoff['edge_k']}")
+            print(f"  center = {handoff['center']}")
+            print(f"  radius = {handoff['radius']}")
+            if handoff.get("scan_start") is not None:
+                print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            print(f"  candidates_checked = {handoff['candidates_checked']}")
+            print(f"  divisor_found = {handoff['divisor_found']}")
+            print(f"  cofactor = {handoff['cofactor']}")
+            print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
+            print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
+            print(f"  claim = {handoff['claim']}")
 
     print()
     print("PET interpretation")
@@ -4789,6 +5008,17 @@ def main(argv: list[str] | None = None) -> int:
         choices=["NEW", "DROP"],
         help="continue recursive zoom through a selected fork-follow branch when center lens is unavailable",
     )
+    p_opaque_recursive_lens.add_argument(
+        "--classic-handoff",
+        action="store_true",
+        help="use the recursive center lens as a classic divisibility anchor",
+    )
+    p_opaque_recursive_lens.add_argument(
+        "--handoff-radius",
+        type=int,
+        default=5,
+        help="radius around the recursive center for classic handoff scans",
+    )
     p_opaque_recursive_lens.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -5615,6 +5845,8 @@ def main(argv: list[str] | None = None) -> int:
                 depth=args.depth,
                 terminal_reduction=args.terminal_reduction,
                 branch_recursion=args.branch_recursion,
+                classic_handoff=args.classic_handoff,
+                handoff_radius=args.handoff_radius,
             )
 
             if args.json:
