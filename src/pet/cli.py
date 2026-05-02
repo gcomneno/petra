@@ -3708,6 +3708,21 @@ def _opaque_recursive_lens_subedge_recursion(
                     if not center_lens_available
                     else center_lens["center_generator"]
                 ),
+                "center_nearest_integer": (
+                    None
+                    if not center_lens_available
+                    else center_lens["center_nearest_integer"]
+                ),
+                "center_shape": (
+                    None
+                    if not center_lens_available
+                    else center_lens["center_shape"]
+                ),
+                "center_signature": (
+                    None
+                    if not center_lens_available
+                    else center_lens["center_signature"]
+                ),
                 "suggested_window": (
                     None
                     if not center_lens_available
@@ -3759,6 +3774,90 @@ def _opaque_recursive_lens_subedge_recursion(
             "reason": "no repeated subedge PET field was detected",
         }
 
+    if convergence["available"]:
+        converged_subedges = set(convergence["converged_subedges"])
+        converged_results = [
+            result
+            for result in available_results
+            if result["subedge_k"] in converged_subedges
+        ]
+        centers = sorted(
+            {
+                result["center_nearest_integer"]
+                for result in converged_results
+                if result.get("center_nearest_integer") is not None
+            }
+        )
+
+        visible_shape = convergence["converged_visible_shape"]
+        converged_edge_k = int(convergence["converged_edge_k"])
+
+        if (
+            converged_edge_k == 2
+            and visible_shape == "thin-ramp"
+            and len(centers) == 1
+        ):
+            anchor_status = "strong"
+            binding_strength = "high"
+            classic_bridge_recommendation = "recommended"
+            reason = (
+                "twin subedges converge to a thin-ramp edge_k=2 field with "
+                "a single realized center"
+            )
+        elif converged_edge_k == 2 and len(centers) == 1:
+            anchor_status = "weak"
+            binding_strength = "low"
+            classic_bridge_recommendation = "not-recommended"
+            reason = (
+                "twin subedges converge to edge_k=2 with a single center, "
+                "but visible shape is not anchor-like"
+            )
+        elif converged_edge_k == 2:
+            anchor_status = "unresolved"
+            binding_strength = "unknown"
+            classic_bridge_recommendation = "not-recommended"
+            reason = (
+                "twin subedges converge to edge_k=2 but do not agree on a "
+                "single realized center"
+            )
+        else:
+            anchor_status = "structural-only"
+            binding_strength = "medium"
+            classic_bridge_recommendation = "not-recommended"
+            reason = (
+                "subedge convergence is structural but not classic-anchor compatible"
+            )
+
+        refined_anchor_candidate = {
+            "available": True,
+            "source": "twin-subedge-convergence",
+            "base_centers": centers,
+            "candidate_count": len(centers),
+            "anchor_status": anchor_status,
+            "binding_strength": binding_strength,
+            "classic_bridge_recommendation": classic_bridge_recommendation,
+            "converged_subedges": convergence["converged_subedges"],
+            "converged_edge_k": convergence["converged_edge_k"],
+            "converged_visible_shape": convergence["converged_visible_shape"],
+            "converged_center_generator": convergence[
+                "converged_center_generator"
+            ],
+            "reason": reason,
+            "claim": (
+                "PET convergence-refined anchor candidate only; "
+                "this does not factor N"
+            ),
+        }
+    else:
+        refined_anchor_candidate = {
+            "available": False,
+            "reason": "subedge convergence is not available",
+            "claim": (
+                "PET convergence-refined anchor candidate only; "
+                "this does not factor N"
+            ),
+        }
+
     return {
         "available": bool(subedge_results),
         "source": "composite-edge-peel",
@@ -3768,6 +3867,7 @@ def _opaque_recursive_lens_subedge_recursion(
         "available_subedge_count": len(available_results),
         "subedge_results": subedge_results,
         "convergence": convergence,
+        "refined_anchor_candidate": refined_anchor_candidate,
         "claim": claim,
     }
 
@@ -4389,6 +4489,42 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                     f"{convergence['converged_center_lens_kind']}"
                 )
                 print(f"    reason = {convergence['reason']}")
+
+            refined = recursion["refined_anchor_candidate"]
+            print()
+            print("  Convergence-refined anchor candidate")
+            if not refined["available"]:
+                print("    available = no")
+                print(f"    reason = {refined['reason']}")
+            else:
+                print("    available = yes")
+                print(f"    source = {refined['source']}")
+                print(f"    base_centers = {refined['base_centers']}")
+                print(f"    candidate_count = {refined['candidate_count']}")
+                print(f"    anchor_status = {refined['anchor_status']}")
+                print(f"    binding_strength = {refined['binding_strength']}")
+                print(
+                    "    classic_bridge_recommendation = "
+                    f"{refined['classic_bridge_recommendation']}"
+                )
+                print(
+                    "    converged_subedges = "
+                    f"{refined['converged_subedges']}"
+                )
+                print(
+                    "    converged_edge_k = "
+                    f"{refined['converged_edge_k']}"
+                )
+                print(
+                    "    converged_visible_shape = "
+                    f"{refined['converged_visible_shape']}"
+                )
+                print(
+                    "    converged_center_generator = "
+                    f"{refined['converged_center_generator']}"
+                )
+                print(f"    reason = {refined['reason']}")
+                print(f"    claim = {refined['claim']}")
 
             print(f"  claim = {recursion['claim']}")
 
