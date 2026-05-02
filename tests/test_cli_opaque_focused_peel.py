@@ -653,3 +653,58 @@ def test_opaque_focused_peel_classic_handoff_rejects_negative_radius() -> None:
 
     assert result.returncode != 0
     assert "--handoff-radius expects integers >= 0" in result.stderr
+
+
+def test_opaque_focused_peel_classic_handoff_uses_small_n_fallback_for_edge_point() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "77",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "8",
+        "--max-move-span",
+        "2",
+        "--classic-handoff",
+        "--handoff-radius",
+        "5",
+    )
+
+    assert data["classic_handoff"] is True
+    handoff = data["pet_classic_handoff"]
+    assert handoff["handoff_available"] is True
+    assert handoff["recommended"] is True
+    assert handoff["method"] == "classic-small-n-trial-division"
+    assert handoff["edge_k"] == 1
+    assert handoff["center"] == 77
+    assert handoff["scan_limit"] == 8
+    assert handoff["divisor_found"] == 7
+    assert handoff["cofactor"] == 11
+    assert handoff["verified"] is True
+    assert "classic small-N fallback performed" in handoff["claim"]
+
+
+def test_opaque_focused_peel_classic_handoff_edge_point_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "77",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "8",
+        "--max-move-span",
+        "2",
+        "--classic-handoff",
+        "--handoff-radius",
+        "5",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET classic handoff" in result.stdout
+    assert "method = classic-small-n-trial-division" in result.stdout
+    assert "recommended = yes" in result.stdout
+    assert "edge_k = 1" in result.stdout
+    assert "scan_limit = 8" in result.stdout
+    assert "divisor_found = 7" in result.stdout
+    assert "cofactor = 11" in result.stdout
+    assert "verified = yes" in result.stdout

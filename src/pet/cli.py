@@ -2296,13 +2296,55 @@ def _opaque_focused_peel_classic_handoff(
     edge_k = int(pet_realization["edge_k"])
     center = int(pet_realization["nearest_integer"])
 
+    if edge_k == 1:
+        scan_limit = int(n**0.5)
+        candidates_checked = []
+        divisor_found = None
+        cofactor = None
+
+        for candidate in range(2, scan_limit + 1):
+            candidates_checked.append(candidate)
+            if n % candidate == 0:
+                divisor_found = candidate
+                cofactor = n // candidate
+                break
+
+        verified = (
+            divisor_found is not None
+            and cofactor is not None
+            and divisor_found * cofactor == n
+        )
+
+        return {
+            "handoff_available": True,
+            "source": "PET realization payload",
+            "method": "classic-small-n-trial-division",
+            "recommended": True,
+            "reason": (
+                "edge_k=1 center is N itself; using classic bounded "
+                "trial division fallback"
+            ),
+            "edge_k": edge_k,
+            "center": center,
+            "radius": radius,
+            "scan_limit": scan_limit,
+            "candidates_checked": candidates_checked,
+            "divisor_found": divisor_found,
+            "cofactor": cofactor,
+            "verified": verified,
+            "claim": (
+                "PET-guided classic handoff only; classic small-N fallback "
+                "performed"
+            ),
+        }
+
     if edge_k != 2:
         return {
             "handoff_available": True,
             "source": "PET realization payload",
             "method": "local-divisibility-scan",
             "recommended": False,
-            "reason": "direct divisor handoff is only recommended for edge_k=2",
+            "reason": "direct divisor handoff is only recommended for edge_k=1 or edge_k=2",
             "edge_k": edge_k,
             "center": center,
             "radius": radius,
@@ -2836,6 +2878,8 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"  radius = {handoff['radius']}")
             if handoff.get("scan_start") is not None:
                 print(f"  scan_window = [{handoff['scan_start']},{handoff['scan_end']}]")
+            if handoff.get("scan_limit") is not None:
+                print(f"  scan_limit = {handoff['scan_limit']}")
             print(f"  candidates_checked = {handoff['candidates_checked']}")
             print(f"  divisor_found = {handoff['divisor_found']}")
             print(f"  cofactor = {handoff['cofactor']}")
