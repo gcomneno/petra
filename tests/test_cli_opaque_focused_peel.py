@@ -233,3 +233,70 @@ def test_opaque_focused_peel_step_text_is_monkey_friendly() -> None:
     assert "target_k = 2" in result.stdout
     assert "Layer decisions" in result.stdout
     assert "next-peel-target" in result.stdout
+
+
+def test_opaque_focused_peel_slice_partitions_shape_space() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--slice",
+    )
+
+    assert data["cut"] is True
+    assert data["peel_step"] is True
+    assert data["slice"] is True
+
+    slice_data = data["peel_slice"]
+    assert slice_data["slice_available"] is True
+    assert slice_data["slice_boundary"] == "2/3"
+    assert slice_data["edge_k"] == 2
+    assert slice_data["target_kind"] == "pressure-entry"
+    assert slice_data["target_move"] == "NEW"
+
+    selected = slice_data["selected_partition"]
+    assert selected["name"] == "boundary-informative-side"
+    assert selected["k_start"] == 1
+    assert selected["k_end"] == 2
+    assert selected["k_range"] == "1..2"
+    assert selected["role"] == "retained-peel-side"
+
+    separated = slice_data["separated_partition"]
+    assert separated["name"] == "pressured-side"
+    assert separated["k_start"] == 3
+    assert separated["k_end"] == 4
+    assert separated["k_range"] == "3..4"
+    assert separated["role"] == "separated-side"
+
+    decision = slice_data["slice_decision"]
+    assert decision["keep"] == "selected_partition"
+    assert decision["separate"] == "separated_partition"
+    assert decision["next_action"] == "inspect edge stability before pressured transition"
+
+
+def test_opaque_focused_peel_slice_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--slice",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Focused peel cut" in result.stdout
+    assert "Focused peel step" in result.stdout
+    assert "Focused peel slice" in result.stdout
+    assert "Selected partition" in result.stdout
+    assert "Separated partition" in result.stdout
+    assert "boundary-informative-side" in result.stdout
+    assert "pressured-side" in result.stdout

@@ -1891,6 +1891,105 @@ def _opaque_focused_peel_step(peel_cut: dict | None) -> dict:
     }
 
 
+def _opaque_focused_peel_slice(
+    *,
+    selected_band: dict,
+    peel_step_result: dict | None,
+    max_generator_count: int,
+) -> dict:
+    if not peel_step_result or not peel_step_result.get("step_available"):
+        return {
+            "slice_available": False,
+            "reason": "focused peel step is not available",
+        }
+
+    boundary = str(peel_step_result["target_boundary"])
+    edge_k = int(peel_step_result["target_k"])
+    next_side = peel_step_result["next_side"]
+    next_side_k_start = peel_step_result["next_side_k_start"]
+    kind = str(peel_step_result["target_kind"])
+    move = str(peel_step_result["target_move"])
+
+    if next_side is None or next_side_k_start is None:
+        return {
+            "slice_available": False,
+            "reason": "focused peel step has no next side",
+        }
+
+    if kind == "pressure-entry" and move == "NEW":
+        selected_name = "boundary-informative-side"
+        separated_name = "pressured-side"
+        selected_role = "retained-peel-side"
+        separated_role = "separated-side"
+        next_action = "inspect edge stability before pressured transition"
+        reason = "symbolic NEW crosses from boundary-informative into pressured"
+    elif kind == "boundary-entry" and move == "NEW":
+        selected_name = "informative-side"
+        separated_name = "boundary-informative-side"
+        selected_role = "retained-context-side"
+        separated_role = "selected-boundary-side"
+        next_action = "inspect boundary entry stability"
+        reason = "symbolic NEW crosses from informative into boundary-informative"
+    elif kind == "recovery" and move == "DROP":
+        selected_name = "pressured-side"
+        separated_name = "boundary-informative-side"
+        selected_role = "retained-recovery-side"
+        separated_role = "recovered-side"
+        next_action = "inspect recovery edge stability"
+        reason = "symbolic DROP crosses from pressured back into boundary-informative"
+    elif kind == "decompression" and move == "DROP":
+        selected_name = "boundary-informative-side"
+        separated_name = "informative-side"
+        selected_role = "retained-boundary-side"
+        separated_role = "decompressed-side"
+        next_action = "inspect decompression edge stability"
+        reason = "symbolic DROP crosses from boundary-informative back into informative"
+    else:
+        selected_name = f"{kind}-source-side"
+        separated_name = str(next_side)
+        selected_role = "retained-side"
+        separated_role = "separated-side"
+        next_action = "inspect edge stability"
+        reason = f"symbolic {move} crosses the selected representation-scale boundary"
+
+    selected_partition = {
+        "name": selected_name,
+        "k_start": int(selected_band["k_start"]),
+        "k_end": edge_k,
+        "k_range": f"{selected_band['k_start']}..{edge_k}",
+        "role": selected_role,
+    }
+
+    separated_partition = {
+        "name": separated_name,
+        "k_start": int(next_side_k_start),
+        "k_end": max_generator_count,
+        "k_range": f"{next_side_k_start}..{max_generator_count}",
+        "role": separated_role,
+    }
+
+    return {
+        "slice_available": True,
+        "slice_boundary": boundary,
+        "edge_k": edge_k,
+        "target_kind": kind,
+        "target_move": move,
+        "selected_partition": selected_partition,
+        "separated_partition": separated_partition,
+        "slice_decision": {
+            "keep": "selected_partition",
+            "separate": "separated_partition",
+            "next_action": next_action,
+            "reason": reason,
+        },
+        "interpretation": [
+            "The slice partitions local PET shape-space across the selected representation-scale boundary.",
+            "The retained side remains the local peel side; the separated side is structurally beyond the boundary.",
+            "This is a structural PET slice, not a value-level operation.",
+        ],
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -1901,6 +2000,7 @@ def _opaque_focused_peel(
     move: str | None = None,
     cut: bool = False,
     peel_step: bool = False,
+    slice_: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -1910,6 +2010,10 @@ def _opaque_focused_peel(
         raise ValueError("--excluded-support-limit expects integers >= 1")
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
+
+    if slice_:
+        cut = True
+        peel_step = True
 
     requested_move = None if move is None else move.upper()
 
@@ -1968,6 +2072,15 @@ def _opaque_focused_peel(
 
     peel_cut = _opaque_focused_peel_cut(selected, local_hotspots) if cut else None
     peel_step_result = _opaque_focused_peel_step(peel_cut) if peel_step else None
+    peel_slice = (
+        _opaque_focused_peel_slice(
+            selected_band=selected,
+            peel_step_result=peel_step_result,
+            max_generator_count=max_generator_count,
+        )
+        if slice_
+        else None
+    )
 
     return {
         "n": n,
@@ -1982,15 +2095,18 @@ def _opaque_focused_peel(
         "requested_move": requested_move,
         "cut": cut,
         "peel_step": peel_step,
+        "slice": slice_,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
         "peel_step_result": peel_step_result,
+        "peel_slice": peel_slice,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
             "When enabled, the cut separates the focused band into local PET layers.",
             "When enabled, the peel step selects the next structural layer to lift.",
+            "When enabled, the slice partitions local PET shape-space across the selected boundary.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2107,6 +2223,40 @@ def _print_opaque_focused_peel(data: dict) -> None:
                     f"k={decision['k']} "
                     f"{decision['decision']}"
                 )
+
+    if data.get("slice"):
+        slice_data = data["peel_slice"]
+        print()
+        print("Focused peel slice")
+        if not slice_data or not slice_data["slice_available"]:
+            reason = "unknown" if not slice_data else slice_data["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  slice_boundary = {slice_data['slice_boundary']}")
+            print(f"  edge_k = {slice_data['edge_k']}")
+            print(f"  target_kind = {slice_data['target_kind']}")
+            print(f"  target_move = {slice_data['target_move']}")
+
+            selected_partition = slice_data["selected_partition"]
+            separated_partition = slice_data["separated_partition"]
+            print()
+            print("  Selected partition")
+            print(f"    name = {selected_partition['name']}")
+            print(f"    k_range = {selected_partition['k_range']}")
+            print(f"    role = {selected_partition['role']}")
+            print()
+            print("  Separated partition")
+            print(f"    name = {separated_partition['name']}")
+            print(f"    k_range = {separated_partition['k_range']}")
+            print(f"    role = {separated_partition['role']}")
+
+            decision = slice_data["slice_decision"]
+            print()
+            print("  Slice decision")
+            print(f"    keep = {decision['keep']}")
+            print(f"    separate = {decision['separate']}")
+            print(f"    next_action = {decision['next_action']}")
+            print(f"    reason = {decision['reason']}")
 
     print()
     print("PET interpretation")
@@ -3029,6 +3179,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="select the next PET structural layer to peel from the focused cut",
     )
+    p_opaque_focused_peel.add_argument(
+        "--slice",
+        action="store_true",
+        help="partition local PET shape-space across the selected peel boundary",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3830,6 +3985,7 @@ def main(argv: list[str] | None = None) -> int:
                 move=args.move,
                 cut=args.cut,
                 peel_step=args.peel_step,
+                slice_=args.slice,
             )
 
             if args.json:
