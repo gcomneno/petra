@@ -2641,6 +2641,292 @@ def _print_opaque_focused_peel(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _same_k_window(left: dict | None, right: dict | None) -> bool:
+    if left is None or right is None:
+        return False
+    return (
+        int(left["k_start"]) == int(right["k_start"])
+        and int(left["k_end"]) == int(right["k_end"])
+    )
+
+
+def _opaque_recursive_lens(
+    n: int,
+    *,
+    excluded_support_limit: int,
+    max_generator_count: int,
+    max_move_span: int,
+    depth: int,
+) -> dict:
+    if n < 1:
+        raise ValueError("opaque-recursive-lens expects integers >= 1")
+    if excluded_support_limit < 1:
+        raise ValueError("--excluded-support-limit expects integers >= 1")
+    if max_generator_count < 2:
+        raise ValueError("--max-generator-count expects integers >= 2")
+    if max_move_span < 1:
+        raise ValueError("--max-move-span expects integers >= 1")
+    if depth < 1:
+        raise ValueError("--depth expects integers >= 1")
+
+    levels = []
+    active_window = None
+    stop_reason = "depth-limit"
+
+    for level_index in range(depth):
+        effective_max_generator_count = max_generator_count
+        if active_window is not None:
+            effective_max_generator_count = min(
+                max_generator_count,
+                int(active_window["k_end"]),
+            )
+
+        if effective_max_generator_count < 2:
+            stop_reason = "minimal-window"
+            break
+
+        try:
+            peel = _opaque_focused_peel(
+                n,
+                max_generator_count=effective_max_generator_count,
+                excluded_support_limit=excluded_support_limit,
+                max_move_span=max_move_span,
+                center_lens=True,
+            )
+        except ValueError as exc:
+            levels.append(
+                {
+                    "level": level_index,
+                    "input_window": active_window,
+                    "effective_max_generator_count": effective_max_generator_count,
+                    "available": False,
+                    "reason": str(exc),
+                }
+            )
+            stop_reason = "collapsed"
+            break
+
+        center_lens = peel["decoded_center_lens"]
+        if not center_lens or not center_lens["center_lens_available"]:
+            levels.append(
+                {
+                    "level": level_index,
+                    "input_window": active_window,
+                    "effective_max_generator_count": effective_max_generator_count,
+                    "available": False,
+                    "reason": (
+                        "center lens unavailable"
+                        if not center_lens
+                        else center_lens["reason"]
+                    ),
+                }
+            )
+            stop_reason = "collapsed"
+            break
+
+        selected_band = peel["selected_band"]
+        visible = peel["peel_lift"]["visible_pet_form"]
+        decode = peel["pet_decode"]
+        projected = decode["decoded_constraints"]["projected_center_pet_form"]
+        suggested_window = center_lens["suggested_window"]
+
+        level = {
+            "level": level_index,
+            "input_window": active_window,
+            "effective_max_generator_count": effective_max_generator_count,
+            "available": True,
+            "visible_form": visible["form"],
+            "visible_shape": visible["shape"],
+            "edge_k": center_lens["edge_k"],
+            "boundary": center_lens["boundary"],
+            "selected_band": {
+                "kind": selected_band["kind"],
+                "move": selected_band["move"],
+                "k_range": selected_band["k_range"],
+                "focus_score": selected_band["focus_score"],
+                "signal": selected_band["signal"],
+            },
+            "center_lens": {
+                "lens_kind": center_lens["lens_kind"],
+                "center_shape": center_lens["center_shape"],
+                "center_signature": center_lens["center_signature"],
+                "center_generator": center_lens["center_generator"],
+                "center_nearest_integer": center_lens["center_nearest_integer"],
+                "center_bits": center_lens["center_bits"],
+                "center_digits": center_lens["center_digits"],
+                "suggested_window": suggested_window,
+                "recommended_next_lens": center_lens["recommended_next_lens"],
+            },
+            "projected_center": {
+                "expression": projected["expression"],
+                "nearest_integer": projected["nearest_integer"],
+                "pet_shape_text": projected["pet_shape_text"],
+                "pet_signature": projected["pet_signature"],
+                "pet_generator": projected["pet_generator"],
+            },
+        }
+        levels.append(level)
+
+        if _same_k_window(active_window, suggested_window):
+            stop_reason = "stable-window"
+            break
+
+        if (
+            int(suggested_window["k_start"]) == 1
+            and int(suggested_window["k_end"]) <= 2
+        ):
+            active_window = suggested_window
+            stop_reason = "minimal-window"
+            break
+
+        active_window = suggested_window
+
+    center_shapes = [
+        level["center_lens"]["center_shape"]
+        for level in levels
+        if level.get("available")
+    ]
+    center_generators = [
+        level["center_lens"]["center_generator"]
+        for level in levels
+        if level.get("available")
+    ]
+    edges = [
+        level["edge_k"]
+        for level in levels
+        if level.get("available")
+    ]
+    visible_forms = [
+        f"{level['visible_form']}:{level['visible_shape']}"
+        for level in levels
+        if level.get("available")
+    ]
+
+    recurrence = {
+        "level_count": len(levels),
+        "available_level_count": sum(1 for level in levels if level.get("available")),
+        "center_shape_sequence": center_shapes,
+        "center_generator_sequence": center_generators,
+        "edge_sequence": edges,
+        "visible_form_sequence": visible_forms,
+        "stable_center_shape": (
+            len(center_shapes) > 1 and len(set(center_shapes)) == 1
+        ),
+        "stable_center_generator": (
+            len(center_generators) > 1 and len(set(center_generators)) == 1
+        ),
+        "stable_edge": len(edges) > 1 and len(set(edges)) == 1,
+        "status": stop_reason,
+    }
+
+    return {
+        "n": n,
+        "digits": len(str(n)),
+        "bit_length": n.bit_length(),
+        "excluded_support_limit": excluded_support_limit,
+        "excluded_support_bits": excluded_support_limit.bit_length(),
+        "max_generator_count": max_generator_count,
+        "max_move_span": max_move_span,
+        "depth": depth,
+        "levels": levels,
+        "recurrence": recurrence,
+        "interpretation": [
+            "The recursive lens re-enters PET-local windows suggested by decoded center lenses.",
+            "Each level preserves the decoded edge and projected center shape from the previous visible form.",
+            "Recurrence tracks whether center shapes, generators, or edges stabilize across zoom levels.",
+            "This is a recursive PET zoom lens; it does not inspect value divisibility.",
+        ],
+        "claim": "PET recursive zoom lens only; this does not factor N",
+    }
+
+
+def _print_opaque_recursive_lens(data: dict) -> None:
+    print("PET OPAQUE RECURSIVE LENS")
+    print()
+    print("Observed projection")
+    print(f"  digits = {data['digits']}")
+    print(f"  bit_length = {data['bit_length']}")
+    print(f"  excluded_backbone_support = <= {data['excluded_support_limit']}")
+    print(f"  excluded_support_bits = {data['excluded_support_bits']}")
+    print(f"  max_generator_count = {data['max_generator_count']}")
+    print(f"  max_move_span = {data['max_move_span']}")
+    print(f"  depth = {data['depth']}")
+
+    print()
+    print("Recursive zoom levels")
+    if not data["levels"]:
+        print("  none")
+    else:
+        for level in data["levels"]:
+            print()
+            print(f"  level {level['level']}")
+            if level["input_window"] is None:
+                print("    input_window = full")
+            else:
+                window = level["input_window"]
+                print(f"    input_window = k[{window['k_start']},{window['k_end']}]")
+            print(
+                "    effective_max_generator_count = "
+                f"{level['effective_max_generator_count']}"
+            )
+
+            if not level["available"]:
+                print(f"    unavailable = {level['reason']}")
+                continue
+
+            band = level["selected_band"]
+            lens = level["center_lens"]
+            suggested = lens["suggested_window"]
+            print(f"    visible_form = {level['visible_form']}")
+            print(f"    visible_shape = {level['visible_shape']}")
+            print(f"    edge_k = {level['edge_k']}")
+            print(f"    boundary = {level['boundary']}")
+            print(
+                "    selected_band = "
+                f"{band['kind']} {band['move']} k[{band['k_range']}]"
+            )
+            print(f"    center_lens_kind = {lens['lens_kind']}")
+            print(f"    center_shape = {lens['center_shape']}")
+            print(f"    center_generator = {lens['center_generator']}")
+            print(f"    center_nearest_integer = {lens['center_nearest_integer']}")
+            print(
+                "    suggested_window = "
+                f"k[{suggested['k_start']},{suggested['k_end']}]"
+            )
+            print(
+                "    recommended_next_lens = "
+                f"{lens['recommended_next_lens']}"
+            )
+
+    recurrence = data["recurrence"]
+    print()
+    print("Recurrence")
+    print(f"  status = {recurrence['status']}")
+    print(f"  level_count = {recurrence['level_count']}")
+    print(f"  available_level_count = {recurrence['available_level_count']}")
+    print(f"  center_shape_sequence = {recurrence['center_shape_sequence']}")
+    print(f"  center_generator_sequence = {recurrence['center_generator_sequence']}")
+    print(f"  edge_sequence = {recurrence['edge_sequence']}")
+    print(f"  visible_form_sequence = {recurrence['visible_form_sequence']}")
+    print(
+        "  stable_center_shape = "
+        f"{'yes' if recurrence['stable_center_shape'] else 'no'}"
+    )
+    print(
+        "  stable_center_generator = "
+        f"{'yes' if recurrence['stable_center_generator'] else 'no'}"
+    )
+    print(f"  stable_edge = {'yes' if recurrence['stable_edge'] else 'no'}")
+
+    print()
+    print("PET interpretation")
+    for line in data["interpretation"]:
+        print(f"  {line}")
+
+    print()
+    print(f"claim = {data['claim']}")
+
+
 def _next_prime_at_or_after(n: int) -> int:
     candidate = max(2, n)
 
@@ -3575,6 +3861,34 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
+    # opaque-recursive-lens
+    p_opaque_recursive_lens = subparsers.add_parser(
+        "opaque-recursive-lens",
+        help="recursively zoom into PET-local lenses suggested by decoded center forms",
+    )
+    p_opaque_recursive_lens.add_argument("n", type=int, metavar="N")
+    p_opaque_recursive_lens.add_argument(
+        "--excluded-support-limit",
+        type=int,
+        required=True,
+    )
+    p_opaque_recursive_lens.add_argument(
+        "--max-generator-count",
+        type=int,
+        default=40,
+    )
+    p_opaque_recursive_lens.add_argument(
+        "--max-move-span",
+        type=int,
+        default=5,
+    )
+    p_opaque_recursive_lens.add_argument(
+        "--depth",
+        type=int,
+        default=3,
+    )
+    p_opaque_recursive_lens.add_argument("--json", action="store_true")
+
     # opaque-benchmark
     p_opaque_benchmark = subparsers.add_parser(
         "opaque-benchmark",
@@ -4384,6 +4698,20 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, indent=2, ensure_ascii=False))
             else:
                 _print_opaque_focused_peel(data)
+
+        elif args.command == "opaque-recursive-lens":
+            data = _opaque_recursive_lens(
+                args.n,
+                excluded_support_limit=args.excluded_support_limit,
+                max_generator_count=args.max_generator_count,
+                max_move_span=args.max_move_span,
+                depth=args.depth,
+            )
+
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                _print_opaque_recursive_lens(data)
 
         elif args.command == "opaque-benchmark":
             if args.opaque_benchmark_command == "probe":
