@@ -708,3 +708,66 @@ def test_opaque_focused_peel_classic_handoff_edge_point_text_is_monkey_friendly(
     assert "divisor_found = 7" in result.stdout
     assert "cofactor = 11" in result.stdout
     assert "verified = yes" in result.stdout
+
+def test_opaque_focused_peel_fork_opens_multi_threshold_band() -> None:
+    rsa100 = (
+        "1522605027922533360535618378132637429718068114961380688657908494580122963258952897654000350692006139"
+    )
+
+    data = _run_json(
+        "opaque-focused-peel",
+        rsa100,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--fork",
+    )
+
+    assert data["fork"] is True
+    fork = data["peel_fork"]
+    assert fork["fork_available"] is True
+    assert fork["source_band"]["kind"] == "multi-threshold"
+    assert fork["source_band"]["move"] == "NEW,DROP"
+    assert fork["source_band"]["k_range"] == "8..12"
+    assert fork["branch_count"] == 2
+
+    branches = {branch["name"]: branch for branch in fork["branches"]}
+    assert branches["NEW-side"]["move"] == "NEW"
+    assert branches["NEW-side"]["direction"] == "upward"
+    assert branches["NEW-side"]["side_window"]["k_range"] == "13..17"
+    assert branches["NEW-side"]["side_window"]["source_kind"] == "recovery"
+
+    assert branches["DROP-side"]["move"] == "DROP"
+    assert branches["DROP-side"]["direction"] == "downward"
+    assert branches["DROP-side"]["side_window"]["k_range"] == "4..7"
+    assert branches["DROP-side"]["side_window"]["source_kind"] == "multi-threshold"
+
+
+def test_opaque_focused_peel_fork_text_is_monkey_friendly() -> None:
+    rsa100 = (
+        "1522605027922533360535618378132637429718068114961380688657908494580122963258952897654000350692006139"
+    )
+
+    result = _run_cli(
+        "opaque-focused-peel",
+        rsa100,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--fork",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET multi-threshold fork" in result.stdout
+    assert "source_band = multi-threshold NEW,DROP k[8..12]" in result.stdout
+    assert "branch_count = 2" in result.stdout
+    assert "NEW-side" in result.stdout
+    assert "DROP-side" in result.stdout
+    assert "side_window = k[13,17]" in result.stdout
+    assert "side_window = k[4,7]" in result.stdout

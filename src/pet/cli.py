@@ -1120,6 +1120,45 @@ def _print_opaque_shape_families(data: dict) -> None:
     print(f"  excluded_backbone_support = {excluded_text}")
     print(f"  low visible support = {low_visible_text}")
 
+    if data.get("fork"):
+        fork = data["peel_fork"]
+        print()
+        print("PET multi-threshold fork")
+        if not fork or not fork["fork_available"]:
+            reason = "unknown" if not fork else fork["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            source = fork["source_band"]
+            print(
+                "  source_band = "
+                f"{source['kind']} {source['move']} k[{source['k_range']}]"
+            )
+            print(f"  boundary = {source['boundary']}")
+            print(f"  branch_count = {fork['branch_count']}")
+
+            print()
+            print("  Branches")
+            for branch in fork["branches"]:
+                retained = branch["retained_window"]
+                side = branch["side_window"]
+                print(f"    {branch['name']}")
+                print(f"      move = {branch['move']}")
+                print(f"      direction = {branch['direction']}")
+                print(
+                    "      retained_window = "
+                    f"k[{retained['k_start']},{retained['k_end']}]"
+                )
+                print(
+                    "      side_window = "
+                    f"k[{side['k_start']},{side['k_end']}] "
+                    f"({side['source_kind']} {side['source_move']})"
+                )
+                print(f"      side_role = {branch['side_role']}")
+                print(f"      next_action = {branch['next_action']}")
+                print(f"      reason = {branch['reason']}")
+
+            print(f"  claim = {fork['claim']}")
+
     print()
     print("PET interpretation")
     for line in data["interpretation"]:
@@ -2395,6 +2434,127 @@ def _opaque_focused_peel_classic_handoff(
 
 
 
+def _opaque_focused_peel_multi_fork(peel_cut: dict | None, response_data: dict) -> dict:
+    if not peel_cut or not peel_cut.get("cut_available"):
+        return {
+            "fork_available": False,
+            "reason": "focused peel cut is not available",
+        }
+
+    if peel_cut["cut_move"] != "NEW,DROP":
+        return {
+            "fork_available": False,
+            "reason": "focused peel band is not multi-threshold",
+        }
+
+    cut_window_text = peel_cut["cut_window"]
+    k_start_text, k_end_text = (
+        cut_window_text.removeprefix("k[")
+        .removesuffix("]")
+        .split(",", 1)
+    )
+    k_start = int(k_start_text)
+    k_end = int(k_end_text)
+    max_k = int(response_data["max_generator_count"])
+
+    lower_bands = [
+        band
+        for band in response_data["magnetic_bands"]
+        if int(band["k_end"]) < k_start
+    ]
+    upper_bands = [
+        band
+        for band in response_data["magnetic_bands"]
+        if int(band["k_start"]) > k_end
+    ]
+
+    lower_band = lower_bands[-1] if lower_bands else None
+    upper_band = upper_bands[0] if upper_bands else None
+
+    drop_side_window = (
+        {
+            "k_start": int(lower_band["k_start"]),
+            "k_end": int(lower_band["k_end"]),
+            "k_range": lower_band["k_range"],
+            "source_kind": lower_band["kind"],
+            "source_move": lower_band["move"],
+        }
+        if lower_band
+        else {
+            "k_start": 1,
+            "k_end": max(1, k_start - 1),
+            "k_range": f"1..{max(1, k_start - 1)}",
+            "source_kind": "implicit-lower-side",
+            "source_move": "DROP",
+        }
+    )
+
+    new_side_window = (
+        {
+            "k_start": int(upper_band["k_start"]),
+            "k_end": int(upper_band["k_end"]),
+            "k_range": upper_band["k_range"],
+            "source_kind": upper_band["kind"],
+            "source_move": upper_band["move"],
+        }
+        if upper_band
+        else {
+            "k_start": min(max_k, k_end + 1),
+            "k_end": max_k,
+            "k_range": f"{min(max_k, k_end + 1)}..{max_k}",
+            "source_kind": "implicit-upper-side",
+            "source_move": "NEW",
+        }
+    )
+
+    retained_window = {
+        "k_start": k_start,
+        "k_end": k_end,
+        "k_range": f"{k_start}..{k_end}",
+        "kind": peel_cut["cut_kind"],
+        "move": peel_cut["cut_move"],
+        "boundary": peel_cut["boundary"],
+    }
+
+    branches = [
+        {
+            "name": "NEW-side",
+            "move": "NEW",
+            "direction": "upward",
+            "retained_window": retained_window,
+            "side_window": new_side_window,
+            "side_role": "pressured-side",
+            "next_action": "inspect pressured-side recovery edge",
+            "reason": "NEW threshold exits the multi band toward higher-k pressure",
+        },
+        {
+            "name": "DROP-side",
+            "move": "DROP",
+            "direction": "downward",
+            "retained_window": retained_window,
+            "side_window": drop_side_window,
+            "side_role": "informative-side",
+            "next_action": "inspect informative-side boundary edge",
+            "reason": "DROP threshold exits the multi band toward lower-k decompression",
+        },
+    ]
+
+    return {
+        "fork_available": True,
+        "source_band": retained_window,
+        "branch_count": len(branches),
+        "branches": branches,
+        "interpretation": [
+            "The multi-threshold fork opens a NEW,DROP band into two explicit structural branches.",
+            "The NEW-side follows the higher-k pressure transition.",
+            "The DROP-side follows the lower-k decompression transition.",
+            "This fork does not factor N; it separates ambiguous PET peel directions.",
+        ],
+        "claim": "PET multi-threshold fork only; this does not factor N",
+    }
+
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2412,6 +2572,7 @@ def _opaque_focused_peel(
     realize: bool = False,
     classic_handoff: bool = False,
     handoff_radius: int = 5,
+    fork: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2426,6 +2587,9 @@ def _opaque_focused_peel(
 
     if classic_handoff:
         realize = True
+    if fork:
+        cut = True
+        peel_step = True
     if realize:
         center_lens = True
     if center_lens:
@@ -2525,6 +2689,11 @@ def _opaque_focused_peel(
         if classic_handoff
         else None
     )
+    peel_fork = (
+        _opaque_focused_peel_multi_fork(peel_cut, response)
+        if fork
+        else None
+    )
 
     return {
         "n": n,
@@ -2546,6 +2715,7 @@ def _opaque_focused_peel(
         "realize": realize,
         "classic_handoff": classic_handoff,
         "handoff_radius": handoff_radius,
+        "fork": fork,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
@@ -2556,6 +2726,7 @@ def _opaque_focused_peel(
         "decoded_center_lens": decoded_center_lens,
         "pet_realization": pet_realization,
         "pet_classic_handoff": pet_classic_handoff,
+        "peel_fork": peel_fork,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -2567,6 +2738,7 @@ def _opaque_focused_peel(
             "When enabled, the center lens builds the next PET-local lens from the projected center shape.",
             "When enabled, the realization payload bridges the projected center back to PET encode/decode.",
             "When enabled, the classic handoff uses the realized center as an explicit external divisibility anchor.",
+            "When enabled, the fork opens multi-threshold bands into explicit NEW/DROP branches.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2885,6 +3057,45 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"  cofactor = {handoff['cofactor']}")
             print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
             print(f"  claim = {handoff['claim']}")
+
+    if data.get("fork"):
+        fork = data["peel_fork"]
+        print()
+        print("PET multi-threshold fork")
+        if not fork or not fork["fork_available"]:
+            reason = "unknown" if not fork else fork["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            source = fork["source_band"]
+            print(
+                "  source_band = "
+                f"{source['kind']} {source['move']} k[{source['k_range']}]"
+            )
+            print(f"  boundary = {source['boundary']}")
+            print(f"  branch_count = {fork['branch_count']}")
+
+            print()
+            print("  Branches")
+            for branch in fork["branches"]:
+                retained = branch["retained_window"]
+                side = branch["side_window"]
+                print(f"    {branch['name']}")
+                print(f"      move = {branch['move']}")
+                print(f"      direction = {branch['direction']}")
+                print(
+                    "      retained_window = "
+                    f"k[{retained['k_start']},{retained['k_end']}]"
+                )
+                print(
+                    "      side_window = "
+                    f"k[{side['k_start']},{side['k_end']}] "
+                    f"({side['source_kind']} {side['source_move']})"
+                )
+                print(f"      side_role = {branch['side_role']}")
+                print(f"      next_action = {branch['next_action']}")
+                print(f"      reason = {branch['reason']}")
+
+            print(f"  claim = {fork['claim']}")
 
     print()
     print("PET interpretation")
@@ -4269,6 +4480,11 @@ def main(argv: list[str] | None = None) -> int:
         help="use the realized PET center as an explicit classic divisibility anchor",
     )
     p_opaque_focused_peel.add_argument(
+        "--fork",
+        action="store_true",
+        help="open multi-threshold bands into explicit NEW/DROP peel branches",
+    )
+    p_opaque_focused_peel.add_argument(
         "--handoff-radius",
         type=int,
         default=5,
@@ -5110,6 +5326,7 @@ def main(argv: list[str] | None = None) -> int:
                 realize=args.realize,
                 classic_handoff=args.classic_handoff,
                 handoff_radius=args.handoff_radius,
+                fork=args.fork,
             )
 
             if args.json:
