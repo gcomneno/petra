@@ -1816,6 +1816,81 @@ def _opaque_focused_peel_cut(selected_band: dict, local_hotspots: list[dict]) ->
     }
 
 
+def _opaque_focused_peel_step(peel_cut: dict | None) -> dict:
+    if not peel_cut or not peel_cut.get("cut_available"):
+        return {
+            "step_available": False,
+            "reason": "focused peel cut is not available",
+        }
+
+    layers = peel_cut["layers"]
+    if not layers:
+        return {
+            "step_available": False,
+            "reason": "focused peel cut has no layers",
+        }
+
+    edge_layers = [
+        layer for layer in layers
+        if layer["layer"] == "edge-layer"
+    ]
+    if edge_layers:
+        target = edge_layers[0]
+        target_reason = "edge layer has the minimal trigger span at the selected boundary"
+    else:
+        target = min(
+            layers,
+            key=lambda layer: (
+                int(layer["minimal_trigger_span"]),
+                int(layer["k"]),
+            ),
+        )
+        target_reason = "layer has the smallest available trigger span"
+
+    side_layers = peel_cut.get("side_layers", [])
+    if side_layers:
+        next_side = side_layers[0]
+        side_name = next_side["side"]
+        side_start = next_side["k_start"]
+    else:
+        side_name = None
+        side_start = None
+
+    return {
+        "step_available": True,
+        "selected_action": "peel-edge",
+        "target_layer": target["layer"],
+        "target_k": target["k"],
+        "target_boundary": peel_cut["boundary"],
+        "target_kind": peel_cut["cut_kind"],
+        "target_move": peel_cut["cut_move"],
+        "target_minimal_trigger_span": target["minimal_trigger_span"],
+        "target_center_bits": target["center_bits"],
+        "target_margin_bits": target["margin_bits"],
+        "target_threshold_crossings": target["threshold_crossings"],
+        "next_side": side_name,
+        "next_side_k_start": side_start,
+        "target_reason": target_reason,
+        "layer_decisions": [
+            {
+                "layer": layer["layer"],
+                "k": layer["k"],
+                "decision": (
+                    "next-peel-target"
+                    if layer["k"] == target["k"]
+                    else "keep-as-ramp-context"
+                ),
+            }
+            for layer in layers
+        ],
+        "interpretation": [
+            "The peel step selects the next structural layer inside the focused cut.",
+            "The selected layer is a PET-local target, not a value-level divisor.",
+            "This advances from where to cut to which layer to peel next.",
+        ],
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -1825,6 +1900,7 @@ def _opaque_focused_peel(
     kind: str | None = None,
     move: str | None = None,
     cut: bool = False,
+    peel_step: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -1891,6 +1967,7 @@ def _opaque_focused_peel(
     }
 
     peel_cut = _opaque_focused_peel_cut(selected, local_hotspots) if cut else None
+    peel_step_result = _opaque_focused_peel_step(peel_cut) if peel_step else None
 
     return {
         "n": n,
@@ -1904,13 +1981,16 @@ def _opaque_focused_peel(
         "requested_kind": kind,
         "requested_move": requested_move,
         "cut": cut,
+        "peel_step": peel_step,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
+        "peel_step_result": peel_step_result,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
             "When enabled, the cut separates the focused band into local PET layers.",
+            "When enabled, the peel step selects the next structural layer to lift.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -1996,6 +2076,37 @@ def _print_opaque_focused_peel(data: dict) -> None:
                         f"k_start={side['k_start']} "
                         f"{side['description']}"
                     )
+
+    if data.get("peel_step"):
+        step = data["peel_step_result"]
+        print()
+        print("Focused peel step")
+        if not step or not step["step_available"]:
+            reason = "unknown" if not step else step["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  selected_action = {step['selected_action']}")
+            print(f"  target_layer = {step['target_layer']}")
+            print(f"  target_k = {step['target_k']}")
+            print(f"  target_boundary = {step['target_boundary']}")
+            print(f"  target_kind = {step['target_kind']}")
+            print(f"  target_move = {step['target_move']}")
+            print(
+                "  target_minimal_trigger_span = "
+                f"{step['target_minimal_trigger_span']}"
+            )
+            print(f"  next_side = {step['next_side']}")
+            print(f"  next_side_k_start = {step['next_side_k_start']}")
+            print(f"  target_reason = {step['target_reason']}")
+
+            print()
+            print("  Layer decisions")
+            for decision in step["layer_decisions"]:
+                print(
+                    f"    {decision['layer']}: "
+                    f"k={decision['k']} "
+                    f"{decision['decision']}"
+                )
 
     print()
     print("PET interpretation")
@@ -2913,6 +3024,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="incise the selected magnetic band into local PET peel layers",
     )
+    p_opaque_focused_peel.add_argument(
+        "--peel-step",
+        action="store_true",
+        help="select the next PET structural layer to peel from the focused cut",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3713,6 +3829,7 @@ def main(argv: list[str] | None = None) -> int:
                 kind=args.kind,
                 move=args.move,
                 cut=args.cut,
+                peel_step=args.peel_step,
             )
 
             if args.json:

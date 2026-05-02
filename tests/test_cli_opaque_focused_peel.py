@@ -178,3 +178,58 @@ def test_opaque_focused_peel_cut_text_is_monkey_friendly() -> None:
     assert "edge-layer" in result.stdout
     assert "Side layers" in result.stdout
     assert "pressured-side" in result.stdout
+
+
+def test_opaque_focused_peel_step_selects_edge_layer() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--cut",
+        "--peel-step",
+    )
+
+    assert data["peel_step"] is True
+    step = data["peel_step_result"]
+    assert step["step_available"] is True
+    assert step["selected_action"] == "peel-edge"
+    assert step["target_layer"] == "edge-layer"
+    assert step["target_k"] == 2
+    assert step["target_boundary"] == "2/3"
+    assert step["target_kind"] == "pressure-entry"
+    assert step["target_move"] == "NEW"
+    assert step["target_minimal_trigger_span"] == 1
+    assert step["next_side"] == "pressured-side"
+    assert step["next_side_k_start"] == 3
+
+    decisions = {row["k"]: row for row in step["layer_decisions"]}
+    assert decisions[1]["decision"] == "keep-as-ramp-context"
+    assert decisions[2]["decision"] == "next-peel-target"
+
+
+def test_opaque_focused_peel_step_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--cut",
+        "--peel-step",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Focused peel step" in result.stdout
+    assert "selected_action = peel-edge" in result.stdout
+    assert "target_layer = edge-layer" in result.stdout
+    assert "target_k = 2" in result.stdout
+    assert "Layer decisions" in result.stdout
+    assert "next-peel-target" in result.stdout
