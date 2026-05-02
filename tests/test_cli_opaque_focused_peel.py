@@ -124,3 +124,57 @@ def test_opaque_focused_peel_errors_when_no_band_matches() -> None:
 
     assert result.returncode != 0
     assert "opaque-focused-peel found no matching magnetic bands" in result.stderr
+
+
+def test_opaque_focused_peel_cut_reports_layers() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--cut",
+    )
+
+    assert data["cut"] is True
+    cut = data["peel_cut"]
+    assert cut["cut_available"] is True
+    assert cut["cut_window"] == "k[1,2]"
+    assert cut["edge_k"] == 2
+    assert cut["boundary"] == "2/3"
+    assert cut["cut_kind"] == "pressure-entry"
+    assert cut["cut_move"] == "NEW"
+    assert cut["layer_count"] == 2
+
+    layers = {layer["k"]: layer for layer in cut["layers"]}
+    assert layers[1]["layer"] == "outer-layer"
+    assert layers[2]["layer"] == "edge-layer"
+
+    assert cut["side_layers"]
+    assert cut["side_layers"][0]["side"] == "pressured-side"
+    assert cut["side_layers"][0]["k_start"] == 3
+
+
+def test_opaque_focused_peel_cut_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--cut",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Focused peel cut" in result.stdout
+    assert "Layers" in result.stdout
+    assert "outer-layer" in result.stdout
+    assert "edge-layer" in result.stdout
+    assert "Side layers" in result.stdout
+    assert "pressured-side" in result.stdout

@@ -1698,6 +1698,124 @@ def _print_opaque_mass_response(data: dict) -> None:
     print(f"claim = {data['claim']}")
 
 
+def _opaque_focused_peel_cut(selected_band: dict, local_hotspots: list[dict]) -> dict:
+    if not local_hotspots:
+        return {
+            "cut_available": False,
+            "reason": "selected band has no local hotspots",
+            "layers": [],
+        }
+
+    ordered = sorted(local_hotspots, key=lambda row: int(row["k"]))
+    closest_k = int(selected_band["closest_k"])
+    boundary = str(selected_band["boundary"])
+    move = str(selected_band["move"])
+    kind = str(selected_band["kind"])
+
+    layers = []
+    for row in ordered:
+        k = int(row["k"])
+        trigger_span = int(row["minimal_trigger_span"])
+
+        if k == closest_k:
+            layer = "edge-layer"
+        elif trigger_span == int(selected_band["max_trigger_span"]):
+            layer = "outer-layer"
+        else:
+            layer = "middle-layer"
+
+        layers.append(
+            {
+                "layer": layer,
+                "k": k,
+                "center_bits": row["center_bits"],
+                "margin_bits": row["margin_bits"],
+                "response": row["response"],
+                "minimal_trigger_span": trigger_span,
+                "hotspot_kind": row["hotspot_kind"],
+                "threshold_crossings": row["threshold_crossings"],
+            }
+        )
+
+    side_layers = []
+    if "/" in boundary:
+        left_text, right_text = boundary.split("/", maxsplit=1)
+        try:
+            left_k = int(left_text)
+            right_k = int(right_text)
+        except ValueError:
+            left_k = None
+            right_k = None
+
+        if left_k is not None and right_k is not None:
+            if kind == "pressure-entry" and move == "NEW":
+                side_layers.append(
+                    {
+                        "side": "pressured-side",
+                        "k_start": right_k,
+                        "description": "symbolic NEW crosses from boundary-informative into pressured",
+                    }
+                )
+            elif kind == "recovery" and move == "DROP":
+                side_layers.append(
+                    {
+                        "side": "boundary-side",
+                        "k_start": right_k,
+                        "description": "symbolic DROP crosses from pressured back into boundary-informative",
+                    }
+                )
+            elif kind == "boundary-entry" and move == "NEW":
+                side_layers.append(
+                    {
+                        "side": "boundary-side",
+                        "k_start": right_k,
+                        "description": "symbolic NEW crosses from informative into boundary-informative",
+                    }
+                )
+            elif kind == "decompression" and move == "DROP":
+                side_layers.append(
+                    {
+                        "side": "informative-side",
+                        "k_start": right_k,
+                        "description": "symbolic DROP crosses from boundary-informative back into informative",
+                    }
+                )
+            elif kind == "visibility-entry" and move == "NEW":
+                side_layers.append(
+                    {
+                        "side": "informative-side",
+                        "k_start": right_k,
+                        "description": "symbolic NEW crosses from deep-opaque into informative",
+                    }
+                )
+            elif kind == "fog-return" and move == "DROP":
+                side_layers.append(
+                    {
+                        "side": "deep-opaque-side",
+                        "k_start": right_k,
+                        "description": "symbolic DROP crosses from informative back into deep-opaque",
+                    }
+                )
+
+    return {
+        "cut_available": True,
+        "cut_kind": kind,
+        "cut_move": move,
+        "cut_window": f"k[{selected_band['k_start']},{selected_band['k_end']}]",
+        "edge_k": closest_k,
+        "boundary": boundary,
+        "layer_count": len(layers),
+        "layers": layers,
+        "side_layers": side_layers,
+        "interpretation": [
+            "The cut separates the selected magnetic band into PET layers.",
+            "The edge layer is the closest hotspot to the representation-scale boundary.",
+            "Side layers describe the symbolic regime beyond the selected boundary.",
+            "This cut is structural: it does not inspect value divisibility.",
+        ],
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -1706,6 +1824,7 @@ def _opaque_focused_peel(
     max_move_span: int,
     kind: str | None = None,
     move: str | None = None,
+    cut: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -1771,6 +1890,8 @@ def _opaque_focused_peel(
         "local_hotspots": local_hotspots,
     }
 
+    peel_cut = _opaque_focused_peel_cut(selected, local_hotspots) if cut else None
+
     return {
         "n": n,
         "digits": response["digits"],
@@ -1782,11 +1903,14 @@ def _opaque_focused_peel(
         "max_move_span": max_move_span,
         "requested_kind": kind,
         "requested_move": requested_move,
+        "cut": cut,
         "selected_band": selected,
         "peel_lens": peel_lens,
+        "peel_cut": peel_cut,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
+            "When enabled, the cut separates the focused band into local PET layers.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -1838,6 +1962,40 @@ def _print_opaque_focused_peel(data: dict) -> None:
             f"kind={row['hotspot_kind']} "
             f"threshold={thresholds}"
         )
+
+    if data.get("cut"):
+        cut = data["peel_cut"]
+        print()
+        print("Focused peel cut")
+        if not cut or not cut["cut_available"]:
+            reason = "unknown" if not cut else cut["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  cut_window = {cut['cut_window']}")
+            print(f"  edge_k = {cut['edge_k']}")
+            print(f"  boundary = {cut['boundary']}")
+            print(f"  cut_kind = {cut['cut_kind']}")
+            print(f"  cut_move = {cut['cut_move']}")
+            print()
+            print("  Layers")
+            for layer in cut["layers"]:
+                print(
+                    f"    {layer['layer']}: "
+                    f"k={layer['k']} "
+                    f"center_bits={layer['center_bits']:.2f} "
+                    f"margin_bits={layer['margin_bits']:.2f} "
+                    f"min_span={layer['minimal_trigger_span']}"
+                )
+
+            if cut["side_layers"]:
+                print()
+                print("  Side layers")
+                for side in cut["side_layers"]:
+                    print(
+                        f"    {side['side']}: "
+                        f"k_start={side['k_start']} "
+                        f"{side['description']}"
+                    )
 
     print()
     print("PET interpretation")
@@ -2750,6 +2908,11 @@ def main(argv: list[str] | None = None) -> int:
         "--move",
         choices=["NEW", "DROP", "new", "drop"],
     )
+    p_opaque_focused_peel.add_argument(
+        "--cut",
+        action="store_true",
+        help="incise the selected magnetic band into local PET peel layers",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3549,6 +3712,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_move_span=args.max_move_span,
                 kind=args.kind,
                 move=args.move,
+                cut=args.cut,
             )
 
             if args.json:
