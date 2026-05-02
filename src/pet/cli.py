@@ -2057,6 +2057,114 @@ def _opaque_focused_peel_lift(peel_slice: dict | None) -> dict:
     }
 
 
+def _opaque_projected_center_pet_form(n: int, edge_k: int) -> dict:
+    if edge_k < 1:
+        raise ValueError("projected center edge_k expects integers >= 1")
+
+    center_estimate = n ** (1.0 / edge_k)
+    nearest_integer = max(1, int(round(center_estimate)))
+    nearest_tree = encode(nearest_integer)
+
+    try:
+        from tools.pet_shape_algebra import pet_to_shape
+
+        pet_shape = pet_to_shape(nearest_tree)
+    except Exception:
+        pet_shape = None
+
+    signature_data = shape_signature_dict(nearest_integer)
+
+    return {
+        "expression": f"N^(1/{edge_k})",
+        "estimate": center_estimate,
+        "nearest_integer": nearest_integer,
+        "nearest_integer_digits": len(str(nearest_integer)),
+        "nearest_integer_bits": nearest_integer.bit_length(),
+        "pet_shape": None if pet_shape is None else _jsonable_value(pet_shape),
+        "pet_shape_text": None if pet_shape is None else str(pet_shape),
+        "pet_signature": signature_data["signature"],
+        "pet_generator": signature_data["generator"],
+        "pet_already_minimal": signature_data["already_minimal"],
+        "pet_child_generators": signature_data["child_generators"],
+        "center_role": "local edge projection",
+    }
+
+
+
+def _opaque_focused_peel_decode(n: int, peel_lift: dict | None) -> dict:
+    if not peel_lift or not peel_lift.get("lift_available"):
+        return {
+            "decode_available": False,
+            "reason": "focused peel lift is not available",
+        }
+
+    visible = peel_lift["visible_pet_form"]
+    profile = peel_lift["lift_profile"]
+    retained = peel_lift["lift_target"]
+    separated = peel_lift["lifted_against"]
+
+    edge_k = int(visible["edge_k"])
+    support_region = {
+        "name": retained["name"],
+        "k_start": int(retained["k_start"]),
+        "k_end": int(retained["k_end"]),
+        "k_range": retained["k_range"],
+    }
+    separated_region = {
+        "name": separated["name"],
+        "k_start": int(separated["k_start"]),
+        "k_end": int(separated["k_end"]),
+        "k_range": separated["k_range"],
+    }
+
+    if visible["shape"] == "thin-ramp":
+        recommended_next_lens = "preserve-edge-k"
+        decode_strength = "sharp"
+    elif visible["shape"] == "ramp-band":
+        recommended_next_lens = "preserve-edge-k-and-rescan-local-band"
+        decode_strength = "banded"
+    elif visible["shape"] == "edge-point":
+        recommended_next_lens = "preserve-single-edge"
+        decode_strength = "point"
+    else:
+        recommended_next_lens = "preserve-visible-form"
+        decode_strength = "generic"
+
+    projected_center = _opaque_projected_center_pet_form(n, edge_k)
+
+    decoded_constraints = {
+        "support_count_region": support_region,
+        "separated_region": separated_region,
+        "local_edge_hypothesis": {
+            "k": edge_k,
+            "boundary": visible["boundary"],
+            "form": visible["form"],
+            "shape": visible["shape"],
+        },
+        "projected_center_pet_form": projected_center,
+        "transition": (
+            f"{profile['retained_side']} -> {profile['separated_side']}"
+        ),
+        "decode_strength": decode_strength,
+        "recommended_next_lens": recommended_next_lens,
+    }
+
+    return {
+        "decode_available": True,
+        "input_form": visible["form"],
+        "input_shape": visible["shape"],
+        "edge_k": edge_k,
+        "boundary": visible["boundary"],
+        "decoded_constraints": decoded_constraints,
+        "interpretation": [
+            "The decode translates the lifted PET form into local structural constraints.",
+            "The local edge hypothesis preserves the visible edge without inspecting value divisibility.",
+            "The recommended next lens describes how to continue PET-local analysis.",
+        ],
+        "claim": "PET visible-form decode only; this does not factor N",
+    }
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2069,6 +2177,7 @@ def _opaque_focused_peel(
     peel_step: bool = False,
     slice_: bool = False,
     lift: bool = False,
+    decode: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2079,6 +2188,8 @@ def _opaque_focused_peel(
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
 
+    if decode:
+        lift = True
     if lift:
         slice_ = True
     if slice_:
@@ -2152,6 +2263,7 @@ def _opaque_focused_peel(
         else None
     )
     peel_lift = _opaque_focused_peel_lift(peel_slice) if lift else None
+    pet_decode = _opaque_focused_peel_decode(n, peel_lift) if decode else None
 
     return {
         "n": n,
@@ -2168,12 +2280,14 @@ def _opaque_focused_peel(
         "peel_step": peel_step,
         "slice": slice_,
         "lift": lift,
+        "decode": decode,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
         "peel_step_result": peel_step_result,
         "peel_slice": peel_slice,
         "peel_lift": peel_lift,
+        "pet_decode": pet_decode,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -2181,6 +2295,7 @@ def _opaque_focused_peel(
             "When enabled, the peel step selects the next structural layer to lift.",
             "When enabled, the slice partitions local PET shape-space across the selected boundary.",
             "When enabled, the lift exposes the visible PET form of the retained partition.",
+            "When enabled, the decode translates the visible PET form into local structural constraints.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2356,6 +2471,59 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"    shape = {visible['shape']}")
             print(f"    boundary = {visible['boundary']}")
             print(f"    description = {visible['description']}")
+
+    if data.get("decode"):
+        decode_data = data["pet_decode"]
+        print()
+        print("PET visible-form decode")
+        if not decode_data or not decode_data["decode_available"]:
+            reason = "unknown" if not decode_data else decode_data["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            constraints = decode_data["decoded_constraints"]
+            support = constraints["support_count_region"]
+            separated = constraints["separated_region"]
+            edge = constraints["local_edge_hypothesis"]
+            print(f"  input_form = {decode_data['input_form']}")
+            print(f"  input_shape = {decode_data['input_shape']}")
+            print(f"  edge_k = {decode_data['edge_k']}")
+            print(f"  boundary = {decode_data['boundary']}")
+
+            print()
+            print("  Decoded constraints")
+            print(f"    support_count_region = k[{support['k_start']},{support['k_end']}]")
+            print(f"    separated_region = k[{separated['k_start']},{separated['k_end']}]")
+            print(f"    local_edge_hypothesis = k={edge['k']}")
+            print(f"    transition = {constraints['transition']}")
+            print(f"    decode_strength = {constraints['decode_strength']}")
+            print(
+                "    recommended_next_lens = "
+                f"{constraints['recommended_next_lens']}"
+            )
+
+            projected = constraints["projected_center_pet_form"]
+            print()
+            print("  Projected center PET form")
+            print(f"    expression = {projected['expression']}")
+            print(f"    estimate = {projected['estimate']:.12f}")
+            print(f"    nearest_integer = {projected['nearest_integer']}")
+            print(
+                "    nearest_integer_digits = "
+                f"{projected['nearest_integer_digits']}"
+            )
+            print(
+                "    nearest_integer_bits = "
+                f"{projected['nearest_integer_bits']}"
+            )
+            print(f"    pet_shape = {projected['pet_shape_text']}")
+            print(f"    pet_signature = {projected['pet_signature']}")
+            print(f"    pet_generator = {projected['pet_generator']}")
+            print(
+                "    pet_child_generators = "
+                f"{projected['pet_child_generators']}"
+            )
+            print(f"    center_role = {projected['center_role']}")
+            print(f"    claim = {decode_data['claim']}")
 
     print()
     print("PET interpretation")
@@ -3288,6 +3456,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="lift the retained partition and expose its visible PET form",
     )
+    p_opaque_focused_peel.add_argument(
+        "--decode",
+        action="store_true",
+        help="decode the lifted visible PET form into local structural constraints",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -4091,6 +4264,7 @@ def main(argv: list[str] | None = None) -> int:
                 peel_step=args.peel_step,
                 slice_=args.slice,
                 lift=args.lift,
+                decode=args.decode,
             )
 
             if args.json:

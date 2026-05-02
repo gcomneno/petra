@@ -361,3 +361,81 @@ def test_opaque_focused_peel_lift_text_is_monkey_friendly() -> None:
     assert "Visible PET form" in result.stdout
     assert "emergent_form = pre-pressure-edge" in result.stdout
     assert "local_shape = thin-ramp" in result.stdout
+
+
+def test_opaque_focused_peel_decode_translates_visible_form() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--decode",
+    )
+
+    assert data["cut"] is True
+    assert data["peel_step"] is True
+    assert data["slice"] is True
+    assert data["lift"] is True
+    assert data["decode"] is True
+
+    decode = data["pet_decode"]
+    assert decode["decode_available"] is True
+    assert decode["input_form"] == "pre-pressure-edge"
+    assert decode["input_shape"] == "thin-ramp"
+    assert decode["edge_k"] == 2
+    assert decode["boundary"] == "2/3"
+    assert "does not factor N" in decode["claim"]
+
+    constraints = decode["decoded_constraints"]
+    assert constraints["support_count_region"]["k_range"] == "1..2"
+    assert constraints["separated_region"]["k_range"] == "3..4"
+    assert constraints["local_edge_hypothesis"]["k"] == 2
+    assert constraints["local_edge_hypothesis"]["form"] == "pre-pressure-edge"
+    assert constraints["local_edge_hypothesis"]["shape"] == "thin-ramp"
+    assert constraints["transition"] == "boundary-informative-side -> pressured-side"
+    assert constraints["decode_strength"] == "sharp"
+    assert constraints["recommended_next_lens"] == "preserve-edge-k"
+
+    projected = constraints["projected_center_pet_form"]
+    assert projected["expression"] == "N^(1/2)"
+    assert round(projected["estimate"], 6) == 101.995098
+    assert projected["nearest_integer"] == 102
+    assert projected["nearest_integer_digits"] == 3
+    assert projected["nearest_integer_bits"] == 7
+    assert projected["pet_shape_text"] == "((), (), ())"
+    assert projected["pet_signature"] == [[], [], []]
+    assert projected["pet_generator"] == 30
+    assert projected["pet_child_generators"] == [1, 1, 1]
+    assert projected["center_role"] == "local edge projection"
+
+
+def test_opaque_focused_peel_decode_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--decode",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Focused peel lift" in result.stdout
+    assert "PET visible-form decode" in result.stdout
+    assert "input_form = pre-pressure-edge" in result.stdout
+    assert "input_shape = thin-ramp" in result.stdout
+    assert "local_edge_hypothesis = k=2" in result.stdout
+    assert "recommended_next_lens = preserve-edge-k" in result.stdout
+    assert "Projected center PET form" in result.stdout
+    assert "expression = N^(1/2)" in result.stdout
+    assert "nearest_integer = 102" in result.stdout
+    assert "pet_shape = ((), (), ())" in result.stdout
+    assert "pet_signature = [[], [], []]" in result.stdout
+    assert "pet_generator = 30" in result.stdout
