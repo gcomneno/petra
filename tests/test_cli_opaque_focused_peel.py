@@ -502,3 +502,78 @@ def test_opaque_focused_peel_center_lens_text_is_monkey_friendly() -> None:
     assert "preserve_center_shape = yes" in result.stdout
     assert "center_shape = ((), (), ())" in result.stdout
     assert "suggested_window = k[1,2]" in result.stdout
+
+
+def test_opaque_focused_peel_realize_bridges_to_pet_encode_decode() -> None:
+    data = _run_json(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--realize",
+    )
+
+    assert data["cut"] is True
+    assert data["peel_step"] is True
+    assert data["slice"] is True
+    assert data["lift"] is True
+    assert data["decode"] is True
+    assert data["center_lens"] is True
+    assert data["realize"] is True
+
+    realization = data["pet_realization"]
+    assert realization["realization_available"] is True
+    assert realization["source"] == "projected-center"
+    assert realization["source_form"] == "pre-pressure-edge:thin-ramp"
+    assert realization["edge_k"] == 2
+    assert realization["boundary"] == "2/3"
+    assert realization["nearest_integer"] == 102
+
+    encode_decode = realization["encode_decode"]
+    assert encode_decode["decoded_back"] == 102
+    assert encode_decode["roundtrip_ok"] is True
+    assert encode_decode["encoded_pet"] == [
+        [2, None],
+        [3, None],
+        [17, None],
+    ]
+
+    realized_shape = realization["realized_shape"]
+    assert realized_shape["shape_text"] == "((), (), ())"
+    assert realized_shape["signature"] == [[], [], []]
+    assert realized_shape["generator"] == 30
+    assert realized_shape["already_minimal"] is False
+    assert realized_shape["child_generators"] == [1, 1, 1]
+    assert realization["role"] == "local edge projection realization"
+    assert "does not factor N" in realization["claim"]
+
+
+def test_opaque_focused_peel_realize_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-focused-peel",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--realize",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET visible-form decode" in result.stdout
+    assert "PET decoded-center lens" in result.stdout
+    assert "PET realization payload" in result.stdout
+    assert "source = projected-center" in result.stdout
+    assert "nearest_integer = 102" in result.stdout
+    assert "Encode/decode" in result.stdout
+    assert "decoded_back = 102" in result.stdout
+    assert "roundtrip_ok = yes" in result.stdout
+    assert "Realized shape" in result.stdout
+    assert "shape = ((), (), ())" in result.stdout
+    assert "generator = 30" in result.stdout

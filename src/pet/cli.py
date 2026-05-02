@@ -2231,6 +2231,53 @@ def _opaque_focused_peel_center_lens(pet_decode: dict | None) -> dict:
 
 
 
+def _opaque_focused_peel_realization(pet_decode: dict | None) -> dict:
+    if not pet_decode or not pet_decode.get("decode_available"):
+        return {
+            "realization_available": False,
+            "reason": "focused peel decode is not available",
+        }
+
+    constraints = pet_decode["decoded_constraints"]
+    projected = constraints["projected_center_pet_form"]
+    edge = constraints["local_edge_hypothesis"]
+
+    nearest_integer = int(projected["nearest_integer"])
+    encoded_pet = encode(nearest_integer)
+    decoded_back = decode(encoded_pet)
+    roundtrip_ok = decoded_back == nearest_integer
+
+    return {
+        "realization_available": True,
+        "source": "projected-center",
+        "source_form": f"{pet_decode['input_form']}:{pet_decode['input_shape']}",
+        "edge_k": edge["k"],
+        "boundary": edge["boundary"],
+        "nearest_integer": nearest_integer,
+        "encode_decode": {
+            "encoded_pet": _jsonable_value(encoded_pet),
+            "decoded_back": decoded_back,
+            "roundtrip_ok": roundtrip_ok,
+        },
+        "realized_shape": {
+            "shape": projected["pet_shape"],
+            "shape_text": projected["pet_shape_text"],
+            "signature": projected["pet_signature"],
+            "generator": projected["pet_generator"],
+            "already_minimal": projected["pet_already_minimal"],
+            "child_generators": projected["pet_child_generators"],
+        },
+        "role": "local edge projection realization",
+        "interpretation": [
+            "The realization payload materializes the projected center with the canonical PET encode/decode pipeline.",
+            "The roundtrip check verifies that the projected center can re-enter the original PET world.",
+            "This bridges focused peel decode to PET shape, signature, generator, and algebra tools.",
+        ],
+        "claim": "PET realization payload only; this does not factor N",
+    }
+
+
+
 def _opaque_focused_peel(
     n: int,
     *,
@@ -2245,6 +2292,7 @@ def _opaque_focused_peel(
     lift: bool = False,
     decode: bool = False,
     center_lens: bool = False,
+    realize: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-focused-peel expects integers >= 1")
@@ -2255,6 +2303,8 @@ def _opaque_focused_peel(
     if max_move_span < 1:
         raise ValueError("--max-move-span expects integers >= 1")
 
+    if realize:
+        center_lens = True
     if center_lens:
         decode = True
     if decode:
@@ -2338,6 +2388,11 @@ def _opaque_focused_peel(
         if center_lens
         else None
     )
+    pet_realization = (
+        _opaque_focused_peel_realization(pet_decode)
+        if realize
+        else None
+    )
 
     return {
         "n": n,
@@ -2356,6 +2411,7 @@ def _opaque_focused_peel(
         "lift": lift,
         "decode": decode,
         "center_lens": center_lens,
+        "realize": realize,
         "selected_band": selected,
         "peel_lens": peel_lens,
         "peel_cut": peel_cut,
@@ -2364,6 +2420,7 @@ def _opaque_focused_peel(
         "peel_lift": peel_lift,
         "pet_decode": pet_decode,
         "decoded_center_lens": decoded_center_lens,
+        "pet_realization": pet_realization,
         "interpretation": [
             "The focused peel lens is selected from magnetic bands, not from raw value probing.",
             "The selected band is the highest-focus matching reactive frontier under the current PET lens.",
@@ -2373,6 +2430,7 @@ def _opaque_focused_peel(
             "When enabled, the lift exposes the visible PET form of the retained partition.",
             "When enabled, the decode translates the visible PET form into local structural constraints.",
             "When enabled, the center lens builds the next PET-local lens from the projected center shape.",
+            "When enabled, the realization payload bridges the projected center back to PET encode/decode.",
             "This is a local PET peeling target: it identifies where to focus next, not what the hidden support is.",
         ],
         "claim": "PET focused peel lens only; this does not factor N",
@@ -2631,6 +2689,41 @@ def _print_opaque_focused_peel(data: dict) -> None:
             print(f"  next_focus = {lens['next_focus']}")
             print(f"  recommended_next_lens = {lens['recommended_next_lens']}")
             print(f"  claim = {lens['claim']}")
+
+    if data.get("realize"):
+        realization = data["pet_realization"]
+        print()
+        print("PET realization payload")
+        if not realization or not realization["realization_available"]:
+            reason = "unknown" if not realization else realization["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            encode_decode = realization["encode_decode"]
+            realized_shape = realization["realized_shape"]
+            print(f"  source = {realization['source']}")
+            print(f"  source_form = {realization['source_form']}")
+            print(f"  edge_k = {realization['edge_k']}")
+            print(f"  boundary = {realization['boundary']}")
+            print(f"  nearest_integer = {realization['nearest_integer']}")
+
+            print()
+            print("  Encode/decode")
+            print(f"    encoded_pet = {encode_decode['encoded_pet']}")
+            print(f"    decoded_back = {encode_decode['decoded_back']}")
+            print(
+                "    roundtrip_ok = "
+                f"{'yes' if encode_decode['roundtrip_ok'] else 'no'}"
+            )
+
+            print()
+            print("  Realized shape")
+            print(f"    shape = {realized_shape['shape_text']}")
+            print(f"    signature = {realized_shape['signature']}")
+            print(f"    generator = {realized_shape['generator']}")
+            print(f"    already_minimal = {realized_shape['already_minimal']}")
+            print(f"    child_generators = {realized_shape['child_generators']}")
+            print(f"    role = {realization['role']}")
+            print(f"    claim = {realization['claim']}")
 
     print()
     print("PET interpretation")
@@ -4004,6 +4097,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="build the next PET-local lens from the decoded projected center shape",
     )
+    p_opaque_focused_peel.add_argument(
+        "--realize",
+        action="store_true",
+        help="materialize the projected center through canonical PET encode/decode",
+    )
     p_opaque_focused_peel.add_argument("--json", action="store_true")
 
     # opaque-recursive-lens
@@ -4837,6 +4935,7 @@ def main(argv: list[str] | None = None) -> int:
                 lift=args.lift,
                 decode=args.decode,
                 center_lens=args.center_lens,
+                realize=args.realize,
             )
 
             if args.json:
