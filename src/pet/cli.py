@@ -3606,6 +3606,172 @@ def _opaque_recursive_lens_classic_handoff(
     return handoff
 
 
+def _opaque_recursive_lens_subedge_recursion(
+    n: int,
+    composite_edge_peel_payload: dict | None,
+    *,
+    excluded_support_limit: int,
+    max_generator_count: int,
+    max_move_span: int,
+) -> dict:
+    claim = "PET composite-subedge recursion only; this does not factor N"
+
+    if (
+        not composite_edge_peel_payload
+        or not composite_edge_peel_payload.get("available")
+    ):
+        return {
+            "available": False,
+            "reason": "composite-edge peel is not available",
+            "claim": claim,
+        }
+
+    subedge_results = []
+    for subedge in composite_edge_peel_payload["subedge_lenses"]:
+        subedge_k = int(subedge["edge_k"])
+        target_window = {
+            "k_start": subedge_k,
+            "k_end": subedge_k,
+            "k_range": f"{subedge_k}..{subedge_k}",
+            "source": "composite-subedge",
+        }
+
+        try:
+            selection = _select_windowed_recursive_peel(
+                n,
+                active_window=target_window,
+                max_generator_count=max_generator_count,
+                excluded_support_limit=excluded_support_limit,
+                max_move_span=max_move_span,
+            )
+        except ValueError as exc:
+            subedge_results.append(
+                {
+                    "subedge_k": subedge_k,
+                    "target_window": target_window,
+                    "available": False,
+                    "reason": str(exc),
+                    "source_role": subedge["role"],
+                }
+            )
+            continue
+
+        if not selection["window_match"]:
+            subedge_results.append(
+                {
+                    "subedge_k": subedge_k,
+                    "target_window": target_window,
+                    "available": False,
+                    "reason": selection["reason"],
+                    "source_role": subedge["role"],
+                    "window_filter": selection.get("window_filter"),
+                }
+            )
+            continue
+
+        peel = selection["peel"]
+        center_lens = peel.get("decoded_center_lens")
+        selected_band = peel["selected_band"]
+        visible = peel.get("peel_lift", {}).get("visible_pet_form")
+
+        center_lens_available = bool(
+            center_lens and center_lens.get("center_lens_available")
+        )
+
+        subedge_results.append(
+            {
+                "subedge_k": subedge_k,
+                "target_window": target_window,
+                "available": True,
+                "source_role": subedge["role"],
+                "window_filter": selection.get("window_filter"),
+                "forced_band": selection.get("forced_band"),
+                "effective_max_generator_count": selection[
+                    "effective_max_generator_count"
+                ],
+                "selected_band": {
+                    "kind": selected_band["kind"],
+                    "move": selected_band["move"],
+                    "k_range": selected_band["k_range"],
+                    "focus_score": selected_band["focus_score"],
+                    "signal": selected_band["signal"],
+                },
+                "visible_form": None if not visible else visible["form"],
+                "visible_shape": None if not visible else visible["shape"],
+                "edge_k": None if not center_lens_available else center_lens["edge_k"],
+                "center_lens_available": center_lens_available,
+                "center_lens_kind": (
+                    None if not center_lens_available else center_lens["lens_kind"]
+                ),
+                "center_generator": (
+                    None
+                    if not center_lens_available
+                    else center_lens["center_generator"]
+                ),
+                "suggested_window": (
+                    None
+                    if not center_lens_available
+                    else center_lens["suggested_window"]
+                ),
+                "next_action": (
+                    "inspect subedge visible form for thin-ramp or anchor-field"
+                ),
+            }
+        )
+
+    available_results = [
+        result for result in subedge_results if result.get("available")
+    ]
+
+    convergence_groups: dict[tuple[int | None, int | None], list[dict]] = {}
+    for result in available_results:
+        key = (result.get("edge_k"), result.get("center_generator"))
+        convergence_groups.setdefault(key, []).append(result)
+
+    converged_groups = [
+        group
+        for key, group in convergence_groups.items()
+        if key[0] is not None and key[1] is not None and len(group) > 1
+    ]
+
+    if converged_groups:
+        best_group = sorted(
+            converged_groups,
+            key=lambda group: (-len(group), int(group[0]["edge_k"])),
+        )[0]
+        convergence = {
+            "available": True,
+            "kind": "twin-subedge-convergence",
+            "converged_subedges": [
+                result["subedge_k"] for result in best_group
+            ],
+            "converged_edge_k": best_group[0]["edge_k"],
+            "converged_center_generator": best_group[0]["center_generator"],
+            "converged_visible_shape": best_group[0]["visible_shape"],
+            "converged_center_lens_kind": best_group[0]["center_lens_kind"],
+            "reason": (
+                "multiple symbolic subedges re-enter the same PET field"
+            ),
+        }
+    else:
+        convergence = {
+            "available": False,
+            "reason": "no repeated subedge PET field was detected",
+        }
+
+    return {
+        "available": bool(subedge_results),
+        "source": "composite-edge-peel",
+        "source_edge_k": composite_edge_peel_payload["source_edge_k"],
+        "source_level": composite_edge_peel_payload["source_level"],
+        "subedge_count": len(subedge_results),
+        "available_subedge_count": len(available_results),
+        "subedge_results": subedge_results,
+        "convergence": convergence,
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens(
     n: int,
     *,
@@ -3881,6 +4047,17 @@ def _opaque_recursive_lens(
         if composite_edge_peel
         else None
     )
+    subedge_recursion_payload = (
+        _opaque_recursive_lens_subedge_recursion(
+            n,
+            composite_edge_peel_payload,
+            excluded_support_limit=excluded_support_limit,
+            max_generator_count=max_generator_count,
+            max_move_span=max_move_span,
+        )
+        if composite_edge_peel
+        else None
+    )
 
     data = {
         "n": n,
@@ -3895,9 +4072,11 @@ def _opaque_recursive_lens(
         "handoff_radius": handoff_radius,
         "anchor_field": anchor_field,
         "composite_edge_peel": composite_edge_peel,
+        "subedge_recursion": composite_edge_peel,
         "levels": levels,
         "anchor_field_payload": anchor_field_payload,
         "composite_edge_peel_payload": composite_edge_peel_payload,
+        "subedge_recursion_payload": subedge_recursion_payload,
         "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
@@ -4124,6 +4303,94 @@ def _print_opaque_recursive_lens(data: dict) -> None:
             )
             print(f"  reason = {peel['reason']}")
             print(f"  claim = {peel['claim']}")
+
+    if data.get("subedge_recursion"):
+        recursion = data["subedge_recursion_payload"]
+        print()
+        print("PET composite-subedge recursion")
+        if not recursion or not recursion["available"]:
+            reason = "unknown" if not recursion else recursion["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            print(f"  source = {recursion['source']}")
+            print(f"  source_level = {recursion['source_level']}")
+            print(f"  source_edge_k = {recursion['source_edge_k']}")
+            print(f"  subedge_count = {recursion['subedge_count']}")
+            print(
+                "  available_subedge_count = "
+                f"{recursion['available_subedge_count']}"
+            )
+
+            print()
+            print("  Subedge results")
+            for result in recursion["subedge_results"]:
+                target = result["target_window"]
+                print(f"    subedge_k = {result['subedge_k']}")
+                print(
+                    "      target_window = "
+                    f"k[{target['k_start']},{target['k_end']}]"
+                )
+                print(f"      source_role = {result['source_role']}")
+                if not result["available"]:
+                    print(f"      unavailable = {result['reason']}")
+                    continue
+
+                band = result["selected_band"]
+                print(f"      window_filter = {result.get('window_filter')}")
+                print(
+                    "      selected_band = "
+                    f"{band['kind']} {band['move']} k[{band['k_range']}]"
+                )
+                print(f"      visible_form = {result['visible_form']}")
+                print(f"      visible_shape = {result['visible_shape']}")
+                print(f"      edge_k = {result['edge_k']}")
+                print(
+                    "      center_lens_available = "
+                    f"{'yes' if result['center_lens_available'] else 'no'}"
+                )
+                print(f"      center_lens_kind = {result['center_lens_kind']}")
+                print(f"      center_generator = {result['center_generator']}")
+
+                suggested = result["suggested_window"]
+                if suggested is not None:
+                    print(
+                        "      suggested_window = "
+                        f"k[{suggested['k_start']},{suggested['k_end']}]"
+                    )
+                print(f"      next_action = {result['next_action']}")
+
+            convergence = recursion["convergence"]
+            print()
+            print("  Subedge convergence")
+            if not convergence["available"]:
+                print("    available = no")
+                print(f"    reason = {convergence['reason']}")
+            else:
+                print("    available = yes")
+                print(f"    kind = {convergence['kind']}")
+                print(
+                    "    converged_subedges = "
+                    f"{convergence['converged_subedges']}"
+                )
+                print(
+                    "    converged_edge_k = "
+                    f"{convergence['converged_edge_k']}"
+                )
+                print(
+                    "    converged_center_generator = "
+                    f"{convergence['converged_center_generator']}"
+                )
+                print(
+                    "    converged_visible_shape = "
+                    f"{convergence['converged_visible_shape']}"
+                )
+                print(
+                    "    converged_center_lens_kind = "
+                    f"{convergence['converged_center_lens_kind']}"
+                )
+                print(f"    reason = {convergence['reason']}")
+
+            print(f"  claim = {recursion['claim']}")
 
     if data.get("anchor_field"):
         field = data["anchor_field_payload"]

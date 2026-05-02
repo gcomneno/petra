@@ -513,3 +513,86 @@ def test_opaque_recursive_lens_composite_edge_peel_text_is_monkey_friendly() -> 
     assert "k=2 role=shared-form-subedge" in result.stdout
     assert "k=3 role=shared-form-subedge" in result.stdout
     assert "claim = PET composite-edge peel only; this does not factor N" in result.stdout
+
+def test_opaque_recursive_lens_composite_edge_peel_runs_subedge_recursion() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    recursion = data["subedge_recursion_payload"]
+    assert data["subedge_recursion"] is True
+    assert recursion["available"] is True
+    assert recursion["source"] == "composite-edge-peel"
+    assert recursion["source_edge_k"] == 6
+    assert recursion["subedge_count"] == 2
+    assert recursion["available_subedge_count"] == 2
+
+    results = {result["subedge_k"]: result for result in recursion["subedge_results"]}
+    assert sorted(results) == [2, 3]
+
+    assert results[2]["target_window"]["k_range"] == "2..2"
+    assert results[2]["visible_shape"] == "edge-point"
+    assert results[2]["edge_k"] == 2
+    assert results[2]["center_generator"] == 430080
+
+    assert results[3]["target_window"]["k_range"] == "3..3"
+    assert results[3]["visible_shape"] == "edge-point"
+    assert results[3]["edge_k"] == 2
+    assert results[3]["center_generator"] == 430080
+
+    convergence = recursion["convergence"]
+    assert convergence["available"] is True
+    assert convergence["kind"] == "twin-subedge-convergence"
+    assert convergence["converged_subedges"] == [2, 3]
+    assert convergence["converged_edge_k"] == 2
+    assert convergence["converged_center_generator"] == 430080
+    assert convergence["converged_visible_shape"] == "edge-point"
+
+
+def test_opaque_recursive_lens_composite_subedge_recursion_text_is_monkey_friendly() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET composite-subedge recursion" in result.stdout
+    assert "source_edge_k = 6" in result.stdout
+    assert "subedge_count = 2" in result.stdout
+    assert "subedge_k = 2" in result.stdout
+    assert "target_window = k[2,2]" in result.stdout
+    assert "subedge_k = 3" in result.stdout
+    assert "target_window = k[3,3]" in result.stdout
+    assert "Subedge convergence" in result.stdout
+    assert "kind = twin-subedge-convergence" in result.stdout
+    assert "converged_subedges = [2, 3]" in result.stdout
+    assert "converged_edge_k = 2" in result.stdout
+    assert "converged_center_generator = 430080" in result.stdout
+    assert "claim = PET composite-subedge recursion only; this does not factor N" in result.stdout
