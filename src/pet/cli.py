@@ -3872,6 +3872,141 @@ def _opaque_recursive_lens_subedge_recursion(
     }
 
 
+def _opaque_recursive_lens_branch_verdict(
+    levels: list[dict],
+    *,
+    anchor_field_payload: dict | None,
+    composite_edge_peel_payload: dict | None,
+    subedge_recursion_payload: dict | None,
+) -> dict:
+    claim = "PET branch verdict only; this does not factor N"
+
+    if (
+        subedge_recursion_payload
+        and subedge_recursion_payload.get("available")
+    ):
+        refined = subedge_recursion_payload.get("refined_anchor_candidate")
+        if refined and refined.get("available"):
+            classic_ready = (
+                refined["classic_bridge_recommendation"] == "recommended"
+                and refined["anchor_status"] == "strong"
+            )
+            if refined["anchor_status"] == "weak":
+                best_signal = "twin-subedge-convergence"
+            elif refined["anchor_status"] == "strong":
+                best_signal = "strong-convergence-anchor"
+            else:
+                best_signal = f"{refined['anchor_status']}-subedge-convergence"
+
+            return {
+                "available": True,
+                "classic_ready": classic_ready,
+                "best_signal": best_signal,
+                "anchor_status": refined["anchor_status"],
+                "binding_strength": refined["binding_strength"],
+                "classic_bridge_recommendation": refined[
+                    "classic_bridge_recommendation"
+                ],
+                "source": refined["source"],
+                "reason": refined["reason"],
+                "claim": claim,
+            }
+
+        convergence = subedge_recursion_payload.get("convergence")
+        if convergence and convergence.get("available"):
+            return {
+                "available": True,
+                "classic_ready": False,
+                "best_signal": convergence["kind"],
+                "anchor_status": "weak",
+                "binding_strength": "low",
+                "classic_bridge_recommendation": "not-recommended",
+                "source": "subedge-convergence",
+                "reason": convergence["reason"],
+                "claim": claim,
+            }
+
+        if subedge_recursion_payload.get("subedge_count", 0) > 0:
+            return {
+                "available": True,
+                "classic_ready": False,
+                "best_signal": "composite-edge-with-dead-subedge",
+                "anchor_status": "no",
+                "binding_strength": "none",
+                "classic_bridge_recommendation": "not-recommended",
+                "source": "subedge-recursion",
+                "reason": (
+                    "composite edge produced subedges, but no subedge produced "
+                    "a repeated PET field"
+                ),
+                "claim": claim,
+            }
+
+    if (
+        composite_edge_peel_payload
+        and composite_edge_peel_payload.get("available")
+    ):
+        return {
+            "available": True,
+            "classic_ready": False,
+            "best_signal": "composite-edge",
+            "anchor_status": "structural-only",
+            "binding_strength": "medium",
+            "classic_bridge_recommendation": "not-recommended",
+            "source": "composite-edge-peel",
+            "reason": composite_edge_peel_payload["reason"],
+            "claim": claim,
+        }
+
+    if anchor_field_payload and anchor_field_payload.get("available"):
+        classic_ready = (
+            anchor_field_payload["classic_bridge_recommendation"]
+            == "recommended"
+            and anchor_field_payload["anchor_status"] == "strong"
+        )
+        return {
+            "available": True,
+            "classic_ready": classic_ready,
+            "best_signal": f"{anchor_field_payload['anchor_status']}-anchor-field",
+            "anchor_status": anchor_field_payload["anchor_status"],
+            "binding_strength": anchor_field_payload["binding_strength"],
+            "classic_bridge_recommendation": anchor_field_payload[
+                "classic_bridge_recommendation"
+            ],
+            "source": "anchor-field",
+            "reason": anchor_field_payload["reason"],
+            "claim": claim,
+        }
+
+    available_levels = [level for level in levels if level.get("available")]
+    if available_levels:
+        last = available_levels[-1]
+        edge_k = last.get("edge_k")
+        center_lens = last.get("center_lens")
+        if edge_k is not None and center_lens is not None:
+            return {
+                "available": True,
+                "classic_ready": False,
+                "best_signal": "stable-prime-or-unsplit-edge",
+                "anchor_status": "structural-only",
+                "binding_strength": "low",
+                "classic_bridge_recommendation": "not-recommended",
+                "source": "recursive-levels",
+                "reason": (
+                    "recursive branch produced a PET edge, but no composite "
+                    "subedge or anchor field is available"
+                ),
+                "claim": claim,
+            }
+
+    return {
+        "available": False,
+        "classic_ready": False,
+        "reason": "no usable recursive PET signal is available",
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens(
     n: int,
     *,
@@ -4158,6 +4293,12 @@ def _opaque_recursive_lens(
         if composite_edge_peel
         else None
     )
+    branch_verdict = _opaque_recursive_lens_branch_verdict(
+        levels,
+        anchor_field_payload=anchor_field_payload,
+        composite_edge_peel_payload=composite_edge_peel_payload,
+        subedge_recursion_payload=subedge_recursion_payload,
+    )
 
     data = {
         "n": n,
@@ -4177,6 +4318,7 @@ def _opaque_recursive_lens(
         "anchor_field_payload": anchor_field_payload,
         "composite_edge_peel_payload": composite_edge_peel_payload,
         "subedge_recursion_payload": subedge_recursion_payload,
+        "branch_verdict": branch_verdict,
         "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
@@ -4582,6 +4724,28 @@ def _print_opaque_recursive_lens(data: dict) -> None:
             print(f"  verified = {'yes' if handoff['verified'] else 'no'}")
             print(f"  anchor_useful = {'yes' if handoff['anchor_useful'] else 'no'}")
             print(f"  claim = {handoff['claim']}")
+
+    verdict = data.get("branch_verdict")
+    if verdict is not None:
+        print()
+        print("PET branch verdict")
+        if not verdict["available"]:
+            print("  available = no")
+            print(f"  classic_ready = {'yes' if verdict['classic_ready'] else 'no'}")
+            print(f"  reason = {verdict['reason']}")
+        else:
+            print("  available = yes")
+            print(f"  classic_ready = {'yes' if verdict['classic_ready'] else 'no'}")
+            print(f"  best_signal = {verdict['best_signal']}")
+            print(f"  anchor_status = {verdict['anchor_status']}")
+            print(f"  binding_strength = {verdict['binding_strength']}")
+            print(
+                "  classic_bridge_recommendation = "
+                f"{verdict['classic_bridge_recommendation']}"
+            )
+            print(f"  source = {verdict['source']}")
+            print(f"  reason = {verdict['reason']}")
+        print(f"  claim = {verdict['claim']}")
 
     print()
     print("PET interpretation")
