@@ -168,3 +168,80 @@ def test_opaque_mass_response_rejects_non_positive_move_span() -> None:
 
     assert result.returncode != 0
     assert "--max-move-span expects integers >= 1" in result.stderr
+
+
+def test_opaque_mass_response_json_reports_magnetic_bands() -> None:
+    data = _run_json(
+        "opaque-mass-response",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+    )
+
+    assert data["magnetic_band_count"] == len(data["magnetic_bands"])
+
+    pressure = next(
+        band
+        for band in data["magnetic_bands"]
+        if band["kind"] == "pressure-entry"
+    )
+    assert pressure["move"] == "NEW"
+    assert pressure["k_start"] == 1
+    assert pressure["k_end"] == 2
+    assert pressure["k_range"] == "1..2"
+    assert pressure["band_width"] == 2
+    assert pressure["min_trigger_span"] == 1
+    assert pressure["max_trigger_span"] == 2
+    assert pressure["span_range"] == "2..1"
+    assert pressure["closest_k"] == 2
+    assert pressure["boundary"] == "2/3"
+    assert pressure["focus_score"] == 4
+    assert pressure["signal"] == "critical"
+
+    recovery = next(
+        band
+        for band in data["magnetic_bands"]
+        if band["kind"] == "recovery"
+    )
+    assert recovery["move"] == "DROP"
+    assert recovery["k_start"] == 3
+    assert recovery["k_end"] == 4
+    assert recovery["k_range"] == "3..4"
+    assert recovery["span_range"] == "1..2"
+    assert recovery["boundary"] == "3/2"
+    assert recovery["signal"] == "strong"
+
+
+def test_opaque_mass_response_bands_text_is_optional() -> None:
+    without_bands = _run_cli(
+        "opaque-mass-response",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+    )
+    assert without_bands.returncode == 0, without_bands.stderr
+    assert "\nMagnetic bands\n" not in without_bands.stdout
+
+    with_bands = _run_cli(
+        "opaque-mass-response",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--bands",
+    )
+    assert with_bands.returncode == 0, with_bands.stderr
+    assert "\nMagnetic bands\n" in with_bands.stdout
+    assert "pressure-entry" in with_bands.stdout
+    assert "recovery" in with_bands.stdout

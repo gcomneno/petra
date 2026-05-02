@@ -1276,6 +1276,94 @@ def _opaque_mass_response_focus_score(kind: str) -> int:
     return scores[kind]
 
 
+def _opaque_mass_response_signal(focus_score: int) -> str:
+    if focus_score >= 4:
+        return "critical"
+    if focus_score >= 3:
+        return "strong"
+    if focus_score >= 2:
+        return "medium"
+    return "weak"
+
+
+def _opaque_mass_response_bands(hotspots: list[dict]) -> list[dict]:
+    bands = []
+    current_rows: list[dict] = []
+
+    def close_current() -> None:
+        if not current_rows:
+            return
+
+        first = current_rows[0]
+        last = current_rows[-1]
+        trigger_spans = [
+            int(row["minimal_trigger_span"])
+            for row in current_rows
+        ]
+        closest = min(
+            current_rows,
+            key=lambda row: (
+                int(row["minimal_trigger_span"]),
+                int(row["k"]),
+            ),
+        )
+
+        if closest["response"] == "NEW":
+            boundary = f"{closest['k']}/{closest['new_k']}"
+        elif closest["response"] == "DROP":
+            boundary = f"{closest['k']}/{closest['drop_k']}"
+        else:
+            boundary = "multi"
+
+        bands.append(
+            {
+                "kind": first["hotspot_kind"],
+                "move": first["response"],
+                "k_start": first["k"],
+                "k_end": last["k"],
+                "k_range": f"{first['k']}..{last['k']}",
+                "band_width": last["k"] - first["k"] + 1,
+                "min_trigger_span": min(trigger_spans),
+                "max_trigger_span": max(trigger_spans),
+                "span_range": (
+                    f"{first['minimal_trigger_span']}.."
+                    f"{last['minimal_trigger_span']}"
+                ),
+                "closest_k": closest["k"],
+                "boundary": boundary,
+                "focus_score": first["focus_score"],
+                "signal": _opaque_mass_response_signal(first["focus_score"]),
+            }
+        )
+
+        current_rows.clear()
+
+    previous = None
+    for row in hotspots:
+        if previous is None:
+            current_rows.append(row)
+            previous = row
+            continue
+
+        same_band = (
+            row["k"] == previous["k"] + 1
+            and row["hotspot_kind"] == previous["hotspot_kind"]
+            and row["response"] == previous["response"]
+            and row["focus_score"] == previous["focus_score"]
+        )
+
+        if same_band:
+            current_rows.append(row)
+        else:
+            close_current()
+            current_rows.append(row)
+
+        previous = row
+
+    close_current()
+    return bands
+
+
 def _opaque_mass_centers(
     n: int,
     *,
@@ -1378,6 +1466,7 @@ def _opaque_mass_response(
     max_generator_count: int,
     excluded_support_limit: int,
     max_move_span: int = 1,
+    include_bands: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-mass-response expects integers >= 1")
@@ -1515,6 +1604,8 @@ def _opaque_mass_response(
             }
         )
 
+    magnetic_bands = _opaque_mass_response_bands(hotspots)
+
     return {
         "n": n,
         "digits": digits,
@@ -1525,12 +1616,16 @@ def _opaque_mass_response(
         "excluded_support_digits": excluded_support_digits,
         "max_generator_count": max_generator_count,
         "max_move_span": max_move_span,
+        "include_bands": include_bands,
         "hotspots": hotspots,
         "hotspot_count": len(hotspots),
+        "magnetic_bands": magnetic_bands,
+        "magnetic_band_count": len(magnetic_bands),
         "interpretation": [
             "Hotspots are mass centers where symbolic PET NEW/DROP moves change the information zone.",
             "Move span is the symbolic stimulus strength applied to the support-count hypothesis.",
             "Minimal trigger span is the smallest NEW/DROP stimulus that crosses a representation-scale threshold.",
+            "Magnetic bands group consecutive hotspots that share the same response kind and move.",
             "Focus score is a PET heuristic for prioritizing reactive frontiers, not a probability.",
             "PET still does not identify the true support; it marks reactive mass-center boundaries.",
         ],
@@ -1572,6 +1667,27 @@ def _print_opaque_mass_response(data: dict) -> None:
                 f"{row['focus_score']:>5} | "
                 f"{thresholds}"
             )
+
+    if data.get("include_bands"):
+        print()
+        print("Magnetic bands")
+        if not data["magnetic_bands"]:
+            print("  none")
+        else:
+            print(
+                "  kind             | move     | k_range | span_range | "
+                "boundary | focus | signal"
+            )
+            for band in data["magnetic_bands"]:
+                print(
+                    f"  {band['kind']:<16} | "
+                    f"{band['move']:<8} | "
+                    f"{band['k_range']:<7} | "
+                    f"{band['span_range']:<10} | "
+                    f"{band['boundary']:<8} | "
+                    f"{band['focus_score']:>5} | "
+                    f"{band['signal']}"
+                )
 
     print()
     print("PET interpretation")
@@ -2450,6 +2566,11 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=1,
     )
+    p_opaque_mass_response.add_argument(
+        "--bands",
+        action="store_true",
+        help="print grouped magnetic bands for response hotspots",
+    )
     p_opaque_mass_response.add_argument("--json", action="store_true")
 
     # opaque-benchmark
@@ -3232,6 +3353,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_generator_count=args.max_generator_count,
                 excluded_support_limit=args.excluded_support_limit,
                 max_move_span=args.max_move_span,
+                include_bands=args.bands,
             )
 
             if args.json:
