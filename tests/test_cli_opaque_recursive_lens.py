@@ -247,7 +247,7 @@ def test_opaque_recursive_lens_branch_recursion_reuses_fork_follow_window() -> N
     assert level1["center_lens"]["lens_kind"] == "projected-center-shape"
 
     assert data["recurrence"]["status"] == "minimal-window"
-    assert data["recurrence"]["edge_sequence"] == [2, 2]
+    assert data["recurrence"]["edge_sequence"] == [2, 2, 1]
 
 
 def test_opaque_recursive_lens_branch_recursion_text_is_monkey_friendly() -> None:
@@ -367,3 +367,149 @@ def test_opaque_recursive_lens_anchor_field_text_is_monkey_friendly() -> None:
     assert "binding_strength = high" in result.stdout
     assert "classic_bridge_recommendation = recommended" in result.stdout
     assert "claim = PET anchor-field analysis only; this does not factor N" in result.stdout
+
+def test_opaque_recursive_lens_auto_rampifies_edge_point_minimal_window() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "4",
+        "--branch-recursion",
+        "DROP",
+    )
+
+    assert data["recurrence"]["status"] == "minimal-window"
+    assert len(data["levels"]) == 3
+
+    level1 = data["levels"][1]
+    assert level1["visible_shape"] == "edge-point"
+    assert level1["edge_k"] == 2
+    assert level1["rampification"]["attempted"] is True
+    assert level1["rampification"]["target_window"]["k_range"] == "1..2"
+
+    level2 = data["levels"][2]
+    assert level2["input_window"]["k_range"] == "1..2"
+    assert level2["visible_shape"] == "edge-point"
+    assert level2["edge_k"] == 1
+    assert level2["selected_band"]["kind"] == "visibility-entry"
+    assert "rampification" not in level2
+
+
+def test_opaque_recursive_lens_auto_rampification_text_is_monkey_friendly() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "4",
+        "--branch-recursion",
+        "DROP",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "rampification = attempted" in result.stdout
+    assert "rampification_target_window = k[1,2]" in result.stdout
+    assert "input_window = k[1,2]" in result.stdout
+    assert "selected_band = visibility-entry NEW k[1..1]" in result.stdout
+
+def test_opaque_recursive_lens_composite_edge_peel_opens_stable_new_branch_edge() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    peel = data["composite_edge_peel_payload"]
+    assert peel["available"] is True
+    assert peel["source_edge_k"] == 6
+    assert peel["edge_factorization"]["flat_factors"] == [2, 3]
+    assert peel["center_generator"] == 210
+    assert peel["center_generator_factorization"]["flat_factors"] == [2, 3, 5, 7]
+    assert peel["shared_form_factors"] == [2, 3]
+    assert [lens["edge_k"] for lens in peel["subedge_lenses"]] == [2, 3]
+    assert all(lens["role"] == "shared-form-subedge" for lens in peel["subedge_lenses"])
+    assert peel["classic_bridge_recommendation"] == "not-recommended"
+    assert "does not factor N" in peel["claim"]
+
+
+def test_opaque_recursive_lens_composite_edge_peel_reports_unavailable_on_drop_branch() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "4",
+        "--branch-recursion",
+        "DROP",
+        "--composite-edge-peel",
+    )
+
+    peel = data["composite_edge_peel_payload"]
+    assert peel["available"] is False
+    assert peel["reason"] == "no recursive center lens with composite edge_k > 2 is available"
+    assert "does not factor N" in peel["claim"]
+
+
+def test_opaque_recursive_lens_composite_edge_peel_text_is_monkey_friendly() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    result = _run_cli(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET composite-edge peel" in result.stdout
+    assert "source_edge_k = 6" in result.stdout
+    assert "edge_factorization = 2 * 3" in result.stdout
+    assert "center_generator = 210" in result.stdout
+    assert "center_generator_factorization = 2 * 3 * 5 * 7" in result.stdout
+    assert "shared_form_factors = [2, 3]" in result.stdout
+    assert "k=2 role=shared-form-subedge" in result.stdout
+    assert "k=3 role=shared-form-subedge" in result.stdout
+    assert "claim = PET composite-edge peel only; this does not factor N" in result.stdout

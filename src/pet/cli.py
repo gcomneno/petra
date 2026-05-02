@@ -3371,6 +3371,111 @@ def _select_windowed_recursive_peel(
 
 
 
+def _small_factorization_payload(value: int) -> dict:
+    factors = prime_factorization(value)
+    flat = []
+    for prime, exponent in factors:
+        flat.extend([prime] * exponent)
+
+    return {
+        "value": value,
+        "factors": [
+            {"prime": prime, "exponent": exponent}
+            for prime, exponent in factors
+        ],
+        "flat_factors": flat,
+        "text": " * ".join(str(part) for part in flat) if flat else str(value),
+    }
+
+
+def _opaque_recursive_lens_composite_edge_peel(levels: list[dict]) -> dict:
+    claim = "PET composite-edge peel only; this does not factor N"
+
+    available_levels = [
+        level
+        for level in levels
+        if level.get("available")
+        and "center_lens" in level
+        and int(level.get("edge_k", 0)) > 2
+    ]
+
+    if not available_levels:
+        return {
+            "available": False,
+            "reason": "no recursive center lens with composite edge_k > 2 is available",
+            "claim": claim,
+        }
+
+    candidate_level = None
+    for level in reversed(available_levels):
+        edge_k = int(level["edge_k"])
+        edge_factors = prime_factorization(edge_k)
+        if len(edge_factors) > 1 or edge_factors[0][1] > 1:
+            candidate_level = level
+            break
+
+    if candidate_level is None:
+        return {
+            "available": False,
+            "reason": "recursive edge_k values are prime or non-composite",
+            "claim": claim,
+        }
+
+    edge_k = int(candidate_level["edge_k"])
+    lens = candidate_level["center_lens"]
+    center_generator = int(lens["center_generator"])
+
+    edge_payload = _small_factorization_payload(edge_k)
+    generator_payload = _small_factorization_payload(center_generator)
+
+    edge_factor_set = set(edge_payload["flat_factors"])
+    generator_factor_set = set(generator_payload["flat_factors"])
+    shared = sorted(edge_factor_set & generator_factor_set)
+
+    subedge_lenses = [
+        {
+            "edge_k": factor,
+            "role": (
+                "shared-form-subedge"
+                if factor in shared
+                else "edge-only-subedge"
+            ),
+            "next_action": "inspect symbolic subedge as PET form, not as N divisor",
+        }
+        for factor in sorted(edge_factor_set)
+    ]
+
+    return {
+        "available": True,
+        "source_level": candidate_level["level"],
+        "source_form": (
+            f"{candidate_level['visible_form']}:"
+            f"{candidate_level['visible_shape']}"
+        ),
+        "source_band": {
+            "kind": candidate_level["selected_band"]["kind"],
+            "move": candidate_level["selected_band"]["move"],
+            "k_range": candidate_level["selected_band"]["k_range"],
+            "signal": candidate_level["selected_band"]["signal"],
+            "focus_score": candidate_level["selected_band"]["focus_score"],
+        },
+        "source_edge_k": edge_k,
+        "edge_factorization": edge_payload,
+        "center_lens_kind": lens["lens_kind"],
+        "center_shape": lens["center_shape"],
+        "center_generator": center_generator,
+        "center_generator_factorization": generator_payload,
+        "shared_form_factors": shared,
+        "subedge_lenses": subedge_lenses,
+        "classic_bridge_recommendation": "not-recommended",
+        "reason": (
+            "stable composite edge exposes symbolic subedges; "
+            "this is PET-form analysis, not a divisor anchor"
+        ),
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens_anchor_field(levels: list[dict]) -> dict:
     claim = "PET anchor-field analysis only; this does not factor N"
 
@@ -3513,6 +3618,7 @@ def _opaque_recursive_lens(
     classic_handoff: bool = False,
     handoff_radius: int = 5,
     anchor_field: bool = False,
+    composite_edge_peel: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -3689,6 +3795,29 @@ def _opaque_recursive_lens(
             int(suggested_window["k_start"]) == 1
             and int(suggested_window["k_end"]) <= 2
         ):
+            if (
+                level["visible_shape"] == "edge-point"
+                and int(level["edge_k"]) == 2
+                and int(suggested_window["k_start"]) == 1
+                and int(suggested_window["k_end"]) == 2
+                and level_index + 1 < depth
+            ):
+                level["rampification"] = {
+                    "attempted": True,
+                    "source_level": level_index,
+                    "source_window": active_window,
+                    "target_window": suggested_window,
+                    "reason": (
+                        "edge-point requires PET-side rampification before "
+                        "treating the minimal window as terminal"
+                    ),
+                    "claim": (
+                        "PET edge-point rampification only; this does not factor N"
+                    ),
+                }
+                active_window = suggested_window
+                continue
+
             active_window = suggested_window
             stop_reason = "minimal-window"
             break
@@ -3747,6 +3876,11 @@ def _opaque_recursive_lens(
         if anchor_field
         else None
     )
+    composite_edge_peel_payload = (
+        _opaque_recursive_lens_composite_edge_peel(levels)
+        if composite_edge_peel
+        else None
+    )
 
     data = {
         "n": n,
@@ -3760,8 +3894,10 @@ def _opaque_recursive_lens(
         "classic_handoff": classic_handoff,
         "handoff_radius": handoff_radius,
         "anchor_field": anchor_field,
+        "composite_edge_peel": composite_edge_peel,
         "levels": levels,
         "anchor_field_payload": anchor_field_payload,
+        "composite_edge_peel_payload": composite_edge_peel_payload,
         "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
@@ -3889,6 +4025,15 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 "    recommended_next_lens = "
                 f"{lens['recommended_next_lens']}"
             )
+            if level.get("rampification"):
+                ramp = level["rampification"]
+                target = ramp["target_window"]
+                print("    rampification = attempted")
+                print(
+                    "    rampification_target_window = "
+                    f"k[{target['k_start']},{target['k_end']}]"
+                )
+                print(f"    rampification_reason = {ramp['reason']}")
 
     recurrence = data["recurrence"]
     print()
@@ -3937,6 +4082,48 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 f"{'yes' if reduction['recommended_classic_handoff'] else 'no'}"
             )
         print(f"  claim = {reduction['claim']}")
+
+    if data.get("composite_edge_peel"):
+        peel = data["composite_edge_peel_payload"]
+        print()
+        print("PET composite-edge peel")
+        if not peel or not peel["available"]:
+            reason = "unknown" if not peel else peel["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            band = peel["source_band"]
+            print(f"  source_level = {peel['source_level']}")
+            print(
+                "  source_band = "
+                f"{band['kind']} {band['move']} k[{band['k_range']}]"
+            )
+            print(f"  source_signal = {band['signal']}")
+            print(f"  source_form = {peel['source_form']}")
+            print(f"  source_edge_k = {peel['source_edge_k']}")
+            print(
+                "  edge_factorization = "
+                f"{peel['edge_factorization']['text']}"
+            )
+            print(f"  center_lens_kind = {peel['center_lens_kind']}")
+            print(f"  center_shape = {peel['center_shape']}")
+            print(f"  center_generator = {peel['center_generator']}")
+            print(
+                "  center_generator_factorization = "
+                f"{peel['center_generator_factorization']['text']}"
+            )
+            print(f"  shared_form_factors = {peel['shared_form_factors']}")
+            print("  subedge_lenses")
+            for lens in peel["subedge_lenses"]:
+                print(
+                    f"    k={lens['edge_k']} "
+                    f"role={lens['role']}"
+                )
+            print(
+                "  classic_bridge_recommendation = "
+                f"{peel['classic_bridge_recommendation']}"
+            )
+            print(f"  reason = {peel['reason']}")
+            print(f"  claim = {peel['claim']}")
 
     if data.get("anchor_field"):
         field = data["anchor_field_payload"]
@@ -5003,6 +5190,11 @@ def main(argv: list[str] | None = None) -> int:
         help="evaluate whether the recursive edge_k=2 form creates a PET-side anchor field",
     )
     p_opaque_recursive_lens.add_argument(
+        "--composite-edge-peel",
+        action="store_true",
+        help="decompose stable composite recursive edge_k values as PET-side symbolic subedges",
+    )
+    p_opaque_recursive_lens.add_argument(
         "--classic-handoff",
         action="store_true",
         help="use the recursive center lens as a classic divisibility anchor",
@@ -5842,6 +6034,7 @@ def main(argv: list[str] | None = None) -> int:
                 classic_handoff=args.classic_handoff,
                 handoff_radius=args.handoff_radius,
                 anchor_field=args.anchor_field,
+                composite_edge_peel=args.composite_edge_peel,
             )
 
             if args.json:
