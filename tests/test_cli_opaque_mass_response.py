@@ -42,11 +42,22 @@ def test_opaque_mass_response_json_reports_hotspots() -> None:
     assert k2["drop_zone"] == "boundary-informative"
     assert k2["response_moves"] == ["NEW"]
     assert k2["response"] == "NEW"
+    assert k2["threshold_crossings"] == [
+        "NEW:boundary-informative->pressured"
+    ]
+    assert k2["hotspot_kind"] == "pressure-entry"
+    assert k2["hotspot_kinds"] == ["pressure-entry"]
+    assert k2["focus_score"] == 4
 
     k3 = next(row for row in data["hotspots"] if row["k"] == 3)
     assert k3["zone"] == "pressured"
     assert k3["drop_zone"] == "boundary-informative"
     assert k3["response_moves"] == ["DROP"]
+    assert k3["threshold_crossings"] == [
+        "DROP:pressured->boundary-informative"
+    ]
+    assert k3["hotspot_kind"] == "recovery"
+    assert k3["focus_score"] == 3
 
     assert "claim" in data
     assert "does not factor N" in data["claim"]
@@ -66,6 +77,9 @@ def test_opaque_mass_response_text_is_monkey_friendly() -> None:
     assert "PET OPAQUE MASS RESPONSE" in result.stdout
     assert "Observed projection" in result.stdout
     assert "Response hotspots" in result.stdout
+    assert "threshold" in result.stdout
+    assert "pressure-entry" in result.stdout
+    assert "recovery" in result.stdout
     assert "PET interpretation" in result.stdout
     assert "claim = PET mass-response analysis only; this does not factor N" in result.stdout
 

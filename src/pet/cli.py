@@ -1250,6 +1250,32 @@ def _opaque_mass_center_information_weight(margin_bits: float) -> float:
     return 1.0 / (1.0 + distance_from_boundary)
 
 
+def _opaque_mass_response_hotspot_kind(from_zone: str, to_zone: str) -> str:
+    transition = (from_zone, to_zone)
+    kinds = {
+        ("deep-opaque", "informative"): "visibility-entry",
+        ("informative", "deep-opaque"): "fog-return",
+        ("informative", "boundary-informative"): "boundary-entry",
+        ("boundary-informative", "informative"): "decompression",
+        ("boundary-informative", "pressured"): "pressure-entry",
+        ("pressured", "boundary-informative"): "recovery",
+    }
+    return kinds.get(transition, "zone-transition")
+
+
+def _opaque_mass_response_focus_score(kind: str) -> int:
+    scores = {
+        "visibility-entry": 1,
+        "fog-return": 1,
+        "decompression": 2,
+        "boundary-entry": 3,
+        "recovery": 3,
+        "pressure-entry": 4,
+        "zone-transition": 1,
+    }
+    return scores[kind]
+
+
 def _opaque_mass_centers(
     n: int,
     *,
@@ -1385,13 +1411,38 @@ def _opaque_mass_response(
         drop_center = center_for(k - 1) if k > 1 else None
 
         response_moves = []
+        threshold_crossings = []
+        hotspot_kinds = []
+        focus_scores = []
+
         if new_center is not None and new_center["zone"] != current["zone"]:
+            kind = _opaque_mass_response_hotspot_kind(
+                current["zone"],
+                new_center["zone"],
+            )
             response_moves.append("NEW")
+            threshold_crossings.append(
+                f"NEW:{current['zone']}->{new_center['zone']}"
+            )
+            hotspot_kinds.append(kind)
+            focus_scores.append(_opaque_mass_response_focus_score(kind))
+
         if drop_center is not None and drop_center["zone"] != current["zone"]:
+            kind = _opaque_mass_response_hotspot_kind(
+                current["zone"],
+                drop_center["zone"],
+            )
             response_moves.append("DROP")
+            threshold_crossings.append(
+                f"DROP:{current['zone']}->{drop_center['zone']}"
+            )
+            hotspot_kinds.append(kind)
+            focus_scores.append(_opaque_mass_response_focus_score(kind))
 
         if not response_moves:
             continue
+
+        focus_score = max(focus_scores)
 
         hotspots.append(
             {
@@ -1407,6 +1458,12 @@ def _opaque_mass_response(
                 "drop_zone": None if drop_center is None else drop_center["zone"],
                 "response_moves": response_moves,
                 "response": ",".join(response_moves),
+                "threshold_crossings": threshold_crossings,
+                "hotspot_kinds": hotspot_kinds,
+                "hotspot_kind": hotspot_kinds[0]
+                if len(hotspot_kinds) == 1
+                else "multi-threshold",
+                "focus_score": focus_score,
             }
         )
 
@@ -1423,7 +1480,8 @@ def _opaque_mass_response(
         "hotspot_count": len(hotspots),
         "interpretation": [
             "Hotspots are mass centers where symbolic PET NEW/DROP moves change the information zone.",
-            "These frontiers are candidate regions for focused PET lenses.",
+            "Threshold crossings classify which representation-scale boundary was crossed.",
+            "Focus score is a PET heuristic for prioritizing reactive frontiers, not a probability.",
             "PET still does not identify the true support; it marks reactive mass-center boundaries.",
         ],
         "claim": "PET mass-response analysis only; this does not factor N",
@@ -1447,21 +1505,20 @@ def _print_opaque_mass_response(data: dict) -> None:
         print("  none")
     else:
         print(
-            "  k | center_bits | center_digits | margin_bits | "
-            "zone                 | new_zone             | drop_zone            | response"
+            "  k | center_bits | margin_bits | zone                 | "
+            "response | kind             | focus | threshold"
         )
         for row in data["hotspots"]:
-            new_zone = "-" if row["new_zone"] is None else row["new_zone"]
-            drop_zone = "-" if row["drop_zone"] is None else row["drop_zone"]
+            thresholds = ";".join(row["threshold_crossings"])
             print(
                 f"  {row['k']:>2} | "
                 f"{row['center_bits']:>11.2f} | "
-                f"{row['center_digits']:>13.2f} | "
                 f"{row['margin_bits']:>11.2f} | "
                 f"{row['zone']:<20} | "
-                f"{new_zone:<20} | "
-                f"{drop_zone:<20} | "
-                f"{row['response']}"
+                f"{row['response']:<8} | "
+                f"{row['hotspot_kind']:<16} | "
+                f"{row['focus_score']:>5} | "
+                f"{thresholds}"
             )
 
     print()
