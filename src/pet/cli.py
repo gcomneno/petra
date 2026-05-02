@@ -3371,6 +3371,82 @@ def _select_windowed_recursive_peel(
 
 
 
+def _opaque_recursive_lens_anchor_field(levels: list[dict]) -> dict:
+    claim = "PET anchor-field analysis only; this does not factor N"
+
+    candidate_level = None
+    for level in reversed(levels):
+        if not level.get("available"):
+            continue
+        if "center_lens" not in level:
+            continue
+        if int(level.get("edge_k", -1)) != 2:
+            continue
+        candidate_level = level
+        break
+
+    if candidate_level is None:
+        return {
+            "available": False,
+            "reason": "no recursive center lens with edge_k=2 is available",
+            "claim": claim,
+        }
+
+    lens = candidate_level["center_lens"]
+    band = candidate_level["selected_band"]
+    visible_shape = candidate_level["visible_shape"]
+    lens_kind = lens["lens_kind"]
+    center_generator = int(lens["center_generator"])
+    signal = band["signal"]
+
+    if (
+        visible_shape == "thin-ramp"
+        and lens_kind == "flat-three-leaf-center"
+        and center_generator <= 30
+    ):
+        anchor_status = "strong"
+        binding_strength = "high"
+        classic_bridge_recommendation = "recommended"
+        reason = "thin-ramp flat center forms a local divisor anchor"
+    elif (
+        visible_shape == "edge-point"
+        and lens_kind == "projected-center-shape"
+        and center_generator > 30
+    ):
+        anchor_status = "weak"
+        binding_strength = "low"
+        classic_bridge_recommendation = "not-recommended"
+        reason = "edge-point projected center is structurally geometric, not a local divisor anchor"
+    else:
+        anchor_status = "unresolved"
+        binding_strength = "unknown"
+        classic_bridge_recommendation = "inspect-only"
+        reason = "recursive edge form does not match a known anchor-field class"
+
+    return {
+        "available": True,
+        "source_level": candidate_level["level"],
+        "source_band": {
+            "kind": band["kind"],
+            "move": band["move"],
+            "k_range": band["k_range"],
+            "signal": signal,
+            "focus_score": band["focus_score"],
+        },
+        "source_form": f"{candidate_level['visible_form']}:{visible_shape}",
+        "edge_k": candidate_level["edge_k"],
+        "center_lens_kind": lens_kind,
+        "center_shape": lens["center_shape"],
+        "center_generator": center_generator,
+        "center_nearest_integer": lens["center_nearest_integer"],
+        "anchor_status": anchor_status,
+        "binding_strength": binding_strength,
+        "classic_bridge_recommendation": classic_bridge_recommendation,
+        "reason": reason,
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens_classic_handoff(
     n: int,
     levels: list[dict],
@@ -3436,6 +3512,7 @@ def _opaque_recursive_lens(
     branch_recursion: str | None = None,
     classic_handoff: bool = False,
     handoff_radius: int = 5,
+    anchor_field: bool = False,
 ) -> dict:
     if n < 1:
         raise ValueError("opaque-recursive-lens expects integers >= 1")
@@ -3665,6 +3742,11 @@ def _opaque_recursive_lens(
         if classic_handoff
         else None
     )
+    anchor_field_payload = (
+        _opaque_recursive_lens_anchor_field(levels)
+        if anchor_field
+        else None
+    )
 
     data = {
         "n": n,
@@ -3677,7 +3759,9 @@ def _opaque_recursive_lens(
         "depth": depth,
         "classic_handoff": classic_handoff,
         "handoff_radius": handoff_radius,
+        "anchor_field": anchor_field,
         "levels": levels,
+        "anchor_field_payload": anchor_field_payload,
         "recursive_classic_handoff": recursive_classic_handoff,
         "recurrence": recurrence,
         "interpretation": [
@@ -3853,6 +3937,36 @@ def _print_opaque_recursive_lens(data: dict) -> None:
                 f"{'yes' if reduction['recommended_classic_handoff'] else 'no'}"
             )
         print(f"  claim = {reduction['claim']}")
+
+    if data.get("anchor_field"):
+        field = data["anchor_field_payload"]
+        print()
+        print("PET anchor field")
+        if not field or not field["available"]:
+            reason = "unknown" if not field else field["reason"]
+            print(f"  unavailable = {reason}")
+        else:
+            band = field["source_band"]
+            print(f"  source_level = {field['source_level']}")
+            print(
+                "  source_band = "
+                f"{band['kind']} {band['move']} k[{band['k_range']}]"
+            )
+            print(f"  source_signal = {band['signal']}")
+            print(f"  source_form = {field['source_form']}")
+            print(f"  edge_k = {field['edge_k']}")
+            print(f"  center_lens_kind = {field['center_lens_kind']}")
+            print(f"  center_shape = {field['center_shape']}")
+            print(f"  center_generator = {field['center_generator']}")
+            print(f"  center_nearest_integer = {field['center_nearest_integer']}")
+            print(f"  anchor_status = {field['anchor_status']}")
+            print(f"  binding_strength = {field['binding_strength']}")
+            print(
+                "  classic_bridge_recommendation = "
+                f"{field['classic_bridge_recommendation']}"
+            )
+            print(f"  reason = {field['reason']}")
+            print(f"  claim = {field['claim']}")
 
     if data.get("classic_handoff"):
         handoff = data["recursive_classic_handoff"]
@@ -4884,6 +4998,11 @@ def main(argv: list[str] | None = None) -> int:
         help="continue recursive zoom through a selected fork-follow branch when center lens is unavailable",
     )
     p_opaque_recursive_lens.add_argument(
+        "--anchor-field",
+        action="store_true",
+        help="evaluate whether the recursive edge_k=2 form creates a PET-side anchor field",
+    )
+    p_opaque_recursive_lens.add_argument(
         "--classic-handoff",
         action="store_true",
         help="use the recursive center lens as a classic divisibility anchor",
@@ -5722,6 +5841,7 @@ def main(argv: list[str] | None = None) -> int:
                 branch_recursion=args.branch_recursion,
                 classic_handoff=args.classic_handoff,
                 handoff_radius=args.handoff_radius,
+                anchor_field=args.anchor_field,
             )
 
             if args.json:

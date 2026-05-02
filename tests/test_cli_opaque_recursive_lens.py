@@ -278,3 +278,92 @@ def test_opaque_recursive_lens_branch_recursion_text_is_monkey_friendly() -> Non
     assert "selected_band = fog-return DROP k[2..3]" in result.stdout
     assert "status = minimal-window" in result.stdout
 
+def test_opaque_recursive_lens_anchor_field_marks_thin_ramp_as_strong() -> None:
+    data = _run_json(
+        "opaque-recursive-lens",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--depth",
+        "3",
+        "--anchor-field",
+    )
+
+    field = data["anchor_field_payload"]
+    assert field["available"] is True
+    assert field["source_level"] == 0
+    assert field["source_band"]["kind"] == "pressure-entry"
+    assert field["source_band"]["move"] == "NEW"
+    assert field["source_band"]["k_range"] == "1..2"
+    assert field["source_form"] == "pre-pressure-edge:thin-ramp"
+    assert field["edge_k"] == 2
+    assert field["center_lens_kind"] == "flat-three-leaf-center"
+    assert field["center_generator"] == 30
+    assert field["anchor_status"] == "strong"
+    assert field["binding_strength"] == "high"
+    assert field["classic_bridge_recommendation"] == "recommended"
+    assert "does not factor N" in field["claim"]
+
+
+def test_opaque_recursive_lens_anchor_field_marks_edge_point_as_weak() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "40",
+        "--excluded-support-limit",
+        "100000000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "3",
+        "--branch-recursion",
+        "DROP",
+        "--anchor-field",
+    )
+
+    field = data["anchor_field_payload"]
+    assert field["available"] is True
+    assert field["source_level"] == 1
+    assert field["source_band"]["kind"] == "fog-return"
+    assert field["source_band"]["move"] == "DROP"
+    assert field["source_band"]["k_range"] == "2..3"
+    assert field["source_form"] == "scale-transition-edge:edge-point"
+    assert field["edge_k"] == 2
+    assert field["center_lens_kind"] == "projected-center-shape"
+    assert field["center_generator"] == 430080
+    assert field["anchor_status"] == "weak"
+    assert field["binding_strength"] == "low"
+    assert field["classic_bridge_recommendation"] == "not-recommended"
+    assert "does not factor N" in field["claim"]
+
+
+def test_opaque_recursive_lens_anchor_field_text_is_monkey_friendly() -> None:
+    result = _run_cli(
+        "opaque-recursive-lens",
+        "10403",
+        "--max-generator-count",
+        "4",
+        "--excluded-support-limit",
+        "16",
+        "--max-move-span",
+        "2",
+        "--depth",
+        "3",
+        "--anchor-field",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "PET anchor field" in result.stdout
+    assert "source_form = pre-pressure-edge:thin-ramp" in result.stdout
+    assert "center_lens_kind = flat-three-leaf-center" in result.stdout
+    assert "anchor_status = strong" in result.stdout
+    assert "binding_strength = high" in result.stdout
+    assert "classic_bridge_recommendation = recommended" in result.stdout
+    assert "claim = PET anchor-field analysis only; this does not factor N" in result.stdout
