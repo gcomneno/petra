@@ -13,7 +13,7 @@ Options:
   --depth D                     default: 3
   --handoff-radius R            default: 100
   --json                        emit JSON from PET commands
-  --fork-follow SIDE           run fork follow-up lens for NEW or DROP, default: DROP
+  --fork-follow SIDE           run fork follow-up lens for NEW, DROP, or BOTH; default: BOTH
   --no-fork-follow              skip fork follow-up lens pass
   --no-fork                     skip focused peel fork pass
   --no-recursive                skip recursive terminal reduction pass
@@ -34,7 +34,7 @@ HANDOFF_RADIUS=100
 JSON=0
 RUN_FORK=1
 RUN_FORK_FOLLOW=1
-FORK_FOLLOW=DROP
+FORK_FOLLOW=BOTH
 RUN_RECURSIVE=1
 
 if [[ $# -lt 1 ]]; then
@@ -149,29 +149,40 @@ if [[ "$RUN_FORK" -eq 1 ]]; then
     "${JSON_ARG[@]}"
 fi
 
-if [[ "$RUN_FORK_FOLLOW" -eq 1 ]]; then
-  if [[ "$FORK_FOLLOW" != "NEW" && "$FORK_FOLLOW" != "DROP" ]]; then
-    echo "--fork-follow must be NEW or DROP" >&2
-    exit 2
-  fi
+BRANCHES=()
+if [[ "$FORK_FOLLOW" == "BOTH" ]]; then
+  BRANCHES=(DROP NEW)
+elif [[ "$FORK_FOLLOW" == "NEW" || "$FORK_FOLLOW" == "DROP" ]]; then
+  BRANCHES=("$FORK_FOLLOW")
+else
+  echo "--fork-follow must be NEW, DROP, or BOTH" >&2
+  exit 2
+fi
 
-  section "4. opaque-focused-peel --fork-follow $FORK_FOLLOW"
-  python -m pet.cli opaque-focused-peel "$N" \
-    --max-generator-count "$MAX_GENERATOR_COUNT" \
-    --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
-    --max-move-span "$MAX_MOVE_SPAN" \
-    --fork-follow "$FORK_FOLLOW" \
-    "${JSON_ARG[@]}"
+if [[ "$RUN_FORK_FOLLOW" -eq 1 ]]; then
+  for BRANCH in "${BRANCHES[@]}"; do
+    section "4. opaque-focused-peel --fork-follow $BRANCH"
+    python -m pet.cli opaque-focused-peel "$N" \
+      --max-generator-count "$MAX_GENERATOR_COUNT" \
+      --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
+      --max-move-span "$MAX_MOVE_SPAN" \
+      --fork-follow "$BRANCH" \
+      "${JSON_ARG[@]}"
+  done
 fi
 
 if [[ "$RUN_RECURSIVE" -eq 1 ]]; then
-  section "5. opaque-recursive-lens --terminal-reduction"
-  python -m pet.cli opaque-recursive-lens "$N" \
-    --max-generator-count "$MAX_GENERATOR_COUNT" \
-    --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
-    --max-move-span "$MAX_MOVE_SPAN" \
-    --depth "$DEPTH" \
-    --terminal-reduction \
-    --branch-recursion "$FORK_FOLLOW" \
-    "${JSON_ARG[@]}"
+  for BRANCH in "${BRANCHES[@]}"; do
+    section "5. opaque-recursive-lens --terminal-reduction --branch-recursion $BRANCH"
+    python -m pet.cli opaque-recursive-lens "$N" \
+      --max-generator-count "$MAX_GENERATOR_COUNT" \
+      --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
+      --max-move-span "$MAX_MOVE_SPAN" \
+      --depth "$DEPTH" \
+      --terminal-reduction \
+      --anchor-field \
+      --composite-edge-peel \
+      --branch-recursion "$BRANCH" \
+      "${JSON_ARG[@]}"
+  done
 fi
