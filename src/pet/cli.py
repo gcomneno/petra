@@ -4181,6 +4181,7 @@ def _opaque_recursive_lens_shape_handoff_verdict(
 def _opaque_recursive_lens_diagnostic_classic_probe(
     n: int,
     subedge_recursion_payload: dict | None,
+    shape_handoff_verdict: dict | None,
     *,
     radius: int,
 ) -> dict:
@@ -4188,6 +4189,17 @@ def _opaque_recursive_lens_diagnostic_classic_probe(
 
     if radius < 0:
         raise ValueError("--handoff-radius expects integers >= 0")
+
+    if (
+        not shape_handoff_verdict
+        or not shape_handoff_verdict.get("available")
+        or not shape_handoff_verdict.get("diagnostic_classic_allowed")
+    ):
+        return {
+            "available": False,
+            "reason": "shape handoff verdict does not allow diagnostic classic probing",
+            "claim": claim,
+        }
 
     if (
         not subedge_recursion_payload
@@ -4576,19 +4588,20 @@ def _opaque_recursive_lens(
         composite_edge_peel_payload=composite_edge_peel_payload,
         subedge_recursion_payload=subedge_recursion_payload,
     )
+    shape_handoff_verdict = _opaque_recursive_lens_shape_handoff_verdict(
+        branch_verdict,
+        subedge_recursion_payload,
+    )
+
     diagnostic_classic_probe_payload = (
         _opaque_recursive_lens_diagnostic_classic_probe(
             n,
             subedge_recursion_payload,
+            shape_handoff_verdict,
             radius=handoff_radius,
         )
         if diagnostic_classic_probe
         else None
-    )
-
-    shape_handoff_verdict = _opaque_recursive_lens_shape_handoff_verdict(
-        branch_verdict,
-        subedge_recursion_payload,
     )
 
     data = {

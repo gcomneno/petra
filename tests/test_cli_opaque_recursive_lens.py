@@ -881,3 +881,34 @@ def test_opaque_recursive_lens_shape_handoff_verdict_blocks_structural_only_case
     assert verdict["center_lens_kind"] is None
     assert verdict["risk"] == "no PET anchor authorized for classic probing"
     assert "does not factor N" in verdict["claim"]
+
+def test_opaque_recursive_lens_diagnostic_probe_obeys_shape_handoff_verdict() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    verdict = data["shape_handoff_verdict"]
+    probe = data["diagnostic_classic_probe_payload"]
+
+    assert verdict["available"] is True
+    assert verdict["diagnostic_classic_allowed"] is False
+    assert probe["available"] is False
+    assert probe["reason"] == "shape handoff verdict does not allow diagnostic classic probing"
+    assert "does not factor N unless verified" in probe["claim"]
