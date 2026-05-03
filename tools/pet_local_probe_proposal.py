@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from typing import Any
+
+
+def run_command(args: list[str]) -> str:
+    result = subprocess.run(
+        args,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise SystemExit(result.stderr)
+    return result.stdout
+
+
+def extract_value(text: str, key: str) -> str:
+    prefix = f"{key} = "
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(prefix):
+            return stripped[len(prefix):]
+    return "unknown"
+
+
+def band_contains_move(band: dict[str, Any], move: str) -> bool:
+    moves = [item.strip() for item in str(band.get("move", "")).split(",")]
+    return move in moves
+
+
+def band_sort_key(band: dict[str, Any]) -> tuple[int, int, int]:
+    return (
+        int(band.get("focus_score", 0)),
+        -int(band.get("min_trigger_span", 999999)),
+        int(band.get("band_width", 0)),
+    )
+
+
+def choose_primary_band(bands: list[dict[str, Any]], transition: str) -> tuple[dict[str, Any] | None, str]:
+    matching = [band for band in bands if band_contains_move(band, transition)]
+    if matching:
+        return max(matching, key=band_sort_key), transition
+
+    multi = [band for band in bands if band.get("kind") == "multi-threshold"]
+    if multi:
+        return max(multi, key=band_sort_key), "embedded"
+
+    if bands:
+        return max(bands, key=band_sort_key), "fallback"
+
+    return None, "unknown"
+
+
+def proposal_status(transition: str, transition_side: str) -> str:
+    if transition == "unknown":
+        return "weak"
+    if transition_side in {"fallback", "unknown"}:
+        return "weak"
+    return "strong"
+
+
+def proposal_reason(transition: str, transition_side: str) -> str:
+    if transition == "unknown":
+        return "no direct PET lens transition available"
+    if transition_side in {"fallback", "unknown"}:
+        return "no transition-coherent magnetic band available"
+    return "transition-coherent magnetic band selected"
+
+
+def suggested_probe_role(transition: str, transition_side: str) -> str:
+    if transition == "DROP":
+        if transition_side == "embedded":
+            return "inspect embedded DROP side / structural release"
+        return "inspect DROP side / lower structural release"
+
+    if transition == "NEW":
+        if transition_side == "embedded":
+            return "inspect embedded NEW side / structural pressure"
+        return "inspect NEW side / upper structural pressure"
+
+    return "inspect unresolved transition neighborhood"
+
+
+def format_band(band: dict[str, Any] | None) -> str:
+    if band is None:
+        return "unknown"
+    return (
+        f"{band.get('kind', 'unknown')} "
+        f"{band.get('move', 'unknown')} "
+        f"k[{band.get('k_range', 'unknown')}]"
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Propose a local PET probe window from lens transition and mass-response bands."
+    )
+    parser.add_argument("n", type=int, metavar="N")
+    parser.add_argument("--max-leaves", type=int, default=8)
+    parser.add_argument("--flatten", action="store_true")
+    parser.add_argument("--max-generator-count", type=int, default=20)
+    parser.add_argument("--excluded-support-limit", type=int, default=16)
+    parser.add_argument("--max-move-span", type=int, default=5)
+    args = parser.parse_args()
+
+    if args.n < 1:
+        raise SystemExit("pet_local_probe_proposal expects integers >= 1")
+
+    transition_args = [
+        sys.executable,
+        "tools/pet_lens_transition.py",
+        str(args.n),
+        "--max-leaves",
+        str(args.max_leaves),
+    ]
+    if args.flatten:
+        transition_args.append("--flatten")
+
+    transition_text = run_command(transition_args)
+
+    transition = extract_value(transition_text, "transition")
+    source_generator = extract_value(transition_text, "source_generator")
+    target_generator = extract_value(transition_text, "target_generator")
+    representative_target = extract_value(transition_text, "representative_target")
+
+    mass_response_text = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "opaque-mass-response",
+            str(args.n),
+            "--max-generator-count",
+            str(args.max_generator_count),
+            "--excluded-support-limit",
+            str(args.excluded_support_limit),
+            "--max-move-span",
+            str(args.max_move_span),
+            "--bands",
+            "--json",
+        ]
+    )
+    mass_response = json.loads(mass_response_text)
+    bands = mass_response.get("magnetic_bands", [])
+
+    primary_band, transition_side = choose_primary_band(bands, transition)
+
+    print("PET LOCAL PROBE PROPOSAL")
+    print()
+    print(f"N = {args.n}")
+    print(f"transition = {transition}")
+    print(f"source_generator = {source_generator}")
+    print(f"target_generator = {target_generator}")
+    print(f"representative_target = {representative_target}")
+    print()
+    print(f"primary_band = {format_band(primary_band)}")
+    print(f"transition_side = {transition_side}")
+    print(f"proposal_status = {proposal_status(transition, transition_side)}")
+    print(f"reason = {proposal_reason(transition, transition_side)}")
+    print(f"suggested_probe_role = {suggested_probe_role(transition, transition_side)}")
+    print(f"candidate_window = k[{primary_band.get('k_range', 'unknown') if primary_band else 'unknown'}]")
+    print()
+    print("claim = PET local probe proposal only; this does not factor N")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
