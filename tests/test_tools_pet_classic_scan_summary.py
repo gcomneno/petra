@@ -51,3 +51,13 @@ def test_classic_scan_summary_tolerates_unavailable_sources() -> None:
     assert "cofactor_generator = 2" in output
     assert "role_hint = prime-like split" in output
     assert "verified_divisor_count = 1" in output
+
+
+def test_classic_scan_summary_preserves_crumb_source_for_first_step_divisor() -> None:
+    output = run_tool(3027009081)
+
+    divisor_block = output.split("verified_divisor = 3", maxsplit=1)[1]
+    divisor_block = divisor_block.split("verified_divisor = 1009", maxsplit=1)[0]
+
+    assert "cofactor = 1009003027" in divisor_block
+    assert "sources = crumb,root-window-digits:5:exhaustive-like,root-window-fixed:500" in divisor_block
