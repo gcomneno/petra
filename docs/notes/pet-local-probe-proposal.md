@@ -101,7 +101,11 @@ The first conservative rule is:
 9. map exponent transitions conservatively:
    - `DEC` -> `DROP`-like release;
    - `INC` -> `NEW`-like pressure;
-10. mark exponent-projected proposals as `partial`, not `strong`.
+   - `DEC_PATH` -> `DROP`-like release;
+   - `INC_PATH` -> `NEW`-like pressure;
+   - `DROP_PATH` -> `DROP`-like release;
+   - `NEW_PATH` -> `NEW`-like pressure;
+10. mark exponent-projected and path-projected proposals as `partial`, not `strong`.
 
 ## Status
 
@@ -123,8 +127,40 @@ Exponent transitions:
     INC -> NEW-like pressure
     DEC -> DROP-like release
 
+Transition paths:
+
+    INC_PATH  -> NEW-like pressure
+    DEC_PATH  -> DROP-like release
+    NEW_PATH  -> NEW-like pressure
+    DROP_PATH -> DROP-like release
+
 The projection is conservative.
 
 A `DEC-as-DROP` or `INC-as-NEW` proposal is marked as `partial` because the magnetic bands currently expose `NEW` / `DROP` movement, not native `INC` / `DEC` bands.
 
 This avoids pretending that exponent movement and flat leaf movement are identical.
+
+
+## Multi-step transition paths
+
+When no immediate transition reaches the target lens generator, PET can use the rewrite explanation path between the source generator and the target generator.
+
+Example:
+
+    N = 16
+    source_generator = 16
+    target_generator = 2
+    transition = DEC_PATH
+    transition_path = DEC -> DEC -> DEC
+    generator_path = 16 -> 8 -> 4 -> 2
+
+The local probe proposal maps this to:
+
+    primary_band = recovery DROP k[2..6]
+    transition_side = DEC_PATH-as-DROP
+    proposal_status = partial
+    reason = exponent transition path mapped to DROP-like release band
+
+This does not mean that `DEC_PATH` is identical to `DROP`.
+
+It means that, with the current magnetic band vocabulary, a multi-step exponent release is inspected through the closest available DROP-like release band.
