@@ -39,10 +39,12 @@ def test_local_probe_proposal_handles_dec_transition() -> None:
     assert "source_generator = 4" in output
     assert "target_generator = 2" in output
     assert "representative_target = 2" in output
-    assert "transition_side = fallback" in output
-    assert "proposal_status = weak" in output
-    assert "reason = no transition-coherent magnetic band available" in output
-    assert "suggested_probe_role = inspect unresolved transition neighborhood" in output
+    assert "primary_band = recovery DROP k[2..6]" in output
+    assert "transition_side = DEC-as-DROP" in output
+    assert "proposal_status = partial" in output
+    assert "reason = exponent transition mapped to DROP-like release band" in output
+    assert "suggested_probe_role = inspect DEC exponent release through DROP-like band" in output
+    assert "candidate_window = k[2..6]" in output
     assert "side_band = unknown" in output
     assert "side_window = unknown" in output
     assert "claim = PET local probe proposal only; this does not factor N" in output

@@ -42,10 +42,20 @@ def band_sort_key(band: dict[str, Any]) -> tuple[int, int, int]:
     )
 
 
+def band_transition_for(transition: str) -> tuple[str, str]:
+    if transition == "DEC":
+        return "DROP", "DEC-as-DROP"
+    if transition == "INC":
+        return "NEW", "INC-as-NEW"
+    return transition, transition
+
+
 def choose_primary_band(bands: list[dict[str, Any]], transition: str) -> tuple[dict[str, Any] | None, str]:
-    matching = [band for band in bands if band_contains_move(band, transition)]
+    band_transition, transition_side = band_transition_for(transition)
+
+    matching = [band for band in bands if band_contains_move(band, band_transition)]
     if matching:
-        return max(matching, key=band_sort_key), transition
+        return max(matching, key=band_sort_key), transition_side
 
     multi = [band for band in bands if band.get("kind") == "multi-threshold"]
     if multi:
@@ -65,10 +75,12 @@ def choose_side_band(
     if transition == "unknown":
         return None
 
+    band_transition, _transition_side = band_transition_for(transition)
+
     matching = [
         band
         for band in bands
-        if band is not primary_band and band_contains_move(band, transition)
+        if band is not primary_band and band_contains_move(band, band_transition)
     ]
     if not matching:
         return None
@@ -81,6 +93,8 @@ def proposal_status(transition: str, transition_side: str) -> str:
         return "weak"
     if transition_side in {"fallback", "unknown"}:
         return "weak"
+    if transition_side in {"DEC-as-DROP", "INC-as-NEW"}:
+        return "partial"
     return "strong"
 
 
@@ -89,6 +103,10 @@ def proposal_reason(transition: str, transition_side: str) -> str:
         return "no direct PET lens transition available"
     if transition_side in {"fallback", "unknown"}:
         return "no transition-coherent magnetic band available"
+    if transition_side == "DEC-as-DROP":
+        return "exponent transition mapped to DROP-like release band"
+    if transition_side == "INC-as-NEW":
+        return "exponent transition mapped to NEW-like pressure band"
     return "transition-coherent magnetic band selected"
 
 
@@ -102,6 +120,12 @@ def suggested_probe_role(transition: str, transition_side: str) -> str:
         if transition_side == "embedded":
             return "inspect embedded NEW side / structural pressure"
         return "inspect NEW side / upper structural pressure"
+
+    if transition == "DEC":
+        return "inspect DEC exponent release through DROP-like band"
+
+    if transition == "INC":
+        return "inspect INC exponent pressure through NEW-like band"
 
     return "inspect unresolved transition neighborhood"
 
