@@ -44,12 +44,15 @@ In PET terms:
     reason = transition-coherent magnetic band selected
     suggested_probe_role = inspect DROP side / lower structural release
     candidate_window = k[2..6]
+    side_band = recovery DROP k[7..11]
+    side_window = k[7..11]
 
 Interpretation:
 
 - the PET transition says that the structural movement is `DROP`;
 - the mass-response bands expose a critical multi-threshold region;
-- the proposal selects the `DROP` side of that region as the next inspection window.
+- the proposal selects the `DROP` side of that region as the next inspection window;
+- the side band keeps track of the adjacent `DROP` recovery region.
 
 This does not mean that `15` divides `N`.
 
@@ -68,6 +71,8 @@ The representative target is structural, not arithmetical.
     reason = no direct PET lens transition available
     suggested_probe_role = inspect unresolved transition neighborhood
     candidate_window = k[1..1]
+    side_band = unknown
+    side_window = unknown
 
 Interpretation:
 
@@ -89,7 +94,9 @@ The first conservative rule is:
    - lower `min_trigger_span`;
    - wider `band_width`;
 5. if no transition-coherent band exists, fall back to a multi-threshold band;
-6. otherwise fall back to the strongest visible band and mark the proposal as weak.
+6. otherwise fall back to the strongest visible band and mark the proposal as weak;
+7. when another transition-coherent band exists, report it as `side_band`;
+8. if no side band exists, report `side_band = unknown`.
 
 ## Status
 
