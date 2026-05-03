@@ -114,7 +114,9 @@ def test_classic_scan_summary_supports_json_output() -> None:
     ]
     assert first_divisor["divisor_generator"] == "2"
     assert first_divisor["cofactor_generator"] == "6"
+    assert first_divisor["arithmetic_status"] == "verified_divisor"
     assert first_divisor["role_hint"] == "single-leaf divisor"
+    assert first_divisor["role_hint_confidence"] == "heuristic"
     assert first_divisor["verified"] is True
     assert (
         payload["claim"]
@@ -167,5 +169,7 @@ def test_classic_scan_summary_json_reports_unavailable_sources() -> None:
     ]
     assert divisor["divisor_generator"] == "2"
     assert divisor["cofactor_generator"] == "2"
+    assert divisor["arithmetic_status"] == "verified_divisor"
     assert divisor["role_hint"] == "prime-like split"
+    assert divisor["role_hint_confidence"] == "heuristic"
     assert divisor["verified"] is True

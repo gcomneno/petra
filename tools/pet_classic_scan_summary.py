@@ -205,7 +205,9 @@ def main() -> int:
                 ],
                 "divisor_generator": divisor_generator,
                 "cofactor_generator": cofactor_generator,
+                "arithmetic_status": "verified_divisor",
                 "role_hint": role_hint(divisor_generator, cofactor_generator),
+                "role_hint_confidence": "heuristic",
                 "verified": True,
             }
         )
