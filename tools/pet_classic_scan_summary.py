@@ -14,7 +14,7 @@ class VerifiedDivisor:
     sources: set[str]
 
 
-def run_command(args: list[str]) -> str:
+def run_command(args: list[str]) -> tuple[str, str | None]:
     result = subprocess.run(
         args,
         check=False,
@@ -22,8 +22,8 @@ def run_command(args: list[str]) -> str:
         capture_output=True,
     )
     if result.returncode != 0:
-        raise SystemExit(result.stderr)
-    return result.stdout
+        return "", result.stderr.strip() or "command failed"
+    return result.stdout, None
 
 
 def extract_value(text: str, key: str) -> str:
@@ -60,7 +60,9 @@ def parse_verified_divisors(text: str) -> list[tuple[int, int]]:
 
 
 def generator_for(n: int) -> str:
-    output = run_command([sys.executable, "-m", "pet.cli", "generator", str(n)])
+    output, error = run_command([sys.executable, "-m", "pet.cli", "generator", str(n)])
+    if error:
+        return "unknown"
     return output.strip()
 
 
@@ -102,11 +104,16 @@ def main() -> int:
         raise SystemExit("pet_classic_scan_summary expects integers >= 1")
 
     results: dict[int, VerifiedDivisor] = {}
+    source_errors: dict[str, str] = {}
 
-    crumb = run_command([sys.executable, "tools/pet_crumb_classic_scan.py", str(args.n)])
-    add_results(results, "crumb", parse_verified_divisors(crumb))
+    crumb, error = run_command([sys.executable, "tools/pet_crumb_classic_scan.py", str(args.n)])
+    if error:
+        source_errors["crumb"] = error
+    else:
+        add_results(results, "crumb", parse_verified_divisors(crumb))
 
-    root_fixed = run_command(
+    fixed_source = f"root-window-fixed:{args.fixed_radius}"
+    root_fixed, error = run_command(
         [
             sys.executable,
             "tools/pet_root_window_classic_scan.py",
@@ -115,9 +122,13 @@ def main() -> int:
             str(args.fixed_radius),
         ]
     )
-    add_results(results, f"root-window-fixed:{args.fixed_radius}", parse_verified_divisors(root_fixed))
+    if error:
+        source_errors[fixed_source] = error
+    else:
+        add_results(results, fixed_source, parse_verified_divisors(root_fixed))
 
-    root_digits = run_command(
+    digits_source = f"root-window-digits:{args.radius_digits}"
+    root_digits, error = run_command(
         [
             sys.executable,
             "tools/pet_root_window_classic_scan.py",
@@ -126,7 +137,10 @@ def main() -> int:
             str(args.radius_digits),
         ]
     )
-    add_results(results, f"root-window-digits:{args.radius_digits}", parse_verified_divisors(root_digits))
+    if error:
+        source_errors[digits_source] = error
+    else:
+        add_results(results, digits_source, parse_verified_divisors(root_digits))
 
     print("PET CLASSIC SCAN SUMMARY")
     print()
@@ -134,6 +148,13 @@ def main() -> int:
     print(f"fixed_radius = {args.fixed_radius}")
     print(f"radius_digits = {args.radius_digits}")
     print()
+
+    for source, error in sorted(source_errors.items()):
+        print(f"source_status {source} = unavailable")
+        print(f"source_reason {source} = {error}")
+
+    if source_errors:
+        print()
 
     if not results:
         print("verified_divisor = none")

@@ -35,3 +35,19 @@ def test_classic_scan_summary_reports_structural_divisor_roles() -> None:
 
     assert "verified_divisor_count = 3" in output
     assert "claim = PET-guided classic scan summary only; divisors are accepted only when verified" in output
+
+
+def test_classic_scan_summary_tolerates_unavailable_sources() -> None:
+    output = run_tool(49)
+
+    assert "PET CLASSIC SCAN SUMMARY" in output
+    assert "N = 49" in output
+    assert "source_status crumb = unavailable" in output
+    assert "source_reason crumb = ERROR: opaque-focused-peel found no matching magnetic bands" in output
+    assert "verified_divisor = 7" in output
+    assert "cofactor = 7" in output
+    assert "sources = root-window-digits:5,root-window-fixed:500" in output
+    assert "divisor_generator = 2" in output
+    assert "cofactor_generator = 2" in output
+    assert "role_hint = prime-like split" in output
+    assert "verified_divisor_count = 1" in output
