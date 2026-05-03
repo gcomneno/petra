@@ -122,6 +122,11 @@ echo "fork_follow = ${FORK_FOLLOW:-disabled}"
 echo
 echo "claim = PET diagnostic pipeline only; this does not factor N unless classic handoff verifies factors"
 
+section "0. pet-lens-hint"
+tools/pet_lens_hint.py "$N" \
+  --schedule-limit 8 \
+  --max-leaves 8
+
 section "1. opaque-mass-response --bands"
 python -m pet.cli opaque-mass-response "$N" \
   --max-generator-count "$MAX_GENERATOR_COUNT" \
