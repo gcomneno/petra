@@ -1,0 +1,107 @@
+[
+  {
+    "n": 3027009081,
+    "label": "multifactor_with_crumb_and_composite_block",
+    "expected_verified_divisors": [
+      3,
+      1009,
+      3027
+    ],
+    "expected_policy": {
+      "baseline_sources": [
+        "crumb"
+      ],
+      "recommended_sources": [
+        "root-window-fixed:500"
+      ],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": []
+    },
+    "limitation": "root-window-digits is exhaustive-like; crumb is baseline first-step classic fallback"
+  },
+  {
+    "n": 49,
+    "label": "prime_power_with_unavailable_crumb",
+    "expected_verified_divisors": [
+      7
+    ],
+    "expected_policy": {
+      "baseline_sources": [],
+      "recommended_sources": [
+        "root-window-fixed:500"
+      ],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": [
+        "crumb"
+      ]
+    },
+    "limitation": "crumb source unavailable; divisor is found through root-window classic scan"
+  },
+  {
+    "n": 9081007063,
+    "label": "root_window_single_leaf_divisors",
+    "expected_verified_divisors": [
+      277,
+      1009,
+      32491
+    ],
+    "expected_policy": {
+      "baseline_sources": [
+        "crumb"
+      ],
+      "recommended_sources": [
+        "root-window-fixed:500"
+      ],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": []
+    },
+    "limitation": "crumb baseline is available; digit-radius source is exhaustive-like; fixed root-window source is the recommended bounded scan"
+  },
+  {
+    "n": 6345405191,
+    "label": "semiprime_prime_like_split",
+    "expected_verified_divisors": [
+      70139,
+      90469
+    ],
+    "expected_policy": {
+      "baseline_sources": [
+        "crumb"
+      ],
+      "recommended_sources": [],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": []
+    },
+    "limitation": "verified split is available, but root-window digit scan is exhaustive-like and no bounded fixed source is expected"
+  },
+  {
+    "n": 16,
+    "label": "small_prime_power_structural_divisors",
+    "expected_verified_divisors": [
+      2,
+      4,
+      8
+    ],
+    "expected_policy": {
+      "baseline_sources": [],
+      "recommended_sources": [
+        "root-window-fixed:500"
+      ],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": [
+        "crumb"
+      ]
+    },
+    "limitation": "small number; scans are diagnostic only and digit radius is exhaustive-like"
+  }
+]
