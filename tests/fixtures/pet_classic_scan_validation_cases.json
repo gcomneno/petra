@@ -31,6 +31,11 @@
         "root-window-digits:5:exhaustive-like"
       ],
       "unavailable": []
+    },
+    "expected_role_hints": {
+      "3": "single-leaf divisor",
+      "1009": "single-leaf divisor",
+      "3027": "composite-block isolates single-leaf cofactor"
     }
   },
   {
@@ -63,6 +68,9 @@
       "unavailable": [
         "crumb"
       ]
+    },
+    "expected_role_hints": {
+      "7": "prime-like split"
     }
   },
   {
@@ -97,6 +105,11 @@
         "root-window-digits:5:exhaustive-like"
       ],
       "unavailable": []
+    },
+    "expected_role_hints": {
+      "277": "single-leaf divisor",
+      "1009": "single-leaf divisor",
+      "32491": "single-leaf divisor"
     }
   },
   {
@@ -126,6 +139,10 @@
         "root-window-digits:5:exhaustive-like"
       ],
       "unavailable": []
+    },
+    "expected_role_hints": {
+      "70139": "prime-like split",
+      "90469": "prime-like split"
     }
   },
   {
@@ -160,6 +177,11 @@
       "unavailable": [
         "crumb"
       ]
+    },
+    "expected_role_hints": {
+      "2": "single-leaf divisor",
+      "4": "balanced structural split",
+      "8": "composite-block isolates single-leaf cofactor"
     }
   }
 ]

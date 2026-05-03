@@ -33,8 +33,13 @@ def test_classic_scan_validation_matrix_expected_divisors_and_policy() -> None:
             record["divisor"]
             for record in summary["verified_divisors"]
         ]
+        actual_role_hints = {
+            str(record["divisor"]): record["role_hint"]
+            for record in summary["verified_divisors"]
+        }
 
         assert actual_divisors == case["expected_verified_divisors"], case["label"]
+        assert actual_role_hints == case["expected_role_hints"], case["label"]
 
         policy = run_json_tool(["tools/pet_classic_scan_policy.py", str(n)])
         expected_policy = case["expected_policy"]
