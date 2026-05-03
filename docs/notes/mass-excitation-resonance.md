@@ -156,6 +156,39 @@ The resonance becomes none.
 
 Interpretation: this is a candidate dominant-large-mass pattern.
 
+## Delta dependency classes
+
+The delta helper currently reports a simple empirical dependency class.
+
+### unchanged
+
+Pattern:
+
+- changed = no
+- extinction = no
+
+Candidate meaning: the peel does not affect the observed resonance signature. This usually marks a non-driving component, a small perturbation, or a component below the current excitation sensitivity.
+
+### modulator
+
+Pattern:
+
+- changed = yes
+- extinction = no
+
+Candidate meaning: the peel changes the resonance signature but does not destroy it. The removed component modulates the coarse mass resonance, while the peeled residual still supports a resonance.
+
+### extinction-driver
+
+Pattern:
+
+- changed = yes
+- extinction = yes
+
+Candidate meaning: removing the component collapses the resonance. This marks a candidate resonance-driving component or a peel that leaves a residual too small/simple to sustain the observed resonance.
+
+This is still diagnostic only. It does not discover or prove factors.
+
 ## Candidate resonance dependency profiles
 
 ### Co-dependent balanced masses
