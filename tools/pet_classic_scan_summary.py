@@ -98,6 +98,11 @@ def main() -> int:
     parser.add_argument("n", type=int, metavar="N")
     parser.add_argument("--fixed-radius", type=int, default=500)
     parser.add_argument("--radius-digits", type=int, default=5)
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON output.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -147,12 +152,49 @@ def main() -> int:
     else:
         add_results(results, digits_source, parse_json_verified_divisors(root_digits))
 
+    claim = "PET-guided classic scan summary only; divisors are accepted only when verified"
+    digit_scope = digit_radius_scope(args.n, args.radius_digits)
+
+    verified_divisors = []
+    for divisor in sorted(results):
+        record = results[divisor]
+        divisor_generator = generator_for(record.divisor)
+        cofactor_generator = generator_for(record.cofactor)
+        verified_divisors.append(
+            {
+                "divisor": record.divisor,
+                "cofactor": record.cofactor,
+                "sources": sorted(record.sources),
+                "divisor_generator": divisor_generator,
+                "cofactor_generator": cofactor_generator,
+                "role_hint": role_hint(divisor_generator, cofactor_generator),
+                "verified": True,
+            }
+        )
+
+    payload = {
+        "n": args.n,
+        "fixed_radius": args.fixed_radius,
+        "radius_digits": args.radius_digits,
+        "root_window_digit_scope": digit_scope,
+        "source_errors": {
+            source: error for source, error in sorted(source_errors.items())
+        },
+        "verified_divisors": verified_divisors,
+        "verified_divisor_count": len(verified_divisors),
+        "claim": claim,
+    }
+
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0
+
     print("PET CLASSIC SCAN SUMMARY")
     print()
     print(f"N = {args.n}")
     print(f"fixed_radius = {args.fixed_radius}")
     print(f"radius_digits = {args.radius_digits}")
-    print(f"root_window_digit_scope = {digit_radius_scope(args.n, args.radius_digits)}")
+    print(f"root_window_digit_scope = {digit_scope}")
     print()
 
     for source, error in sorted(source_errors.items()):
@@ -162,28 +204,24 @@ def main() -> int:
     if source_errors:
         print()
 
-    if not results:
+    if not verified_divisors:
         print("verified_divisor = none")
         print()
-        print("claim = PET-guided classic scan summary only; divisors are accepted only when verified")
+        print(f"claim = {claim}")
         return 0
 
-    for divisor in sorted(results):
-        record = results[divisor]
-        divisor_generator = generator_for(record.divisor)
-        cofactor_generator = generator_for(record.cofactor)
-
-        print(f"verified_divisor = {record.divisor}")
-        print(f"cofactor = {record.cofactor}")
-        print(f"sources = {','.join(sorted(record.sources))}")
-        print(f"divisor_generator = {divisor_generator}")
-        print(f"cofactor_generator = {cofactor_generator}")
-        print(f"role_hint = {role_hint(divisor_generator, cofactor_generator)}")
+    for record in verified_divisors:
+        print(f"verified_divisor = {record['divisor']}")
+        print(f"cofactor = {record['cofactor']}")
+        print(f"sources = {','.join(record['sources'])}")
+        print(f"divisor_generator = {record['divisor_generator']}")
+        print(f"cofactor_generator = {record['cofactor_generator']}")
+        print(f"role_hint = {record['role_hint']}")
         print()
 
-    print(f"verified_divisor_count = {len(results)}")
+    print(f"verified_divisor_count = {len(verified_divisors)}")
     print()
-    print("claim = PET-guided classic scan summary only; divisors are accepted only when verified")
+    print(f"claim = {claim}")
 
     return 0
 

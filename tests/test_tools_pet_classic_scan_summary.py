@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 
@@ -61,3 +62,43 @@ def test_classic_scan_summary_preserves_crumb_source_for_first_step_divisor() ->
 
     assert "cofactor = 1009003027" in divisor_block
     assert "sources = crumb,root-window-digits:5:exhaustive-like,root-window-fixed:500" in divisor_block
+
+
+def test_classic_scan_summary_supports_json_output() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_classic_scan_summary.py",
+            "3027009081",
+            "--json",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["n"] == 3027009081
+    assert payload["fixed_radius"] == 500
+    assert payload["radius_digits"] == 5
+    assert payload["root_window_digit_scope"] == "exhaustive-like"
+    assert payload["source_errors"] == {}
+    assert payload["verified_divisor_count"] == 3
+    assert payload["verified_divisors"][0] == {
+        "divisor": 3,
+        "cofactor": 1009003027,
+        "sources": [
+            "crumb",
+            "root-window-digits:5:exhaustive-like",
+            "root-window-fixed:500",
+        ],
+        "divisor_generator": "2",
+        "cofactor_generator": "6",
+        "role_hint": "single-leaf divisor",
+        "verified": True,
+    }
+    assert (
+        payload["claim"]
+        == "PET-guided classic scan summary only; divisors are accepted only when verified"
+    )
