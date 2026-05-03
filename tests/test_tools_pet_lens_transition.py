@@ -18,6 +18,8 @@ def test_pet_lens_transition_reports_drop_for_three_leaf_source() -> None:
     assert "target_generator = 6" in result.stdout
     assert "transition_available = yes" in result.stdout
     assert "transition = DROP" in result.stdout
+    assert "transition_path = DROP" in result.stdout
+    assert "representative_path = 30 -> 15" in result.stdout
     assert "representative_target = 15" in result.stdout
 
 
@@ -64,3 +66,16 @@ def test_peelator_pipeline_reports_lens_transition_section() -> None:
     assert "source_generator = 30" in result.stdout
     assert "target_generator = 6" in result.stdout
     assert "transition = DROP" in result.stdout
+
+
+def test_pet_lens_transition_reports_multistep_dec_path() -> None:
+    result = run("tools/pet_lens_transition.py", "16")
+
+    assert result.returncode == 0, result.stderr
+    assert "source_generator = 16" in result.stdout
+    assert "target_generator = 2" in result.stdout
+    assert "transition_available = partial" in result.stdout
+    assert "transition = DEC_PATH" in result.stdout
+    assert "representative_target = 2" in result.stdout
+    assert "transition_path = DEC -> DEC -> DEC" in result.stdout
+    assert "generator_path = 16 -> 8 -> 4 -> 2" in result.stdout
