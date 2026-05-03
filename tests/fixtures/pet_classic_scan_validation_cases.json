@@ -19,7 +19,19 @@
       ],
       "unavailable_sources": []
     },
-    "limitation": "root-window-digits is exhaustive-like; crumb is baseline first-step classic fallback"
+    "limitation": "root-window-digits is exhaustive-like; crumb is baseline first-step classic fallback",
+    "expected_decision": {
+      "use": [
+        "root-window-fixed:500"
+      ],
+      "baseline_only": [
+        "crumb"
+      ],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": []
+    }
   },
   {
     "n": 49,
@@ -39,7 +51,19 @@
         "crumb"
       ]
     },
-    "limitation": "crumb source unavailable; divisor is found through root-window classic scan"
+    "limitation": "crumb source unavailable; divisor is found through root-window classic scan",
+    "expected_decision": {
+      "use": [
+        "root-window-fixed:500"
+      ],
+      "baseline_only": [],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": [
+        "crumb"
+      ]
+    }
   },
   {
     "n": 9081007063,
@@ -61,7 +85,19 @@
       ],
       "unavailable_sources": []
     },
-    "limitation": "crumb baseline is available; digit-radius source is exhaustive-like; fixed root-window source is the recommended bounded scan"
+    "limitation": "crumb baseline is available; digit-radius source is exhaustive-like; fixed root-window source is the recommended bounded scan",
+    "expected_decision": {
+      "use": [
+        "root-window-fixed:500"
+      ],
+      "baseline_only": [
+        "crumb"
+      ],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": []
+    }
   },
   {
     "n": 6345405191,
@@ -80,7 +116,17 @@
       ],
       "unavailable_sources": []
     },
-    "limitation": "verified split is available, but root-window digit scan is exhaustive-like and no bounded fixed source is expected"
+    "limitation": "verified split is available, but root-window digit scan is exhaustive-like and no bounded fixed source is expected",
+    "expected_decision": {
+      "use": [],
+      "baseline_only": [
+        "crumb"
+      ],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": []
+    }
   },
   {
     "n": 16,
@@ -102,6 +148,18 @@
         "crumb"
       ]
     },
-    "limitation": "small number; scans are diagnostic only and digit radius is exhaustive-like"
+    "limitation": "small number; scans are diagnostic only and digit radius is exhaustive-like",
+    "expected_decision": {
+      "use": [
+        "root-window-fixed:500"
+      ],
+      "baseline_only": [],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": [
+        "crumb"
+      ]
+    }
   }
 ]
