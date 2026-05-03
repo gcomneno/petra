@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -27,35 +28,26 @@ def run_command(args: list[str]) -> tuple[str, str | None]:
     return result.stdout, None
 
 
-def extract_value(text: str, key: str) -> str:
-    prefix = f"{key} = "
-    for line in text.splitlines():
-        stripped = line.strip()
-        if stripped.startswith(prefix):
-            return stripped[len(prefix):]
-    return "unknown"
-
-
-def parse_verified_divisors(text: str) -> list[tuple[int, int]]:
+def parse_json_verified_divisors(text: str) -> list[tuple[int, int]]:
+    payload = json.loads(text)
     found: list[tuple[int, int]] = []
-    current_divisor: int | None = None
 
-    for line in text.splitlines():
-        stripped = line.strip()
+    if payload.get("verified", False):
+        divisor = payload.get("divisor_found")
+        cofactor = payload.get("cofactor")
+        if divisor is not None and cofactor is not None:
+            found.append((int(divisor), int(cofactor)))
 
-        if stripped.startswith("divisor_found = "):
-            raw = stripped.removeprefix("divisor_found = ")
-            if raw == "none":
-                current_divisor = None
-                continue
-            current_divisor = int(raw)
+    for record in payload.get("verified_divisors", []):
+        if not record.get("verified", False):
             continue
 
-        if stripped.startswith("cofactor = ") and current_divisor is not None:
-            raw = stripped.removeprefix("cofactor = ")
-            if raw != "none":
-                found.append((current_divisor, int(raw)))
-            current_divisor = None
+        divisor = record.get("divisor")
+        cofactor = record.get("cofactor")
+        if divisor is None or cofactor is None:
+            continue
+
+        found.append((int(divisor), int(cofactor)))
 
     return found
 
@@ -114,11 +106,13 @@ def main() -> int:
     results: dict[int, VerifiedDivisor] = {}
     source_errors: dict[str, str] = {}
 
-    crumb, error = run_command([sys.executable, "tools/pet_crumb_classic_scan.py", str(args.n)])
+    crumb, error = run_command(
+        [sys.executable, "tools/pet_crumb_classic_scan.py", str(args.n), "--json"]
+    )
     if error:
         source_errors["crumb"] = error
     else:
-        add_results(results, "crumb", parse_verified_divisors(crumb))
+        add_results(results, "crumb", parse_json_verified_divisors(crumb))
 
     fixed_source = f"root-window-fixed:{args.fixed_radius}"
     root_fixed, error = run_command(
@@ -128,12 +122,13 @@ def main() -> int:
             str(args.n),
             "--radius",
             str(args.fixed_radius),
+            "--json",
         ]
     )
     if error:
         source_errors[fixed_source] = error
     else:
-        add_results(results, fixed_source, parse_verified_divisors(root_fixed))
+        add_results(results, fixed_source, parse_json_verified_divisors(root_fixed))
 
     digits_scope = digit_radius_scope(args.n, args.radius_digits)
     digits_source = f"root-window-digits:{args.radius_digits}:{digits_scope}"
@@ -144,12 +139,13 @@ def main() -> int:
             str(args.n),
             "--radius-digits",
             str(args.radius_digits),
+            "--json",
         ]
     )
     if error:
         source_errors[digits_source] = error
     else:
-        add_results(results, digits_source, parse_verified_divisors(root_digits))
+        add_results(results, digits_source, parse_json_verified_divisors(root_digits))
 
     print("PET CLASSIC SCAN SUMMARY")
     print()
