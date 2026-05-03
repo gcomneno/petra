@@ -1,1 +1,98 @@
-# PET local probe proposal\n\nThe PET local probe proposal is an experimental diagnostic step that connects a PET lens transition to a local inspection window.\n\nIt combines:\n\n- the PET lens transition;\n- the source generator;\n- the target generator;\n- the representative target;\n- the magnetic mass-response bands.\n\nIt does not factor `N`.\n\n## Chain\n\n    N opaque\n    -> surface/lens hint\n    -> structural candidate\n    -> PET transition\n    -> local probe proposal\n\n## Operational claim\n\nThe local probe proposal does not identify factors.\n\nIt selects a structurally coherent inspection window by combining the PET lens transition with magnetic mass-response bands.\n\nIn PET terms:\n\n    Non trova il pesce.\n    Indica dove l’acqua si muove strano.\n\n## Example: 3027009081\n\n    transition = DROP\n    source_generator = 30\n    target_generator = 6\n    representative_target = 15\n\n    primary_band = multi-threshold NEW,DROP k[2..6]\n    transition_side = DROP\n    proposal_status = strong\n    reason = transition-coherent magnetic band selected\n    suggested_probe_role = inspect DROP side / lower structural release\n    candidate_window = k[2..6]\n\nInterpretation:\n\n- the PET transition says that the structural movement is `DROP`;\n- the mass-response bands expose a critical multi-threshold region;\n- the proposal selects the `DROP` side of that region as the next inspection window.\n\nThis does not mean that `15` divides `N`.\n\nThe representative target is structural, not arithmetical.\n\n## Weak transition case: 49\n\n    transition = unknown\n    source_generator = 4\n    target_generator = 2\n    representative_target = unknown\n\n    primary_band = pressure-entry NEW k[1..1]\n    transition_side = fallback\n    proposal_status = weak\n    reason = no direct PET lens transition available\n    suggested_probe_role = inspect unresolved transition neighborhood\n    candidate_window = k[1..1]\n\nInterpretation:\n\n- no direct PET lens transition is available;\n- the proposal falls back to the strongest visible band;\n- the result is explicitly marked as weak.\n\nThis is important because non-flat / power-like cases may require a different transition family, such as a future `DEC` or flattening-aware proposal.\n\n## Current selection rule\n\nThe first conservative rule is:\n\n1. read the PET transition;\n2. read the magnetic bands;\n3. prefer bands whose `move` contains the transition;\n4. rank candidate bands by:\n   - higher `focus_score`;\n   - lower `min_trigger_span`;\n   - wider `band_width`;\n5. if no transition-coherent band exists, fall back to a multi-threshold band;\n6. otherwise fall back to the strongest visible band and mark the proposal as weak.\n\n## Status\n\nThis helper is diagnostic.\n\nIt is useful for deciding where PET should inspect next, not for claiming a factorization.\n
+# PET local probe proposal
+
+The PET local probe proposal is an experimental diagnostic step that connects a PET lens transition to a local inspection window.
+
+It combines:
+
+- the PET lens transition;
+- the source generator;
+- the target generator;
+- the representative target;
+- the magnetic mass-response bands.
+
+It does not factor `N`.
+
+## Chain
+
+    N opaque
+    -> surface/lens hint
+    -> structural candidate
+    -> PET transition
+    -> local probe proposal
+
+## Operational claim
+
+The local probe proposal does not identify factors.
+
+It selects a structurally coherent inspection window by combining the PET lens transition with magnetic mass-response bands.
+
+In PET terms:
+
+    Non trova il pesce.
+    Indica dove l’acqua si muove strano.
+
+## Example: 3027009081
+
+    transition = DROP
+    source_generator = 30
+    target_generator = 6
+    representative_target = 15
+
+    primary_band = multi-threshold NEW,DROP k[2..6]
+    transition_side = DROP
+    proposal_status = strong
+    reason = transition-coherent magnetic band selected
+    suggested_probe_role = inspect DROP side / lower structural release
+    candidate_window = k[2..6]
+
+Interpretation:
+
+- the PET transition says that the structural movement is `DROP`;
+- the mass-response bands expose a critical multi-threshold region;
+- the proposal selects the `DROP` side of that region as the next inspection window.
+
+This does not mean that `15` divides `N`.
+
+The representative target is structural, not arithmetical.
+
+## Weak transition case: 49
+
+    transition = unknown
+    source_generator = 4
+    target_generator = 2
+    representative_target = unknown
+
+    primary_band = pressure-entry NEW k[1..1]
+    transition_side = fallback
+    proposal_status = weak
+    reason = no direct PET lens transition available
+    suggested_probe_role = inspect unresolved transition neighborhood
+    candidate_window = k[1..1]
+
+Interpretation:
+
+- no direct PET lens transition is available;
+- the proposal falls back to the strongest visible band;
+- the result is explicitly marked as weak.
+
+This is important because non-flat / power-like cases may require a different transition family, such as a future `DEC` or flattening-aware proposal.
+
+## Current selection rule
+
+The first conservative rule is:
+
+1. read the PET transition;
+2. read the magnetic bands;
+3. prefer bands whose `move` contains the transition;
+4. rank candidate bands by:
+   - higher `focus_score`;
+   - lower `min_trigger_span`;
+   - wider `band_width`;
+5. if no transition-coherent band exists, fall back to a multi-threshold band;
+6. otherwise fall back to the strongest visible band and mark the proposal as weak.
+
+## Status
+
+This helper is diagnostic.
+
+It is useful for deciding where PET should inspect next, not for claiming a factorization.
