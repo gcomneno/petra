@@ -139,6 +139,22 @@ Interpretation:
 
 Flattening is a second PET view. It does not replace the original probe.
 
+## Structural mass is not prime factor count
+
+PET structural mass is not the same as classical prime factor count.
+
+A small arithmetic factor may be real, but structurally non-driving.
+
+Example:
+
+- Classic view: 3027009081 = 3 * 1009 * 1000003
+- PET lens view: the dominant structural cut is two-leaf
+- Operational meaning: the tiny factor 3 should be handled by cheap low-backbone peeling, not by the main stencil lens
+
+In short:
+
+Non tutte le briciole meritano la spada laser.
+
 ## What this gives us
 
 The current stencil probe cannot find factors.
