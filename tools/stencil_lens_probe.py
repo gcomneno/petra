@@ -166,9 +166,17 @@ def main() -> int:
 
     print("PET STENCIL LENS PROBE")
     print()
+    source_height = shape_height(source)
+    flattening_steps = max(0, source_height - 2)
+
     print(f"N = {args.n}")
     print(f"source_size = {source_size}")
-    print(f"source_height = {shape_height(source)}")
+    print(f"source_height = {source_height}")
+    print(f"flattening_steps = {flattening_steps}")
+    print(
+        "flattening_recommended = "
+        f"{'yes' if flattening_steps else 'no'}"
+    )
     print(f"max_leaves = {args.max_leaves}")
     print()
     print("Candidate lenses")
