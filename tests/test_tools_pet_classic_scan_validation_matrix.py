@@ -44,3 +44,27 @@ def test_classic_scan_validation_matrix_expected_divisors_and_policy() -> None:
         assert policy["caution_sources"] == expected_policy["caution_sources"], case["label"]
         assert policy["unavailable_sources"] == expected_policy["unavailable_sources"], case["label"]
         assert policy["decision"] == case["expected_decision"], case["label"]
+
+        limitation = case.get("limitation", "")
+        assert limitation, case["label"]
+        assert any(
+            marker in limitation
+            for marker in [
+                "exhaustive-like",
+                "baseline",
+                "unavailable",
+                "diagnostic",
+            ]
+        ), case["label"]
+
+        limitation = case.get("limitation", "")
+        assert limitation, case["label"]
+        assert any(
+            marker in limitation
+            for marker in [
+                "exhaustive-like",
+                "baseline",
+                "unavailable",
+                "diagnostic",
+            ]
+        ), case["label"]
