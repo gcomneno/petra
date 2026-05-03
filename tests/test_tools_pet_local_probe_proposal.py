@@ -32,16 +32,16 @@ def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
     assert "claim = PET local probe proposal only; this does not factor N" in output
 
 
-def test_local_probe_proposal_marks_unknown_transition_as_weak() -> None:
+def test_local_probe_proposal_handles_dec_transition() -> None:
     output = run_tool(49)
 
-    assert "transition = unknown" in output
+    assert "transition = DEC" in output
     assert "source_generator = 4" in output
     assert "target_generator = 2" in output
-    assert "representative_target = unknown" in output
+    assert "representative_target = 2" in output
     assert "transition_side = fallback" in output
     assert "proposal_status = weak" in output
-    assert "reason = no direct PET lens transition available" in output
+    assert "reason = no transition-coherent magnetic band available" in output
     assert "suggested_probe_role = inspect unresolved transition neighborhood" in output
     assert "side_band = unknown" in output
     assert "side_window = unknown" in output

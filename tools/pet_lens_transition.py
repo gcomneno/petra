@@ -28,24 +28,61 @@ def extract_value(text: str, key: str) -> str:
     return "unknown"
 
 
-def find_transition(explain_text: str, target_generator: int) -> dict[str, str]:
+def find_transition(
+    explain_text: str,
+    source_generator: int,
+    target_generator: int,
+) -> dict[str, str]:
+    matches: list[dict[str, str]] = []
+    current_move = "unknown"
+
     for line in explain_text.splitlines():
         stripped = line.strip()
-        if "generator=" not in stripped:
+        if not stripped:
             continue
+
+        section_match = re.match(r"^(?P<move>[A-Z]+)(?:\([^)]*\))?:(?:\s*(?P<body>.*))?$", stripped)
+        if section_match:
+            current_move = section_match.group("move")
+            body = section_match.group("body") or ""
+            if "unavailable" in body:
+                continue
+            search_text = body
+        else:
+            search_text = stripped
+
+        if "generator=" not in search_text or "-> N'=" not in search_text:
+            continue
+
         match = re.search(
-            r"^(?P<move>[A-Z]+): .*-> N'=(?P<n>[0-9]+) generator=(?P<generator>[0-9]+)",
-            stripped,
+            r"-> N'=(?P<n>[0-9]+) generator=(?P<generator>[0-9]+)",
+            search_text,
         )
         if not match:
             continue
+
         if int(match.group("generator")) == target_generator:
-            return {
-                "available": "yes",
-                "move": match.group("move"),
-                "representative_target": match.group("n"),
-                "target_generator": match.group("generator"),
-            }
+            matches.append(
+                {
+                    "available": "yes",
+                    "move": current_move,
+                    "representative_target": match.group("n"),
+                    "target_generator": match.group("generator"),
+                }
+            )
+
+    if matches:
+        if target_generator <= source_generator:
+            move_priority = ["DROP", "DEC", "NEW", "INC"]
+        else:
+            move_priority = ["NEW", "INC", "DROP", "DEC"]
+
+        return min(
+            matches,
+            key=lambda item: move_priority.index(item["move"])
+            if item["move"] in move_priority
+            else len(move_priority),
+        )
 
     return {
         "available": "no",
@@ -114,7 +151,7 @@ def main() -> int:
         "explain",
         str(source_generator),
     )
-    transition = find_transition(explain, target_generator)
+    transition = find_transition(explain, source_generator, target_generator)
 
     print(f"source_generator = {source_generator}")
     print(f"target_generator = {target_generator}")

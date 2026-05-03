@@ -32,14 +32,14 @@ def test_pet_lens_transition_reports_drop_for_two_leaf_source() -> None:
     assert "representative_target = 3" in result.stdout
 
 
-def test_pet_lens_transition_reports_unavailable_for_non_flat_power_like_source() -> None:
+def test_pet_lens_transition_detects_dec_for_power_like_source() -> None:
     result = run("tools/pet_lens_transition.py", "49")
 
     assert result.returncode == 0, result.stderr
     assert "source_generator = 4" in result.stdout
     assert "target_generator = 2" in result.stdout
-    assert "transition_available = no" in result.stdout
-    assert "transition = unknown" in result.stdout
+    assert "transition_available = yes" in result.stdout
+    assert "transition = DEC" in result.stdout
 
 
 def test_peelator_pipeline_reports_lens_transition_section() -> None:
