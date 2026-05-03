@@ -132,6 +132,10 @@ section "0b. pet-lens-candidates"
 tools/pet_lens_candidates.py "$N" \
   --max-leaves 8
 
+section "0c. pet-lens-transition"
+tools/pet_lens_transition.py "$N" \
+  --max-leaves 8
+
 section "1. opaque-mass-response --bands"
 python -m pet.cli opaque-mass-response "$N" \
   --max-generator-count "$MAX_GENERATOR_COUNT" \
