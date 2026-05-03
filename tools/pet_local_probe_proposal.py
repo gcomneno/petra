@@ -57,6 +57,25 @@ def choose_primary_band(bands: list[dict[str, Any]], transition: str) -> tuple[d
     return None, "unknown"
 
 
+def choose_side_band(
+    bands: list[dict[str, Any]],
+    transition: str,
+    primary_band: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if transition == "unknown":
+        return None
+
+    matching = [
+        band
+        for band in bands
+        if band is not primary_band and band_contains_move(band, transition)
+    ]
+    if not matching:
+        return None
+
+    return max(matching, key=band_sort_key)
+
+
 def proposal_status(transition: str, transition_side: str) -> str:
     if transition == "unknown":
         return "weak"
@@ -150,6 +169,7 @@ def main() -> int:
     bands = mass_response.get("magnetic_bands", [])
 
     primary_band, transition_side = choose_primary_band(bands, transition)
+    side_band = choose_side_band(bands, transition, primary_band)
 
     print("PET LOCAL PROBE PROPOSAL")
     print()
@@ -165,6 +185,11 @@ def main() -> int:
     print(f"reason = {proposal_reason(transition, transition_side)}")
     print(f"suggested_probe_role = {suggested_probe_role(transition, transition_side)}")
     print(f"candidate_window = k[{primary_band.get('k_range', 'unknown') if primary_band else 'unknown'}]")
+    print(f"side_band = {format_band(side_band)}")
+    if side_band:
+        print(f"side_window = k[{side_band.get('k_range', 'unknown')}]")
+    else:
+        print("side_window = unknown")
     print()
     print("claim = PET local probe proposal only; this does not factor N")
 

@@ -27,6 +27,8 @@ def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
     assert "proposal_status = strong" in output
     assert "reason = transition-coherent magnetic band selected" in output
     assert "candidate_window = k[2..6]" in output
+    assert "side_band = recovery DROP k[7..11]" in output
+    assert "side_window = k[7..11]" in output
     assert "claim = PET local probe proposal only; this does not factor N" in output
 
 
@@ -41,4 +43,6 @@ def test_local_probe_proposal_marks_unknown_transition_as_weak() -> None:
     assert "proposal_status = weak" in output
     assert "reason = no direct PET lens transition available" in output
     assert "suggested_probe_role = inspect unresolved transition neighborhood" in output
+    assert "side_band = unknown" in output
+    assert "side_window = unknown" in output
     assert "claim = PET local probe proposal only; this does not factor N" in output
