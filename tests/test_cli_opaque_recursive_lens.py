@@ -912,3 +912,35 @@ def test_opaque_recursive_lens_diagnostic_probe_obeys_shape_handoff_verdict() ->
     assert probe["available"] is False
     assert probe["reason"] == "shape handoff verdict does not allow diagnostic classic probing"
     assert "does not factor N unless verified" in probe["claim"]
+
+def test_opaque_recursive_lens_diagnostic_probe_uses_shape_handoff_method_and_center() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+        "--diagnostic-classic-probe",
+        "--handoff-radius",
+        "1000",
+    )
+
+    verdict = data["shape_handoff_verdict"]
+    probe = data["diagnostic_classic_probe_payload"]
+
+    assert verdict["diagnostic_classic_allowed"] is True
+    assert verdict["recommended_method"] == "fermat-center-scan"
+    assert verdict["center"] == 79658
+    assert probe["method"] == verdict["recommended_method"]
+    assert probe["center"] == verdict["center"]
+    assert probe["verified"] is True

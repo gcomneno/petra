@@ -4226,7 +4226,22 @@ def _opaque_recursive_lens_diagnostic_classic_probe(
             "claim": claim,
         }
 
-    center = int(single["center_nearest_integer"])
+    method = shape_handoff_verdict.get("recommended_method")
+    center = shape_handoff_verdict.get("center")
+    if method not in {"fermat-center-scan", "local-divisibility-scan"}:
+        return {
+            "available": False,
+            "reason": "shape handoff verdict does not recommend a supported diagnostic classic method",
+            "claim": claim,
+        }
+    if center is None:
+        return {
+            "available": False,
+            "reason": "shape handoff verdict does not provide a diagnostic center",
+            "claim": claim,
+        }
+
+    center = int(center)
     start = max(2, center - radius)
     end = max(start, center + radius)
 
@@ -4234,10 +4249,8 @@ def _opaque_recursive_lens_diagnostic_classic_probe(
     divisor_found = None
     cofactor = None
     verified = False
-    method = "local-divisibility-scan"
 
-    if single["center_lens_kind"] == "flat-two-leaf-center":
-        method = "fermat-center-scan"
+    if method == "fermat-center-scan":
         for candidate_center in range(start, end + 1):
             candidates_checked.append(candidate_center)
             delta_square = candidate_center * candidate_center - n
@@ -4255,7 +4268,7 @@ def _opaque_recursive_lens_diagnostic_classic_probe(
                 cofactor = right
                 verified = True
                 break
-    else:
+    elif method == "local-divisibility-scan":
         for candidate in range(start, end + 1):
             candidates_checked.append(candidate)
             if n % candidate == 0:
