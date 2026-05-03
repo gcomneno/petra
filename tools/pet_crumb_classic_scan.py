@@ -32,6 +32,11 @@ def main() -> int:
     parser.add_argument("--excluded-support-limit", type=int, default=16)
     parser.add_argument("--max-move-span", type=int, default=5)
     parser.add_argument("--handoff-radius", type=int, default=100)
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON output.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -73,20 +78,43 @@ def main() -> int:
     realization = focused.get("pet_realization") or {}
     handoff = focused.get("pet_classic_handoff") or {}
 
+    claim = "PET-guided crumb classic scan only; divisors are accepted only when verified"
+    payload = {
+        "n": args.n,
+        "source": "boundary-entry NEW",
+        "selected_band": {
+            "kind": selected_band.get("kind", "unknown"),
+            "move": selected_band.get("move", "unknown"),
+            "k_range": selected_band.get("k_range", "unknown"),
+        },
+        "edge_k": realization.get("edge_k", handoff.get("edge_k", "unknown")),
+        "center": realization.get("nearest_integer", handoff.get("center", "unknown")),
+        "method": handoff.get("method", "unknown"),
+        "recommended": bool(handoff.get("recommended", False)),
+        "divisor_found": handoff.get("divisor_found"),
+        "cofactor": handoff.get("cofactor"),
+        "verified": bool(handoff.get("verified", False)),
+        "claim": claim,
+    }
+
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0
+
     print("PET CRUMB CLASSIC SCAN")
     print()
     print(f"N = {args.n}")
     print("source = boundary-entry NEW")
-    print(f"selected_band = {selected_band.get('kind', 'unknown')} {selected_band.get('move', 'unknown')} k[{selected_band.get('k_range', 'unknown')}]")
-    print(f"edge_k = {realization.get('edge_k', handoff.get('edge_k', 'unknown'))}")
-    print(f"center = {realization.get('nearest_integer', handoff.get('center', 'unknown'))}")
-    print(f"method = {handoff.get('method', 'unknown')}")
-    print(f"recommended = {yes_no(handoff.get('recommended', False))}")
-    print(f"divisor_found = {handoff.get('divisor_found') or 'none'}")
-    print(f"cofactor = {handoff.get('cofactor') or 'none'}")
-    print(f"verified = {yes_no(handoff.get('verified', False))}")
+    print(f"selected_band = {payload['selected_band']['kind']} {payload['selected_band']['move']} k[{payload['selected_band']['k_range']}]")
+    print(f"edge_k = {payload['edge_k']}")
+    print(f"center = {payload['center']}")
+    print(f"method = {payload['method']}")
+    print(f"recommended = {yes_no(payload['recommended'])}")
+    print(f"divisor_found = {payload['divisor_found'] or 'none'}")
+    print(f"cofactor = {payload['cofactor'] or 'none'}")
+    print(f"verified = {yes_no(payload['verified'])}")
     print()
-    print("claim = PET-guided crumb classic scan only; divisors are accepted only when verified")
+    print(f"claim = {claim}")
 
     return 0
 
