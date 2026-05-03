@@ -80,6 +80,13 @@ def flat_lens_shape(leaf_count: int) -> Shape:
     return tuple(tuple() for _ in range(leaf_count))
 
 
+def flatten_root_branches(shape: Shape) -> Shape:
+    """Project root branches to flat leaves without using arithmetic factors."""
+    if not shape:
+        return shape
+    return tuple(tuple() for _ in shape)
+
+
 def lens_name(leaf_count: int) -> str:
     names = {
         1: "one-leaf",
@@ -103,6 +110,11 @@ def main() -> int:
         default=8,
         help="maximum flat leaf lens to test",
     )
+    parser.add_argument(
+        "--flatten",
+        action="store_true",
+        help="project non-flat root branches to flat leaves before probing",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -110,8 +122,18 @@ def main() -> int:
     if args.max_leaves < 1:
         raise SystemExit("--max-leaves expects integers >= 1")
 
-    source = load_shape(args.n)
+    original_source = load_shape(args.n)
+    original_source_size = shape_size(original_source)
+    original_source_height = shape_height(original_source)
+    flattening_steps = max(0, original_source_height - 2)
+
+    source = (
+        normalize_shape(flatten_root_branches(original_source))
+        if args.flatten
+        else original_source
+    )
     source_size = shape_size(source)
+    source_height = shape_height(source)
 
     rows = []
     for leaves in range(1, args.max_leaves + 1):
@@ -166,17 +188,18 @@ def main() -> int:
 
     print("PET STENCIL LENS PROBE")
     print()
-    source_height = shape_height(source)
-    flattening_steps = max(0, source_height - 2)
 
     print(f"N = {args.n}")
-    print(f"source_size = {source_size}")
-    print(f"source_height = {source_height}")
+    print(f"original_source_size = {original_source_size}")
+    print(f"original_source_height = {original_source_height}")
     print(f"flattening_steps = {flattening_steps}")
     print(
         "flattening_recommended = "
         f"{'yes' if flattening_steps else 'no'}"
     )
+    print(f"flatten_applied = {'yes' if args.flatten else 'no'}")
+    print(f"source_size = {source_size}")
+    print(f"source_height = {source_height}")
     print(f"max_leaves = {args.max_leaves}")
     print()
     print("Candidate lenses")
