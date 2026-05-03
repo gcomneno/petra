@@ -38,11 +38,17 @@ def scan_window(n: int, center: int, radius: int) -> list[tuple[int, int]]:
     hits: list[tuple[int, int]] = []
 
     start = max(2, center - radius)
-    end = center + radius
+    end = min(n - 1, center + radius)
 
     for candidate in range(start, end + 1):
-        if n % candidate == 0:
-            hits.append((candidate, n // candidate))
+        if n % candidate != 0:
+            continue
+
+        cofactor = n // candidate
+        if cofactor <= 1 or cofactor >= n:
+            continue
+
+        hits.append((candidate, cofactor))
 
     return hits
 
@@ -119,7 +125,7 @@ def main() -> int:
         print("claim = PET-guided root-window classic scan only; divisors are accepted only when verified")
         return 0
 
-    total_hits = 0
+    hits_by_candidate: dict[int, dict[str, object]] = {}
 
     for k in range(k_start, k_end + 1):
         center = integer_nth_root_nearest(args.n, k)
@@ -130,17 +136,34 @@ def main() -> int:
 
         if hits:
             for candidate, cofactor in hits:
-                total_hits += 1
-                print(f"divisor_found = {candidate}")
+                record = hits_by_candidate.setdefault(
+                    candidate,
+                    {"cofactor": cofactor, "matched_k": []},
+                )
+                record["matched_k"].append(k)
+                print(f"candidate_hit = {candidate}")
                 print(f"cofactor = {cofactor}")
                 print("verified = yes")
         else:
-            print("divisor_found = none")
+            print("candidate_hit = none")
             print("verified = no")
 
         print()
 
-    print(f"verified_hit_count = {total_hits}")
+    print("Verified divisors")
+    if hits_by_candidate:
+        for candidate in sorted(hits_by_candidate):
+            record = hits_by_candidate[candidate]
+            matched_k = ",".join(str(k) for k in record["matched_k"])
+            print(f"divisor_found = {candidate}")
+            print(f"cofactor = {record['cofactor']}")
+            print(f"matched_k = {matched_k}")
+            print("verified = yes")
+    else:
+        print("divisor_found = none")
+
+    print()
+    print(f"verified_hit_count = {len(hits_by_candidate)}")
     print()
     print("claim = PET-guided root-window classic scan only; divisors are accepted only when verified")
 
