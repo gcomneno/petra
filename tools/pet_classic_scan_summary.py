@@ -135,7 +135,8 @@ def main() -> int:
     else:
         add_results(results, fixed_source, parse_verified_divisors(root_fixed))
 
-    digits_source = f"root-window-digits:{args.radius_digits}"
+    digits_scope = digit_radius_scope(args.n, args.radius_digits)
+    digits_source = f"root-window-digits:{args.radius_digits}:{digits_scope}"
     root_digits, error = run_command(
         [
             sys.executable,

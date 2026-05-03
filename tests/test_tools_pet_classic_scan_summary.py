@@ -46,7 +46,7 @@ def test_classic_scan_summary_tolerates_unavailable_sources() -> None:
     assert "source_reason crumb = ERROR: opaque-focused-peel found no matching magnetic bands" in output
     assert "verified_divisor = 7" in output
     assert "cofactor = 7" in output
-    assert "sources = root-window-digits:5,root-window-fixed:500" in output
+    assert "sources = root-window-digits:5:exhaustive-like,root-window-fixed:500" in output
     assert "divisor_generator = 2" in output
     assert "cofactor_generator = 2" in output
     assert "role_hint = prime-like split" in output
