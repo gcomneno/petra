@@ -136,6 +136,13 @@ section "0c. pet-lens-transition"
 tools/pet_lens_transition.py "$N" \
   --max-leaves 8
 
+section "0d. pet-local-probe-proposal"
+tools/pet_local_probe_proposal.py "$N" \
+  --max-leaves 8 \
+  --max-generator-count "$MAX_GENERATOR_COUNT" \
+  --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
+  --max-move-span "$MAX_MOVE_SPAN"
+
 section "1. opaque-mass-response --bands"
 python -m pet.cli opaque-mass-response "$N" \
   --max-generator-count "$MAX_GENERATOR_COUNT" \
