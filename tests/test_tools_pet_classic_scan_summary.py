@@ -102,3 +102,40 @@ def test_classic_scan_summary_supports_json_output() -> None:
         payload["claim"]
         == "PET-guided classic scan summary only; divisors are accepted only when verified"
     )
+
+
+def test_classic_scan_summary_json_reports_unavailable_sources() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_classic_scan_summary.py",
+            "49",
+            "--json",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["n"] == 49
+    assert payload["root_window_digit_scope"] == "exhaustive-like"
+    assert payload["source_errors"] == {
+        "crumb": "ERROR: opaque-focused-peel found no matching magnetic bands"
+    }
+    assert payload["verified_divisor_count"] == 1
+    assert payload["verified_divisors"] == [
+        {
+            "divisor": 7,
+            "cofactor": 7,
+            "sources": [
+                "root-window-digits:5:exhaustive-like",
+                "root-window-fixed:500",
+            ],
+            "divisor_generator": "2",
+            "cofactor_generator": "2",
+            "role_hint": "prime-like split",
+            "verified": True,
+        }
+    ]
