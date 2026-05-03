@@ -5,6 +5,7 @@ import argparse
 import subprocess
 import sys
 from dataclasses import dataclass
+from math import isqrt
 
 
 @dataclass
@@ -78,6 +79,13 @@ def role_hint(divisor_generator: str, cofactor_generator: str) -> str:
     return "verified structural divisor"
 
 
+def digit_radius_scope(n: int, radius_digits: int) -> str:
+    radius = 10 ** radius_digits
+    if radius >= isqrt(n):
+        return "exhaustive-like"
+    return "bounded-window"
+
+
 def add_results(
     results: dict[int, VerifiedDivisor],
     source: str,
@@ -147,6 +155,7 @@ def main() -> int:
     print(f"N = {args.n}")
     print(f"fixed_radius = {args.fixed_radius}")
     print(f"radius_digits = {args.radius_digits}")
+    print(f"root_window_digit_scope = {digit_radius_scope(args.n, args.radius_digits)}")
     print()
 
     for source, error in sorted(source_errors.items()):
