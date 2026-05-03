@@ -143,6 +143,18 @@ tools/pet_local_probe_proposal.py "$N" \
   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
   --max-move-span "$MAX_MOVE_SPAN"
 
+section "0e. pet-classic-handoff-route"
+tools/pet_classic_handoff_route.py "$N" \
+  --max-generator-count "$MAX_GENERATOR_COUNT" \
+  --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
+  --max-move-span "$MAX_MOVE_SPAN"
+
+section "0f. pet-classic-scan-summary"
+tools/pet_classic_scan_summary.py "$N"
+
+section "0g. pet-classic-scan-policy"
+tools/pet_classic_scan_policy.py "$N"
+
 section "1. opaque-mass-response --bands"
 python -m pet.cli opaque-mass-response "$N" \
   --max-generator-count "$MAX_GENERATOR_COUNT" \
