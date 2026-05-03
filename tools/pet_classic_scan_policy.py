@@ -66,6 +66,53 @@ def classify_source(source: str, source_errors: dict[str, str]) -> dict[str, Any
     }
 
 
+def classify_source_detail(
+    detail: dict[str, Any],
+    source_errors: dict[str, str],
+) -> dict[str, Any]:
+    source = str(detail.get("source", "unknown"))
+    if source in source_errors:
+        return {
+            "source": source,
+            "status": "unavailable",
+            "source_kind": "unavailable",
+            "usable": False,
+            "reason": source_errors[source],
+        }
+
+    kind = detail.get("kind")
+    scope = detail.get("scope")
+
+    if kind == "crumb":
+        return {
+            "source": source,
+            "status": "available",
+            "source_kind": "baseline",
+            "usable": True,
+            "reason": "first-step classic fallback",
+        }
+
+    if kind == "root-window-digits" and scope == "exhaustive-like":
+        return {
+            "source": source,
+            "status": "available",
+            "source_kind": "exhaustive-like",
+            "usable": False,
+            "reason": "digit radius reaches exhaustive-like low-side coverage",
+        }
+
+    if kind in {"root-window-fixed", "root-window-digits"} and scope == "bounded-window":
+        return {
+            "source": source,
+            "status": "available",
+            "source_kind": "bounded-window",
+            "usable": True,
+            "reason": "bounded root-window classic scan",
+        }
+
+    return classify_source(source, source_errors)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Classify PET classic scan summary sources by operational policy."
@@ -101,14 +148,26 @@ def main() -> int:
     summary = json.loads(summary_text)
     source_errors = summary.get("source_errors", {})
 
+    discovered_details: dict[str, dict[str, Any]] = {}
     discovered_sources = set(source_errors)
-    for record in summary.get("verified_divisors", []):
-        discovered_sources.update(record.get("sources", []))
 
-    source_policies = [
-        classify_source(source, source_errors)
-        for source in sorted(discovered_sources)
-    ]
+    for record in summary.get("verified_divisors", []):
+        for detail in record.get("source_details", []):
+            source = str(detail.get("source", "unknown"))
+            discovered_details[source] = detail
+            discovered_sources.add(source)
+
+        for source in record.get("sources", []):
+            discovered_sources.add(source)
+
+    source_policies = []
+    for source in sorted(discovered_sources):
+        if source in discovered_details:
+            source_policies.append(
+                classify_source_detail(discovered_details[source], source_errors)
+            )
+        else:
+            source_policies.append(classify_source(source, source_errors))
 
     usable_sources = [
         policy["source"]
