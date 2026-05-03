@@ -91,7 +91,17 @@ echo "  saturation_span = $p_sat_span"
 echo "  saturation_k_range = $p_sat_range"
 echo "  saturation_width = $p_sat_width"
 echo
+dependency="unclassified"
+if [[ "$changed" == "no" && "$extinction" == "no" ]]; then
+  dependency="unchanged"
+elif [[ "$changed" == "yes" && "$extinction" == "no" ]]; then
+  dependency="modulator"
+elif [[ "$changed" == "yes" && "$extinction" == "yes" ]]; then
+  dependency="extinction-driver"
+fi
+
 echo "Delta verdict"
 echo "  changed = $changed"
 echo "  extinction = $extinction"
+echo "  dependency = $dependency"
 echo "  claim = PET mass excitation delta only; this does not discover or prove factors"
