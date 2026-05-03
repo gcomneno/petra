@@ -43,10 +43,10 @@ def band_sort_key(band: dict[str, Any]) -> tuple[int, int, int]:
 
 
 def band_transition_for(transition: str) -> tuple[str, str]:
-    if transition == "DEC":
-        return "DROP", "DEC-as-DROP"
-    if transition == "INC":
-        return "NEW", "INC-as-NEW"
+    if transition in {"DEC", "DEC_PATH", "DROP_PATH"}:
+        return "DROP", f"{transition}-as-DROP"
+    if transition in {"INC", "INC_PATH", "NEW_PATH"}:
+        return "NEW", f"{transition}-as-NEW"
     return transition, transition
 
 
@@ -93,7 +93,14 @@ def proposal_status(transition: str, transition_side: str) -> str:
         return "weak"
     if transition_side in {"fallback", "unknown"}:
         return "weak"
-    if transition_side in {"DEC-as-DROP", "INC-as-NEW"}:
+    if transition_side in {
+        "DEC-as-DROP",
+        "INC-as-NEW",
+        "DEC_PATH-as-DROP",
+        "INC_PATH-as-NEW",
+        "DROP_PATH-as-DROP",
+        "NEW_PATH-as-NEW",
+    }:
         return "partial"
     return "strong"
 
@@ -107,6 +114,14 @@ def proposal_reason(transition: str, transition_side: str) -> str:
         return "exponent transition mapped to DROP-like release band"
     if transition_side == "INC-as-NEW":
         return "exponent transition mapped to NEW-like pressure band"
+    if transition_side == "DEC_PATH-as-DROP":
+        return "exponent transition path mapped to DROP-like release band"
+    if transition_side == "INC_PATH-as-NEW":
+        return "exponent transition path mapped to NEW-like pressure band"
+    if transition_side == "DROP_PATH-as-DROP":
+        return "DROP transition path mapped to DROP-like release band"
+    if transition_side == "NEW_PATH-as-NEW":
+        return "NEW transition path mapped to NEW-like pressure band"
     return "transition-coherent magnetic band selected"
 
 
@@ -126,6 +141,18 @@ def suggested_probe_role(transition: str, transition_side: str) -> str:
 
     if transition == "INC":
         return "inspect INC exponent pressure through NEW-like band"
+
+    if transition == "DEC_PATH":
+        return "inspect DEC exponent path through DROP-like band"
+
+    if transition == "INC_PATH":
+        return "inspect INC exponent path through NEW-like band"
+
+    if transition == "DROP_PATH":
+        return "inspect DROP transition path through DROP-like band"
+
+    if transition == "NEW_PATH":
+        return "inspect NEW transition path through NEW-like band"
 
     return "inspect unresolved transition neighborhood"
 
