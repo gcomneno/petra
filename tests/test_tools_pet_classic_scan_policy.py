@@ -39,6 +39,10 @@ def test_classic_scan_policy_classifies_baseline_bounded_and_exhaustive_sources(
     assert "recommended_sources = root-window-fixed:500" in output
     assert "caution_sources = root-window-digits:5:exhaustive-like" in output
     assert "unavailable_sources = none" in output
+    assert "decision_use = root-window-fixed:500" in output
+    assert "decision_baseline_only = crumb" in output
+    assert "decision_do_not_treat_as_narrow = root-window-digits:5:exhaustive-like" in output
+    assert "decision_unavailable = none" in output
     assert "verified_divisor_count = 3" in output
     assert (
         "claim = PET classic scan policy only; it classifies scan sources and does not verify new divisors"
@@ -68,6 +72,12 @@ def test_classic_scan_policy_json_reports_unavailable_sources() -> None:
     assert payload["recommended_sources"] == ["root-window-fixed:500"]
     assert payload["caution_sources"] == ["root-window-digits:5:exhaustive-like"]
     assert payload["unavailable_sources"] == ["crumb"]
+    assert payload["decision"] == {
+        "use": ["root-window-fixed:500"],
+        "baseline_only": [],
+        "do_not_treat_as_narrow": ["root-window-digits:5:exhaustive-like"],
+        "unavailable": ["crumb"],
+    }
     assert payload["verified_divisor_count"] == 1
     assert payload["source_policies"] == [
         {

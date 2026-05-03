@@ -195,6 +195,13 @@ def main() -> int:
         if policy["status"] == "unavailable"
     ]
 
+    decision = {
+        "use": recommended_sources,
+        "baseline_only": baseline_sources,
+        "do_not_treat_as_narrow": caution_sources,
+        "unavailable": unavailable_sources,
+    }
+
     payload = {
         "n": args.n,
         "fixed_radius": args.fixed_radius,
@@ -206,6 +213,7 @@ def main() -> int:
         "recommended_sources": recommended_sources,
         "caution_sources": caution_sources,
         "unavailable_sources": unavailable_sources,
+        "decision": decision,
         "verified_divisor_count": summary.get("verified_divisor_count", 0),
         "claim": "PET classic scan policy only; it classifies scan sources and does not verify new divisors",
     }
@@ -235,6 +243,10 @@ def main() -> int:
     print(f"recommended_sources = {','.join(recommended_sources) if recommended_sources else 'none'}")
     print(f"caution_sources = {','.join(caution_sources) if caution_sources else 'none'}")
     print(f"unavailable_sources = {','.join(unavailable_sources) if unavailable_sources else 'none'}")
+    print(f"decision_use = {','.join(decision['use']) if decision['use'] else 'none'}")
+    print(f"decision_baseline_only = {','.join(decision['baseline_only']) if decision['baseline_only'] else 'none'}")
+    print(f"decision_do_not_treat_as_narrow = {','.join(decision['do_not_treat_as_narrow']) if decision['do_not_treat_as_narrow'] else 'none'}")
+    print(f"decision_unavailable = {','.join(decision['unavailable']) if decision['unavailable'] else 'none'}")
     print(f"verified_divisor_count = {payload['verified_divisor_count']}")
     print()
     print(f"claim = {payload['claim']}")
