@@ -91,6 +91,40 @@ def add_results(
         record.sources.add(source)
 
 
+def source_detail(source: str) -> dict[str, object]:
+    if source == "crumb":
+        return {
+            "source": source,
+            "kind": "crumb",
+            "scope": "baseline",
+        }
+
+    if source.startswith("root-window-fixed:"):
+        _, raw_radius = source.rsplit(":", maxsplit=1)
+        return {
+            "source": source,
+            "kind": "root-window-fixed",
+            "radius": int(raw_radius),
+            "scope": "bounded-window",
+        }
+
+    if source.startswith("root-window-digits:"):
+        parts = source.split(":")
+        if len(parts) == 3:
+            return {
+                "source": source,
+                "kind": "root-window-digits",
+                "radius_digits": int(parts[1]),
+                "scope": parts[2],
+            }
+
+    return {
+        "source": source,
+        "kind": "unknown",
+        "scope": "unknown",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Summarize PET-guided classic scan verified divisors."
@@ -165,6 +199,10 @@ def main() -> int:
                 "divisor": record.divisor,
                 "cofactor": record.cofactor,
                 "sources": sorted(record.sources),
+                "source_details": [
+                    source_detail(source)
+                    for source in sorted(record.sources)
+                ],
                 "divisor_generator": divisor_generator,
                 "cofactor_generator": cofactor_generator,
                 "role_hint": role_hint(divisor_generator, cofactor_generator),

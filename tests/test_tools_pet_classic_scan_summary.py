@@ -85,19 +85,37 @@ def test_classic_scan_summary_supports_json_output() -> None:
     assert payload["root_window_digit_scope"] == "exhaustive-like"
     assert payload["source_errors"] == {}
     assert payload["verified_divisor_count"] == 3
-    assert payload["verified_divisors"][0] == {
-        "divisor": 3,
-        "cofactor": 1009003027,
-        "sources": [
-            "crumb",
-            "root-window-digits:5:exhaustive-like",
-            "root-window-fixed:500",
-        ],
-        "divisor_generator": "2",
-        "cofactor_generator": "6",
-        "role_hint": "single-leaf divisor",
-        "verified": True,
-    }
+    first_divisor = payload["verified_divisors"][0]
+    assert first_divisor["divisor"] == 3
+    assert first_divisor["cofactor"] == 1009003027
+    assert first_divisor["sources"] == [
+        "crumb",
+        "root-window-digits:5:exhaustive-like",
+        "root-window-fixed:500",
+    ]
+    assert first_divisor["source_details"] == [
+        {
+            "source": "crumb",
+            "kind": "crumb",
+            "scope": "baseline",
+        },
+        {
+            "source": "root-window-digits:5:exhaustive-like",
+            "kind": "root-window-digits",
+            "radius_digits": 5,
+            "scope": "exhaustive-like",
+        },
+        {
+            "source": "root-window-fixed:500",
+            "kind": "root-window-fixed",
+            "radius": 500,
+            "scope": "bounded-window",
+        },
+    ]
+    assert first_divisor["divisor_generator"] == "2"
+    assert first_divisor["cofactor_generator"] == "6"
+    assert first_divisor["role_hint"] == "single-leaf divisor"
+    assert first_divisor["verified"] is True
     assert (
         payload["claim"]
         == "PET-guided classic scan summary only; divisors are accepted only when verified"
@@ -125,17 +143,29 @@ def test_classic_scan_summary_json_reports_unavailable_sources() -> None:
         "crumb": "ERROR: opaque-focused-peel found no matching magnetic bands"
     }
     assert payload["verified_divisor_count"] == 1
-    assert payload["verified_divisors"] == [
-        {
-            "divisor": 7,
-            "cofactor": 7,
-            "sources": [
-                "root-window-digits:5:exhaustive-like",
-                "root-window-fixed:500",
-            ],
-            "divisor_generator": "2",
-            "cofactor_generator": "2",
-            "role_hint": "prime-like split",
-            "verified": True,
-        }
+    assert len(payload["verified_divisors"]) == 1
+    divisor = payload["verified_divisors"][0]
+    assert divisor["divisor"] == 7
+    assert divisor["cofactor"] == 7
+    assert divisor["sources"] == [
+        "root-window-digits:5:exhaustive-like",
+        "root-window-fixed:500",
     ]
+    assert divisor["source_details"] == [
+        {
+            "source": "root-window-digits:5:exhaustive-like",
+            "kind": "root-window-digits",
+            "radius_digits": 5,
+            "scope": "exhaustive-like",
+        },
+        {
+            "source": "root-window-fixed:500",
+            "kind": "root-window-fixed",
+            "radius": 500,
+            "scope": "bounded-window",
+        },
+    ]
+    assert divisor["divisor_generator"] == "2"
+    assert divisor["cofactor_generator"] == "2"
+    assert divisor["role_hint"] == "prime-like split"
+    assert divisor["verified"] is True
