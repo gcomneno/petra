@@ -39,6 +39,11 @@ def main() -> int:
         action="store_true",
         help="pass --flatten to stencil_lens_probe",
     )
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="emit a compact operational hint",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -80,6 +85,16 @@ def main() -> int:
     recommended_lens = extract_value(stencil, "recommended_lens")
     recommended_leaf_count = extract_value(stencil, "recommended_leaf_count")
     recommended_stencil_usage = extract_value(stencil, "recommended_stencil_usage")
+
+    if args.summary:
+        print("PET LENS HINT SUMMARY")
+        print(f"N = {args.n}")
+        print(f"blade_index = {blade_index}")
+        print(f"target_lens = {recommended_lens}")
+        print(f"target_leaf_count = {recommended_leaf_count}")
+        print(f"flatten_first = {flattening_recommended}")
+        print("claim = PET lens hint only; this does not factor N")
+        return 0
 
     print("PET LENS HINT")
     print()
