@@ -142,7 +142,6 @@ def main() -> int:
                 )
                 record["matched_k"].append(k)
                 print(f"candidate_hit = {candidate}")
-                print(f"cofactor = {cofactor}")
                 print("verified = yes")
         else:
             print("candidate_hit = none")
