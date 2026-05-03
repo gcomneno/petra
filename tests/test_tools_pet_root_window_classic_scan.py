@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 
@@ -58,3 +59,52 @@ def test_root_window_classic_scan_supports_radius_digits_policy() -> None:
     assert "cofactor = 70139" in output
     assert "matched_k = 5,6,7" in output
     assert "verified_hit_count = 2" in output
+
+
+def test_root_window_classic_scan_supports_json_output() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_root_window_classic_scan.py",
+            "9081007063",
+            "--json",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["n"] == 9081007063
+    assert payload["source"] == "PET decoded-center lens"
+    assert payload["move"] == "DROP"
+    assert payload["suggested_window"] == {
+        "k_start": 5,
+        "k_end": 7,
+        "k_range": "5..7",
+    }
+    assert payload["radius_policy"] == "fixed"
+    assert payload["radius"] == 500
+    assert payload["radius_digits"] is None
+    assert payload["scan_status"] == "available"
+    assert payload["verified_hit_count"] == 1
+    assert payload["verified_divisors"] == [
+        {
+            "divisor": 277,
+            "cofactor": 32783419,
+            "matched_k": [5, 6, 7],
+            "verified": True,
+        }
+    ]
+    assert payload["scan_results"][0] == {
+        "k": 5,
+        "center": 98,
+        "candidate_hits": [
+            {"divisor": 277, "cofactor": 32783419, "verified": True}
+        ],
+    }
+    assert (
+        payload["claim"]
+        == "PET-guided root-window classic scan only; divisors are accepted only when verified"
+    )

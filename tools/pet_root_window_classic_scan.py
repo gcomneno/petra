@@ -69,6 +69,11 @@ def main() -> int:
         default=None,
         help="Set scan radius to 10^D decimal units.",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON output.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -112,6 +117,122 @@ def main() -> int:
     suggested_window = center_lens.get("suggested_window") or {}
     k_start, k_end, k_range = parse_window(suggested_window)
 
+    claim = "PET-guided root-window classic scan only; divisors are accepted only when verified"
+    radius_policy = "decimal-digits" if args.radius_digits is not None else "fixed"
+    payload: dict[str, Any] = {
+        "n": args.n,
+        "source": "PET decoded-center lens",
+        "move": args.move,
+        "suggested_window": {
+            "k_start": k_start,
+            "k_end": k_end,
+            "k_range": k_range,
+        },
+        "radius_policy": radius_policy,
+        "radius": radius,
+        "radius_digits": args.radius_digits,
+        "scan_results": [],
+        "verified_divisors": [],
+        "verified_hit_count": 0,
+        "claim": claim,
+    }
+
+    if not center_lens.get("center_lens_available"):
+        payload["scan_status"] = "unavailable"
+        payload["reason"] = center_lens.get("reason", "decoded-center lens is not available")
+        if args.json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0
+
+        print("PET ROOT-WINDOW CLASSIC SCAN")
+        print()
+        print(f"N = {args.n}")
+        print("source = PET decoded-center lens")
+        print(f"move = {args.move}")
+        print(f"suggested_window = k[{k_range}]")
+        if args.radius_digits is not None:
+            print("radius_policy = decimal-digits")
+            print(f"radius_digits = {args.radius_digits}")
+        else:
+            print("radius_policy = fixed")
+        print(f"radius = {radius}")
+        print()
+        print("scan_status = unavailable")
+        print(f"reason = {payload['reason']}")
+        print()
+        print(f"claim = {claim}")
+        return 0
+
+    if k_start < 1 or k_end < k_start:
+        payload["scan_status"] = "unavailable"
+        payload["reason"] = "decoded-center lens did not provide a valid suggested window"
+        if args.json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0
+
+        print("PET ROOT-WINDOW CLASSIC SCAN")
+        print()
+        print(f"N = {args.n}")
+        print("source = PET decoded-center lens")
+        print(f"move = {args.move}")
+        print(f"suggested_window = k[{k_range}]")
+        if args.radius_digits is not None:
+            print("radius_policy = decimal-digits")
+            print(f"radius_digits = {args.radius_digits}")
+        else:
+            print("radius_policy = fixed")
+        print(f"radius = {radius}")
+        print()
+        print("scan_status = unavailable")
+        print("reason = decoded-center lens did not provide a valid suggested window")
+        print()
+        print(f"claim = {claim}")
+        return 0
+
+    payload["scan_status"] = "available"
+    hits_by_candidate: dict[int, dict[str, object]] = {}
+
+    for k in range(k_start, k_end + 1):
+        center = integer_nth_root_nearest(args.n, k)
+        hits = scan_window(args.n, center, radius)
+        candidate_hits = [
+            {"divisor": candidate, "cofactor": cofactor, "verified": True}
+            for candidate, cofactor in hits
+        ]
+        payload["scan_results"].append(
+            {
+                "k": k,
+                "center": center,
+                "candidate_hits": candidate_hits,
+            }
+        )
+
+        for candidate, cofactor in hits:
+            record = hits_by_candidate.setdefault(
+                candidate,
+                {"cofactor": cofactor, "matched_k": []},
+            )
+            record["matched_k"].append(k)
+
+    verified_divisors = []
+    for candidate in sorted(hits_by_candidate):
+        record = hits_by_candidate[candidate]
+        verified_divisors.append(
+            {
+                "divisor": candidate,
+                "cofactor": record["cofactor"],
+                "matched_k": record["matched_k"],
+                "verified": True,
+            }
+        )
+
+    payload["verified_divisors"] = verified_divisors
+    payload["verified_hit_count"] = len(verified_divisors)
+
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0
+
     print("PET ROOT-WINDOW CLASSIC SCAN")
     print()
     print(f"N = {args.n}")
@@ -119,44 +240,21 @@ def main() -> int:
     print(f"move = {args.move}")
     print(f"suggested_window = k[{k_range}]")
     if args.radius_digits is not None:
-        print(f"radius_policy = decimal-digits")
+        print("radius_policy = decimal-digits")
         print(f"radius_digits = {args.radius_digits}")
     else:
         print("radius_policy = fixed")
     print(f"radius = {radius}")
     print()
 
-    if not center_lens.get("center_lens_available"):
-        print("scan_status = unavailable")
-        print(f"reason = {center_lens.get('reason', 'decoded-center lens is not available')}")
-        print()
-        print("claim = PET-guided root-window classic scan only; divisors are accepted only when verified")
-        return 0
+    for result in payload["scan_results"]:
+        print(f"k = {result['k']}")
+        print(f"center = {result['center']}")
 
-    if k_start < 1 or k_end < k_start:
-        print("scan_status = unavailable")
-        print("reason = decoded-center lens did not provide a valid suggested window")
-        print()
-        print("claim = PET-guided root-window classic scan only; divisors are accepted only when verified")
-        return 0
-
-    hits_by_candidate: dict[int, dict[str, object]] = {}
-
-    for k in range(k_start, k_end + 1):
-        center = integer_nth_root_nearest(args.n, k)
-        hits = scan_window(args.n, center, radius)
-
-        print(f"k = {k}")
-        print(f"center = {center}")
-
-        if hits:
-            for candidate, cofactor in hits:
-                record = hits_by_candidate.setdefault(
-                    candidate,
-                    {"cofactor": cofactor, "matched_k": []},
-                )
-                record["matched_k"].append(k)
-                print(f"candidate_hit = {candidate}")
+        candidate_hits = result["candidate_hits"]
+        if candidate_hits:
+            for hit in candidate_hits:
+                print(f"candidate_hit = {hit['divisor']}")
                 print("verified = yes")
         else:
             print("candidate_hit = none")
@@ -165,11 +263,10 @@ def main() -> int:
         print()
 
     print("Verified divisors")
-    if hits_by_candidate:
-        for candidate in sorted(hits_by_candidate):
-            record = hits_by_candidate[candidate]
+    if verified_divisors:
+        for record in verified_divisors:
             matched_k = ",".join(str(k) for k in record["matched_k"])
-            print(f"divisor_found = {candidate}")
+            print(f"divisor_found = {record['divisor']}")
             print(f"cofactor = {record['cofactor']}")
             print(f"matched_k = {matched_k}")
             print("verified = yes")
@@ -177,9 +274,9 @@ def main() -> int:
         print("divisor_found = none")
 
     print()
-    print(f"verified_hit_count = {len(hits_by_candidate)}")
+    print(f"verified_hit_count = {len(verified_divisors)}")
     print()
-    print("claim = PET-guided root-window classic scan only; divisors are accepted only when verified")
+    print(f"claim = {claim}")
 
     return 0
 
