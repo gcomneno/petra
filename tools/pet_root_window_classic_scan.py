@@ -63,12 +63,22 @@ def main() -> int:
     parser.add_argument("--max-move-span", type=int, default=5)
     parser.add_argument("--move", default="DROP")
     parser.add_argument("--radius", type=int, default=500)
+    parser.add_argument(
+        "--radius-digits",
+        type=int,
+        default=None,
+        help="Set scan radius to 10^D decimal units.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
         raise SystemExit("pet_root_window_classic_scan expects integers >= 1")
     if args.radius < 0:
         raise SystemExit("--radius expects integers >= 0")
+    if args.radius_digits is not None and args.radius_digits < 0:
+        raise SystemExit("--radius-digits expects integers >= 0")
+
+    radius = 10 ** args.radius_digits if args.radius_digits is not None else args.radius
 
     focused_text = run_command(
         [
@@ -108,7 +118,12 @@ def main() -> int:
     print("source = PET decoded-center lens")
     print(f"move = {args.move}")
     print(f"suggested_window = k[{k_range}]")
-    print(f"radius = {args.radius}")
+    if args.radius_digits is not None:
+        print(f"radius_policy = decimal-digits")
+        print(f"radius_digits = {args.radius_digits}")
+    else:
+        print("radius_policy = fixed")
+    print(f"radius = {radius}")
     print()
 
     if not center_lens.get("center_lens_available"):
@@ -129,7 +144,7 @@ def main() -> int:
 
     for k in range(k_start, k_end + 1):
         center = integer_nth_root_nearest(args.n, k)
-        hits = scan_window(args.n, center, args.radius)
+        hits = scan_window(args.n, center, radius)
 
         print(f"k = {k}")
         print(f"center = {center}")

@@ -32,3 +32,29 @@ def test_root_window_classic_scan_finds_verified_divisor() -> None:
     assert "verified = yes" in output
     assert "verified_hit_count = 1" in output
     assert "claim = PET-guided root-window classic scan only; divisors are accepted only when verified" in output
+
+
+def test_root_window_classic_scan_supports_radius_digits_policy() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_root_window_classic_scan.py",
+            "6345405191",
+            "--radius-digits",
+            "5",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    output = result.stdout
+
+    assert "radius_policy = decimal-digits" in output
+    assert "radius_digits = 5" in output
+    assert "radius = 100000" in output
+    assert "divisor_found = 70139" in output
+    assert "cofactor = 90469" in output
+    assert "divisor_found = 90469" in output
+    assert "cofactor = 70139" in output
+    assert "matched_k = 5,6,7" in output
+    assert "verified_hit_count = 2" in output
