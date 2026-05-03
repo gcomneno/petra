@@ -65,22 +65,23 @@ The representative target is structural, not arithmetical.
     target_generator = 2
     representative_target = unknown
 
-    primary_band = pressure-entry NEW k[1..1]
-    transition_side = fallback
-    proposal_status = weak
-    reason = no direct PET lens transition available
-    suggested_probe_role = inspect unresolved transition neighborhood
-    candidate_window = k[1..1]
+    primary_band = recovery DROP k[2..6]
+    transition_side = DEC-as-DROP
+    proposal_status = partial
+    reason = exponent transition mapped to DROP-like release band
+    suggested_probe_role = inspect DEC exponent release through DROP-like band
+    candidate_window = k[2..6]
     side_band = unknown
     side_window = unknown
 
 Interpretation:
 
-- no direct PET lens transition is available;
-- the proposal falls back to the strongest visible band;
-- the result is explicitly marked as weak.
+- the direct PET lens transition is now detected as `DEC`;
+- `DEC` is not treated as native `DROP`;
+- it is projected onto a `DROP`-like release band;
+- the result is explicitly marked as partial.
 
-This is important because non-flat / power-like cases may require a different transition family, such as a future `DEC` or flattening-aware proposal.
+This is important because non-flat / power-like cases require exponent-aware transitions.
 
 ## Current selection rule
 
@@ -96,10 +97,34 @@ The first conservative rule is:
 5. if no transition-coherent band exists, fall back to a multi-threshold band;
 6. otherwise fall back to the strongest visible band and mark the proposal as weak;
 7. when another transition-coherent band exists, report it as `side_band`;
-8. if no side band exists, report `side_band = unknown`.
+8. if no side band exists, report `side_band = unknown`;
+9. map exponent transitions conservatively:
+   - `DEC` -> `DROP`-like release;
+   - `INC` -> `NEW`-like pressure;
+10. mark exponent-projected proposals as `partial`, not `strong`.
 
 ## Status
 
 This helper is diagnostic.
 
 It is useful for deciding where PET should inspect next, not for claiming a factorization.
+
+## Exponent transition projection
+
+PET transitions can be native or projected.
+
+Native transitions:
+
+    NEW  -> structural pressure
+    DROP -> structural release
+
+Exponent transitions:
+
+    INC -> NEW-like pressure
+    DEC -> DROP-like release
+
+The projection is conservative.
+
+A `DEC-as-DROP` or `INC-as-NEW` proposal is marked as `partial` because the magnetic bands currently expose `NEW` / `DROP` movement, not native `INC` / `DEC` bands.
+
+This avoids pretending that exponent movement and flat leaf movement are identical.
