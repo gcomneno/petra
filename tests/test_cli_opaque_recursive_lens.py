@@ -816,3 +816,68 @@ def test_opaque_recursive_lens_diagnostic_fermat_probe_text_is_monkey_friendly()
     assert "cofactor = 90469" in result.stdout
     assert "verified = yes" in result.stdout
     assert "claim = PET diagnostic classic probe only; this does not factor N unless verified" in result.stdout
+
+def test_opaque_recursive_lens_shape_handoff_verdict_allows_diagnostic_fermat_probe() -> None:
+    n10 = "6345405191"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n10,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    verdict = data["shape_handoff_verdict"]
+    assert verdict["available"] is True
+    assert verdict["mode"] == "diagnostic-only"
+    assert verdict["best_signal"] == "single-subedge-anchor-candidate"
+    assert verdict["anchor_source"] == "single-subedge-anchor-candidate"
+    assert verdict["anchor_kind"] == "fermat-center"
+    assert verdict["classic_ready"] is False
+    assert verdict["diagnostic_classic_allowed"] is True
+    assert verdict["recommended_method"] == "fermat-center-scan"
+    assert verdict["center"] == 79658
+    assert verdict["center_lens_kind"] == "flat-two-leaf-center"
+    assert verdict["risk"] == "no twin-subedge convergence"
+    assert "does not factor N" in verdict["claim"]
+
+
+def test_opaque_recursive_lens_shape_handoff_verdict_blocks_structural_only_case() -> None:
+    n50b = "2000000000900146713649308342226750098973706617969"
+
+    data = _run_json(
+        "opaque-recursive-lens",
+        n50b,
+        "--max-generator-count",
+        "20",
+        "--excluded-support-limit",
+        "1000",
+        "--max-move-span",
+        "5",
+        "--depth",
+        "6",
+        "--branch-recursion",
+        "NEW",
+        "--composite-edge-peel",
+    )
+
+    verdict = data["shape_handoff_verdict"]
+    assert verdict["available"] is True
+    assert verdict["mode"] == "structural-only"
+    assert verdict["anchor_kind"] == "none"
+    assert verdict["classic_ready"] is False
+    assert verdict["diagnostic_classic_allowed"] is False
+    assert verdict["recommended_method"] is None
+    assert verdict["center"] is None
+    assert verdict["center_lens_kind"] is None
+    assert verdict["risk"] == "no PET anchor authorized for classic probing"
+    assert "does not factor N" in verdict["claim"]

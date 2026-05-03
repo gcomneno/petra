@@ -4082,6 +4082,102 @@ def _opaque_recursive_lens_branch_verdict(
     }
 
 
+def _opaque_recursive_lens_shape_handoff_verdict(
+    branch_verdict: dict,
+    subedge_recursion_payload: dict | None,
+) -> dict:
+    claim = "PET shape handoff verdict only; this does not factor N"
+
+    if not branch_verdict or not branch_verdict.get("available"):
+        return {
+            "available": False,
+            "mode": "unavailable",
+            "classic_ready": False,
+            "diagnostic_classic_allowed": False,
+            "recommended_method": None,
+            "reason": "no usable PET branch verdict is available",
+            "claim": claim,
+        }
+
+    single = None
+    if subedge_recursion_payload and subedge_recursion_payload.get("available"):
+        single = subedge_recursion_payload.get("single_subedge_anchor_candidate")
+
+    if single and single.get("available"):
+        diagnostic_allowed = (
+            single["classic_bridge_recommendation"] == "diagnostic-only"
+        )
+        center_lens_kind = single.get("center_lens_kind")
+        if diagnostic_allowed and center_lens_kind == "flat-two-leaf-center":
+            recommended_method = "fermat-center-scan"
+            anchor_kind = "fermat-center"
+        elif diagnostic_allowed:
+            recommended_method = "local-divisibility-scan"
+            anchor_kind = "local-divisor-window"
+        else:
+            recommended_method = None
+            anchor_kind = "none"
+
+        return {
+            "available": True,
+            "mode": "diagnostic-only" if diagnostic_allowed else "structural-only",
+            "best_signal": branch_verdict["best_signal"],
+            "anchor_source": "single-subedge-anchor-candidate",
+            "anchor_kind": anchor_kind,
+            "anchor_status": single["anchor_status"],
+            "classic_ready": False,
+            "diagnostic_classic_allowed": diagnostic_allowed,
+            "recommended_method": recommended_method,
+            "center": single.get("center_nearest_integer"),
+            "center_lens_kind": center_lens_kind,
+            "binding_strength": single["binding_strength"],
+            "risk": "no twin-subedge convergence",
+            "reason": single["reason"],
+            "claim": claim,
+        }
+
+    if branch_verdict.get("classic_ready"):
+        return {
+            "available": True,
+            "mode": "classic-ready",
+            "best_signal": branch_verdict["best_signal"],
+            "anchor_source": branch_verdict["source"],
+            "anchor_kind": "classic-anchor",
+            "anchor_status": branch_verdict["anchor_status"],
+            "classic_ready": True,
+            "diagnostic_classic_allowed": False,
+            "recommended_method": None,
+            "center": None,
+            "center_lens_kind": None,
+            "binding_strength": branch_verdict["binding_strength"],
+            "risk": "requires explicit classic handoff verification",
+            "reason": branch_verdict["reason"],
+            "claim": claim,
+        }
+
+    return {
+        "available": True,
+        "mode": (
+            "weak"
+            if branch_verdict.get("anchor_status") == "weak"
+            else "structural-only"
+        ),
+        "best_signal": branch_verdict.get("best_signal"),
+        "anchor_source": branch_verdict.get("source"),
+        "anchor_kind": "none",
+        "anchor_status": branch_verdict.get("anchor_status"),
+        "classic_ready": False,
+        "diagnostic_classic_allowed": False,
+        "recommended_method": None,
+        "center": None,
+        "center_lens_kind": None,
+        "binding_strength": branch_verdict.get("binding_strength"),
+        "risk": "no PET anchor authorized for classic probing",
+        "reason": branch_verdict.get("reason"),
+        "claim": claim,
+    }
+
+
 def _opaque_recursive_lens_diagnostic_classic_probe(
     n: int,
     subedge_recursion_payload: dict | None,
@@ -4490,6 +4586,11 @@ def _opaque_recursive_lens(
         else None
     )
 
+    shape_handoff_verdict = _opaque_recursive_lens_shape_handoff_verdict(
+        branch_verdict,
+        subedge_recursion_payload,
+    )
+
     data = {
         "n": n,
         "digits": len(str(n)),
@@ -4509,6 +4610,7 @@ def _opaque_recursive_lens(
         "composite_edge_peel_payload": composite_edge_peel_payload,
         "subedge_recursion_payload": subedge_recursion_payload,
         "branch_verdict": branch_verdict,
+        "shape_handoff_verdict": shape_handoff_verdict,
         "diagnostic_classic_probe": diagnostic_classic_probe,
         "diagnostic_classic_probe_payload": diagnostic_classic_probe_payload,
         "recursive_classic_handoff": recursive_classic_handoff,
