@@ -125,6 +125,11 @@ echo "claim = PET diagnostic pipeline only; this does not factor N unless classi
 section "0. pet-lens-hint"
 tools/pet_lens_hint.py "$N" \
   --schedule-limit 8 \
+  --max-leaves 8 \
+  --summary
+
+section "0b. pet-lens-candidates"
+tools/pet_lens_candidates.py "$N" \
   --max-leaves 8
 
 section "1. opaque-mass-response --bands"
