@@ -35,6 +35,8 @@ def test_classic_scan_policy_classifies_baseline_bounded_and_exhaustive_sources(
     assert "reason = digit radius reaches exhaustive-like low-side coverage" in output
 
     assert "usable_sources = crumb,root-window-fixed:500" in output
+    assert "baseline_sources = crumb" in output
+    assert "recommended_sources = root-window-fixed:500" in output
     assert "caution_sources = root-window-digits:5:exhaustive-like" in output
     assert "unavailable_sources = none" in output
     assert "verified_divisor_count = 3" in output
@@ -62,6 +64,8 @@ def test_classic_scan_policy_json_reports_unavailable_sources() -> None:
     assert payload["n"] == 49
     assert payload["root_window_digit_scope"] == "exhaustive-like"
     assert payload["usable_sources"] == ["root-window-fixed:500"]
+    assert payload["baseline_sources"] == []
+    assert payload["recommended_sources"] == ["root-window-fixed:500"]
     assert payload["caution_sources"] == ["root-window-digits:5:exhaustive-like"]
     assert payload["unavailable_sources"] == ["crumb"]
     assert payload["verified_divisor_count"] == 1

@@ -115,6 +115,16 @@ def main() -> int:
         for policy in source_policies
         if policy["usable"]
     ]
+    baseline_sources = [
+        policy["source"]
+        for policy in source_policies
+        if policy["source_kind"] == "baseline"
+    ]
+    recommended_sources = [
+        policy["source"]
+        for policy in source_policies
+        if policy["source_kind"] == "bounded-window"
+    ]
     caution_sources = [
         policy["source"]
         for policy in source_policies
@@ -133,6 +143,8 @@ def main() -> int:
         "root_window_digit_scope": summary.get("root_window_digit_scope"),
         "source_policies": source_policies,
         "usable_sources": usable_sources,
+        "baseline_sources": baseline_sources,
+        "recommended_sources": recommended_sources,
         "caution_sources": caution_sources,
         "unavailable_sources": unavailable_sources,
         "verified_divisor_count": summary.get("verified_divisor_count", 0),
@@ -160,6 +172,8 @@ def main() -> int:
         print()
 
     print(f"usable_sources = {','.join(usable_sources) if usable_sources else 'none'}")
+    print(f"baseline_sources = {','.join(baseline_sources) if baseline_sources else 'none'}")
+    print(f"recommended_sources = {','.join(recommended_sources) if recommended_sources else 'none'}")
     print(f"caution_sources = {','.join(caution_sources) if caution_sources else 'none'}")
     print(f"unavailable_sources = {','.join(unavailable_sources) if unavailable_sources else 'none'}")
     print(f"verified_divisor_count = {payload['verified_divisor_count']}")
