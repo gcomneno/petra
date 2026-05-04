@@ -1,40 +1,17 @@
-import json
+#!/usr/bin/env python3
+from __future__ import annotations
+
+from pathlib import Path
+import runpy
 import sys
 
-from collections import Counter
+TARGET = Path(__file__).resolve().parent / "research" / "distinct_shapes.py"
+RESEARCH_DIR = TARGET.parent
 
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
-def normalize(node_list):
-    shape = []
-
-    for node in node_list:
-        exp = node["e"]
-
-        if exp is None:
-            shape.append(("p", None))
-        else:
-            shape.append(("p", normalize(exp)))
-
-    return tuple(sorted(shape, key=str))
-
-shapes = Counter()
-
-path = sys.argv[1]
-with open(path) as f:
-    for line in f:
-        row = json.loads(line)
-
-        shape = normalize(row["pet"])
-        shapes[shape] += 1
-
-
-print("distinct shapes:", len(shapes))
-print()
-
-total = sum(shapes.values())
-
-for shape,count in shapes.most_common(10):
-    pct = 100 * count / total
-    print()
-    print(f"{count:8d}  {pct:6.2f}%")
-    print(shape)
+if __name__ == "__main__":
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))

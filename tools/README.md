@@ -103,22 +103,33 @@ not be removed without replacing their callers and tests.
 
 ## Stable tooling
 
-- `atlas_summary.py` — atlas-style summary generation used by bounded reports
-- `cluster_families_disjoint.py` — compatibility wrapper for the disjoint family
+Stable report tooling now lives under `tools/research/`.
+
+Compatibility wrappers remain in `tools/` for existing scripts, tests, and
+documentation examples:
+
+- `research/atlas_summary.py` — atlas-style summary generation used by bounded reports
+- `research/cluster_families_disjoint.py` — compatibility wrapper for the disjoint family
   benchmark tooling; canonical entry point: `pet families benchmark-disjoint`
 
 ## Dataset and report helpers
 
-- `cluster_families.py` — related family-clustering tooling
-- `distinct_shapes.py` — distinct-shape extraction over bounded ranges
-- `height_distribution.py` — PET height distribution over bounded ranges
-- `shape_entropy.py` — entropy-style summaries over PET shape datasets
-- `shape_count_fast.py` — fast shape counting utility
-- `shape_first_occurrence.py` — first-occurrence reporting for PET shapes
-- `scan_query.py` — filtering and grouped counts over PET scan JSONL artifacts
-- `pet_table.py` — PET table generation from integer datasets
-- `pet_profile_range.py` — PET profile exploration over numeric ranges
-- `pet_family_combinations.py` — family-combination generation/counting in ranges
+Dataset/report research helpers live under `tools/research/`.
+
+Compatibility wrappers remain in `tools/` for existing scripts, tests, and
+documentation examples:
+
+- `research/cluster_families.py` — related family-clustering tooling
+- `research/distinct_shapes.py` — distinct-shape extraction over bounded ranges
+- `research/height_distribution.py` — PET height distribution over bounded ranges
+- `research/shape_entropy.py` — entropy-style summaries over PET shape datasets
+- `research/shape_count_fast.py` — fast shape counting utility
+- `research/shape_first_occurrence.py` — first-occurrence reporting for PET shapes
+- `research/scan_query.py` — filtering and grouped counts over PET scan JSONL artifacts
+- `research/pet_table.py` — PET table generation from integer datasets
+- `research/pet_profile_range.py` — PET profile exploration over numeric ranges
+- `research/pet_family_combinations.py` — family-combination generation/counting in ranges
+- `research/exponent_shape_trace.py` — exponent-shape trace reporting over known ranges
 
 ## PET-METICA and shape research tooling
 

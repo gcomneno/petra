@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
-"""Small operator-side query helper for PET scan JSONL artifacts."""
+from __future__ import annotations
 
-from pet.query import main
+from pathlib import Path
+import runpy
+import sys
 
+TARGET = Path(__file__).resolve().parent / "research" / "scan_query.py"
+RESEARCH_DIR = TARGET.parent
+
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))

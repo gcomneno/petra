@@ -1,26 +1,17 @@
-"""
-Compatibility wrapper for the disjoint family benchmark.
-
-The canonical implementation now lives in src/pet/families.py
-and is exposed through:
-
-    pet families benchmark-disjoint
-"""
-
+#!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
-import os
+from pathlib import Path
+import runpy
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+TARGET = Path(__file__).resolve().parent / "research" / "cluster_families_disjoint.py"
+RESEARCH_DIR = TARGET.parent
 
-from pet.families import cmd_benchmark_disjoint
-
-
-def main() -> int:
-    return cmd_benchmark_disjoint(argparse.Namespace())
-
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))

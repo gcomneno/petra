@@ -1,43 +1,17 @@
-import json
-import math
-import sys
+#!/usr/bin/env python3
+from __future__ import annotations
+
 from pathlib import Path
-from collections import Counter
+import runpy
+import sys
 
-INPUT_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("docs/reports/data/scan-2-1000000.jsonl")
+TARGET = Path(__file__).resolve().parent / "research" / "shape_entropy.py"
+RESEARCH_DIR = TARGET.parent
 
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
-def normalize(node_list):
-    shape = []
-
-    for node in node_list:
-        exp = node["e"]
-
-        if exp is None:
-            shape.append(("p", None))
-        else:
-            shape.append(("p", normalize(exp)))
-
-    return tuple(sorted(shape, key=str))
-
-
-shapes = Counter()
-
-with INPUT_FILE.open(encoding="utf-8") as f:
-    for line in f:
-        row = json.loads(line)
-
-        shape = normalize(row["pet"])
-        shapes[shape] += 1
-
-
-total = sum(shapes.values())
-
-H = 0
-
-for count in shapes.values():
-    p = count / total
-    H -= p * math.log(p)
-
-print("shape entropy:", H)
-print("max entropy:", math.log(len(shapes)))
+if __name__ == "__main__":
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))

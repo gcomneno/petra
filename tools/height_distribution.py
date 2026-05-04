@@ -1,22 +1,17 @@
-import json
-import sys
+#!/usr/bin/env python3
+from __future__ import annotations
+
 from pathlib import Path
-from collections import Counter
+import runpy
+import sys
 
-INPUT_FILE = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("docs/reports/data/scan-2-1000000.jsonl")
+TARGET = Path(__file__).resolve().parent / "research" / "height_distribution.py"
+RESEARCH_DIR = TARGET.parent
 
-height_dist = Counter()
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
-with INPUT_FILE.open(encoding="utf-8") as f:
-    for line in f:
-        row = json.loads(line)
-        height_dist[row["metrics"]["height"]] += 1
-
-total = sum(height_dist.values())
-
-print("height distribution")
-print()
-
-for h in sorted(height_dist):
-    pct = 100 * height_dist[h] / total
-    print(h, height_dist[h], f"{pct:.2f}%")
+if __name__ == "__main__":
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))
