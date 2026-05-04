@@ -155,6 +155,24 @@ def main() -> int:
         print("claim = PET classic handoff route only; classic verification required")
         return 0
 
+    if policy == "operator-neighborhood-check":
+        suggested_parts = [
+            "python",
+            "-m",
+            "pet.cli",
+            "opaque-probe",
+            str(args.n),
+            "--trial-limit",
+            selected_backbone_order,
+        ]
+        print("route_status = available")
+        print("route_kind = operator-neighborhood-check")
+        print("reason = near PET shape; run classic probe bounded by selected operator neighborhood")
+        print(f"suggested_command = {command_text(suggested_parts)}")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")

@@ -64,6 +64,19 @@ def test_classic_handoff_route_supports_wide_exact_backbone_policy() -> None:
     assert "route_kind = fork-follow-rescan" not in output
 
 
+def test_classic_handoff_route_supports_near_shape_operator_policy() -> None:
+    output = run_tool(9999999999)
+
+    assert "proposal_race_shape_diagnostic = near-shape" in output
+    assert "proposal_selected_operator_sequence = INC (0,)" in output
+    assert "classic_probe_policy = operator-neighborhood-check" in output
+    assert "route_status = available" in output
+    assert "route_kind = operator-neighborhood-check" in output
+    assert "reason = near PET shape; run classic probe bounded by selected operator neighborhood" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 9999999999 --trial-limit 5" in output
+    assert "route_kind = fork-follow-rescan" not in output
+
+
 def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
     import importlib.util
     from pathlib import Path
