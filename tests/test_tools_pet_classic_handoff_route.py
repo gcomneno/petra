@@ -36,3 +36,23 @@ def test_classic_handoff_route_follows_drop_branch_to_boundary_entry() -> None:
     assert "recommended_next_lens = rescan-branch-window" in output
     assert "--move NEW --kind boundary-entry" in output
     assert "claim = PET classic handoff route only; classic verification required" in output
+
+
+def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    module_path = Path("tools/pet_classic_handoff_route.py")
+    spec = importlib.util.spec_from_file_location("pet_classic_handoff_route", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.classic_probe_policy("atomic-exact") == "primality-check-only"
+    assert module.classic_probe_policy("narrow-deep") == "power-like-local-check"
+    assert module.classic_probe_policy("wide-exact") == "backbone-wide-structural-check"
+    assert module.classic_probe_policy("near-shape") == "operator-neighborhood-check"
+    assert module.classic_probe_policy("complex-border") == "existing-route-fallback"
+    assert module.classic_probe_policy("unknown") == "existing-route-fallback"
