@@ -67,19 +67,19 @@ def digits_in_base(n: int, base: int) -> list[int]:
     return list(reversed(digits))
 
 
-def digit_band_bounds(digits: int, base: int) -> tuple[int, int]:
-    lower = base ** (digits - 1)
+def digit_shadow_band_bounds(digits: int, base: int) -> tuple[int, int]:
+    lower = 0
     upper = (base ** digits) - 1
     return lower, upper
 
 
-def band_position(n: int, lower: int, upper: int) -> float:
+def digit_shadow_position(n: int, lower: int, upper: int) -> float:
     if upper == lower:
         return 0.0
     return (n - lower) / (upper - lower)
 
 
-def weight_band_zone(position: float) -> str:
+def digit_shadow_zone(position: float) -> str:
     if position < 1 / 3:
         return "low"
     if position < 2 / 3:
@@ -136,9 +136,9 @@ def main() -> int:
         raise SystemExit("--base expects integers >= 2")
 
     n_digits = digit_count(args.n, args.base)
-    band_min, band_max = digit_band_bounds(n_digits, args.base)
-    n_band_position = band_position(args.n, band_min, band_max)
-    n_weight_band_zone = weight_band_zone(n_band_position)
+    band_min, band_max = digit_shadow_band_bounds(n_digits, args.base)
+    n_shadow_position = digit_shadow_position(args.n, band_min, band_max)
+    n_digit_shadow_zone = digit_shadow_zone(n_shadow_position)
 
     digits = digits_in_base(args.n, args.base)
     counts = Counter(digits)
@@ -186,9 +186,9 @@ def main() -> int:
     print("Input metrics")
     print(f"base = {args.base}")
     print(f"n_digits = {n_digits}")
-    print(f"weight_band = {band_min}..{band_max}")
-    print(f"weight_band_position = {n_band_position:.3f}")
-    print(f"weight_band_zone = {n_weight_band_zone}")
+    print(f"digit_shadow_band = {band_min:0{n_digits}d}..{band_max}")
+    print(f"digit_shadow_position = {n_shadow_position:.3f}")
+    print(f"digit_shadow_zone = {n_digit_shadow_zone}")
     print(f"digit_unique_count = {digit_unique_count}")
     print(f"max_digit_frequency = {max_digit_frequency}")
     print(f"digit_repetition_ratio = {digit_repetition_ratio:.3f}")

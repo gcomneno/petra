@@ -49,9 +49,9 @@ def test_backbone_selection_for_repeated_low_band_two_digit_input() -> None:
 
     assert_common_backbone_selection(output, 11)
 
-    assert "weight_band = 10..99" in output
-    assert "weight_band_position = 0.011" in output
-    assert "weight_band_zone = low" in output
+    assert "digit_shadow_band = 00..99" in output
+    assert "digit_shadow_position = 0.111" in output
+    assert "digit_shadow_zone = low" in output
 
     assert "n_already_minimal = no" in output
     assert "n_child_generators = [1]" in output
@@ -65,9 +65,9 @@ def test_backbone_selection_for_repeated_mid_band_two_digit_input() -> None:
 
     assert_common_backbone_selection(output, 55)
 
-    assert "weight_band = 10..99" in output
-    assert "weight_band_position = 0.506" in output
-    assert "weight_band_zone = mid" in output
+    assert "digit_shadow_band = 00..99" in output
+    assert "digit_shadow_position = 0.556" in output
+    assert "digit_shadow_zone = mid" in output
 
     assert "n_already_minimal = no" in output
     assert "n_child_generators = [1, 1]" in output
@@ -81,9 +81,9 @@ def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
 
     assert_common_backbone_selection(output, 99)
 
-    assert "weight_band = 10..99" in output
-    assert "weight_band_position = 1.000" in output
-    assert "weight_band_zone = high" in output
+    assert "digit_shadow_band = 00..99" in output
+    assert "digit_shadow_position = 1.000" in output
+    assert "digit_shadow_zone = high" in output
 
     assert "n_already_minimal = no" in output
     assert "n_child_generators = [2, 1]" in output
