@@ -281,5 +281,38 @@
       "101": "prime-like split",
       "103": "prime-like split"
     }
+  },
+  {
+    "n": 100160063,
+    "label": "semiprime_no_recommended_sources_baseline_and_caution_only",
+    "expected_verified_divisors": [
+      10007,
+      10009
+    ],
+    "expected_policy": {
+      "baseline_sources": [
+        "crumb"
+      ],
+      "recommended_sources": [],
+      "caution_sources": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable_sources": []
+    },
+    "limitation": "verified semiprime split, but no recommended bounded-window source; crumb is baseline and digit radius is exhaustive-like",
+    "expected_decision": {
+      "use": [],
+      "baseline_only": [
+        "crumb"
+      ],
+      "do_not_treat_as_narrow": [
+        "root-window-digits:5:exhaustive-like"
+      ],
+      "unavailable": []
+    },
+    "expected_role_hints": {
+      "10007": "prime-like split",
+      "10009": "prime-like split"
+    }
   }
 ]
