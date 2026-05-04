@@ -46,8 +46,8 @@ def classic_probe_policy(shape_diagnostic: str) -> str:
         "narrow-deep": "power-like-local-check",
         "wide-exact": "backbone-wide-structural-check",
         "near-shape": "operator-neighborhood-check",
-        "complex-border": "existing-route-fallback",
-    }.get(shape_diagnostic, "existing-route-fallback")
+        "complex-border": "complex-border-route-needed",
+    }.get(shape_diagnostic, "route-needed")
 
 
 def main() -> int:

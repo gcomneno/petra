@@ -24,7 +24,7 @@ def test_classic_handoff_route_follows_drop_branch_to_boundary_entry() -> None:
     assert "proposal_selected_backbone_order = " in output
     assert "proposal_race_shape_diagnostic = " in output
     assert "proposal_selected_operator_sequence = " in output
-    assert "classic_probe_policy = existing-route-fallback" in output
+    assert "classic_probe_policy = complex-border-route-needed" in output
     assert "route_status = available" in output
     assert "route_kind = fork-follow-rescan" in output
     assert "route_branch = DROP" in output
@@ -54,5 +54,5 @@ def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
     assert module.classic_probe_policy("narrow-deep") == "power-like-local-check"
     assert module.classic_probe_policy("wide-exact") == "backbone-wide-structural-check"
     assert module.classic_probe_policy("near-shape") == "operator-neighborhood-check"
-    assert module.classic_probe_policy("complex-border") == "existing-route-fallback"
-    assert module.classic_probe_policy("unknown") == "existing-route-fallback"
+    assert module.classic_probe_policy("complex-border") == "complex-border-route-needed"
+    assert module.classic_probe_policy("unknown") == "route-needed"
