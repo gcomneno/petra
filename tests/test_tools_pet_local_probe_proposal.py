@@ -39,9 +39,9 @@ def assert_common_backbone_selection(output: str, n: int) -> None:
     assert "selected_backbone_child_generators = [1, 1]" in output
     assert "selected_backbone_signature = [[], []]" in output
 
-    assert "next_stage = backbone-relative localization" in output
+    assert "next_stage = backbone-guided operator probe" in output
     assert "next_stage_status = pending" in output
-    assert "next_stage_note = operator signal search comes after backbone-relative localization" in output
+    assert "next_stage_operators = DROP, NEW, DEC, INC" in output
     assert "claim = PET backbone selection prototype only; this does not factor N" in output
 
 
