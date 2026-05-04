@@ -94,6 +94,7 @@ def main() -> int:
     selected_backbone_order = extract_value(proposal, "selected_backbone_order")
     race_shape_diagnostic = extract_value(proposal, "race_shape_diagnostic")
     selected_operator_sequence = extract_value(proposal, "selected_operator_sequence")
+    composite_border_hint = extract_value(proposal, "composite_border_hint")
     policy = classic_probe_policy(race_shape_diagnostic)
 
     print("PET CLASSIC HANDOFF ROUTE")
@@ -107,6 +108,7 @@ def main() -> int:
     print(f"proposal_selected_backbone_order = {selected_backbone_order}")
     print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
+    print(f"proposal_composite_border_hint = {composite_border_hint}")
     print(f"classic_probe_policy = {policy}")
     print()
 
@@ -205,7 +207,14 @@ def main() -> int:
             "20",
         ]
         print("route_status = available")
-        if transition_available == "yes" and transition == "DROP":
+        if (
+            composite_border_hint == "balanced-flat-border"
+            and transition_available == "yes"
+            and transition == "DROP"
+        ):
+            print("route_kind = balanced-flat-border-lens-drop-classic-probe")
+            print("reason = balanced flat PET border has a DROP lens transition; run conservative classic residual probe")
+        elif transition_available == "yes" and transition == "DROP":
             print("route_kind = complex-border-lens-drop-classic-probe")
             print("reason = complex border PET shape has a DROP lens transition; run conservative classic residual probe")
         else:

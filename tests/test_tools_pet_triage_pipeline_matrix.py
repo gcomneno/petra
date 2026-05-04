@@ -59,7 +59,7 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
             "complex-border",
             "complex-border-route-needed",
             "available",
-            "complex-border-lens-drop-classic-probe",
+            "balanced-flat-border-lens-drop-classic-probe",
             "python -m pet.cli opaque-probe 3027009081 --trial-limit 20",
         ),
     ]
@@ -82,6 +82,8 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
         assert f"classic_probe_policy = {expected_policy}" in output
         assert f"route_status = {expected_status}" in output
         assert f"route_kind = {expected_route_kind}" in output
+        if expected_diagnostic == "complex-border":
+            assert "proposal_composite_border_hint = balanced-flat-border" in output
 
         assert f"suggested_command = {expected_command}" in output
 
