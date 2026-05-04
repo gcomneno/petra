@@ -27,7 +27,8 @@ target-directed candidate search.
 
 The current canonical operator-side workflow is the PET triage pipeline:
 
-- `pet_triage_pipeline.sh` — canonical PET triage pipeline.
+- `core/pet_triage_pipeline.sh` — canonical PET triage pipeline implementation.
+- `pet_triage_pipeline.sh` — compatibility wrapper that delegates to `core/pet_triage_pipeline.sh`.
 - `peelator.sh` — compatibility wrapper that delegates to `pet_triage_pipeline.sh`.
 
 The triage pipeline follows this order:
@@ -46,19 +47,22 @@ The core contract is:
 
 ## Core PET triage tools
 
-These tools are part of the current PET-policy-first flow:
+These tools are part of the current PET-policy-first flow and live under
+`tools/core/` unless otherwise noted:
 
-- `pet_local_probe_proposal.py` — single-number PET race diagnostic report.
-- `pet_backbone_race.py` — PET-only backbone race selection.
-- `pet_backbone_race_matrix.py` — batch matrix for backbone race diagnostics.
-- `pet_classic_handoff_route.py` — maps PET shape diagnostics to classic probe policies.
+- `core/pet_local_probe_proposal.py` — single-number PET race diagnostic report.
+- `core/pet_backbone_race.py` — PET-only backbone race selection.
+- `core/pet_backbone_race_matrix.py` — batch matrix for backbone race diagnostics.
+- `core/pet_classic_handoff_route.py` — maps PET shape diagnostics to classic probe policies.
 - `classic/pet_classic_scan_summary.py` — summarizes verified classic divisors from PET-guided scans.
 - `classic/pet_classic_scan_policy.py` — classifies classic scan sources and policy status.
-- `pet_triage_pipeline.sh` — canonical triage pipeline.
+- `core/pet_triage_pipeline.sh` — canonical triage pipeline.
 
 ## Compatibility wrappers
 
-- `peelator.sh` — legacy command name kept for compatibility; delegates to
+- `pet_triage_pipeline.sh` — legacy root-level entry point kept for compatibility;
+  delegates to `core/pet_triage_pipeline.sh`.
+- `peelator.sh` — older command name kept for compatibility; delegates to
   `pet_triage_pipeline.sh`.
 
 ## Legacy diagnostics
