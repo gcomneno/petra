@@ -5,6 +5,7 @@ import argparse
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 
 def run_command(args: list[str]) -> str:
@@ -60,22 +61,30 @@ def main() -> int:
     parser.add_argument("--excluded-support-limit", type=int, default=16)
     parser.add_argument("--max-move-span", type=int, default=5)
     parser.add_argument("--handoff-radius", type=int, default=100)
+    parser.add_argument(
+        "--proposal-file",
+        type=Path,
+        help="Reuse a precomputed pet_local_probe_proposal output instead of recomputing it.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
         raise SystemExit("pet_classic_handoff_route expects integers >= 1")
 
-    proposal = run_command(
-        [
-            sys.executable,
-            "tools/pet_local_probe_proposal.py",
-            str(args.n),
-            "--operator-depth",
-            "auto",
-            "--backbone-selection",
-            "race",
-        ]
-    )
+    if args.proposal_file is None:
+        proposal = run_command(
+            [
+                sys.executable,
+                "tools/pet_local_probe_proposal.py",
+                str(args.n),
+                "--operator-depth",
+                "auto",
+                "--backbone-selection",
+                "race",
+            ]
+        )
+    else:
+        proposal = args.proposal_file.read_text(encoding="utf-8")
 
     transition = extract_value(proposal, "transition")
     transition_side = extract_value(proposal, "transition_side")

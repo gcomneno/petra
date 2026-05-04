@@ -152,11 +152,14 @@ echo "legacy_fork_follow = ${FORK_FOLLOW:-disabled}"
 echo
 echo "claim = PET triage pipeline only; classic stages verify divisors only when explicitly reported"
 
+proposal_file="$(mktemp)"
+trap 'rm -f "$proposal_file"' EXIT
+
 section "0. PET race diagnostic"
-tools/pet_local_probe_proposal.py "$N"   --operator-depth auto   --backbone-selection race
+tools/pet_local_probe_proposal.py "$N"   --operator-depth auto   --backbone-selection race | tee "$proposal_file"
 
 section "1. PET classic handoff policy"
-tools/pet_classic_handoff_route.py "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"
+tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"
 
 section "2. PET verified divisor summary"
 run_optional tools/pet_classic_scan_summary.py "$N"

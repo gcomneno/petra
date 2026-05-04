@@ -14,6 +14,22 @@ def run_tool(n: int) -> str:
     return result.stdout
 
 
+def run_tool_with_proposal_file(n: int, proposal_file: str) -> str:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_classic_handoff_route.py",
+            str(n),
+            "--proposal-file",
+            proposal_file,
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout
+
+
 def test_classic_handoff_route_reports_policy_without_legacy_fallback() -> None:
     output = run_tool(3027009081)
 
@@ -95,3 +111,31 @@ def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
     assert module.classic_probe_policy("near-shape") == "operator-neighborhood-check"
     assert module.classic_probe_policy("complex-border") == "complex-border-route-needed"
     assert module.classic_probe_policy("unknown") == "route-needed"
+
+def test_classic_handoff_route_can_reuse_precomputed_proposal_file(tmp_path) -> None:
+    proposal = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_local_probe_proposal.py",
+            "10007",
+            "--operator-depth",
+            "auto",
+            "--backbone-selection",
+            "race",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout
+
+    proposal_file = tmp_path / "proposal.txt"
+    proposal_file.write_text(proposal, encoding="utf-8")
+
+    output = run_tool_with_proposal_file(10007, str(proposal_file))
+
+    assert "proposal_race_shape_diagnostic = atomic-exact" in output
+    assert "classic_probe_policy = primality-check-only" in output
+    assert "route_status = available" in output
+    assert "route_kind = primality-check-only" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 10007 --trial-limit 2" in output
+
