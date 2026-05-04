@@ -154,3 +154,28 @@ def test_iterative_operator_probe_matches_three_digit_same_mass_case_high() -> N
     assert "probed_backbone_signature = [[], [[]]]" in output
     assert "probed_backbone_relation_to_n = same-signature" in output
     assert "probed_backbone_fit_against_n = result-matches" in output
+
+
+def test_operator_depth_can_match_deeper_power_shapes() -> None:
+    output = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_local_probe_proposal.py",
+            "16",
+            "--operator-depth",
+            "3",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout
+
+    assert "N = 16" in output
+    assert "n_signature = [[[[]]]]" in output
+    assert "shape_fit = backbone-underestimates" in output
+    assert "operator_probe_depth_limit = 3" in output
+    assert "operator_probe_result = matched" in output
+    assert "selected_operator_sequence = INC (0,) -> INC (1, 0) -> DROP root" in output
+    assert "probed_backbone_signature = [[[[]]]]" in output
+    assert "probed_backbone_relation_to_n = same-signature" in output
+    assert "probed_backbone_fit_against_n = result-matches" in output
