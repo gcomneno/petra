@@ -40,7 +40,8 @@ def assert_common_backbone_selection(output: str, n: int) -> None:
     assert "selected_backbone_signature = [[], []]" in output
 
     assert "Operator probe" in output
-    assert "operator_probe_status = ordered-probe-until-match" in output
+    assert "operator_probe_status = iterative-shape-probe" in output
+    assert "operator_probe_depth_limit = 2" in output
     assert "Selected operator shape comparison" in output
     assert "claim = PET backbone selection prototype only; this does not factor N" in output
 
@@ -100,3 +101,49 @@ def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
     assert "operator_priority = INC, NEW, DROP, DEC" in output
     assert "selected_operator = INC" in output
     assert "selected_operator_path = (0,)" in output
+
+
+def test_iterative_operator_probe_matches_three_digit_same_mass_case_low_mid() -> None:
+    output = run_tool(333)
+
+    assert "N = 333" in output
+    assert "n_digits = 3" in output
+    assert "digit_shadow_band = 000..999" in output
+    assert "selected_backbone_order = 3" in output
+    assert "selected_backbone_generator = 30" in output
+    assert "selected_backbone_factorization = 2 * 3 * 5" in output
+
+    assert "n_signature = [[], [[]]]" in output
+    assert "selected_backbone_signature = [[], [], []]" in output
+    assert "shape_fit = backbone-different-same-mass" in output
+
+    assert "operator_probe_status = iterative-shape-probe" in output
+    assert "operator_probe_depth_limit = 2" in output
+    assert "operator_probe_result = matched" in output
+    assert "selected_operator_sequence = INC (0,) -> DROP root" in output
+    assert "probed_backbone_signature = [[], [[]]]" in output
+    assert "probed_backbone_relation_to_n = same-signature" in output
+    assert "probed_backbone_fit_against_n = result-matches" in output
+
+
+def test_iterative_operator_probe_matches_three_digit_same_mass_case_high() -> None:
+    output = run_tool(999)
+
+    assert "N = 999" in output
+    assert "n_digits = 3" in output
+    assert "digit_shadow_band = 000..999" in output
+    assert "selected_backbone_order = 3" in output
+    assert "selected_backbone_generator = 30" in output
+    assert "selected_backbone_factorization = 2 * 3 * 5" in output
+
+    assert "n_signature = [[], [[]]]" in output
+    assert "selected_backbone_signature = [[], [], []]" in output
+    assert "shape_fit = backbone-different-same-mass" in output
+
+    assert "operator_probe_status = iterative-shape-probe" in output
+    assert "operator_probe_depth_limit = 2" in output
+    assert "operator_probe_result = matched" in output
+    assert "selected_operator_sequence = INC (0,) -> DROP root" in output
+    assert "probed_backbone_signature = [[], [[]]]" in output
+    assert "probed_backbone_relation_to_n = same-signature" in output
+    assert "probed_backbone_fit_against_n = result-matches" in output

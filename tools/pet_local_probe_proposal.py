@@ -153,68 +153,98 @@ def operator_priority_for_fit(shape_fit_label: str) -> list[str]:
     return []
 
 
-def ordered_operator_probe(backbone_signature: list, n_signature: list, shape_fit_label: str) -> dict:
+def format_move(move: tuple[str, tuple]) -> str:
+    op, path = move
+    return f"{op} {format_probe_path(path)}"
+
+
+def format_move_sequence(moves: list[tuple[str, tuple]]) -> str:
+    if not moves:
+        return "none"
+    return " -> ".join(format_move(move) for move in moves)
+
+
+def iterative_operator_probe(
+    backbone_signature: list,
+    n_signature: list,
+    shape_fit_label: str,
+    *,
+    depth_limit: int = 2,
+) -> dict:
     backbone_shape = signature_to_shape(backbone_signature)
     priority = operator_priority_for_fit(shape_fit_label)
 
     if not priority:
         return {
             "status": "already-matching",
+            "depth_limit": depth_limit,
             "priority": ["none"],
             "attempts": [],
-            "selected_op": "none",
-            "selected_path": (),
+            "selected_moves": [],
             "selected_signature": backbone_signature,
             "selected_relation": "same-signature",
             "selected_fit": "result-matches",
         }
 
     attempts = []
+    frontier = [(backbone_shape, [])]
+    seen = {backbone_shape}
 
-    for op in priority:
-        paths = [()] if op in {"NEW", "DROP"} else list(shape_paths(backbone_shape))
-        for path in paths:
-            if not shape_can_apply(backbone_shape, op, path):
-                continue
+    while frontier:
+        current_shape, current_moves = frontier.pop(0)
 
-            result_shape = shape_apply(backbone_shape, op, path)
-            result_signature = shape_to_signature(result_shape)
-            result_relation = (
-                "same-signature"
-                if result_signature == n_signature
-                else "different-signature"
-            )
-            result_fit = result_fit_against_n(n_signature, result_signature)
+        if len(current_moves) >= depth_limit:
+            continue
 
-            attempt = {
-                "op": op,
-                "path": path,
-                "result_signature": result_signature,
-                "result_relation": result_relation,
-                "result_fit": result_fit,
-            }
-            attempts.append(attempt)
+        for op in priority:
+            paths = [()] if op in {"NEW", "DROP"} else list(shape_paths(current_shape))
+            for path in paths:
+                if not shape_can_apply(current_shape, op, path):
+                    continue
 
-            if result_relation == "same-signature":
-                return {
-                    "status": "matched",
-                    "priority": priority,
-                    "attempts": attempts,
-                    "selected_op": op,
-                    "selected_path": path,
-                    "selected_signature": result_signature,
-                    "selected_relation": result_relation,
-                    "selected_fit": result_fit,
+                result_shape = shape_apply(current_shape, op, path)
+                result_signature = shape_to_signature(result_shape)
+                result_relation = (
+                    "same-signature"
+                    if result_signature == n_signature
+                    else "different-signature"
+                )
+                result_fit = result_fit_against_n(n_signature, result_signature)
+                result_moves = current_moves + [(op, path)]
+
+                attempt = {
+                    "moves": result_moves,
+                    "result_shape": result_shape,
+                    "result_signature": result_signature,
+                    "result_relation": result_relation,
+                    "result_fit": result_fit,
                 }
+                attempts.append(attempt)
+
+                if result_relation == "same-signature":
+                    return {
+                        "status": "matched",
+                        "depth_limit": depth_limit,
+                        "priority": priority,
+                        "attempts": attempts,
+                        "selected_moves": result_moves,
+                        "selected_signature": result_signature,
+                        "selected_relation": result_relation,
+                        "selected_fit": result_fit,
+                    }
+
+                if result_shape not in seen:
+                    seen.add(result_shape)
+                    frontier.append((result_shape, result_moves))
 
     if attempts:
         fallback = attempts[-1]
         return {
             "status": "exhausted",
+            "depth_limit": depth_limit,
             "priority": priority,
             "attempts": attempts,
-            "selected_op": fallback["op"],
-            "selected_path": fallback["path"],
+            "selected_moves": [],
             "selected_signature": fallback["result_signature"],
             "selected_relation": fallback["result_relation"],
             "selected_fit": fallback["result_fit"],
@@ -222,10 +252,10 @@ def ordered_operator_probe(backbone_signature: list, n_signature: list, shape_fi
 
     return {
         "status": "unavailable",
+        "depth_limit": depth_limit,
         "priority": priority,
         "attempts": [],
-        "selected_op": "none",
-        "selected_path": (),
+        "selected_moves": [],
         "selected_signature": [],
         "selected_relation": "unavailable",
         "selected_fit": "unavailable",
@@ -283,10 +313,11 @@ def main() -> int:
         n_signature_data["signature"],
         selected_backbone_signature_data["signature"],
     )
-    operator_probe = ordered_operator_probe(
+    operator_probe = iterative_operator_probe(
         selected_backbone_signature_data["signature"],
         n_signature_data["signature"],
         shape_fit_label,
+        depth_limit=2,
     )
 
     n_tree = encode(args.n)
@@ -334,19 +365,22 @@ def main() -> int:
     print(f"shape_fit = {shape_fit_label}")
     print()
     print("Operator probe")
-    print("operator_probe_status = ordered-probe-until-match")
+    print("operator_probe_status = iterative-shape-probe")
+    print(f"operator_probe_depth_limit = {operator_probe['depth_limit']}")
     print(f"operator_probe_result = {operator_probe['status']}")
     print(f"operator_priority = {', '.join(operator_probe['priority'])}")
     for index, attempt in enumerate(operator_probe["attempts"], start=1):
         print(
             f"operator_probe_{index} = "
-            f"{attempt['op']} {format_probe_path(attempt['path'])} -> "
+            f"{format_move_sequence(attempt['moves'])} -> "
             f"{attempt['result_signature']} / "
             f"{attempt['result_relation']} / "
             f"{attempt['result_fit']}"
         )
-    print(f"selected_operator = {operator_probe['selected_op']}")
-    print(f"selected_operator_path = {format_probe_path(operator_probe['selected_path'])}")
+    print(f"selected_operator_sequence = {format_move_sequence(operator_probe['selected_moves'])}")
+    selected_first_move = operator_probe["selected_moves"][0] if operator_probe["selected_moves"] else ("none", ())
+    print(f"selected_operator = {selected_first_move[0]}")
+    print(f"selected_operator_path = {format_probe_path(selected_first_move[1])}")
     print()
     print("Selected operator shape comparison")
     print(f"probed_backbone_signature = {operator_probe['selected_signature']}")
