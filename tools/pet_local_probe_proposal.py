@@ -344,6 +344,16 @@ def operator_probe_result_rank(result: str) -> int:
     }.get(result, 4)
 
 
+def shape_diagnostic_summary(diagnostic: str) -> str:
+    return {
+        "atomic-exact": "selected backbone is atomic and already matches N shape",
+        "narrow-deep": "selected backbone is narrow and reaches N through depth-increasing moves",
+        "wide-exact": "selected backbone is wider than digit-count and exactly matches N shape",
+        "near-shape": "selected backbone is one operator move away from N shape",
+        "complex-border": "selected backbone has a non-trivial PET relation to N shape",
+    }.get(diagnostic, "selected backbone has an unknown PET diagnostic relation to N shape")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Prototype PET backbone selection from input mass and digit-shadow metrics."
@@ -518,11 +528,13 @@ def main() -> int:
         print(f"race_candidate_orders = 1..{n_digits + 2}")
         print(f"race_selected_move_count = {race_selected['move_count']}")
         print(f"race_selected_sequence = {race_selected['sequence']}")
-        print(f"race_selection_quality = {race_selected['quality']}")
-        print(
-            "race_shape_diagnostic = "
-            f"{shape_diagnostic(selected_backbone_order, n_digits, race_selected['quality'])}"
+        race_diagnostic = shape_diagnostic(
+            selected_backbone_order,
+            n_digits,
+            race_selected["quality"],
         )
+        print(f"race_selection_quality = {race_selected['quality']}")
+        print(f"race_shape_diagnostic = {race_diagnostic}")
     print("backbone_status = selected")
     print()
     print("PET shape comparison")
@@ -558,6 +570,11 @@ def main() -> int:
     print(f"probed_backbone_relation_to_n = {operator_probe['selected_relation']}")
     print(f"probed_backbone_fit_against_n = {operator_probe['selected_fit']}")
     print()
+    if race_selected is not None:
+        print("PET diagnostic summary")
+        print(f"shape_diagnostic = {race_diagnostic}")
+        print(f"summary = {shape_diagnostic_summary(race_diagnostic)}")
+        print()
     print("claim = PET backbone selection prototype only; this does not factor N")
 
     return 0
