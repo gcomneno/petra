@@ -199,6 +199,23 @@ def main() -> int:
     target_generator = extract_value(transition_text, "target_generator")
     representative_target = extract_value(transition_text, "representative_target")
 
+    mass_probe_text = run_command(
+        [
+            sys.executable,
+            "tools/pet_lens_mass_probe.py",
+            str(args.n),
+            "--max-leaves",
+            str(args.max_leaves),
+        ]
+    )
+    mass_source_generator = extract_value(mass_probe_text, "source_generator")
+    primorial_expanded_generator = extract_value(mass_probe_text, "primorial_expanded_generator")
+    digit_aligned = extract_value(mass_probe_text, "digit_aligned")
+    weight_alignment = extract_value(mass_probe_text, "weight_alignment")
+    weight_direction = extract_value(mass_probe_text, "weight_direction")
+    digit_repetition_ratio = extract_value(mass_probe_text, "digit_repetition_ratio")
+    shadow_note = extract_value(mass_probe_text, "shadow_note")
+
     mass_response_text = run_command(
         [
             sys.executable,
@@ -229,6 +246,15 @@ def main() -> int:
     print(f"source_generator = {source_generator}")
     print(f"target_generator = {target_generator}")
     print(f"representative_target = {representative_target}")
+    print()
+    print("Lens mass/shadow")
+    print(f"mass_source_generator = {mass_source_generator}")
+    print(f"primorial_expanded_generator = {primorial_expanded_generator}")
+    print(f"digit_aligned = {digit_aligned}")
+    print(f"weight_alignment = {weight_alignment}")
+    print(f"weight_direction = {weight_direction}")
+    print(f"digit_repetition_ratio = {digit_repetition_ratio}")
+    print(f"shadow_note = {shadow_note}")
     print()
     print(f"primary_band = {format_band(primary_band)}")
     print(f"transition_side = {transition_side}")

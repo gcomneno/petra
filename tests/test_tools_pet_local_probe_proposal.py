@@ -22,6 +22,14 @@ def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
     assert "source_generator = 30" in output
     assert "target_generator = 6" in output
     assert "representative_target = 15" in output
+    assert "Lens mass/shadow" in output
+    assert "mass_source_generator = 30" in output
+    assert "primorial_expanded_generator = " in output
+    assert "digit_aligned = " in output
+    assert "weight_alignment = " in output
+    assert "weight_direction = " in output
+    assert "digit_repetition_ratio = " in output
+    assert "shadow_note = " in output
     assert "primary_band = multi-threshold NEW,DROP k[2..6]" in output
     assert "transition_side = DROP" in output
     assert "proposal_status = strong" in output
