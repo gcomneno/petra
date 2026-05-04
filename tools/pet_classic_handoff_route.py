@@ -100,6 +100,25 @@ def main() -> int:
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
     print(f"classic_probe_policy = {policy}")
     print()
+
+    if policy == "primality-check-only":
+        suggested_parts = [
+            "python",
+            "-m",
+            "pet.cli",
+            "opaque-probe",
+            str(args.n),
+            "--trial-limit",
+            "2",
+        ]
+        print("route_status = available")
+        print("route_kind = primality-check-only")
+        print("reason = atomic PET shape; run minimal classic residual/primality probe")
+        print(f"suggested_command = {command_text(suggested_parts)}")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")

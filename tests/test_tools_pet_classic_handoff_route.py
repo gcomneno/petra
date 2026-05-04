@@ -28,6 +28,18 @@ def test_classic_handoff_route_reports_policy_without_legacy_fallback() -> None:
     assert "claim = PET classic handoff route only; classic verification required" in output
 
 
+def test_classic_handoff_route_supports_atomic_exact_primality_policy() -> None:
+    output = run_tool(10007)
+
+    assert "proposal_race_shape_diagnostic = atomic-exact" in output
+    assert "classic_probe_policy = primality-check-only" in output
+    assert "route_status = available" in output
+    assert "route_kind = primality-check-only" in output
+    assert "reason = atomic PET shape; run minimal classic residual/primality probe" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 10007 --trial-limit 2" in output
+    assert "route_kind = fork-follow-rescan" not in output
+
+
 def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
     import importlib.util
     from pathlib import Path
