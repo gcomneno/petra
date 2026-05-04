@@ -80,6 +80,18 @@ def select_candidate(n: int, base: int, raw_orders: str | None, operator_depth: 
     return n_digits, selected
 
 
+def shape_diagnostic(selected_order: int, n_digits: int, quality: str) -> str:
+    if selected_order == 1 and quality == "exact-shape":
+        return "atomic-exact"
+    if selected_order == 1 and quality == "multi-move":
+        return "narrow-deep"
+    if selected_order > n_digits and quality == "exact-shape":
+        return "wide-exact"
+    if quality == "one-move":
+        return "near-shape"
+    return "complex-border"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Print a compact PET backbone race diagnostic matrix."
@@ -101,7 +113,8 @@ def main() -> int:
 
     print(
         "N | class | n_digits | selected_backbone_order | "
-        "selected_result | selected_move_count | selection_quality | selected_sequence"
+        "selected_result | selected_move_count | selection_quality | "
+        "shape_diagnostic | selected_sequence"
     )
 
     for sample in samples:
@@ -111,6 +124,8 @@ def main() -> int:
             args.orders,
             args.operator_depth,
         )
+        quality = selection_quality(selected)
+        diagnostic = shape_diagnostic(selected.order, n_digits, quality)
         print(
             f"{sample.n} | "
             f"{sample.label} | "
@@ -118,7 +133,8 @@ def main() -> int:
             f"{selected.order} | "
             f"{selected.result} | "
             f"{selected.move_count} | "
-            f"{selection_quality(selected)} | "
+            f"{quality} | "
+            f"{diagnostic} | "
             f"{selected.sequence}"
         )
 
