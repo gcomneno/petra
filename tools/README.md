@@ -52,8 +52,8 @@ These tools are part of the current PET-policy-first flow:
 - `pet_backbone_race.py` — PET-only backbone race selection.
 - `pet_backbone_race_matrix.py` — batch matrix for backbone race diagnostics.
 - `pet_classic_handoff_route.py` — maps PET shape diagnostics to classic probe policies.
-- `pet_classic_scan_summary.py` — summarizes verified classic divisors from PET-guided scans.
-- `pet_classic_scan_policy.py` — classifies classic scan sources and policy status.
+- `classic/pet_classic_scan_summary.py` — summarizes verified classic divisors from PET-guided scans.
+- `classic/pet_classic_scan_policy.py` — classifies classic scan sources and policy status.
 - `pet_triage_pipeline.sh` — canonical triage pipeline.
 
 ## Compatibility wrappers
@@ -84,11 +84,17 @@ policy decisions.
 
 ## Classic scan support tools
 
-These are still used by classic scan summary/policy tooling and should not be
-removed without replacing their callers and tests:
+Classic scan support tools live under `tools/classic/`.
 
-- `pet_crumb_classic_scan.py`
-- `pet_root_window_classic_scan.py`
+Compatibility wrappers remain in `tools/` for existing scripts and tests:
+
+- `classic/pet_classic_scan_summary.py`
+- `classic/pet_classic_scan_policy.py`
+- `classic/pet_crumb_classic_scan.py`
+- `classic/pet_root_window_classic_scan.py`
+
+These tools are still used by classic scan summary/policy tooling and should
+not be removed without replacing their callers and tests.
 
 
 ## Stable tooling
