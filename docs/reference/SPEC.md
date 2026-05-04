@@ -363,6 +363,93 @@ PET-Algebra studia le operazioni strutturali sui PET canonici.
 Tutte le operazioni producono PET canonici che rappresentano interi.
 Il codice vive in `src/pet_algebra.py`.
 
+### Operatori compositi: PET-MERGE `⊕` e PET-UNMERGE `⊖`
+
+Oltre agli operatori locali (`NEW`, `DROP`, `INC`, `DEC`), PET può descrivere
+operatori compositi tra due strutture.
+
+`PET-MERGE` (`⊕`), leggibile in italiano come **somma PET**, sovrappone due
+strutture PET sommando le molteplicità dei componenti comuni.
+
+Esempio:
+
+```text
+a^2 * b ⊕ b * c = a^2 * b^2 * c
+```
+
+`PET-UNMERGE` (`⊖`), leggibile come **sottrazione PET**, rimuove da una
+struttura PET il contributo di un'altra struttura, sottraendo le molteplicità.
+È definita solo quando la struttura sottratta è contenuta nella struttura di
+partenza; altrimenti il risultato è non definito.
+
+Esempio:
+
+```text
+a^2 * b^2 * c ⊖ b * c = a^2 * b
+```
+
+Questi nomi non indicano somma o sottrazione aritmetica dei valori interi:
+indicano somma e sottrazione delle molteplicità strutturali PET.
+
+### PET unit
+
+Gli operatori compositi introducono naturalmente un elemento neutro strutturale:
+
+```text
+PET unit = 1
+generator = 1
+signature = []
+```
+
+Proprietà fondamentali:
+
+```text
+P ⊕ 1 = P
+P ⊖ P = 1
+```
+
+`1` non è un PET ordinario secondo `encode(n)` storico, che accetta `n >= 2`,
+ma funziona come unità algebrica del layer composito.
+
+### Leggi osservate sui generatori flat
+
+Per i generatori flat primoriali:
+
+```text
+Flat(1) = 2
+Flat(2) = 6
+Flat(3) = 30
+Flat(4) = 210
+...
+```
+
+`PET-UNMERGE` riduce la massa strutturale quando il lato destro è contenuto:
+
+```text
+Flat(m) ⊖ Flat(n) = Flat(m-n), se m >= n
+```
+
+Se `m = n`, il risultato è la PET unit `1`.
+Se `m < n`, il risultato è non definito.
+
+`PET-MERGE` sovrappone le foglie: le foglie condivise aumentano molteplicità,
+mentre le foglie eccedenti restano semplici. Per esempio:
+
+```text
+30 ⊕ 6 = 180
+signature = [[], [[]], [[]]]
+```
+
+ossia:
+
+```text
+Flat(3) ⊕ Flat(2)
+= una foglia semplice + due foglie elevate
+```
+
+Queste proprietà sono attualmente cristallizzate nei test esplorativi
+`tests/test_pet_composite_operators.py`.
+
 ### Operazione: graft
 
 `graft(tree, scion)` sostituisce ogni foglia (`None`) di `tree` con `scion`.
