@@ -222,6 +222,7 @@ def test_local_probe_can_select_backbone_with_race_for_large_diagonal() -> None:
     assert "race_selected_move_count = 1" in output
     assert "race_selected_sequence = INC (0,)" in output
     assert "race_selection_quality = one-move" in output
+    assert "race_shape_diagnostic = near-shape" in output
     assert "operator_probe_result = matched" in output
     assert "selected_operator_sequence = INC (0,)" in output
 
@@ -235,6 +236,7 @@ def test_local_probe_can_select_exact_backbone_with_race_for_mixed_shape() -> No
     assert "race_selected_move_count = 0" in output
     assert "race_selected_sequence = none" in output
     assert "race_selection_quality = exact-shape" in output
+    assert "race_shape_diagnostic = wide-exact" in output
     assert "shape_fit = backbone-matches" in output
     assert "operator_probe_result = already-matching" in output
 
@@ -248,5 +250,6 @@ def test_local_probe_can_select_narrow_backbone_with_race_for_deep_power_shape()
     assert "race_selected_move_count = 3" in output
     assert "race_selected_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
     assert "race_selection_quality = multi-move" in output
+    assert "race_shape_diagnostic = narrow-deep" in output
     assert "operator_probe_result = matched" in output
     assert "selected_operator_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
