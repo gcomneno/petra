@@ -583,6 +583,17 @@ def main() -> int:
     flat_generator = bool(selected_signature) and all(child == [] for child in selected_signature)
     print(f"flat_generator = {yes_no(flat_generator)}")
     print(f"flat_leaf_count = {len(selected_signature) if flat_generator else 'unknown'}")
+    print("composite_relation = flat-self-unmerge-to-unit" if flat_generator else "composite_relation = none")
+    selected_operator_sequence = format_move_sequence(operator_probe["selected_moves"])
+    balanced_flat_border = (
+        race_selected is not None
+        and race_diagnostic == "complex-border"
+        and shape_relation == "same-signature"
+        and shape_fit_label == "backbone-matches"
+        and selected_operator_sequence == "none"
+        and flat_generator
+    )
+    print(f"composite_border_hint = {'balanced-flat-border' if balanced_flat_border else 'none'}")
     print()
     if race_selected is not None:
         print("PET diagnostic summary")

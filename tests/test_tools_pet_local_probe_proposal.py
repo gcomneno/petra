@@ -96,6 +96,20 @@ def test_backbone_selection_for_repeated_mid_band_two_digit_input() -> None:
     assert "operator_priority = none" in output
     assert "selected_operator = none" in output
     assert "selected_operator_path = root" in output
+    assert "composite_relation = flat-self-unmerge-to-unit" in output
+
+
+def test_race_complex_border_reports_balanced_flat_border_hint() -> None:
+    output = run_tool_with_args("55", "--operator-depth", "auto", "--backbone-selection", "race")
+
+    assert "race_shape_diagnostic = complex-border" in output
+    assert "shape_relation = same-signature" in output
+    assert "shape_fit = backbone-matches" in output
+    assert "selected_operator_sequence = none" in output
+    assert "flat_generator = yes" in output
+    assert "flat_leaf_count = 2" in output
+    assert "composite_relation = flat-self-unmerge-to-unit" in output
+    assert "composite_border_hint = balanced-flat-border" in output
 
 
 def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
