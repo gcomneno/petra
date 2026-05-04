@@ -5,6 +5,8 @@ import argparse
 from collections import Counter
 from math import prod
 
+from pet_backbone_race import shape_diagnostic
+
 from pet.algebra import distance, structural_distance
 from pet.core import encode, shape_signature_dict
 from pet_shape_algebra import shape_apply, shape_can_apply, shape_paths
@@ -333,22 +335,6 @@ def operator_probe_selection_quality(result: str, move_count: int) -> str:
     return "multi-move"
 
 
-def race_shape_diagnostic(
-    selected_order: int,
-    n_digits: int,
-    quality: str,
-) -> str:
-    if selected_order == 1 and quality == "exact-shape":
-        return "atomic-exact"
-    if selected_order == 1 and quality == "multi-move":
-        return "narrow-deep"
-    if selected_order > n_digits and quality == "exact-shape":
-        return "wide-exact"
-    if quality == "one-move":
-        return "near-shape"
-    return "complex-border"
-
-
 def operator_probe_result_rank(result: str) -> int:
     return {
         "already-matching": 0,
@@ -535,7 +521,7 @@ def main() -> int:
         print(f"race_selection_quality = {race_selected['quality']}")
         print(
             "race_shape_diagnostic = "
-            f"{race_shape_diagnostic(selected_backbone_order, n_digits, race_selected['quality'])}"
+            f"{shape_diagnostic(selected_backbone_order, n_digits, race_selected['quality'])}"
         )
     print("backbone_status = selected")
     print()

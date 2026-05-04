@@ -100,6 +100,22 @@ def selection_quality(candidate: Candidate) -> str:
     return "multi-move"
 
 
+def shape_diagnostic(
+    selected_order: int,
+    n_digits: int,
+    quality: str,
+) -> str:
+    if selected_order == 1 and quality == "exact-shape":
+        return "atomic-exact"
+    if selected_order == 1 and quality == "multi-move":
+        return "narrow-deep"
+    if selected_order > n_digits and quality == "exact-shape":
+        return "wide-exact"
+    if quality == "one-move":
+        return "near-shape"
+    return "complex-border"
+
+
 def candidate_score(candidate: Candidate, n_digits: int) -> tuple[int, int, int]:
     result_rank = {
         "already-matching": 0,

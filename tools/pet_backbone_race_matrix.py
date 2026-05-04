@@ -10,6 +10,7 @@ from pet_backbone_race import (
     run_candidate,
     candidate_score,
     selection_quality,
+    shape_diagnostic,
 )
 
 
@@ -78,18 +79,6 @@ def select_candidate(n: int, base: int, raw_orders: str | None, operator_depth: 
     ]
     selected = min(candidates, key=lambda candidate: candidate_score(candidate, n_digits))
     return n_digits, selected
-
-
-def shape_diagnostic(selected_order: int, n_digits: int, quality: str) -> str:
-    if selected_order == 1 and quality == "exact-shape":
-        return "atomic-exact"
-    if selected_order == 1 and quality == "multi-move":
-        return "narrow-deep"
-    if selected_order > n_digits and quality == "exact-shape":
-        return "wide-exact"
-    if quality == "one-move":
-        return "near-shape"
-    return "complex-border"
 
 
 def main() -> int:
