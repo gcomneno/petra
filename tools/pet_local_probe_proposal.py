@@ -153,19 +153,23 @@ def operator_priority_for_fit(shape_fit_label: str) -> list[str]:
     return []
 
 
-def first_operator_probe(backbone_signature: list, n_signature: list, shape_fit_label: str) -> dict:
+def ordered_operator_probe(backbone_signature: list, n_signature: list, shape_fit_label: str) -> dict:
     backbone_shape = signature_to_shape(backbone_signature)
     priority = operator_priority_for_fit(shape_fit_label)
 
     if not priority:
         return {
+            "status": "already-matching",
             "priority": ["none"],
-            "op": "none",
-            "path": (),
-            "result_signature": backbone_signature,
-            "result_relation": "same-signature",
-            "result_fit": "result-matches",
+            "attempts": [],
+            "selected_op": "none",
+            "selected_path": (),
+            "selected_signature": backbone_signature,
+            "selected_relation": "same-signature",
+            "selected_fit": "result-matches",
         }
+
+    attempts = []
 
     for op in priority:
         paths = [()] if op in {"NEW", "DROP"} else list(shape_paths(backbone_shape))
@@ -180,24 +184,58 @@ def first_operator_probe(backbone_signature: list, n_signature: list, shape_fit_
                 if result_signature == n_signature
                 else "different-signature"
             )
+            result_fit = result_fit_against_n(n_signature, result_signature)
 
-            return {
-                "priority": priority,
+            attempt = {
                 "op": op,
                 "path": path,
                 "result_signature": result_signature,
                 "result_relation": result_relation,
-                "result_fit": result_fit_against_n(n_signature, result_signature),
+                "result_fit": result_fit,
             }
+            attempts.append(attempt)
+
+            if result_relation == "same-signature":
+                return {
+                    "status": "matched",
+                    "priority": priority,
+                    "attempts": attempts,
+                    "selected_op": op,
+                    "selected_path": path,
+                    "selected_signature": result_signature,
+                    "selected_relation": result_relation,
+                    "selected_fit": result_fit,
+                }
+
+    if attempts:
+        fallback = attempts[-1]
+        return {
+            "status": "exhausted",
+            "priority": priority,
+            "attempts": attempts,
+            "selected_op": fallback["op"],
+            "selected_path": fallback["path"],
+            "selected_signature": fallback["result_signature"],
+            "selected_relation": fallback["result_relation"],
+            "selected_fit": fallback["result_fit"],
+        }
 
     return {
+        "status": "unavailable",
         "priority": priority,
-        "op": "none",
-        "path": (),
-        "result_signature": [],
-        "result_relation": "unavailable",
-        "result_fit": "unavailable",
+        "attempts": [],
+        "selected_op": "none",
+        "selected_path": (),
+        "selected_signature": [],
+        "selected_relation": "unavailable",
+        "selected_fit": "unavailable",
     }
+
+
+def format_probe_path(path: tuple) -> str:
+    return str(path) if path else "root"
+
+
 
 
 def format_factorization(values: list[int]) -> str:
@@ -245,7 +283,7 @@ def main() -> int:
         n_signature_data["signature"],
         selected_backbone_signature_data["signature"],
     )
-    operator_probe = first_operator_probe(
+    operator_probe = ordered_operator_probe(
         selected_backbone_signature_data["signature"],
         n_signature_data["signature"],
         shape_fit_label,
@@ -296,15 +334,24 @@ def main() -> int:
     print(f"shape_fit = {shape_fit_label}")
     print()
     print("Operator probe")
-    print("operator_probe_status = first-iteration")
+    print("operator_probe_status = ordered-probe-until-match")
+    print(f"operator_probe_result = {operator_probe['status']}")
     print(f"operator_priority = {', '.join(operator_probe['priority'])}")
-    print(f"first_operator = {operator_probe['op']}")
-    print(f"first_operator_path = {operator_probe['path'] if operator_probe['path'] else 'root'}")
+    for index, attempt in enumerate(operator_probe["attempts"], start=1):
+        print(
+            f"operator_probe_{index} = "
+            f"{attempt['op']} {format_probe_path(attempt['path'])} -> "
+            f"{attempt['result_signature']} / "
+            f"{attempt['result_relation']} / "
+            f"{attempt['result_fit']}"
+        )
+    print(f"selected_operator = {operator_probe['selected_op']}")
+    print(f"selected_operator_path = {format_probe_path(operator_probe['selected_path'])}")
     print()
-    print("First operator shape comparison")
-    print(f"probed_backbone_signature = {operator_probe['result_signature']}")
-    print(f"probed_backbone_relation_to_n = {operator_probe['result_relation']}")
-    print(f"probed_backbone_fit_against_n = {operator_probe['result_fit']}")
+    print("Selected operator shape comparison")
+    print(f"probed_backbone_signature = {operator_probe['selected_signature']}")
+    print(f"probed_backbone_relation_to_n = {operator_probe['selected_relation']}")
+    print(f"probed_backbone_fit_against_n = {operator_probe['selected_fit']}")
     print()
     print("claim = PET backbone selection prototype only; this does not factor N")
 

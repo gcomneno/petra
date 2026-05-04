@@ -27,6 +27,22 @@ def extract_value(text: str, key: str) -> str:
     return "unknown"
 
 
+def lens_name(leaf_count: int) -> str:
+    if leaf_count == 1:
+        return "one-leaf"
+    if leaf_count == 2:
+        return "two-leaf"
+    if leaf_count == 3:
+        return "three-leaf"
+    if leaf_count == 4:
+        return "four-leaf"
+    if leaf_count == 5:
+        return "five-leaf"
+    if leaf_count == 6:
+        return "six-leaf"
+    return f"{leaf_count}-leaf"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Combine PET surface and stencil-lens diagnostics."
@@ -86,12 +102,22 @@ def main() -> int:
     recommended_leaf_count = extract_value(stencil, "recommended_leaf_count")
     recommended_stencil_usage = extract_value(stencil, "recommended_stencil_usage")
 
+    source_leaf_count = max(1, int(source_size) - 1) if source_size != "unknown" else 0
+    source_lens = lens_name(source_leaf_count) if source_leaf_count else "unknown"
+    target_lens = source_lens
+    target_leaf_count = str(source_leaf_count) if source_leaf_count else "unknown"
+
     if args.summary:
         print("PET LENS HINT SUMMARY")
         print(f"N = {args.n}")
         print(f"blade_index = {blade_index}")
-        print(f"target_lens = {recommended_lens}")
-        print(f"target_leaf_count = {recommended_leaf_count}")
+        print(f"source_lens = {source_lens}")
+        print(f"source_leaf_count = {target_leaf_count}")
+        print(f"target_lens = {target_lens}")
+        print(f"target_leaf_count = {target_leaf_count}")
+        print("target_role = full-mass lens")
+        print(f"stencil_recommended_lens = {recommended_lens}")
+        print(f"stencil_recommended_leaf_count = {recommended_leaf_count}")
         print(f"flatten_first = {flattening_recommended}")
         print("claim = PET lens hint only; this does not factor N")
         return 0
@@ -119,6 +145,11 @@ def main() -> int:
     print(f"  flatten_applied = {flatten_applied}")
     print(f"  source_size = {source_size}")
     print(f"  source_height = {source_height}")
+    print(f"  source_lens = {source_lens}")
+    print(f"  source_leaf_count = {target_leaf_count}")
+    print(f"  target_lens = {target_lens}")
+    print(f"  target_leaf_count = {target_leaf_count}")
+    print("  target_role = full-mass lens")
     print(f"  recommended_lens = {recommended_lens}")
     print(f"  recommended_leaf_count = {recommended_leaf_count}")
     print(f"  recommended_stencil_usage = {recommended_stencil_usage}")
@@ -126,8 +157,13 @@ def main() -> int:
     print()
     print("Operational hint")
     print(f"  blade_index = {blade_index}")
-    print(f"  target_lens = {recommended_lens}")
-    print(f"  target_leaf_count = {recommended_leaf_count}")
+    print(f"  source_lens = {source_lens}")
+    print(f"  source_leaf_count = {target_leaf_count}")
+    print(f"  target_lens = {target_lens}")
+    print(f"  target_leaf_count = {target_leaf_count}")
+    print("  target_role = full-mass lens")
+    print(f"  stencil_recommended_lens = {recommended_lens}")
+    print(f"  stencil_recommended_leaf_count = {recommended_leaf_count}")
     print(f"  flatten_first = {flattening_recommended}")
 
     print()

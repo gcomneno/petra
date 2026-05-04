@@ -26,8 +26,8 @@ def test_lens_mass_probe_reports_digit_mass_weight_and_shadow_for_55() -> None:
     assert "source_generator_digits = 1" in output
     assert "source_signature = [[], []]" in output
 
-    assert "target_lens = one-leaf" in output
-    assert "target_leaf_count = 1" in output
+    assert "target_lens = two-leaf" in output
+    assert "target_leaf_count = 2" in output
 
     assert "primorial_expanded_generator = 30" in output
     assert "primorial_expanded_digits = 2" in output
