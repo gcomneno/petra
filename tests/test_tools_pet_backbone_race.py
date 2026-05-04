@@ -49,3 +49,19 @@ def test_backbone_race_reports_exact_shape_quality() -> None:
     assert "selected_move_count = 0" in output
     assert "selected_sequence = none" in output
     assert "selection_quality = exact-shape" in output
+
+
+def test_backbone_race_selects_narrow_backbone_for_deep_power_shape() -> None:
+    output = run_race(65536, "1,3,5")
+
+    assert "PET BACKBONE RACE PROTOTYPE" in output
+    assert "N = 65536" in output
+    assert "n_digits = 5" in output
+    assert "candidate_orders = 1,3,5" in output
+
+    assert "selected_backbone_order = 1" in output
+    assert "selected_result = matched" in output
+    assert "selected_move_count = 3" in output
+    assert "selected_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
+    assert "selection_quality = multi-move" in output
+    assert "claim = PET backbone race prototype only; this does not factor N" in output
