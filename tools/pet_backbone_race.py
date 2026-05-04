@@ -29,7 +29,7 @@ def digit_count(n: int, base: int) -> int:
 
 def parse_orders(raw_orders: str | None, n_digits: int) -> list[int]:
     if raw_orders is None:
-        return list(range(1, n_digits + 1))
+        return list(range(1, n_digits + 3))
 
     orders = []
     for raw in raw_orders.split(","):

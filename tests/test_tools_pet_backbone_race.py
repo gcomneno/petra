@@ -65,3 +65,28 @@ def test_backbone_race_selects_narrow_backbone_for_deep_power_shape() -> None:
     assert "selected_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
     assert "selection_quality = multi-move" in output
     assert "claim = PET backbone race prototype only; this does not factor N" in output
+
+
+def test_backbone_race_default_orders_include_wide_mixed_shape() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_backbone_race.py",
+            "30030",
+            "--operator-depth",
+            "auto",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    output = result.stdout
+
+    assert "N = 30030" in output
+    assert "n_digits = 5" in output
+    assert "candidate_orders = 1,2,3,4,5,6,7" in output
+    assert "selected_backbone_order = 6" in output
+    assert "selected_result = already-matching" in output
+    assert "selected_move_count = 0" in output
+    assert "selected_sequence = none" in output
+    assert "selection_quality = exact-shape" in output
