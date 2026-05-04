@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import runpy
+import sys
 
-repo_root = Path(__file__).resolve().parents[1]
-src_dir = repo_root / "src"
-if str(src_dir) not in sys.path:
-    sys.path.insert(0, str(src_dir))
+TARGET = Path(__file__).resolve().parent / "research" / "pet_rewrite_metric.py"
+RESEARCH_DIR = TARGET.parent
 
-from pet.rewrite_metric import main
-
+if str(RESEARCH_DIR) not in sys.path:
+    sys.path.insert(0, str(RESEARCH_DIR))
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    runpy.run_path(str(TARGET), run_name="__main__")
+else:
+    globals().update(runpy.run_path(str(TARGET), run_name=__name__))

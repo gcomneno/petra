@@ -133,11 +133,19 @@ documentation examples:
 
 ## PET-METICA and shape research tooling
 
-- `pet_rewrite_metric.py` — rewrite-metric helper
-- `pet_shape_algebra.py` — shape algebra helper
-- `pet_structural_diff.py` — structural diff helper for exact PET updates
-- `shape_rewrite_arithmetic_v0.py` — tested v0 arithmetic rewrite helper
-- `exponent_shape_trace.py` — exponent-shape trace reporting over known ranges
+PET-METICA and structural research helpers live under `tools/research/`.
+
+Compatibility wrappers remain in `tools/` for existing scripts, tests, imports,
+and documentation examples:
+
+- `research/pet_rewrite_metric.py` — rewrite-metric helper
+- `research/pet_shape_algebra.py` — shape algebra helper
+- `research/pet_structural_diff.py` — structural diff helper for exact PET updates
+- `research/shape_rewrite_arithmetic_v0.py` — tested v0 arithmetic rewrite helper
+- `research/shape_overlap.py` — shape overlap helper
+- `research/stencil_lens_probe.py` — stencil lens probe helper
+- `research/surface_signature.py` — surface signature helper
+- `research/exponent_shape_trace.py` — exponent-shape trace reporting over known ranges
 
 ## Notes
 
