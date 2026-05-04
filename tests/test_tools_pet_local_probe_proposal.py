@@ -14,67 +14,79 @@ def run_tool(n: int) -> str:
     return result.stdout
 
 
-def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
-    output = run_tool(3027009081)
+def assert_common_backbone_selection(output: str, n: int) -> None:
+    assert "PET BACKBONE SELECTION PROTOTYPE" in output
+    assert f"N = {n}" in output
 
-    assert "PET LOCAL PROBE PROPOSAL" in output
-    assert "transition = DROP" in output
-    assert "source_generator = 30" in output
-    assert "target_generator = 6" in output
-    assert "target_role = reduction/probe target, not full N mass" in output
-    assert "representative_target = 15" in output
-    assert "Lens mass/shadow" in output
-    assert "mass_source_generator = 30" in output
-    assert "primorial_expanded_generator = " in output
-    assert "digit_aligned = " in output
-    assert "weight_alignment = " in output
-    assert "weight_direction = " in output
-    assert "digit_repetition_ratio = " in output
-    assert "shadow_note = " in output
-    assert "primary_band = multi-threshold NEW,DROP k[2..6]" in output
-    assert "transition_side = DROP" in output
-    assert "proposal_status = strong" in output
-    assert "proposal_status_kind = structural" in output
-    assert "verification_status = unverified" in output
-    assert "reason = transition-coherent magnetic band selected" in output
-    assert "candidate_status = window-only" in output
-    assert "candidate_window = k[2..6]" in output
-    assert "side_band = recovery DROP k[7..11]" in output
-    assert "side_window = k[7..11]" in output
-    assert "claim = PET local probe proposal only; this does not factor N" in output
+    assert "Input metrics" in output
+    assert "base = 10" in output
+    assert "n_digits = 2" in output
+    assert "digit_unique_count = 1" in output
+    assert "max_digit_frequency = 2" in output
+    assert "digit_repetition_ratio = 1.000" in output
+    assert "all_digits_same = yes" in output
+    assert "palindrome = yes" in output
 
+    assert "Backbone selection" in output
+    assert "selection_rule = digit-count primorial backbone" in output
+    assert "selected_backbone_order = 2" in output
+    assert "selected_backbone_generator = 6" in output
+    assert "selected_backbone_factorization = 2 * 3" in output
+    assert "backbone_status = selected" in output
 
-def test_local_probe_proposal_handles_dec_transition() -> None:
-    output = run_tool(49)
+    assert "PET shape comparison" in output
+    assert "selected_backbone_already_minimal = yes" in output
+    assert "selected_backbone_child_generators = [1, 1]" in output
+    assert "selected_backbone_signature = [[], []]" in output
 
-    assert "transition = DEC" in output
-    assert "source_generator = 4" in output
-    assert "target_generator = 2" in output
-    assert "representative_target = 2" in output
-    assert "primary_band = recovery DROP k[2..6]" in output
-    assert "transition_side = DEC-as-DROP" in output
-    assert "proposal_status = partial" in output
-    assert "reason = exponent transition mapped to DROP-like release band" in output
-    assert "suggested_probe_role = inspect DEC exponent release through DROP-like band" in output
-    assert "candidate_window = k[2..6]" in output
-    assert "side_band = unknown" in output
-    assert "side_window = unknown" in output
-    assert "claim = PET local probe proposal only; this does not factor N" in output
+    assert "next_stage = operator signal search" in output
+    assert "next_stage_status = pending" in output
+    assert "claim = PET backbone selection prototype only; this does not factor N" in output
 
 
-def test_local_probe_proposal_handles_dec_path_transition() -> None:
-    output = run_tool(16)
+def test_backbone_selection_for_repeated_low_band_two_digit_input() -> None:
+    output = run_tool(11)
 
-    assert "transition = DEC_PATH" in output
-    assert "source_generator = 16" in output
-    assert "target_generator = 2" in output
-    assert "representative_target = 2" in output
-    assert "primary_band = recovery DROP k[2..6]" in output
-    assert "transition_side = DEC_PATH-as-DROP" in output
-    assert "proposal_status = partial" in output
-    assert "reason = exponent transition path mapped to DROP-like release band" in output
-    assert "suggested_probe_role = inspect DEC exponent path through DROP-like band" in output
-    assert "candidate_window = k[2..6]" in output
-    assert "side_band = unknown" in output
-    assert "side_window = unknown" in output
-    assert "claim = PET local probe proposal only; this does not factor N" in output
+    assert_common_backbone_selection(output, 11)
+
+    assert "weight_band = 10..99" in output
+    assert "weight_band_position = 0.011" in output
+    assert "weight_band_zone = low" in output
+
+    assert "n_already_minimal = no" in output
+    assert "n_child_generators = [1]" in output
+    assert "n_signature = [[]]" in output
+    assert "shape_relation = different-signature" in output
+    assert "shape_fit = backbone-overestimates" in output
+
+
+def test_backbone_selection_for_repeated_mid_band_two_digit_input() -> None:
+    output = run_tool(55)
+
+    assert_common_backbone_selection(output, 55)
+
+    assert "weight_band = 10..99" in output
+    assert "weight_band_position = 0.506" in output
+    assert "weight_band_zone = mid" in output
+
+    assert "n_already_minimal = no" in output
+    assert "n_child_generators = [1, 1]" in output
+    assert "n_signature = [[], []]" in output
+    assert "shape_relation = same-signature" in output
+    assert "shape_fit = backbone-matches" in output
+
+
+def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
+    output = run_tool(99)
+
+    assert_common_backbone_selection(output, 99)
+
+    assert "weight_band = 10..99" in output
+    assert "weight_band_position = 1.000" in output
+    assert "weight_band_zone = high" in output
+
+    assert "n_already_minimal = no" in output
+    assert "n_child_generators = [2, 1]" in output
+    assert "n_signature = [[], [[]]]" in output
+    assert "shape_relation = different-signature" in output
+    assert "shape_fit = backbone-underestimates" in output

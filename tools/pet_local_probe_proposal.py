@@ -2,277 +2,220 @@
 from __future__ import annotations
 
 import argparse
-import json
-import subprocess
-import sys
-from typing import Any
+from collections import Counter
+from math import prod
+
+from pet.algebra import distance, structural_distance
+from pet.core import encode, shape_signature_dict
 
 
-def run_command(args: list[str]) -> str:
-    result = subprocess.run(
-        args,
-        check=False,
-        text=True,
-        capture_output=True,
+def yes_no(value: bool) -> str:
+    return "yes" if value else "no"
+
+
+def is_prime(n: int) -> bool:
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+
+    candidate = 3
+    while candidate * candidate <= n:
+        if n % candidate == 0:
+            return False
+        candidate += 2
+
+    return True
+
+
+def first_primes(count: int) -> list[int]:
+    primes: list[int] = []
+    candidate = 2
+
+    while len(primes) < count:
+        if is_prime(candidate):
+            primes.append(candidate)
+        candidate += 1 if candidate == 2 else 2
+
+    return primes
+
+
+def digit_count(n: int, base: int) -> int:
+    count = 0
+    current = n
+
+    while current:
+        current //= base
+        count += 1
+
+    return max(1, count)
+
+
+def digits_in_base(n: int, base: int) -> list[int]:
+    if n == 0:
+        return [0]
+
+    digits: list[int] = []
+    current = n
+
+    while current:
+        digits.append(current % base)
+        current //= base
+
+    return list(reversed(digits))
+
+
+def digit_band_bounds(digits: int, base: int) -> tuple[int, int]:
+    lower = base ** (digits - 1)
+    upper = (base ** digits) - 1
+    return lower, upper
+
+
+def band_position(n: int, lower: int, upper: int) -> float:
+    if upper == lower:
+        return 0.0
+    return (n - lower) / (upper - lower)
+
+
+def weight_band_zone(position: float) -> str:
+    if position < 1 / 3:
+        return "low"
+    if position < 2 / 3:
+        return "mid"
+    return "high"
+
+
+def structural_mass(signature: list) -> int:
+    return len(signature) + sum(
+        structural_mass(child)
+        for child in signature
+        if isinstance(child, list)
     )
-    if result.returncode != 0:
-        raise SystemExit(result.stderr)
-    return result.stdout
 
 
-def extract_value(text: str, key: str) -> str:
-    prefix = f"{key} = "
-    for line in text.splitlines():
-        stripped = line.strip()
-        if stripped.startswith(prefix):
-            return stripped[len(prefix):]
-    return "unknown"
-
-
-def band_contains_move(band: dict[str, Any], move: str) -> bool:
-    moves = [item.strip() for item in str(band.get("move", "")).split(",")]
-    return move in moves
-
-
-def band_sort_key(band: dict[str, Any]) -> tuple[int, int, int]:
-    return (
-        int(band.get("focus_score", 0)),
-        -int(band.get("min_trigger_span", 999999)),
-        int(band.get("band_width", 0)),
+def structural_mass(signature: list) -> int:
+    return len(signature) + sum(
+        structural_mass(child)
+        for child in signature
+        if isinstance(child, list)
     )
 
 
-def band_transition_for(transition: str) -> tuple[str, str]:
-    if transition in {"DEC", "DEC_PATH", "DROP_PATH"}:
-        return "DROP", f"{transition}-as-DROP"
-    if transition in {"INC", "INC_PATH", "NEW_PATH"}:
-        return "NEW", f"{transition}-as-NEW"
-    return transition, transition
+def shape_fit(n_signature: list, backbone_signature: list) -> str:
+    if n_signature == backbone_signature:
+        return "backbone-matches"
+
+    n_mass = structural_mass(n_signature)
+    backbone_mass = structural_mass(backbone_signature)
+
+    if n_mass < backbone_mass:
+        return "backbone-overestimates"
+    if n_mass > backbone_mass:
+        return "backbone-underestimates"
+
+    return "backbone-different-same-mass"
 
 
-def choose_primary_band(bands: list[dict[str, Any]], transition: str) -> tuple[dict[str, Any] | None, str]:
-    band_transition, transition_side = band_transition_for(transition)
-
-    matching = [band for band in bands if band_contains_move(band, band_transition)]
-    if matching:
-        return max(matching, key=band_sort_key), transition_side
-
-    multi = [band for band in bands if band.get("kind") == "multi-threshold"]
-    if multi:
-        return max(multi, key=band_sort_key), "embedded"
-
-    if bands:
-        return max(bands, key=band_sort_key), "fallback"
-
-    return None, "unknown"
-
-
-def choose_side_band(
-    bands: list[dict[str, Any]],
-    transition: str,
-    primary_band: dict[str, Any] | None,
-) -> dict[str, Any] | None:
-    if transition == "unknown":
-        return None
-
-    band_transition, _transition_side = band_transition_for(transition)
-
-    matching = [
-        band
-        for band in bands
-        if band is not primary_band and band_contains_move(band, band_transition)
-    ]
-    if not matching:
-        return None
-
-    return max(matching, key=band_sort_key)
-
-
-def proposal_status(transition: str, transition_side: str) -> str:
-    if transition == "unknown":
-        return "weak"
-    if transition_side in {"fallback", "unknown"}:
-        return "weak"
-    if transition_side in {
-        "DEC-as-DROP",
-        "INC-as-NEW",
-        "DEC_PATH-as-DROP",
-        "INC_PATH-as-NEW",
-        "DROP_PATH-as-DROP",
-        "NEW_PATH-as-NEW",
-    }:
-        return "partial"
-    return "strong"
-
-
-def proposal_reason(transition: str, transition_side: str) -> str:
-    if transition == "unknown":
-        return "no direct PET lens transition available"
-    if transition_side in {"fallback", "unknown"}:
-        return "no transition-coherent magnetic band available"
-    if transition_side == "DEC-as-DROP":
-        return "exponent transition mapped to DROP-like release band"
-    if transition_side == "INC-as-NEW":
-        return "exponent transition mapped to NEW-like pressure band"
-    if transition_side == "DEC_PATH-as-DROP":
-        return "exponent transition path mapped to DROP-like release band"
-    if transition_side == "INC_PATH-as-NEW":
-        return "exponent transition path mapped to NEW-like pressure band"
-    if transition_side == "DROP_PATH-as-DROP":
-        return "DROP transition path mapped to DROP-like release band"
-    if transition_side == "NEW_PATH-as-NEW":
-        return "NEW transition path mapped to NEW-like pressure band"
-    return "transition-coherent magnetic band selected"
-
-
-def suggested_probe_role(transition: str, transition_side: str) -> str:
-    if transition == "DROP":
-        if transition_side == "embedded":
-            return "inspect embedded DROP side / structural release"
-        return "inspect DROP side / lower structural release"
-
-    if transition == "NEW":
-        if transition_side == "embedded":
-            return "inspect embedded NEW side / structural pressure"
-        return "inspect NEW side / upper structural pressure"
-
-    if transition == "DEC":
-        return "inspect DEC exponent release through DROP-like band"
-
-    if transition == "INC":
-        return "inspect INC exponent pressure through NEW-like band"
-
-    if transition == "DEC_PATH":
-        return "inspect DEC exponent path through DROP-like band"
-
-    if transition == "INC_PATH":
-        return "inspect INC exponent path through NEW-like band"
-
-    if transition == "DROP_PATH":
-        return "inspect DROP transition path through DROP-like band"
-
-    if transition == "NEW_PATH":
-        return "inspect NEW transition path through NEW-like band"
-
-    return "inspect unresolved transition neighborhood"
-
-
-def format_band(band: dict[str, Any] | None) -> str:
-    if band is None:
-        return "unknown"
-    return (
-        f"{band.get('kind', 'unknown')} "
-        f"{band.get('move', 'unknown')} "
-        f"k[{band.get('k_range', 'unknown')}]"
-    )
+def format_factorization(values: list[int]) -> str:
+    return " * ".join(str(value) for value in values)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Propose a local PET probe window from lens transition and mass-response bands."
+        description="Prototype PET backbone selection from input mass and digit-shadow metrics."
     )
     parser.add_argument("n", type=int, metavar="N")
-    parser.add_argument("--max-leaves", type=int, default=8)
-    parser.add_argument("--flatten", action="store_true")
-    parser.add_argument("--max-generator-count", type=int, default=20)
-    parser.add_argument("--excluded-support-limit", type=int, default=16)
-    parser.add_argument("--max-move-span", type=int, default=5)
+    parser.add_argument("--base", type=int, default=10)
     args = parser.parse_args()
 
     if args.n < 1:
         raise SystemExit("pet_local_probe_proposal expects integers >= 1")
+    if args.base < 2:
+        raise SystemExit("--base expects integers >= 2")
 
-    transition_args = [
-        sys.executable,
-        "tools/pet_lens_transition.py",
-        str(args.n),
-        "--max-leaves",
-        str(args.max_leaves),
-    ]
-    if args.flatten:
-        transition_args.append("--flatten")
+    n_digits = digit_count(args.n, args.base)
+    band_min, band_max = digit_band_bounds(n_digits, args.base)
+    n_band_position = band_position(args.n, band_min, band_max)
+    n_weight_band_zone = weight_band_zone(n_band_position)
 
-    transition_text = run_command(transition_args)
+    digits = digits_in_base(args.n, args.base)
+    counts = Counter(digits)
+    digit_unique_count = len(counts)
+    max_digit_frequency = max(counts.values())
+    digit_repetition_ratio = max_digit_frequency / len(digits)
+    all_digits_same = digit_unique_count == 1
+    palindrome = digits == list(reversed(digits))
 
-    transition = extract_value(transition_text, "transition")
-    source_generator = extract_value(transition_text, "source_generator")
-    target_generator = extract_value(transition_text, "target_generator")
-    representative_target = extract_value(transition_text, "representative_target")
+    selected_backbone_order = n_digits
+    selected_backbone_primes = first_primes(selected_backbone_order)
+    selected_backbone_generator = prod(selected_backbone_primes)
 
-    mass_probe_text = run_command(
-        [
-            sys.executable,
-            "tools/pet_lens_mass_probe.py",
-            str(args.n),
-            "--max-leaves",
-            str(args.max_leaves),
-        ]
+    n_signature_data = shape_signature_dict(args.n)
+    selected_backbone_signature_data = shape_signature_dict(selected_backbone_generator)
+    shape_relation = (
+        "same-signature"
+        if n_signature_data["signature"] == selected_backbone_signature_data["signature"]
+        else "different-signature"
     )
-    mass_source_generator = extract_value(mass_probe_text, "source_generator")
-    primorial_expanded_generator = extract_value(mass_probe_text, "primorial_expanded_generator")
-    digit_aligned = extract_value(mass_probe_text, "digit_aligned")
-    weight_alignment = extract_value(mass_probe_text, "weight_alignment")
-    weight_direction = extract_value(mass_probe_text, "weight_direction")
-    digit_repetition_ratio = extract_value(mass_probe_text, "digit_repetition_ratio")
-    shadow_note = extract_value(mass_probe_text, "shadow_note")
-
-    mass_response_text = run_command(
-        [
-            sys.executable,
-            "-m",
-            "pet.cli",
-            "opaque-mass-response",
-            str(args.n),
-            "--max-generator-count",
-            str(args.max_generator_count),
-            "--excluded-support-limit",
-            str(args.excluded_support_limit),
-            "--max-move-span",
-            str(args.max_move_span),
-            "--bands",
-            "--json",
-        ]
+    shape_fit_label = shape_fit(
+        n_signature_data["signature"],
+        selected_backbone_signature_data["signature"],
     )
-    mass_response = json.loads(mass_response_text)
-    bands = mass_response.get("magnetic_bands", [])
+    shape_fit_label = shape_fit(
+        n_signature_data["signature"],
+        selected_backbone_signature_data["signature"],
+    )
 
-    primary_band, transition_side = choose_primary_band(bands, transition)
-    side_band = choose_side_band(bands, transition, primary_band)
+    n_tree = encode(args.n)
+    selected_backbone_tree = encode(selected_backbone_generator)
+    backbone_to_n_distance = distance(selected_backbone_tree, n_tree)
+    backbone_to_n_structural_distance = structural_distance(selected_backbone_tree, n_tree)
+    backbone_to_n_same_shape = backbone_to_n_structural_distance == 0
+    relation_status = (
+        "structurally-compatible"
+        if backbone_to_n_same_shape
+        else "structurally-different"
+    )
 
-    print("PET LOCAL PROBE PROPOSAL")
+    print("PET BACKBONE SELECTION PROTOTYPE")
     print()
     print(f"N = {args.n}")
-    print(f"transition = {transition}")
-    print(f"source_generator = {source_generator}")
-    print(f"target_generator = {target_generator}")
-    print("target_role = reduction/probe target, not full N mass")
-    print(f"representative_target = {representative_target}")
     print()
-    print("Lens mass/shadow")
-    print(f"mass_source_generator = {mass_source_generator}")
-    print(f"primorial_expanded_generator = {primorial_expanded_generator}")
-    print(f"digit_aligned = {digit_aligned}")
-    print(f"weight_alignment = {weight_alignment}")
-    print(f"weight_direction = {weight_direction}")
-    print(f"digit_repetition_ratio = {digit_repetition_ratio}")
-    print(f"shadow_note = {shadow_note}")
+    print("Input metrics")
+    print(f"base = {args.base}")
+    print(f"n_digits = {n_digits}")
+    print(f"weight_band = {band_min}..{band_max}")
+    print(f"weight_band_position = {n_band_position:.3f}")
+    print(f"weight_band_zone = {n_weight_band_zone}")
+    print(f"digit_unique_count = {digit_unique_count}")
+    print(f"max_digit_frequency = {max_digit_frequency}")
+    print(f"digit_repetition_ratio = {digit_repetition_ratio:.3f}")
+    print(f"all_digits_same = {yes_no(all_digits_same)}")
+    print(f"palindrome = {yes_no(palindrome)}")
     print()
-    print(f"primary_band = {format_band(primary_band)}")
-    print(f"transition_side = {transition_side}")
-    print(f"proposal_status = {proposal_status(transition, transition_side)}")
-    print("proposal_status_kind = structural")
-    print("verification_status = unverified")
-    print(f"reason = {proposal_reason(transition, transition_side)}")
-    print(f"suggested_probe_role = {suggested_probe_role(transition, transition_side)}")
-    print("candidate_status = window-only")
-    print(f"candidate_window = k[{primary_band.get('k_range', 'unknown') if primary_band else 'unknown'}]")
-    print(f"side_band = {format_band(side_band)}")
-    if side_band:
-        print(f"side_window = k[{side_band.get('k_range', 'unknown')}]")
-    else:
-        print("side_window = unknown")
+    print("Backbone selection")
+    print("selection_rule = digit-count primorial backbone")
+    print(f"selected_backbone_order = {selected_backbone_order}")
+    print(f"selected_backbone_generator = {selected_backbone_generator}")
+    print(f"selected_backbone_factorization = {format_factorization(selected_backbone_primes)}")
+    print("backbone_status = selected")
     print()
-    print("claim = PET local probe proposal only; this does not factor N")
+    print("PET shape comparison")
+    print(f"n_already_minimal = {yes_no(n_signature_data['already_minimal'])}")
+    print(f"n_child_generators = {n_signature_data['child_generators']}")
+    print(f"n_signature = {n_signature_data['signature']}")
+    print(f"selected_backbone_already_minimal = {yes_no(selected_backbone_signature_data['already_minimal'])}")
+    print(f"selected_backbone_child_generators = {selected_backbone_signature_data['child_generators']}")
+    print(f"selected_backbone_signature = {selected_backbone_signature_data['signature']}")
+    print(f"shape_relation = {shape_relation}")
+    print(f"shape_fit = {shape_fit_label}")
+    print()
+    print("next_stage = operator signal search")
+    print("next_stage_status = pending")
+    print()
+    print("claim = PET backbone selection prototype only; this does not factor N")
 
     return 0
 
