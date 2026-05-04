@@ -324,6 +324,7 @@ def main() -> int:
     parser.add_argument("n", type=int, metavar="N")
     parser.add_argument("--base", type=int, default=10)
     parser.add_argument("--operator-depth", default="2")
+    parser.add_argument("--backbone-order", type=int)
     args = parser.parse_args()
 
     if args.n < 1:
@@ -332,6 +333,9 @@ def main() -> int:
         raise SystemExit("--base expects integers >= 2")
 
     n_digits = digit_count(args.n, args.base)
+
+    if args.backbone_order is not None and args.backbone_order < 1:
+        raise SystemExit("--backbone-order expects integers >= 1")
 
     if args.operator_depth == "auto":
         operator_depth = n_digits + 1
@@ -357,7 +361,12 @@ def main() -> int:
     all_digits_same = digit_unique_count == 1
     palindrome = digits == list(reversed(digits))
 
-    selected_backbone_order = n_digits
+    selected_backbone_order = args.backbone_order or n_digits
+    selection_rule = (
+        "manual primorial backbone order override"
+        if args.backbone_order is not None
+        else "digit-count primorial backbone"
+    )
     selected_backbone_primes = first_primes(selected_backbone_order)
     selected_backbone_generator = prod(selected_backbone_primes)
 
@@ -414,7 +423,7 @@ def main() -> int:
     print(f"digit_gradient = {digit_gradient(digits)}")
     print()
     print("Backbone selection")
-    print("selection_rule = digit-count primorial backbone")
+    print(f"selection_rule = {selection_rule}")
     print(f"selected_backbone_order = {selected_backbone_order}")
     print(f"selected_backbone_generator = {selected_backbone_generator}")
     print(f"selected_backbone_factorization = {format_factorization(selected_backbone_primes)}")
