@@ -317,6 +317,31 @@ def format_factorization(values: list[int]) -> str:
     return " * ".join(str(value) for value in values)
 
 
+def operator_sequence_move_count(sequence: str) -> int:
+    if sequence == "none":
+        return 0
+    return sequence.count(" -> ") + 1
+
+
+def operator_probe_selection_quality(result: str, move_count: int) -> str:
+    if result not in {"already-matching", "matched"}:
+        return "unmatched"
+    if move_count == 0:
+        return "exact-shape"
+    if move_count == 1:
+        return "one-move"
+    return "multi-move"
+
+
+def operator_probe_result_rank(result: str) -> int:
+    return {
+        "already-matching": 0,
+        "matched": 1,
+        "exhausted": 2,
+        "unavailable": 3,
+    }.get(result, 4)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Prototype PET backbone selection from input mass and digit-shadow metrics."
@@ -325,6 +350,11 @@ def main() -> int:
     parser.add_argument("--base", type=int, default=10)
     parser.add_argument("--operator-depth", default="2")
     parser.add_argument("--backbone-order", type=int)
+    parser.add_argument(
+        "--backbone-selection",
+        choices=("digit-count", "race"),
+        default="digit-count",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -361,16 +391,71 @@ def main() -> int:
     all_digits_same = digit_unique_count == 1
     palindrome = digits == list(reversed(digits))
 
-    selected_backbone_order = args.backbone_order or n_digits
-    selection_rule = (
-        "manual primorial backbone order override"
-        if args.backbone_order is not None
-        else "digit-count primorial backbone"
-    )
+    n_signature_data = shape_signature_dict(args.n)
+
+    if args.backbone_selection == "race" and args.backbone_order is not None:
+        raise SystemExit("--backbone-selection race cannot be combined with --backbone-order")
+
+    race_candidates = []
+    race_selected = None
+
+    if args.backbone_selection == "race":
+        selection_rule = "PET backbone race"
+        candidate_orders = list(range(1, n_digits + 3))
+
+        for candidate_order in candidate_orders:
+            candidate_primes = first_primes(candidate_order)
+            candidate_generator = prod(candidate_primes)
+            candidate_signature_data = shape_signature_dict(candidate_generator)
+            candidate_shape_fit = shape_fit(
+                n_signature_data["signature"],
+                candidate_signature_data["signature"],
+            )
+            candidate_probe = iterative_operator_probe(
+                candidate_signature_data["signature"],
+                n_signature_data["signature"],
+                candidate_shape_fit,
+                depth_limit=operator_depth,
+            )
+            candidate_sequence = format_move_sequence(candidate_probe["selected_moves"])
+            candidate_move_count = operator_sequence_move_count(candidate_sequence)
+            candidate_result = candidate_probe["status"]
+
+            race_candidates.append(
+                {
+                    "order": candidate_order,
+                    "generator": candidate_generator,
+                    "shape_fit": candidate_shape_fit,
+                    "result": candidate_result,
+                    "sequence": candidate_sequence,
+                    "move_count": candidate_move_count,
+                    "quality": operator_probe_selection_quality(
+                        candidate_result,
+                        candidate_move_count,
+                    ),
+                }
+            )
+
+        race_selected = min(
+            race_candidates,
+            key=lambda candidate: (
+                operator_probe_result_rank(candidate["result"]),
+                candidate["move_count"],
+                abs(candidate["order"] - n_digits),
+            ),
+        )
+        selected_backbone_order = race_selected["order"]
+    else:
+        selected_backbone_order = args.backbone_order or n_digits
+        selection_rule = (
+            "manual primorial backbone order override"
+            if args.backbone_order is not None
+            else "digit-count primorial backbone"
+        )
+
     selected_backbone_primes = first_primes(selected_backbone_order)
     selected_backbone_generator = prod(selected_backbone_primes)
 
-    n_signature_data = shape_signature_dict(args.n)
     selected_backbone_signature_data = shape_signature_dict(selected_backbone_generator)
     shape_relation = (
         "same-signature"
@@ -427,6 +512,11 @@ def main() -> int:
     print(f"selected_backbone_order = {selected_backbone_order}")
     print(f"selected_backbone_generator = {selected_backbone_generator}")
     print(f"selected_backbone_factorization = {format_factorization(selected_backbone_primes)}")
+    if race_selected is not None:
+        print(f"race_candidate_orders = 1..{n_digits + 2}")
+        print(f"race_selected_move_count = {race_selected['move_count']}")
+        print(f"race_selected_sequence = {race_selected['sequence']}")
+        print(f"race_selection_quality = {race_selected['quality']}")
     print("backbone_status = selected")
     print()
     print("PET shape comparison")

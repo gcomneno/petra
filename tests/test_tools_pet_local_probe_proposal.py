@@ -201,3 +201,52 @@ def test_operator_depth_auto_uses_input_digit_count_plus_one() -> None:
     assert "operator_probe_result = matched" in output
     assert "probed_backbone_relation_to_n = same-signature" in output
     assert "probed_backbone_fit_against_n = result-matches" in output
+
+
+def run_tool_with_args(*args: str) -> str:
+    result = subprocess.run(
+        [sys.executable, "tools/pet_local_probe_proposal.py", *args],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout
+
+
+def test_local_probe_can_select_backbone_with_race_for_large_diagonal() -> None:
+    output = run_tool_with_args("9999999999", "--operator-depth", "auto", "--backbone-selection", "race")
+
+    assert "selection_rule = PET backbone race" in output
+    assert "selected_backbone_order = 5" in output
+    assert "race_candidate_orders = 1..12" in output
+    assert "race_selected_move_count = 1" in output
+    assert "race_selected_sequence = INC (0,)" in output
+    assert "race_selection_quality = one-move" in output
+    assert "operator_probe_result = matched" in output
+    assert "selected_operator_sequence = INC (0,)" in output
+
+
+def test_local_probe_can_select_exact_backbone_with_race_for_mixed_shape() -> None:
+    output = run_tool_with_args("30030", "--operator-depth", "auto", "--backbone-selection", "race")
+
+    assert "selection_rule = PET backbone race" in output
+    assert "selected_backbone_order = 6" in output
+    assert "race_candidate_orders = 1..7" in output
+    assert "race_selected_move_count = 0" in output
+    assert "race_selected_sequence = none" in output
+    assert "race_selection_quality = exact-shape" in output
+    assert "shape_fit = backbone-matches" in output
+    assert "operator_probe_result = already-matching" in output
+
+
+def test_local_probe_can_select_narrow_backbone_with_race_for_deep_power_shape() -> None:
+    output = run_tool_with_args("65536", "--operator-depth", "auto", "--backbone-selection", "race")
+
+    assert "selection_rule = PET backbone race" in output
+    assert "selected_backbone_order = 1" in output
+    assert "race_candidate_orders = 1..7" in output
+    assert "race_selected_move_count = 3" in output
+    assert "race_selected_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
+    assert "race_selection_quality = multi-move" in output
+    assert "operator_probe_result = matched" in output
+    assert "selected_operator_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
