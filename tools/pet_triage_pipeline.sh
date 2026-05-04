@@ -111,6 +111,17 @@ section() {
   echo "================================================================"
 }
 
+run_optional() {
+  local status=0
+  "$@" || status=$?
+
+  if [[ "$status" -ne 0 ]]; then
+    echo "stage_status = unavailable"
+    echo "reason = optional diagnostic command failed"
+    echo "exit_status = $status"
+  fi
+}
+
 echo "PET TRIAGE PIPELINE"
 echo "N_digits = ${#N}"
 echo "max_generator_count = $MAX_GENERATOR_COUNT"
