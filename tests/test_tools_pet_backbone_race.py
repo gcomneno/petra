@@ -38,4 +38,14 @@ def test_backbone_race_selects_lower_cost_candidate_for_large_diagonal() -> None
     assert "selected_result = matched" in output
     assert "selected_move_count = 1" in output
     assert "selected_sequence = INC (0,)" in output
+    assert "selection_quality = one-move" in output
     assert "claim = PET backbone race prototype only; this does not factor N" in output
+
+
+def test_backbone_race_reports_exact_shape_quality() -> None:
+    output = run_race(2222222222, "4,5,10")
+
+    assert "selected_backbone_order = 5" in output
+    assert "selected_move_count = 0" in output
+    assert "selected_sequence = none" in output
+    assert "selection_quality = exact-shape" in output

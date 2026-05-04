@@ -90,6 +90,16 @@ def run_candidate(n: int, order: int, operator_depth: str) -> Candidate:
     )
 
 
+def selection_quality(candidate: Candidate) -> str:
+    if candidate.result not in {"already-matching", "matched"}:
+        return "unmatched"
+    if candidate.move_count == 0:
+        return "exact-shape"
+    if candidate.move_count == 1:
+        return "one-move"
+    return "multi-move"
+
+
 def candidate_score(candidate: Candidate, n_digits: int) -> tuple[int, int, int]:
     result_rank = {
         "already-matching": 0,
@@ -152,6 +162,7 @@ def main() -> int:
     print(f"selected_result = {selected.result}")
     print(f"selected_move_count = {selected.move_count}")
     print(f"selected_sequence = {selected.sequence}")
+    print(f"selection_quality = {selection_quality(selected)}")
     print("selection_rule = prefer already-matching, then matched, then fewer moves, then order closest to n_digits")
     print()
     print("claim = PET backbone race prototype only; this does not factor N")
