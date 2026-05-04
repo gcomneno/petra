@@ -22,6 +22,69 @@ Tools must not implement structural discovery over opaque integers, ISS/IRSR
 pipelines, byte-stream discovery, preimage search, probe pipelines, or
 target-directed candidate search.
 
+
+## Current PET triage workflow
+
+The current canonical operator-side workflow is the PET triage pipeline:
+
+- `pet_triage_pipeline.sh` — canonical PET triage pipeline.
+- `peelator.sh` — compatibility wrapper that delegates to `pet_triage_pipeline.sh`.
+
+The triage pipeline follows this order:
+
+1. PET race diagnostic
+2. PET classic handoff policy
+3. PET verified divisor summary
+4. PET classic scan policy
+5. legacy diagnostics, non-fatal
+
+The core contract is:
+
+> PET does not factor opaque integers directly. PET selects a structural
+> diagnostic and a bounded classic verification policy. Classic stages only
+> accept divisors when explicitly verified.
+
+## Core PET triage tools
+
+These tools are part of the current PET-policy-first flow:
+
+- `pet_local_probe_proposal.py` — single-number PET race diagnostic report.
+- `pet_backbone_race.py` — PET-only backbone race selection.
+- `pet_backbone_race_matrix.py` — batch matrix for backbone race diagnostics.
+- `pet_classic_handoff_route.py` — maps PET shape diagnostics to classic probe policies.
+- `pet_classic_scan_summary.py` — summarizes verified classic divisors from PET-guided scans.
+- `pet_classic_scan_policy.py` — classifies classic scan sources and policy status.
+- `pet_triage_pipeline.sh` — canonical triage pipeline.
+
+## Compatibility wrappers
+
+- `peelator.sh` — legacy command name kept for compatibility; delegates to
+  `pet_triage_pipeline.sh`.
+
+## Legacy diagnostics
+
+These tools remain available for secondary diagnostics, historical comparison,
+and test coverage, but they are no longer the main decision engine of the
+triage flow:
+
+- `pet_lens_hint.py`
+- `pet_lens_candidates.py`
+- `pet_lens_transition.py`
+- `pet_lens_mass_probe.py`
+- `tune_peelator.sh`
+
+Legacy diagnostics must not override PET race diagnostics or classic handoff
+policy decisions.
+
+## Classic scan support tools
+
+These are still used by classic scan summary/policy tooling and should not be
+removed without replacing their callers and tests:
+
+- `pet_crumb_classic_scan.py`
+- `pet_root_window_classic_scan.py`
+
+
 ## Stable tooling
 
 - `atlas_summary.py` — atlas-style summary generation used by bounded reports
