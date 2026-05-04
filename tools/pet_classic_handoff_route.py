@@ -40,6 +40,16 @@ def command_text(parts: list[str]) -> str:
     return " ".join(parts)
 
 
+def classic_probe_policy(shape_diagnostic: str) -> str:
+    return {
+        "atomic-exact": "primality-check-only",
+        "narrow-deep": "power-like-local-check",
+        "wide-exact": "backbone-wide-structural-check",
+        "near-shape": "operator-neighborhood-check",
+        "complex-border": "existing-route-fallback",
+    }.get(shape_diagnostic, "existing-route-fallback")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build a PET-guided route from local probe proposal to classic handoff."
@@ -103,6 +113,7 @@ def main() -> int:
     print(f"proposal_selected_backbone_order = {selected_backbone_order}")
     print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
+    print(f"classic_probe_policy = {classic_probe_policy(race_shape_diagnostic)}")
 
     if branch == "unknown":
         print()
