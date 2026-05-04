@@ -21,6 +21,9 @@ def test_classic_handoff_route_follows_drop_branch_to_boundary_entry() -> None:
     assert "proposal_transition = DROP" in output
     assert "proposal_transition_side = DROP" in output
     assert "proposal_status = strong" in output
+    assert "proposal_selected_backbone_order = " in output
+    assert "proposal_race_shape_diagnostic = " in output
+    assert "proposal_selected_operator_sequence = " in output
     assert "route_status = available" in output
     assert "route_kind = fork-follow-rescan" in output
     assert "route_branch = DROP" in output

@@ -60,6 +60,10 @@ def main() -> int:
             sys.executable,
             "tools/pet_local_probe_proposal.py",
             str(args.n),
+            "--operator-depth",
+            "auto",
+            "--backbone-selection",
+            "race",
         ]
     )
 
@@ -68,6 +72,9 @@ def main() -> int:
     proposal_status = extract_value(proposal, "proposal_status")
     primary_band = extract_value(proposal, "primary_band")
     side_band = extract_value(proposal, "side_band")
+    selected_backbone_order = extract_value(proposal, "selected_backbone_order")
+    race_shape_diagnostic = extract_value(proposal, "race_shape_diagnostic")
+    selected_operator_sequence = extract_value(proposal, "selected_operator_sequence")
 
     if transition == "unknown" or transition_side == "unknown":
         lens_transition = run_command(
@@ -93,6 +100,9 @@ def main() -> int:
     print(f"proposal_status = {proposal_status}")
     print(f"proposal_primary_band = {primary_band}")
     print(f"proposal_side_band = {side_band}")
+    print(f"proposal_selected_backbone_order = {selected_backbone_order}")
+    print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
+    print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
 
     if branch == "unknown":
         print()
