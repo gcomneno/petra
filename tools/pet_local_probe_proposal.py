@@ -88,6 +88,51 @@ def digit_shadow_zone(position: float) -> str:
     return "high"
 
 
+def positional_weights_for_digits(digits: list[int], base: int) -> list[int]:
+    length = len(digits)
+    return [
+        digit * (base ** (length - index - 1))
+        for index, digit in enumerate(digits)
+    ]
+
+
+def positional_terms_for_digits(digits: list[int], base: int) -> str:
+    length = len(digits)
+    return " + ".join(
+        f"{digit}*{base ** (length - index - 1)}"
+        for index, digit in enumerate(digits)
+    )
+
+
+def positional_weight_ratios(weights: list[int]) -> list[float]:
+    total = sum(weights)
+    if total == 0:
+        return [0.0 for _weight in weights]
+    return [weight / total for weight in weights]
+
+
+def digit_delta(digits: list[int]) -> int:
+    if len(digits) < 2:
+        return 0
+    return digits[-1] - digits[0]
+
+
+def digit_gradient(digits: list[int]) -> str:
+    if len(digits) < 2:
+        return "single"
+
+    delta = digit_delta(digits)
+    if delta > 0:
+        return "ascending"
+    if delta < 0:
+        return "descending"
+    return "flat"
+
+
+def format_float_list(values: list[float], precision: int = 3) -> str:
+    return "[" + ", ".join(f"{value:.{precision}f}" for value in values) + "]"
+
+
 def structural_mass(signature: list) -> int:
     return len(signature) + sum(
         structural_mass(child)
@@ -291,6 +336,8 @@ def main() -> int:
     n_digit_shadow_zone = digit_shadow_zone(n_shadow_position)
 
     digits = digits_in_base(args.n, args.base)
+    positional_weights = positional_weights_for_digits(digits, args.base)
+    positional_ratios = positional_weight_ratios(positional_weights)
     counts = Counter(digits)
     digit_unique_count = len(counts)
     max_digit_frequency = max(counts.values())
@@ -346,6 +393,13 @@ def main() -> int:
     print(f"digit_repetition_ratio = {digit_repetition_ratio:.3f}")
     print(f"all_digits_same = {yes_no(all_digits_same)}")
     print(f"palindrome = {yes_no(palindrome)}")
+    print()
+    print("Digit positional profile")
+    print(f"digit_position_terms = {positional_terms_for_digits(digits, args.base)}")
+    print(f"digit_weight_profile = {positional_weights}")
+    print(f"digit_weight_ratios = {format_float_list(positional_ratios)}")
+    print(f"digit_delta = {digit_delta(digits)}")
+    print(f"digit_gradient = {digit_gradient(digits)}")
     print()
     print("Backbone selection")
     print("selection_rule = digit-count primorial backbone")

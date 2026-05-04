@@ -27,6 +27,13 @@ def assert_common_backbone_selection(output: str, n: int) -> None:
     assert "all_digits_same = yes" in output
     assert "palindrome = yes" in output
 
+    assert "Digit positional profile" in output
+    assert "digit_position_terms = " in output
+    assert "digit_weight_profile = " in output
+    assert "digit_weight_ratios = " in output
+    assert "digit_delta = " in output
+    assert "digit_gradient = " in output
+
     assert "Backbone selection" in output
     assert "selection_rule = digit-count primorial backbone" in output
     assert "selected_backbone_order = 2" in output
