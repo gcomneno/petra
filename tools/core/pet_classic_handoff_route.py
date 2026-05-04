@@ -182,6 +182,24 @@ def main() -> int:
         print("claim = PET classic handoff route only; classic verification required")
         return 0
 
+    if policy == "complex-border-route-needed":
+        suggested_parts = [
+            "python",
+            "-m",
+            "pet.cli",
+            "opaque-probe",
+            str(args.n),
+            "--trial-limit",
+            "20",
+        ]
+        print("route_status = available")
+        print("route_kind = complex-border-classic-probe")
+        print("reason = complex border PET shape; run conservative classic residual probe")
+        print(f"suggested_command = {command_text(suggested_parts)}")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")

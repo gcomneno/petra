@@ -36,11 +36,11 @@ def test_classic_handoff_route_reports_policy_without_legacy_fallback() -> None:
     assert "PET CLASSIC HANDOFF ROUTE" in output
     assert "proposal_race_shape_diagnostic = complex-border" in output
     assert "classic_probe_policy = complex-border-route-needed" in output
-    assert "route_status = unavailable" in output
-    assert "route_kind = complex-border-route-needed" in output
-    assert "reason = classic probe policy route not implemented yet" in output
+    assert "route_status = available" in output
+    assert "route_kind = complex-border-classic-probe" in output
+    assert "reason = complex border PET shape; run conservative classic residual probe" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 3027009081 --trial-limit 20" in output
     assert "route_kind = fork-follow-rescan" not in output
-    assert "suggested_command =" not in output
     assert "claim = PET classic handoff route only; classic verification required" in output
 
 

@@ -58,9 +58,9 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
             3027009081,
             "complex-border",
             "complex-border-route-needed",
-            "unavailable",
-            "complex-border-route-needed",
-            None,
+            "available",
+            "complex-border-classic-probe",
+            "python -m pet.cli opaque-probe 3027009081 --trial-limit 20",
         ),
     ]
 
@@ -83,10 +83,6 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
         assert f"route_status = {expected_status}" in output
         assert f"route_kind = {expected_route_kind}" in output
 
-        if expected_command is None:
-            assert "suggested_command =" not in output
-            assert "reason = classic probe policy route not implemented yet" in output
-        else:
-            assert f"suggested_command = {expected_command}" in output
+        assert f"suggested_command = {expected_command}" in output
 
         assert "route_kind = fork-follow-rescan" not in output
