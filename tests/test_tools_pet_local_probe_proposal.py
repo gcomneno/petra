@@ -50,6 +50,13 @@ def assert_common_backbone_selection(output: str, n: int) -> None:
     assert "operator_probe_status = iterative-shape-probe" in output
     assert "operator_probe_depth_limit = 2" in output
     assert "Selected operator shape comparison" in output
+    assert "Composite operator probe" in output
+    assert "composite_probe_status = available" in output
+    assert "pet_unit = 1" in output
+    assert "pet_unit_signature = []" in output
+    assert "self_unmerge_available = yes" in output
+    assert "self_unmerge_result = 1" in output
+    assert "self_unmerge_signature = []" in output
     assert "claim = PET backbone selection prototype only; this does not factor N" in output
 
 
