@@ -59,7 +59,7 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
             "complex-border",
             "complex-border-route-needed",
             "available",
-            "complex-border-classic-probe",
+            "complex-border-lens-drop-classic-probe",
             "python -m pet.cli opaque-probe 3027009081 --trial-limit 20",
         ),
     ]

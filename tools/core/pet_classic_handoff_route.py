@@ -183,6 +183,18 @@ def main() -> int:
         return 0
 
     if policy == "complex-border-route-needed":
+        lens_transition = run_command(
+            [
+                sys.executable,
+                "tools/pet_lens_transition.py",
+                str(args.n),
+                "--max-leaves",
+                str(args.max_leaves),
+            ]
+        )
+        transition_available = extract_value(lens_transition, "transition_available")
+        transition = extract_value(lens_transition, "transition")
+
         suggested_parts = [
             "python",
             "-m",
@@ -193,8 +205,12 @@ def main() -> int:
             "20",
         ]
         print("route_status = available")
-        print("route_kind = complex-border-classic-probe")
-        print("reason = complex border PET shape; run conservative classic residual probe")
+        if transition_available == "yes" and transition == "DROP":
+            print("route_kind = complex-border-lens-drop-classic-probe")
+            print("reason = complex border PET shape has a DROP lens transition; run conservative classic residual probe")
+        else:
+            print("route_kind = complex-border-classic-probe")
+            print("reason = complex border PET shape; run conservative classic residual probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
