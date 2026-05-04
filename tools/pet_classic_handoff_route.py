@@ -119,6 +119,24 @@ def main() -> int:
         print("claim = PET classic handoff route only; classic verification required")
         return 0
 
+    if policy == "power-like-local-check":
+        suggested_parts = [
+            "python",
+            "-m",
+            "pet.cli",
+            "opaque-probe",
+            str(args.n),
+            "--trial-limit",
+            "2",
+        ]
+        print("route_status = available")
+        print("route_kind = power-like-local-check")
+        print("reason = narrow deep PET shape; run minimal classic check for repeated small factors")
+        print(f"suggested_command = {command_text(suggested_parts)}")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")

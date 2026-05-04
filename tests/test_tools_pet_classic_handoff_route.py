@@ -40,6 +40,18 @@ def test_classic_handoff_route_supports_atomic_exact_primality_policy() -> None:
     assert "route_kind = fork-follow-rescan" not in output
 
 
+def test_classic_handoff_route_supports_narrow_deep_power_policy() -> None:
+    output = run_tool(65536)
+
+    assert "proposal_race_shape_diagnostic = narrow-deep" in output
+    assert "classic_probe_policy = power-like-local-check" in output
+    assert "route_status = available" in output
+    assert "route_kind = power-like-local-check" in output
+    assert "reason = narrow deep PET shape; run minimal classic check for repeated small factors" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 65536 --trial-limit 2" in output
+    assert "route_kind = fork-follow-rescan" not in output
+
+
 def test_classic_probe_policy_maps_pet_shape_diagnostics() -> None:
     import importlib.util
     from pathlib import Path
