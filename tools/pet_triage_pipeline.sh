@@ -113,13 +113,32 @@ section() {
 
 run_optional() {
   local status=0
-  "$@" || status=$?
+  local output_file
+  output_file="$(mktemp)"
 
-  if [[ "$status" -ne 0 ]]; then
-    echo "stage_status = unavailable"
-    echo "reason = optional diagnostic command failed"
-    echo "exit_status = $status"
+  "$@" >"$output_file" 2>&1 || status=$?
+
+  if [[ "$status" -eq 0 ]]; then
+    sed \
+      -e 's/^source_reason \([^=]*\) = ERROR: /legacy_source_warning \1 = /' \
+      -e 's/^reason = ERROR: /legacy_reason = /' \
+      "$output_file"
+    rm -f "$output_file"
+    return 0
   fi
+
+  echo "stage_status = unavailable"
+  echo "reason = optional diagnostic command failed"
+  echo "exit_status = $status"
+
+  local diagnostic_error
+  diagnostic_error="$(sed -n '/[^[:space:]]/p' "$output_file" | head -n 1 | sed 's/^ERROR: //')"
+  if [[ -n "$diagnostic_error" ]]; then
+    echo "diagnostic_error = $diagnostic_error"
+  fi
+
+  rm -f "$output_file"
+  return 0
 }
 
 echo "PET TRIAGE PIPELINE"
@@ -140,29 +159,29 @@ section "1. PET classic handoff policy"
 tools/pet_classic_handoff_route.py "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"
 
 section "2. PET verified divisor summary"
-tools/pet_classic_scan_summary.py "$N"
+run_optional tools/pet_classic_scan_summary.py "$N"
 
 section "3. PET classic scan policy"
-tools/pet_classic_scan_policy.py "$N"
+run_optional tools/pet_classic_scan_policy.py "$N"
 
 section "4. Legacy lens hint"
-tools/pet_lens_hint.py "$N"   --schedule-limit 8   --max-leaves 8   --summary
+run_optional tools/pet_lens_hint.py "$N"   --schedule-limit 8   --max-leaves 8   --summary
 
 section "5. Legacy lens candidates"
-tools/pet_lens_candidates.py "$N"   --max-leaves 8
+run_optional tools/pet_lens_candidates.py "$N"   --max-leaves 8
 
 section "6. Legacy lens transition"
-tools/pet_lens_transition.py "$N"   --max-leaves 8
+run_optional tools/pet_lens_transition.py "$N"   --max-leaves 8
 
 section "7. Legacy mass response"
-python -m pet.cli opaque-mass-response "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --bands   "${JSON_ARG[@]}"
+run_optional python -m pet.cli opaque-mass-response "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --bands   "${JSON_ARG[@]}"
 
 section "8. Legacy focused peel classic handoff diagnostic"
-python -m pet.cli opaque-focused-peel "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --classic-handoff   --handoff-radius "$HANDOFF_RADIUS"   "${JSON_ARG[@]}"
+run_optional python -m pet.cli opaque-focused-peel "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --classic-handoff   --handoff-radius "$HANDOFF_RADIUS"   "${JSON_ARG[@]}"
 
 if [[ "$RUN_FORK" -eq 1 ]]; then
   section "9. Legacy focused peel fork diagnostic"
-  python -m pet.cli opaque-focused-peel "$N"     --max-generator-count "$MAX_GENERATOR_COUNT"     --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"     --max-move-span "$MAX_MOVE_SPAN"     --fork     "${JSON_ARG[@]}"
+  run_optional python -m pet.cli opaque-focused-peel "$N"     --max-generator-count "$MAX_GENERATOR_COUNT"     --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"     --max-move-span "$MAX_MOVE_SPAN"     --fork     "${JSON_ARG[@]}"
 fi
 
 BRANCHES=()
@@ -178,13 +197,13 @@ fi
 if [[ "$RUN_FORK_FOLLOW" -eq 1 ]]; then
   for BRANCH in "${BRANCHES[@]}"; do
     section "10. Legacy fork-follow diagnostic $BRANCH"
-    python -m pet.cli opaque-focused-peel "$N"       --max-generator-count "$MAX_GENERATOR_COUNT"       --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"       --max-move-span "$MAX_MOVE_SPAN"       --fork-follow "$BRANCH"       "${JSON_ARG[@]}"
+    run_optional python -m pet.cli opaque-focused-peel "$N"       --max-generator-count "$MAX_GENERATOR_COUNT"       --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"       --max-move-span "$MAX_MOVE_SPAN"       --fork-follow "$BRANCH"       "${JSON_ARG[@]}"
   done
 fi
 
 if [[ "$RUN_RECURSIVE" -eq 1 ]]; then
   for BRANCH in "${BRANCHES[@]}"; do
     section "11. Legacy recursive lens diagnostic $BRANCH"
-    python -m pet.cli opaque-recursive-lens "$N"       --max-generator-count "$MAX_GENERATOR_COUNT"       --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"       --max-move-span "$MAX_MOVE_SPAN"       --depth "$DEPTH"       --terminal-reduction       --anchor-field       --composite-edge-peel       --branch-recursion "$BRANCH"       "${JSON_ARG[@]}"
+    run_optional python -m pet.cli opaque-recursive-lens "$N"       --max-generator-count "$MAX_GENERATOR_COUNT"       --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"       --max-move-span "$MAX_MOVE_SPAN"       --depth "$DEPTH"       --terminal-reduction       --anchor-field       --composite-edge-peel       --branch-recursion "$BRANCH"       "${JSON_ARG[@]}"
   done
 fi
