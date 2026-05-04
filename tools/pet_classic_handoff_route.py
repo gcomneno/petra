@@ -85,22 +85,7 @@ def main() -> int:
     selected_backbone_order = extract_value(proposal, "selected_backbone_order")
     race_shape_diagnostic = extract_value(proposal, "race_shape_diagnostic")
     selected_operator_sequence = extract_value(proposal, "selected_operator_sequence")
-
-    if transition == "unknown" or transition_side == "unknown":
-        lens_transition = run_command(
-            [
-                sys.executable,
-                "tools/pet_lens_transition.py",
-                str(args.n),
-            ]
-        )
-        fallback_transition = extract_value(lens_transition, "transition")
-        if fallback_transition in {"NEW", "DROP"}:
-            transition = fallback_transition
-            transition_side = fallback_transition
-            proposal_status = "strong"
-
-    branch = branch_for_transition_side(transition_side)
+    policy = classic_probe_policy(race_shape_diagnostic)
 
     print("PET CLASSIC HANDOFF ROUTE")
     print()
@@ -113,95 +98,11 @@ def main() -> int:
     print(f"proposal_selected_backbone_order = {selected_backbone_order}")
     print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
-    print(f"classic_probe_policy = {classic_probe_policy(race_shape_diagnostic)}")
-
-    if branch == "unknown":
-        print()
-        print("route_status = unavailable")
-        print("reason = local probe proposal did not identify a NEW/DROP branch")
-        print()
-        print("claim = PET classic handoff route only; classic verification required")
-        return 0
-
-    focused = run_command(
-        [
-            sys.executable,
-            "-m",
-            "pet.cli",
-            "opaque-focused-peel",
-            str(args.n),
-            "--max-generator-count",
-            str(args.max_generator_count),
-            "--excluded-support-limit",
-            str(args.excluded_support_limit),
-            "--max-move-span",
-            str(args.max_move_span),
-            "--fork-follow",
-            branch,
-            "--classic-handoff",
-            "--handoff-radius",
-            str(args.handoff_radius),
-            "--json",
-        ]
-    )
-    focused_json = json.loads(focused)
-    followup = focused_json.get("peel_fork_followup") or {}
-
-    source_window = followup.get("source_window") or {}
-    next_kind = source_window.get("source_kind", "unknown")
-    next_move = source_window.get("source_move", "unknown")
-    target_edge_hint = followup.get("target_edge_hint", "unknown")
-    recommended_next_lens = followup.get("recommended_next_lens", "unknown")
-
-    if not followup.get("available"):
-        print()
-        print("route_status = unavailable")
-        print(f"route_branch = {branch}")
-        print(f"reason = {followup.get('reason', 'fork follow-up lens is not available')}")
-        print()
-        print("claim = PET classic handoff route only; classic verification required")
-        return 0
-
-    suggested_parts = [
-        "python",
-        "-m",
-        "pet.cli",
-        "opaque-focused-peel",
-        str(args.n),
-        "--max-generator-count",
-        str(args.max_generator_count),
-        "--excluded-support-limit",
-        str(args.excluded_support_limit),
-        "--max-move-span",
-        str(args.max_move_span),
-        "--move",
-        str(next_move),
-        "--kind",
-        str(next_kind),
-        "--cut",
-        "--peel-step",
-        "--slice",
-        "--lift",
-        "--decode",
-        "--center-lens",
-        "--realize",
-        "--classic-handoff",
-        "--handoff-radius",
-        str(args.handoff_radius),
-    ]
-
+    print(f"classic_probe_policy = {policy}")
     print()
-    print("route_status = available")
-    print("route_kind = fork-follow-rescan")
-    print(f"route_branch = {branch}")
-    print(f"source_branch = {followup.get('source_branch', 'unknown')}")
-    print(f"next_move = {next_move}")
-    print(f"next_kind = {next_kind}")
-    print(f"source_window = k[{source_window.get('k_range', 'unknown')}]")
-    print(f"target_edge_hint = {target_edge_hint}")
-    print(f"recommended_next_lens = {recommended_next_lens}")
-    print()
-    print(f"suggested_command = {command_text(suggested_parts)}")
+    print("route_status = unavailable")
+    print(f"route_kind = {policy}")
+    print("reason = classic probe policy route not implemented yet")
     print()
     print("claim = PET classic handoff route only; classic verification required")
 
