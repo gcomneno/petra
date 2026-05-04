@@ -39,9 +39,9 @@ def assert_common_backbone_selection(output: str, n: int) -> None:
     assert "selected_backbone_child_generators = [1, 1]" in output
     assert "selected_backbone_signature = [[], []]" in output
 
-    assert "next_stage = backbone-guided operator probe" in output
-    assert "next_stage_status = pending" in output
-    assert "next_stage_operators = DROP, NEW, DEC, INC" in output
+    assert "Operator probe" in output
+    assert "operator_probe_status = first-iteration" in output
+    assert "First operator shape comparison" in output
     assert "claim = PET backbone selection prototype only; this does not factor N" in output
 
 
@@ -59,6 +59,9 @@ def test_backbone_selection_for_repeated_low_band_two_digit_input() -> None:
     assert "n_signature = [[]]" in output
     assert "shape_relation = different-signature" in output
     assert "shape_fit = backbone-overestimates" in output
+    assert "operator_priority = DROP, DEC, NEW, INC" in output
+    assert "first_operator = DROP" in output
+    assert "first_operator_path = root" in output
 
 
 def test_backbone_selection_for_repeated_mid_band_two_digit_input() -> None:
@@ -75,6 +78,9 @@ def test_backbone_selection_for_repeated_mid_band_two_digit_input() -> None:
     assert "n_signature = [[], []]" in output
     assert "shape_relation = same-signature" in output
     assert "shape_fit = backbone-matches" in output
+    assert "operator_priority = none" in output
+    assert "first_operator = none" in output
+    assert "first_operator_path = root" in output
 
 
 def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
@@ -91,3 +97,6 @@ def test_backbone_selection_for_repeated_high_band_two_digit_input() -> None:
     assert "n_signature = [[], [[]]]" in output
     assert "shape_relation = different-signature" in output
     assert "shape_fit = backbone-underestimates" in output
+    assert "operator_priority = INC, NEW, DROP, DEC" in output
+    assert "first_operator = INC" in output
+    assert "first_operator_path = (0,)" in output
