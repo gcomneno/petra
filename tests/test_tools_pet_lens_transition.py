@@ -44,7 +44,7 @@ def test_pet_lens_transition_detects_dec_for_power_like_source() -> None:
     assert "transition = DEC" in result.stdout
 
 
-def test_peelator_pipeline_reports_lens_transition_section() -> None:
+def test_peelator_wrapper_reports_legacy_lens_transition_section() -> None:
     result = run(
         "tools/peelator.sh",
         "3027009081",
@@ -62,7 +62,10 @@ def test_peelator_pipeline_reports_lens_transition_section() -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "0c. pet-lens-transition" in result.stdout
+    assert "PET TRIAGE PIPELINE" in result.stdout
+    assert "0. PET race diagnostic" in result.stdout
+    assert "1. PET classic handoff policy" in result.stdout
+    assert "6. Legacy lens transition" in result.stdout
     assert "source_generator = 30" in result.stdout
     assert "target_generator = 6" in result.stdout
     assert "transition = DROP" in result.stdout

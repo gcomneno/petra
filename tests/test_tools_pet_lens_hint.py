@@ -48,7 +48,7 @@ def test_pet_lens_hint_flatten_projection_reaches_flat_core() -> None:
     assert "target_lens = none" in result.stdout
 
 
-def test_peelator_pipeline_starts_with_pet_lens_hint() -> None:
+def test_peelator_wrapper_runs_pet_triage_pipeline_with_legacy_lens_hint() -> None:
     result = run(
         "tools/peelator.sh",
         "385",
@@ -66,7 +66,10 @@ def test_peelator_pipeline_starts_with_pet_lens_hint() -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "0. pet-lens-hint" in result.stdout
+    assert "PET TRIAGE PIPELINE" in result.stdout
+    assert "0. PET race diagnostic" in result.stdout
+    assert "1. PET classic handoff policy" in result.stdout
+    assert "4. Legacy lens hint" in result.stdout
     assert "PET LENS HINT" in result.stdout
     assert "target_lens = two-leaf" in result.stdout
-    assert "1. opaque-mass-response --bands" in result.stdout
+    assert "7. Legacy mass response" in result.stdout

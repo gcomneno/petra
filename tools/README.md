@@ -63,15 +63,21 @@ These tools are part of the current PET-policy-first flow:
 
 ## Legacy diagnostics
 
-These tools remain available for secondary diagnostics, historical comparison,
-and test coverage, but they are no longer the main decision engine of the
-triage flow:
+Legacy diagnostics live under `tools/legacy/`.
 
-- `pet_lens_hint.py`
-- `pet_lens_candidates.py`
-- `pet_lens_transition.py`
-- `pet_lens_mass_probe.py`
-- `tune_peelator.sh`
+Compatibility wrappers remain in `tools/` for existing scripts and tests, but
+new callers should prefer the explicit legacy paths only when they intentionally
+need historical lens diagnostics:
+
+- `legacy/pet_lens_hint.py`
+- `legacy/pet_lens_candidates.py`
+- `legacy/pet_lens_transition.py`
+- `legacy/pet_lens_mass_probe.py`
+- `legacy/tune_peelator.sh`
+
+Legacy diagnostics remain available for secondary diagnostics, historical
+comparison, and test coverage, but they are no longer the main decision engine
+of the triage flow.
 
 Legacy diagnostics must not override PET race diagnostics or classic handoff
 policy decisions.
