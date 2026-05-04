@@ -7,7 +7,27 @@ Versioning corrente: `0.y.z`.
 
 ## [Unreleased]
 
+### Added
+- Aggiunta la pipeline canonica `tools/pet_triage_pipeline.sh` per il workflow PET triage.
+- Aggiunto il flusso PET race diagnostic -> classic handoff policy -> classic verification.
+- Aggiunti namespace operativi per i tool:
+  - `tools/core/`
+  - `tools/classic/`
+  - `tools/legacy/`
+  - `tools/research/`
+- Aggiunti wrapper compatibili root-level per preservare i vecchi percorsi `tools/*.py` e `tools/*.sh`.
+- Aggiunta `.pet-cache/` come area locale per cache, stati e artefatti generati non tracciati.
+
+### Changed
+- `tools/peelator.sh` ora è un wrapper compatibile verso `tools/pet_triage_pipeline.sh`.
+- I tool PET triage core sono stati spostati sotto `tools/core/`.
+- I tool di scansione classic sono stati spostati sotto `tools/classic/`.
+- I vecchi lens diagnostics sono stati spostati sotto `tools/legacy/`.
+- I tool report/research/PET-METICA sono stati spostati sotto `tools/research/`.
+- Aggiornata la documentazione operativa per riflettere la tassonomia namespaced dei tool.
+
 ### Removed
+- Rimossi dal tracking Git artefatti PET generati precedentemente presenti sotto `artifacts/`.
 - Rimossi esperimenti falliti di builder, support-realization, dismantle, bytes-to-build e pet-friendliness.
 - Rimossi i comandi di planning target-directed `plan`, `branch-plan`, `plan-best` e `branch-plan-best`.
 

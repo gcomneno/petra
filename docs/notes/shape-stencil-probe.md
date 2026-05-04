@@ -1,3 +1,8 @@
+> Historical note.
+> This note refers to legacy/research shape probe tooling. The current
+> implementations live under `tools/research/`; root-level `tools/*.py`
+> wrappers remain available for compatibility.
+
 # PET shape stencil probe notes
 
 Status: experimental note.

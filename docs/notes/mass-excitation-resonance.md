@@ -1,3 +1,8 @@
+> Historical note.
+> This note refers to legacy/research tooling. The current implementation lives
+> under `tools/research/`; root-level `tools/*.sh` wrappers remain available for
+> compatibility.
+
 # PET mass excitation resonance notes
 
 Status: experimental note.

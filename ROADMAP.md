@@ -10,6 +10,8 @@ PET currently works best as:
 
 - a small Python CLI
 - a reproducible PET artifact and report tooling project
+- a PET triage workflow for single-number structural diagnostics
+- a policy-first bridge from PET diagnostics to bounded classic verification
 - a project for exploring recursive prime-exponent-tree representations of integers
 - an emerging rewrite-geometric framework through PET-METICA
 
@@ -50,15 +52,18 @@ Focus areas:
 - strengthen help text and examples
 - preserve consistency across commands and report tooling
 
-### 4. Keep empirical workflows reproducible
+### 4. Keep PET triage and empirical workflows reproducible
 
-Scans, summaries, reports, and datasets should remain easy to regenerate.
+Single-number triage, classic handoff policy, scans, summaries, reports, and
+datasets should remain easy to regenerate.
 
 Focus areas:
 
 - preserve reproducible commands
+- keep PET triage entry points easy to find
 - keep report entry points easy to find
 - improve the path from raw scan to summary/report
+- keep the PET diagnostic vs verified classic divisor boundary explicit
 - avoid stale claims in top-level documentation
 
 ## Mid-term priorities

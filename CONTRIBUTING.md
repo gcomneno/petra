@@ -60,9 +60,19 @@ If you are changing behavior or documentation, these files are usually the most 
 - `docs/reports/README.md`
 - `docs/research/README.md`
 
-Core implementation lives under:
+Core package implementation lives under:
 
 - `src/pet/`
+
+Operator-side tools are namespaced by role:
+
+- `tools/core/` — PET triage core and policy-first handoff
+- `tools/classic/` — bounded classic verification support
+- `tools/legacy/` — historical lens diagnostics
+- `tools/research/` — dataset/report helpers and PET-METICA research helpers
+
+Root-level `tools/*.py` and `tools/*.sh` entries are usually compatibility wrappers.
+When adding new tooling, prefer the appropriate namespaced directory.
 
 Tests live under:
 
@@ -82,6 +92,8 @@ In practice, this usually means checking:
 
 - `docs/reference/CLI.md`
 - `README.md`
+- `docs/reports/process/canonical-workflow.md`
+- `docs/reports/process/tooling-classification.md`
 
 ### Stable vs exploratory material
 

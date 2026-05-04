@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI for encoding, validating, rendering, measuring, and explaining Prime Exponent Tree artifacts.
+PET is a Python CLI and operator-side toolkit for encoding, validating, rendering, measuring, explaining, and triaging Prime Exponent Tree artifacts.
 
 It treats an integer not only as a value, but also as a structured multiplicative object.
 The project studies that structure at three levels:
@@ -26,6 +26,7 @@ It is useful as:
 - a canonical representation of integers based on prime factorization
 - a CLI for inspecting structural properties and metrics
 - a reproducible lab for scans, queries, summaries, and empirical reports
+- a PET triage workflow for single-number structural diagnostics and bounded classic handoff
 - a rewrite-geometric playground for studying paths, asymmetries, and families of PET shapes
 
 ## Try it in 30 seconds
@@ -92,13 +93,13 @@ leaf_depth_variance = 0.0
 ### Run a small bounded scan
 
 ```bash
-pet scan 2 1000 --jsonl artifacts/scan-2-1000.jsonl
+pet scan 2 1000 --jsonl docs/reports/data/scan-2-1000.jsonl
 ```
 
 ### Query the scan
 
 ```bash
-pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
+pet query filter docs/reports/data/scan-2-1000.jsonl --where "height=2" --limit 5
 ```
 
 ## What is stable today
@@ -114,6 +115,11 @@ pet query filter artifacts/scan-2-1000.jsonl --where "height=2" --limit 5
 - PET-derived structural metrics
 - structural comparison across families
 - scan / query / atlas-style workflows
+
+### Operator-side PET triage
+- PET race diagnostics via `tools/pet_triage_pipeline.sh`
+- PET shape diagnostics mapped to bounded classic handoff policy
+- classic divisors accepted only when explicitly verified
 
 ### Live research line
 - PET-METICA as rewrite geometry on canonical PET shapes
@@ -159,10 +165,15 @@ A small practical PET workflow looks like this:
 
 1. encode or inspect specific integers
 2. compute structural metrics
-3. generate a bounded JSONL scan
-4. query or group the scan
-5. summarize the dataset with report tooling
-6. explore rewrite neighborhoods and paths where relevant
+3. run PET triage for single-number structural diagnostics where useful
+4. generate a bounded JSONL scan
+5. query or group the scan
+6. summarize the dataset with report tooling
+7. explore rewrite neighborhoods and paths where relevant
+
+A current operator-side triage smoke run is:
+
+    tools/pet_triage_pipeline.sh 10007 --no-fork --no-fork-follow --no-recursive
 
 ## Current scope
 

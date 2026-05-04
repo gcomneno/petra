@@ -721,9 +721,11 @@ PET-Algebra non separa nettamente le quattro famiglie nel senso metrico forte,
 ma cattura differenze reali e misurabili. Il potere discriminante è presente
 **in media** ma non abbastanza concentrato da produrre separazione netta ai bordi.
 
-Gli strumenti di analisi sono in `tools/cluster_families.py` (famiglie originali)
-e in `pet families benchmark-disjoint` (famiglie disgiunte, con wrapper compatibile
-in `tools/cluster_families_disjoint.py`).
+Gli strumenti di analisi sono ora sotto `tools/research/`, in particolare
+`tools/research/cluster_families.py` per le famiglie originali.
+
+Per le famiglie disgiunte, il percorso canonico resta `pet families benchmark-disjoint`;
+il wrapper compatibile resta disponibile come `tools/cluster_families_disjoint.py`.
 
 ## JSONL scan record schema (v2)
 

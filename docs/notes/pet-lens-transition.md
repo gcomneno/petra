@@ -1,3 +1,9 @@
+> Historical note.
+> This note describes the legacy lens transition workflow. Current PET operator
+> workflow is triage-first via `tools/core/pet_triage_pipeline.sh`; lens tools
+> live under `tools/legacy/` and root-level wrappers remain available for
+> compatibility.
+
 # PET lens transition notes
 
 Status: experimental note.

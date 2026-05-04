@@ -2,13 +2,13 @@
 
 ## Scope
 
-This document classifies the current `tools/` scripts after the PET-only scope
-cleanup.
+This document classifies the current `tools/` layout after the PET triage
+reorganization.
 
 The purpose of this classification is to keep PET focused on already-known
-inputs and PET artifacts. Tools may analyze, build, validate, summarize, or
-explain known PET structures, but they must not reintroduce structural discovery
-over opaque integers.
+inputs, PET artifacts, structural diagnostics, and bounded classic verification.
+Tools may analyze, build, validate, summarize, or explain known PET structures.
+They must not reintroduce broad structural discovery over opaque integers.
 
 ## Boundary rule
 
@@ -19,184 +19,259 @@ Tools kept in this repository may operate on:
 - PET artifacts
 - scan JSONL artifacts
 - known PET shapes or signatures
+- PET-selected bounded classic verification windows
 
 Tools should not implement:
 
 - ISS / IRSR structural search
 - byte-stream-to-structure discovery
-- partial probe or hybrid reconstruction pipelines
 - preimage search
-- target-directed candidate search
+- target-directed opaque reconstruction
+- unbounded factor search presented as PET discovery
 - opaque-integer reconstruction without known structure
 
-## Stable report-facing tooling
+## Current tools layout
 
-These scripts or entry points are part of the current report-facing PET workflow.
+The `tools/` root contains compatibility wrappers and documentation. Real tool
+implementations are grouped by role:
 
-### `tools/atlas_summary.py`
+- `tools/core/` — PET triage core and policy-first handoff.
+- `tools/classic/` — bounded classic verification support.
+- `tools/legacy/` — historical lens diagnostics kept for comparison and tests.
+- `tools/research/` — dataset/report helpers and PET-METICA / shape research tools.
 
-Status:
-- stable report-facing tooling
+Root-level wrappers remain available for existing scripts, tests, and
+documentation examples. Directory placement, not wrapper presence, defines the
+current role of a tool.
 
-Reason:
-- consumes bounded scan JSONL artifacts
-- produces atlas-style summary output
-- referenced by stable reports and workflow docs
+## Core PET triage tooling
 
-### `pet families benchmark-disjoint`
+These tools define the current PET-policy-first workflow.
 
-Status:
-- stable report-facing CLI capability
-
-Reason:
-- defines the canonical disjoint family benchmark path
-- used by generated family benchmark reports
-- compatibility wrapper remains available at `tools/cluster_families_disjoint.py`
-
-### `tools/cluster_families_disjoint.py`
+### `tools/core/pet_triage_pipeline.sh`
 
 Status:
-- compatibility wrapper
+- canonical operator-side triage pipeline
 
 Reason:
-- retained for operator convenience
-- canonical entry point is `pet families benchmark-disjoint`
+- runs PET race diagnostic first
+- routes through PET classic handoff policy
+- keeps legacy diagnostics non-fatal
+- replaces the old peelator-first workflow
 
-### `tools/cluster_families.py`
+Compatibility:
+- `tools/pet_triage_pipeline.sh`
+- `tools/peelator.sh`
+
+### `tools/core/pet_local_probe_proposal.py`
 
 Status:
-- secondary dataset/report helper
+- core PET triage diagnostic
 
 Reason:
-- related family-clustering tooling
-- superseded for canonical reports by `pet families benchmark-disjoint`
+- produces the single-number PET race diagnostic report
+- supports `--operator-depth auto`
+- supports `--backbone-selection race`
+- reports `race_shape_diagnostic`
+- emits a human-readable PET diagnostic summary
 
-### `tools/distinct_shapes.py`
+### `tools/core/pet_backbone_race.py`
 
 Status:
-- secondary dataset/report helper
+- core PET backbone selection helper
 
 Reason:
-- extracts distinct PET shapes over bounded ranges
+- evaluates candidate backbone orders using PET-only shape probes
+- exposes shared race quality and shape diagnostic helpers
+- does not factor `N`
 
-### `tools/height_distribution.py`
+### `tools/core/pet_backbone_race_matrix.py`
 
 Status:
-- secondary dataset/report helper
+- core diagnostic matrix helper
 
 Reason:
-- summarizes PET height distribution over bounded ranges
+- produces batch PET backbone race diagnostics
+- validates diagnostic behavior across primes, powers, mixed shapes, diagonals,
+  and border cases
 
-### `tools/shape_entropy.py`
+### `tools/core/pet_classic_handoff_route.py`
 
 Status:
-- secondary dataset/report helper
+- core PET-to-classic policy bridge
 
 Reason:
-- computes entropy-style summaries over shape datasets
+- maps PET shape diagnostics to classic probe policies
+- does not use the old NEW/DROP fallback as the decision engine
+- only exposes implemented PET-approved classic routes
+- leaves `complex-border` unavailable until a dedicated route exists
 
-### `tools/shape_count_fast.py`
+## Classic verification support
+
+These tools support bounded classic verification. They may verify arithmetic
+divisors, but they must clearly distinguish verified divisors from PET-only
+diagnostics.
+
+### `tools/classic/pet_classic_scan_summary.py`
 
 Status:
-- secondary dataset/report helper
+- classic verification summary helper
 
 Reason:
-- fast shape-counting utility over bounded ranges
+- summarizes verified divisors from PET-guided classic scans
+- accepts divisors only when arithmetic verification succeeds
 
-### `tools/shape_first_occurrence.py`
+Compatibility:
+- `tools/pet_classic_scan_summary.py`
+
+### `tools/classic/pet_classic_scan_policy.py`
 
 Status:
-- secondary dataset/report helper
+- classic scan policy classifier
 
 Reason:
-- reports first observed occurrence for PET shapes
+- classifies classic scan sources and policy status
+- does not verify new divisors directly
 
-### `tools/scan_query.py`
+Compatibility:
+- `tools/pet_classic_scan_policy.py`
+
+### `tools/classic/pet_crumb_classic_scan.py`
 
 Status:
-- secondary dataset/report helper
+- classic scan support helper
 
 Reason:
-- filters and aggregates PET scan JSONL artifacts
+- preserves first-step crumb classic scan behavior
+- used by scan summary tooling
 
-### `tools/pet_table.py`
+Compatibility:
+- `tools/pet_crumb_classic_scan.py`
+
+### `tools/classic/pet_root_window_classic_scan.py`
 
 Status:
-- secondary dataset/report helper
+- classic scan support helper
 
 Reason:
-- generates PET tables from integer datasets
+- preserves bounded root-window classic scan behavior
+- used by scan summary tooling
 
-### `tools/pet_profile_range.py`
+Compatibility:
+- `tools/pet_root_window_classic_scan.py`
+
+## Legacy diagnostics
+
+These tools are retained for secondary diagnostics, historical comparison, and
+test coverage. They are not the main decision engine of the current triage flow.
+
+### `tools/legacy/pet_lens_hint.py`
 
 Status:
-- secondary dataset/report helper
+- legacy lens diagnostic
 
-Reason:
-- explores PET profiles over explicit numeric ranges
+Compatibility:
+- `tools/pet_lens_hint.py`
 
-### `tools/pet_family_combinations.py`
-
-Status:
-- secondary dataset/report helper
-
-Reason:
-- generates or counts combinations across PET families in explicit ranges
-
-## PET-METICA and shape research tooling
-
-These scripts support the currently retained PET-METICA / shape-algebra research
-line. They are research-facing, but they operate on known shapes, known
-integers, or explicit bounded ranges.
-
-### `pet rewrite`
+### `tools/legacy/pet_lens_candidates.py`
 
 Status:
-- PET-METICA research helper
+- legacy lens diagnostic
 
-Reason:
-- supports rewrite-metric experiments and reports
+Compatibility:
+- `tools/pet_lens_candidates.py`
 
-### `tools/pet_shape_algebra.py`
-
-Status:
-- PET-METICA research helper
-
-Reason:
-- provides shape algebra operations over explicit known shapes
-
-### `tools/pet_structural_diff.py`
+### `tools/legacy/pet_lens_transition.py`
 
 Status:
-- PET-METICA research helper
+- legacy lens diagnostic
 
-Reason:
-- explains exact multiplicative/divisive PET updates
+Compatibility:
+- `tools/pet_lens_transition.py`
 
-### `tools/shape_rewrite_arithmetic_v0.py`
-
-Status:
-- tested PET-METICA research helper
-
-Reason:
-- has dedicated test coverage
-- works over explicit shape expressions and bounded shape paths
-
-### `tools/exponent_shape_trace.py`
+### `tools/legacy/pet_lens_mass_probe.py`
 
 Status:
-- PET shape research helper
+- legacy lens diagnostic
+
+Compatibility:
+- `tools/pet_lens_mass_probe.py`
+
+### `tools/legacy/tune_peelator.sh`
+
+Status:
+- legacy tuning diagnostic
 
 Reason:
-- computes exponent-shape traces over explicit exponent ranges
-- supports the exponent-shape trace research note
+- retained for historical recursive-lens tuning experiments
+- not part of the canonical triage path
+
+Compatibility:
+- `tools/tune_peelator.sh`
+
+## Research and report helpers
+
+These tools operate on known inputs, explicit bounded ranges, or existing scan
+artifacts. They are useful for reports and research, but they are not the
+canonical operator-side triage path.
+
+### Stable report-facing helpers
+
+- `tools/research/atlas_summary.py`
+- `tools/research/cluster_families_disjoint.py`
+
+Compatibility wrappers:
+- `tools/atlas_summary.py`
+- `tools/cluster_families_disjoint.py`
+
+Canonical CLI alternative:
+- `pet families benchmark-disjoint`
+
+### Secondary dataset/report helpers
+
+- `tools/research/cluster_families.py`
+- `tools/research/distinct_shapes.py`
+- `tools/research/height_distribution.py`
+- `tools/research/shape_entropy.py`
+- `tools/research/shape_count_fast.py`
+- `tools/research/shape_first_occurrence.py`
+- `tools/research/scan_query.py`
+- `tools/research/pet_table.py`
+- `tools/research/pet_profile_range.py`
+- `tools/research/pet_family_combinations.py`
+- `tools/research/exponent_shape_trace.py`
+- `tools/research/mass_excitation_delta.sh`
+- `tools/research/mass_excitation_sweep.sh`
+
+Compatibility wrappers remain in `tools/` with the same filenames.
+
+### PET-METICA and structural research helpers
+
+- `tools/research/pet_shape_algebra.py`
+- `tools/research/pet_rewrite_metric.py`
+- `tools/research/pet_structural_diff.py`
+- `tools/research/shape_rewrite_arithmetic_v0.py`
+- `tools/research/shape_overlap.py`
+- `tools/research/stencil_lens_probe.py`
+- `tools/research/surface_signature.py`
+
+Compatibility wrappers remain in `tools/` with the same filenames.
+
+`tools/research/pet_shape_algebra.py` is still import-compatible through
+`tools/pet_shape_algebra.py` for existing tests and callers.
 
 ## Usage rule
 
 Workflow docs, contributor docs, and report regeneration notes should treat only
-stable report-facing tooling as interface-stable unless this document is updated.
+the current core triage tools and explicitly listed stable report-facing helpers
+as interface-stable.
 
-should not be presented as general discovery machinery.
+Compatibility wrappers are allowed for existing scripts, tests, and historical
+documentation, but new operational documentation should prefer the namespaced
+paths.
 
-Dataset/report helpers and PET-METICA research tools may be useful, but they
-should not be presented as canonical public interfaces by default.
+Legacy diagnostics must not override PET race diagnostics or PET classic handoff
+policy decisions.
+
+Research helpers may be useful, but they should not be presented as canonical
+public interfaces by default.
