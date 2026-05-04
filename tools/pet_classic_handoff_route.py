@@ -60,14 +60,6 @@ def main() -> int:
             sys.executable,
             "tools/pet_local_probe_proposal.py",
             str(args.n),
-            "--max-leaves",
-            str(args.max_leaves),
-            "--max-generator-count",
-            str(args.max_generator_count),
-            "--excluded-support-limit",
-            str(args.excluded_support_limit),
-            "--max-move-span",
-            str(args.max_move_span),
         ]
     )
 
@@ -76,6 +68,20 @@ def main() -> int:
     proposal_status = extract_value(proposal, "proposal_status")
     primary_band = extract_value(proposal, "primary_band")
     side_band = extract_value(proposal, "side_band")
+
+    if transition == "unknown" or transition_side == "unknown":
+        lens_transition = run_command(
+            [
+                sys.executable,
+                "tools/pet_lens_transition.py",
+                str(args.n),
+            ]
+        )
+        fallback_transition = extract_value(lens_transition, "transition")
+        if fallback_transition in {"NEW", "DROP"}:
+            transition = fallback_transition
+            transition_side = fallback_transition
+            proposal_status = "strong"
 
     branch = branch_for_transition_side(transition_side)
 

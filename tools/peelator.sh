@@ -137,11 +137,7 @@ tools/pet_lens_transition.py "$N" \
   --max-leaves 8
 
 section "0d. pet-local-probe-proposal"
-tools/pet_local_probe_proposal.py "$N" \
-  --max-leaves 8 \
-  --max-generator-count "$MAX_GENERATOR_COUNT" \
-  --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT" \
-  --max-move-span "$MAX_MOVE_SPAN"
+tools/pet_local_probe_proposal.py "$N"
 
 section "0e. pet-classic-handoff-route"
 tools/pet_classic_handoff_route.py "$N" \

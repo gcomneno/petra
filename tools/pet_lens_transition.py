@@ -83,6 +83,38 @@ def find_transition_path(source_generator: int, target_generator: int) -> dict[s
     }
 
 
+def max_prime_factor(n: int) -> int:
+    factor = 2
+    max_factor = 1
+
+    while n % 2 == 0:
+        max_factor = 2
+        n //= 2
+
+    factor = 3
+    while factor * factor <= n:
+        while n % factor == 0:
+            max_factor = factor
+            n //= factor
+        factor += 2
+
+    if n > 1:
+        max_factor = n
+
+    return max_factor
+
+
+def boundary_target_generator(source_generator: int) -> int:
+    """Return the simpler operational boundary generator for lens handoff."""
+    if source_generator <= 2:
+        return source_generator
+
+    if source_generator & (source_generator - 1) == 0:
+        return 2
+
+    return max(2, source_generator // max_prime_factor(source_generator))
+
+
 def find_transition(
     explain_text: str,
     source_generator: int,
@@ -189,7 +221,7 @@ def main() -> int:
         return 0
 
     source_generator = int(source_generator_raw)
-    target_generator = int(target_generator_raw)
+    target_generator = boundary_target_generator(source_generator)
 
     compare = run_tool(
         "-m",

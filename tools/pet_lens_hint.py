@@ -104,8 +104,17 @@ def main() -> int:
 
     source_leaf_count = max(1, int(source_size) - 1) if source_size != "unknown" else 0
     source_lens = lens_name(source_leaf_count) if source_leaf_count else "unknown"
-    target_lens = source_lens
-    target_leaf_count = str(source_leaf_count) if source_leaf_count else "unknown"
+
+    if not source_leaf_count:
+        target_lens = "unknown"
+        target_leaf_count = "unknown"
+    elif source_leaf_count == 1:
+        target_lens = "none"
+        target_leaf_count = "0"
+    else:
+        target_leaf_count_int = source_leaf_count - 1
+        target_lens = lens_name(target_leaf_count_int)
+        target_leaf_count = str(target_leaf_count_int)
 
     if args.summary:
         print("PET LENS HINT SUMMARY")

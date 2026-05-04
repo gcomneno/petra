@@ -118,6 +118,22 @@ def yes_no(value: bool) -> str:
     return "yes" if value else "no"
 
 
+def lens_name(leaf_count: int) -> str:
+    if leaf_count == 1:
+        return "one-leaf"
+    if leaf_count == 2:
+        return "two-leaf"
+    if leaf_count == 3:
+        return "three-leaf"
+    if leaf_count == 4:
+        return "four-leaf"
+    if leaf_count == 5:
+        return "five-leaf"
+    if leaf_count == 6:
+        return "six-leaf"
+    return f"{leaf_count}-leaf"
+
+
 def digit_band_bounds(digits: int, base: int) -> tuple[int, int]:
     lower = base ** (digits - 1)
     upper = (base ** digits) - 1
@@ -169,11 +185,12 @@ def main() -> int:
 
     source_generator_raw = extract_value(candidates_text, "source_generator")
     source_signature_raw = extract_value(candidates_text, "source_signature")
-    target_lens = extract_value(candidates_text, "target_lens")
-    target_leaf_count = extract_value(candidates_text, "target_leaf_count")
-
     source_generator = int(source_generator_raw)
     source_signature = ast.literal_eval(source_signature_raw)
+
+    target_leaf_count_int = len(source_signature)
+    target_lens = lens_name(target_leaf_count_int)
+    target_leaf_count = str(target_leaf_count_int)
 
     n_digits = digit_count(args.n, args.base)
     source_generator_digits = digit_count(source_generator, args.base)
