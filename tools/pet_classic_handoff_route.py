@@ -137,6 +137,24 @@ def main() -> int:
         print("claim = PET classic handoff route only; classic verification required")
         return 0
 
+    if policy == "backbone-wide-structural-check":
+        suggested_parts = [
+            "python",
+            "-m",
+            "pet.cli",
+            "opaque-probe",
+            str(args.n),
+            "--trial-limit",
+            selected_backbone_order,
+        ]
+        print("route_status = available")
+        print("route_kind = backbone-wide-structural-check")
+        print("reason = wide exact PET shape; run classic probe bounded by selected backbone order")
+        print(f"suggested_command = {command_text(suggested_parts)}")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")
