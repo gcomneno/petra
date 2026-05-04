@@ -21,6 +21,7 @@ def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
     assert "transition = DROP" in output
     assert "source_generator = 30" in output
     assert "target_generator = 6" in output
+    assert "target_role = reduction/probe target, not full N mass" in output
     assert "representative_target = 15" in output
     assert "Lens mass/shadow" in output
     assert "mass_source_generator = 30" in output
@@ -33,7 +34,10 @@ def test_local_probe_proposal_selects_drop_multi_threshold_band() -> None:
     assert "primary_band = multi-threshold NEW,DROP k[2..6]" in output
     assert "transition_side = DROP" in output
     assert "proposal_status = strong" in output
+    assert "proposal_status_kind = structural" in output
+    assert "verification_status = unverified" in output
     assert "reason = transition-coherent magnetic band selected" in output
+    assert "candidate_status = window-only" in output
     assert "candidate_window = k[2..6]" in output
     assert "side_band = recovery DROP k[7..11]" in output
     assert "side_window = k[7..11]" in output
