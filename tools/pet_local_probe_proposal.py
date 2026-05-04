@@ -187,7 +187,7 @@ def main() -> int:
     print(f"base = {args.base}")
     print(f"n_digits = {n_digits}")
     print(f"digit_shadow_band = {band_min:0{n_digits}d}..{band_max}")
-    print(f"digit_shadow_position = {n_shadow_position:.3f}")
+    print(f"digit_shadow_position = {n_shadow_position:.{n_digits}f}")
     print(f"digit_shadow_zone = {n_digit_shadow_zone}")
     print(f"digit_unique_count = {digit_unique_count}")
     print(f"max_digit_frequency = {max_digit_frequency}")
