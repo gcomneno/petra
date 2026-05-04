@@ -179,3 +179,25 @@ def test_operator_depth_can_match_deeper_power_shapes() -> None:
     assert "probed_backbone_signature = [[[[]]]]" in output
     assert "probed_backbone_relation_to_n = same-signature" in output
     assert "probed_backbone_fit_against_n = result-matches" in output
+
+
+def test_operator_depth_auto_uses_input_digit_count_plus_one() -> None:
+    output = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_local_probe_proposal.py",
+            "16",
+            "--operator-depth",
+            "auto",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout
+
+    assert "N = 16" in output
+    assert "n_digits = 2" in output
+    assert "operator_probe_depth_limit = 3" in output
+    assert "operator_probe_result = matched" in output
+    assert "probed_backbone_relation_to_n = same-signature" in output
+    assert "probed_backbone_fit_against_n = result-matches" in output

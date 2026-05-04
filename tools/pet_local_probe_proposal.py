@@ -323,17 +323,26 @@ def main() -> int:
     )
     parser.add_argument("n", type=int, metavar="N")
     parser.add_argument("--base", type=int, default=10)
-    parser.add_argument("--operator-depth", type=int, default=2)
+    parser.add_argument("--operator-depth", default="2")
     args = parser.parse_args()
 
     if args.n < 1:
         raise SystemExit("pet_local_probe_proposal expects integers >= 1")
     if args.base < 2:
         raise SystemExit("--base expects integers >= 2")
-    if args.operator_depth < 0:
-        raise SystemExit("--operator-depth expects integers >= 0")
 
     n_digits = digit_count(args.n, args.base)
+
+    if args.operator_depth == "auto":
+        operator_depth = n_digits + 1
+    else:
+        try:
+            operator_depth = int(args.operator_depth)
+        except ValueError as exc:
+            raise SystemExit("--operator-depth expects an integer or auto") from exc
+
+        if operator_depth < 0:
+            raise SystemExit("--operator-depth expects integers >= 0 or auto")
     band_min, band_max = digit_shadow_band_bounds(n_digits, args.base)
     n_shadow_position = digit_shadow_position(args.n, band_min, band_max)
     n_digit_shadow_zone = digit_shadow_zone(n_shadow_position)
@@ -367,7 +376,7 @@ def main() -> int:
         selected_backbone_signature_data["signature"],
         n_signature_data["signature"],
         shape_fit_label,
-        depth_limit=args.operator_depth,
+        depth_limit=operator_depth,
     )
 
     n_tree = encode(args.n)
