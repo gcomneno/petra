@@ -212,8 +212,9 @@ def main() -> int:
     print(f"shape_relation = {shape_relation}")
     print(f"shape_fit = {shape_fit_label}")
     print()
-    print("next_stage = operator signal search")
+    print("next_stage = backbone-relative localization")
     print("next_stage_status = pending")
+    print("next_stage_note = operator signal search comes after backbone-relative localization")
     print()
     print("claim = PET backbone selection prototype only; this does not factor N")
 
