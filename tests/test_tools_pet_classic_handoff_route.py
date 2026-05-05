@@ -36,6 +36,8 @@ def test_classic_handoff_route_reports_policy_without_legacy_fallback() -> None:
     assert "PET CLASSIC HANDOFF ROUTE" in output
     assert "proposal_race_shape_diagnostic = complex-border" in output
     assert "proposal_composite_border_hint = balanced-flat-border" in output
+    assert "proposal_operator_depth = auto" in output
+    assert "proposal_blade_window = full" in output
     assert "classic_probe_policy = complex-border-route-needed" in output
     assert "route_status = available" in output
     assert "route_kind = balanced-flat-border-lens-drop-classic-probe" in output
@@ -140,3 +142,29 @@ def test_classic_handoff_route_can_reuse_precomputed_proposal_file(tmp_path) -> 
     assert "route_kind = primality-check-only" in output
     assert "suggested_command = python -m pet.cli opaque-probe 10007 --trial-limit 2" in output
 
+
+
+def test_classic_handoff_route_can_use_active_blade_window_for_large_input() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_classic_handoff_route.py",
+            "387456687301039324825975283416",
+            "--operator-depth",
+            "0",
+            "--blade-window",
+            "active",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    output = result.stdout
+
+    assert "proposal_race_shape_diagnostic = complex-border" in output
+    assert "proposal_operator_depth = 0" in output
+    assert "proposal_blade_window = active" in output
+    assert "classic_probe_policy = complex-border-route-needed" in output
+    assert "route_status = available" in output
+    assert "route_kind = complex-border-lens-drop-classic-probe" in output
+    assert "suggested_command = python -m pet.cli opaque-probe 387456687301039324825975283416 --trial-limit 20" in output

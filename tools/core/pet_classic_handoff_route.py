@@ -61,6 +61,13 @@ def main() -> int:
     parser.add_argument("--excluded-support-limit", type=int, default=16)
     parser.add_argument("--max-move-span", type=int, default=5)
     parser.add_argument("--handoff-radius", type=int, default=100)
+    parser.add_argument("--operator-depth", default="auto")
+    parser.add_argument(
+        "--blade-window",
+        choices=("full", "active"),
+        default="full",
+        help="Proposal race candidate window policy.",
+    )
     parser.add_argument(
         "--proposal-file",
         type=Path,
@@ -78,9 +85,11 @@ def main() -> int:
                 "tools/pet_local_probe_proposal.py",
                 str(args.n),
                 "--operator-depth",
-                "auto",
+                args.operator_depth,
                 "--backbone-selection",
                 "race",
+                "--blade-window",
+                args.blade_window,
             ]
         )
     else:
@@ -109,6 +118,8 @@ def main() -> int:
     print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
     print(f"proposal_composite_border_hint = {composite_border_hint}")
+    print(f"proposal_operator_depth = {args.operator_depth}")
+    print(f"proposal_blade_window = {args.blade_window}")
     print(f"classic_probe_policy = {policy}")
     print()
 
