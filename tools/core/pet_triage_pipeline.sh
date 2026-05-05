@@ -21,6 +21,7 @@ Options:
   --no-scan-summary             skip PET verified divisor summary
   --no-classic-scan             skip PET verified divisor summary and classic scan policy
   --route-only                  run only PET race diagnostic and classic handoff policy
+  --legacy-diagnostics          run legacy diagnostics sections 4-8
   --no-recursive                skip legacy recursive diagnostics
 
 Examples:
@@ -45,9 +46,9 @@ FORK_FOLLOW=BOTH
 RUN_RECURSIVE=1
 RUN_SCAN_SUMMARY=1
 RUN_CLASSIC_SCAN_POLICY=1
-RUN_LEGACY_LENS=1
-RUN_LEGACY_MASS=1
-RUN_LEGACY_FOCUSED=1
+RUN_LEGACY_LENS=0
+RUN_LEGACY_MASS=0
+RUN_LEGACY_FOCUSED=0
 
 if [[ $# -lt 1 ]]; then
   usage
@@ -121,6 +122,12 @@ while [[ $# -gt 0 ]]; do
       RUN_FORK=0
       RUN_FORK_FOLLOW=0
       RUN_RECURSIVE=0
+      shift
+      ;;
+    --legacy-diagnostics)
+      RUN_LEGACY_LENS=1
+      RUN_LEGACY_MASS=1
+      RUN_LEGACY_FOCUSED=1
       shift
       ;;
     --no-recursive)
