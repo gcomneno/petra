@@ -1,5 +1,58 @@
 # PET Shadow Projection
 
+## Shape scale spectrum
+
+The first `pi`-scale experiments were useful, but the current evidence does not
+support treating pi as a privileged projection scale.
+
+On the tested decimal lengths, `digits / pi` often rounds to the same segment
+length as `digits / 3`.  The scale comparison tool therefore reports an
+`effective_scale_alias` field, so that apparent pi-scale observations are not
+over-interpreted when they are operationally identical to another scale.
+
+The current claim is weaker and more useful:
+
+> PET-shadow projection should be studied as a scale spectrum, not as a single
+> privileged scale.
+
+The helper tool is:
+
+    tools/research/pet_shape_scale_compare_study.py
+
+It compares visible segment projections across relative scale rules such as
+`pi`, `third`, `half`, `quarter`, `sqrt-digits`, and `log2-digits`.
+
+The output is projection-only:
+
+    scale comparison only; visible segment projection only; not PET(N)
+
+### Early scale-spectrum observations
+
+Small empirical sample:
+
+| N | digits | lowest-noise scale | highest-dominant scale | pi alias | field class |
+|---|---:|---|---|---|---|
+| `100000000003900000091` | 21 | half | half | pi,third | has-strong-scale |
+| `100000000000000000091` | 21 | half | half | pi,third | has-strong-scale |
+| `1000000000000000000000091` | 25 | pi | pi | pi,third | has-weak-scale |
+| `9999999999000000000119` | 22 | sqrt-digits | sqrt-digits | pi,third | has-strong-scale |
+| `999999990000000119` | 18 | pi | pi | pi,third | has-strong-scale |
+| `999999999999000000000119` | 24 | sqrt-digits | sqrt-digits | pi,third | has-strong-scale |
+| `1234567891234567891234567` | 25 | half | half | pi,third | diffuse-all-scales |
+| `3141592653589793238462643` | 25 | half | half | pi,third | diffuse-all-scales |
+| `2718281828459045235360287` | 25 | half | pi | pi,third | diffuse-all-scales |
+
+Early reading:
+
+- sparse zero fields can expose a low-noise scale, but the winning scale appears
+  length-sensitive;
+- saturated 9/0 fields tend to produce a strong-scale resonance in this sample;
+- digit-mixed opaque inputs remain diffuse across the tested scales.
+
+These are empirical observations only.  They do not reconstruct `PET(N)`, do not
+identify a true PET generator for `N`, and do not establish a mathematical
+classification.
+
 ## Motivazione
 
 La costruzione completa di `PET(N)` può diventare troppo costosa per input
