@@ -8,6 +8,13 @@ import time
 
 from pet_decimal_boundary_study import decimal_boundary_profile
 
+def coerce_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode(errors="replace")
+    return value
+
 
 def run_pipeline(n: int, timeout_seconds: float) -> tuple[str, str, float]:
     command = [
@@ -33,7 +40,7 @@ def run_pipeline(n: int, timeout_seconds: float) -> tuple[str, str, float]:
         )
     except subprocess.TimeoutExpired as exc:
         elapsed = time.monotonic() - start
-        output = (exc.stdout or "") + (exc.stderr or "")
+        output = coerce_output(exc.stdout) + coerce_output(exc.stderr)
         return "timeout", output, elapsed
 
     elapsed = time.monotonic() - start
@@ -71,6 +78,8 @@ def route_kind(output: str, mode: str) -> str:
         return extract_value(output, "shallow_route_kind")
     if mode == "race":
         return extract_value(output, "route_kind")
+    if mode == "timeout":
+        return "timeout-before-route"
     return "unknown"
 
 
