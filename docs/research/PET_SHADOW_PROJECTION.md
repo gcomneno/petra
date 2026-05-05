@@ -53,6 +53,26 @@ These are empirical observations only.  They do not reconstruct `PET(N)`, do not
 identify a true PET generator for `N`, and do not establish a mathematical
 classification.
 
+### Periodic decimal fields
+
+A follow-up check suggests that periodic decimal fields should be tracked as a
+separate empirical family instead of being merged into generic mixed opaque
+inputs.
+
+Small sample:
+
+| N | digits | lowest-noise scale | highest-dominant scale | pi alias | field class |
+|---|---:|---|---|---|---|
+| `1212121212121212121212121` | 25 | sqrt-digits | sqrt-digits | pi,third | has-strong-scale |
+| `9090909090909090909090909` | 25 | sqrt-digits | sqrt-digits | pi,third | has-single-generator-scale |
+
+Early reading:
+
+- periodic fields can expose scale-specific resonance;
+- in the `909090...` sample, the visible matches collapse to a single generator
+  at the `sqrt-digits` / `log2-digits` alias band;
+- this is still projection-only evidence and does not identify `PET(N)`.
+
 ## Motivazione
 
 La costruzione completa di `PET(N)` può diventare troppo costosa per input
