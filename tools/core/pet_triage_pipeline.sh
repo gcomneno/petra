@@ -217,7 +217,9 @@ decimal_rigid_border_hint="$(awk 'NR == 2 {print $NF}' "$decimal_boundary_file")
 if [[ "$RUN_RIGID_BORDER_GUARD" -eq 1 && "$decimal_rigid_border_hint" == "yes" ]]; then
   echo
   echo "preflight_guard_status = stopped"
+  echo "preflight_guard_kind = decimal-rigid-border"
   echo "reason = decimal rigid border detected; skipping PET race diagnostic"
+  echo "preflight_guard_suggested_next = use shallow decimal-rigid route or rerun without --rigid-border-guard to force PET race"
   echo "claim = PET decimal boundary preflight only; this does not factor N"
   exit 0
 fi

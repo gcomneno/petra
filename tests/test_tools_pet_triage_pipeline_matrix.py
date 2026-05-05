@@ -198,7 +198,12 @@ def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
     assert "9999999999000000000119" in output
     assert "decimal_rigid_border_hint" in output
     assert "preflight_guard_status = stopped" in output
+    assert "preflight_guard_kind = decimal-rigid-border" in output
     assert "reason = decimal rigid border detected; skipping PET race diagnostic" in output
+    assert (
+        "preflight_guard_suggested_next = use shallow decimal-rigid route or rerun "
+        "without --rigid-border-guard to force PET race"
+    ) in output
 
     assert "0. PET race diagnostic" not in output
     assert "1. PET classic handoff policy" not in output
