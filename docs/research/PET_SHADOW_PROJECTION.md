@@ -201,6 +201,36 @@ The current empirical claim is limited:
 
 This is still triage evidence only.
 
+### Ω_shape and route correlation
+
+A follow-up correlation check included both the local projection summary
+`Π_shape` and the positional overlap projection `Ω_shape`.
+
+Small sample with a short full-signature timeout budget:
+
+| N | Π_shape field class | Ω_shape overlap hint | route pressure hint |
+|---|---|---|---|
+| `100000000003900000091` | `has-strong-scale` | `diffuse-overlap-field` | `decimal-rigid-timeout` |
+| `9999999999000000000119` | `has-strong-scale` | `mixed-overlap-field` | `decimal-rigid-timeout` |
+| `1234567891234567891234567` | `diffuse-all-scales` | `diffuse-overlap-field` | `shadow-diffuse-timeout` |
+| `3141592653589793238462643` | `diffuse-all-scales` | `diffuse-overlap-field` | `shadow-diffuse-timeout` |
+| `1212121212121212121212121` | `has-strong-scale` | `dominant-diffuse-overlap` | `structured-shadow-timeout` |
+| `9090909090909090909090909` | `has-single-generator-scale` | `coherent-single-generator-overlap` | `structured-shadow-timeout` |
+
+Current reading:
+
+- with the tested short timeout budget, `Ω_shape` does not yet separate timeout
+  from non-timeout;
+- `Ω_shape` does improve the structural diagnosis by separating diffuse overlap,
+  mixed overlap, dominant noisy overlap, and coherent single-generator overlap;
+- therefore `Ω_shape` currently behaves more like a diagnostic refinement than a
+  cost predictor.
+
+Current empirical claim:
+
+> `Ω_shape` improves PET-shadow structural diagnosis, but it has not yet shown
+> independent timeout-prediction power on the tested sample.
+
 ## Motivazione
 
 La costruzione completa di `PET(N)` può diventare troppo costosa per input
