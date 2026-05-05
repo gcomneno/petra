@@ -104,6 +104,8 @@ def main() -> int:
     race_shape_diagnostic = extract_value(proposal, "race_shape_diagnostic")
     selected_operator_sequence = extract_value(proposal, "selected_operator_sequence")
     composite_border_hint = extract_value(proposal, "composite_border_hint")
+    decimal_rigid_border_score = extract_value(proposal, "decimal_rigid_border_score")
+    decimal_rigid_border_hint = extract_value(proposal, "decimal_rigid_border_hint")
     policy = classic_probe_policy(race_shape_diagnostic)
 
     print("PET CLASSIC HANDOFF ROUTE")
@@ -118,6 +120,8 @@ def main() -> int:
     print(f"proposal_race_shape_diagnostic = {race_shape_diagnostic}")
     print(f"proposal_selected_operator_sequence = {selected_operator_sequence}")
     print(f"proposal_composite_border_hint = {composite_border_hint}")
+    print(f"proposal_decimal_rigid_border_score = {decimal_rigid_border_score}")
+    print(f"proposal_decimal_rigid_border_hint = {decimal_rigid_border_hint}")
     print(f"proposal_operator_depth = {args.operator_depth}")
     print(f"proposal_blade_window = {args.blade_window}")
     print(f"classic_probe_policy = {policy}")
