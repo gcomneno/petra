@@ -4,11 +4,16 @@ import subprocess
 
 
 def run_pipeline(n: int) -> str:
+    return run_pipeline_with_args(str(n))
+
+
+def run_pipeline_with_args(n: str, *args: str) -> str:
     result = subprocess.run(
         [
             "bash",
             "tools/pet_triage_pipeline.sh",
-            str(n),
+            n,
+            *args,
             "--no-fork",
             "--no-fork-follow",
             "--no-recursive",
@@ -88,3 +93,28 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
         assert f"suggested_command = {expected_command}" in output
 
         assert "route_kind = fork-follow-rescan" not in output
+
+
+def test_pet_triage_pipeline_passes_active_blade_window_options() -> None:
+    n = "387456687301039324825975283416"
+
+    output = run_pipeline_with_args(
+        n,
+        "--operator-depth",
+        "0",
+        "--blade-window",
+        "active",
+    )
+
+    assert "operator_depth = 0" in output
+    assert "blade_window = active" in output
+    assert "active_blade_start = 4" in output
+    assert "active_blade_end = 32" in output
+    assert "proposal_operator_depth = 0" in output
+    assert "proposal_blade_window = active" in output
+    assert "route_kind = complex-border-lens-drop-classic-probe" in output
+    assert (
+        "suggested_command = python -m pet.cli opaque-probe "
+        "387456687301039324825975283416 --trial-limit 20"
+    ) in output
+
