@@ -45,6 +45,43 @@ rather than by a continuous interval such as:
 This suggests that the correct PET-native object may be a sparse support over
 the backbone.
 
+## Current implementation note
+
+The current backbone implementation is prefix-based.
+
+In `tools/core/pet_local_probe_proposal.py`, the selected backbone is built as:
+
+    selected_backbone_primes = first_primes(selected_backbone_order)
+    selected_backbone_generator = prod(selected_backbone_primes)
+
+So the current model is:
+
+    B_k = product(first_primes(k))
+
+This is a contiguous prefix of the prime backbone.
+
+The sparse-support hypothesis must therefore be careful.  A naive sparse subset
+of prime values may collapse under PET canonicalization.  For example, different
+square-free products with the same number of prime factors can share the same
+PET shape and canonical generator.
+
+Therefore, a PET-native backbone landmark should probably not be defined only as
+a raw selected prime value.
+
+More plausible PET-native landmark types include:
+
+- backbone order candidates;
+- canonical generator families;
+- shape paths;
+- primitive shape moves (`NEW`, `DROP`, `INC`, `DEC`);
+- nodes in a local `shape_closure`;
+- PE-Tree branching landmarks.
+
+This refines the hypothesis:
+
+> `Σ_backbone(N)` should search for sparse PET-native shape/backbone landmarks,
+> not merely sparse subsets of prime values.
+
 ## Core hypothesis
 
 The core hypothesis is:
