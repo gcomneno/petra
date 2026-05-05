@@ -186,6 +186,64 @@ a sparse backbone explanation.
 
 This is the main reason to study `Σ_backbone`.
 
+## Backbone-closure target basis
+
+A first manual inspection suggests that the previous hand-picked PET-shadow
+target generator basis is not entirely arbitrary.
+
+The flat backbone shape of order `k` is:
+
+    B_k = root with k leaf children
+
+Its canonical generator is:
+
+    gamma(B_1) = 2
+    gamma(B_2) = 6
+    gamma(B_3) = 30
+    gamma(B_4) = 210
+    gamma(B_5) = 2310
+
+A local PE-Tree closure around this flat backbone naturally produces nearby
+generator landmarks.
+
+Example closure samples:
+
+| backbone order | gamma(B_k) | closure depth | generated gamma landmarks |
+|---:|---:|---:|---|
+| 1 | 2 | 1 | 2, 4, 6 |
+| 1 | 2 | 2 | 2, 4, 6, 12, 16, 30, 64 |
+| 2 | 6 | 1 | 2, 6, 12, 30 |
+| 2 | 6 | 2 | 2, 4, 6, 12, 30, 36, 48, 60, 192, 210 |
+| 3 | 30 | 1 | 6, 30, 60, 210 |
+| 3 | 30 | 2 | 2, 6, 12, 30, 60, 180, 210, 240, 420, 960, 2310 |
+
+This matters because the earlier experimental target basis:
+
+    2, 4, 6, 12, 30, 36, 60, 210
+
+appears naturally inside shallow local closures around low-order flat backbone
+nodes.
+
+This suggests a cleaner PET-native replacement for hand-picked target bases:
+
+    target_basis(k, d) = { gamma(S) for S in shape_closure(B_k, d) }
+
+where:
+
+- `B_k` is the flat backbone shape of order `k`;
+- `d` is a small closure depth;
+- each generated gamma is a PET-native landmark candidate.
+
+This does not prove that these landmarks explain `N`.
+
+It only means that the search basis can be generated from the PE-Tree backbone
+instead of being chosen as an external decimal/shadow heuristic.
+
+Refined claim:
+
+> PET-shadow target bases should be derived from shallow PE-Tree closure around
+> backbone nodes whenever possible, rather than hand-picked.
+
 ## Evidence sources
 
 A future implementation should not brute-force arbitrary subsets.
