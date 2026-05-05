@@ -367,6 +367,12 @@ def main() -> int:
         choices=("digit-count", "race"),
         default="digit-count",
     )
+    parser.add_argument(
+        "--blade-window",
+        choices=("full", "active"),
+        default="full",
+        help="Race candidate window policy. Default keeps the historical full window.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -411,9 +417,22 @@ def main() -> int:
     race_candidates = []
     race_selected = None
 
+    active_blade_start = 1
+    active_blade_end = n_digits + 2
+    active_blade_direction = "LTR"
+    actual_pet_mass = structural_mass(n_signature_data["signature"])
+    max_window_mass = n_digits + 2
+    mass_fill_ratio = actual_pet_mass / max_window_mass if max_window_mass else 0.0
+
     if args.backbone_selection == "race":
         selection_rule = "PET backbone race"
-        candidate_orders = list(range(1, n_digits + 3))
+        if args.blade_window == "active":
+            active_blade_start = max(1, actual_pet_mass - 2)
+            active_blade_direction = "RTL" if mass_fill_ratio > 0.80 else "LTR"
+
+        candidate_orders = list(range(active_blade_start, active_blade_end + 1))
+        if active_blade_direction == "RTL":
+            candidate_orders = list(reversed(candidate_orders))
 
         for candidate_order in candidate_orders:
             candidate_primes = first_primes(candidate_order)
@@ -525,7 +544,13 @@ def main() -> int:
     print(f"selected_backbone_generator = {selected_backbone_generator}")
     print(f"selected_backbone_factorization = {format_factorization(selected_backbone_primes)}")
     if race_selected is not None:
-        print(f"race_candidate_orders = 1..{n_digits + 2}")
+        print(f"blade_window = {args.blade_window}")
+        print(f"active_blade_start = {active_blade_start}")
+        print(f"active_blade_end = {active_blade_end}")
+        print(f"active_blade_direction = {active_blade_direction}")
+        print(f"active_blade_actual_pet_mass = {actual_pet_mass}")
+        print(f"active_blade_mass_fill_ratio = {mass_fill_ratio:.3f}")
+        print(f"race_candidate_orders = {','.join(str(order) for order in candidate_orders)}")
         print(f"race_selected_move_count = {race_selected['move_count']}")
         print(f"race_selected_sequence = {race_selected['sequence']}")
         race_diagnostic = shape_diagnostic(

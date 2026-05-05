@@ -239,7 +239,7 @@ def test_local_probe_can_select_backbone_with_race_for_large_diagonal() -> None:
 
     assert "selection_rule = PET backbone race" in output
     assert "selected_backbone_order = 5" in output
-    assert "race_candidate_orders = 1..12" in output
+    assert "race_candidate_orders = 1,2,3,4,5,6,7,8,9,10,11,12" in output
     assert "race_selected_move_count = 1" in output
     assert "race_selected_sequence = INC (0,)" in output
     assert "race_selection_quality = one-move" in output
@@ -256,7 +256,7 @@ def test_local_probe_can_select_exact_backbone_with_race_for_mixed_shape() -> No
 
     assert "selection_rule = PET backbone race" in output
     assert "selected_backbone_order = 6" in output
-    assert "race_candidate_orders = 1..7" in output
+    assert "race_candidate_orders = 1,2,3,4,5,6,7" in output
     assert "race_selected_move_count = 0" in output
     assert "race_selected_sequence = none" in output
     assert "race_selection_quality = exact-shape" in output
@@ -272,7 +272,7 @@ def test_local_probe_can_select_narrow_backbone_with_race_for_deep_power_shape()
 
     assert "selection_rule = PET backbone race" in output
     assert "selected_backbone_order = 1" in output
-    assert "race_candidate_orders = 1..7" in output
+    assert "race_candidate_orders = 1,2,3,4,5,6,7" in output
     assert "race_selected_move_count = 3" in output
     assert "race_selected_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
     assert "race_selection_quality = multi-move" in output
@@ -281,3 +281,24 @@ def test_local_probe_can_select_narrow_backbone_with_race_for_deep_power_shape()
     assert "summary = selected backbone is narrow and reaches N through depth-increasing moves" in output
     assert "operator_probe_result = matched" in output
     assert "selected_operator_sequence = INC (0,) -> INC (0, 0) -> INC (0, 0, 0)" in output
+
+def test_local_probe_active_blade_window_can_shift_candidate_orders() -> None:
+    output = run_tool_with_args(
+        "387456687301039324825975283416",
+        "--operator-depth",
+        "0",
+        "--backbone-selection",
+        "race",
+        "--blade-window",
+        "active",
+    )
+
+    assert "blade_window = active" in output
+    assert "active_blade_start = 4" in output
+    assert "active_blade_end = 32" in output
+    assert "active_blade_direction = LTR" in output
+    assert "active_blade_actual_pet_mass = 6" in output
+    assert "active_blade_mass_fill_ratio = 0.188" in output
+    assert "race_candidate_orders = 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32" in output
+    assert "selected_backbone_order = 30" in output
+    assert "race_shape_diagnostic = complex-border" in output
