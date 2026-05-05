@@ -930,3 +930,116 @@ Compatibility rules:
 {"schema_version":2,"n":72,"pet":[{"p":2,"e":[{"p":3,"e":null}]},{"p":3,"e":[{"p":2,"e":null}]}],"metrics":{"node_count":4,"leaf_count":2,"height":2,"max_branching":2,"branch_profile":[2,2],"recursive_mass":2,"average_leaf_depth":2.0,"leaf_depth_variance":0.0},"meta":{"pet_format":"canonical-json"}}
 ```
 
+## Triage sperimentale: decimal rigid border
+
+Questa sezione documenta un comportamento sperimentale della pipeline di triage.
+Non fa parte della rappresentazione canonica PET e non modifica la semantica di
+`PET(N)`.
+
+### Preflight decimale
+
+La pipeline `tools/pet_triage_pipeline.sh` esegue un preflight leggero prima della
+diagnostica PET completa.
+
+Il preflight analizza la rappresentazione decimale di `N` e misura se contiene
+blocchi rigidi di `0`/`9` con transizioni forti tra blocchi. Questi casi possono
+rendere costosa la costruzione della firma PET completa o della race locale.
+
+Campi principali:
+
+- `decimal_rigid_border_score`
+- `decimal_rigid_border_hint`
+
+La regola sperimentale corrente è:
+
+```text
+decimal_rigid_border_hint = yes
+when digits >= 18 and decimal_rigid_border_score >= 0.28
+```
+
+Questo hint non significa che `N` sia difficile da fattorizzare. Significa solo
+che la diagnostica PET completa può essere costosa per quella forma decimale.
+
+### Guard mode
+
+La pipeline supporta una modalità di guardia opt-in:
+
+```bash
+tools/pet_triage_pipeline.sh N --route-only --rigid-border-guard
+```
+
+Se il preflight produce `decimal_rigid_border_hint = yes`, la pipeline si ferma
+prima della race PET:
+
+```text
+preflight_guard_status = stopped
+preflight_guard_kind = decimal-rigid-border
+reason = decimal rigid border detected; skipping PET race diagnostic
+preflight_guard_suggested_next = use shallow decimal-rigid route or rerun without --rigid-border-guard to force PET race
+```
+
+Questa modalità evita timeout o elaborazioni lunghe quando il preflight ha già
+identificato una forma decimale rigida.
+
+### Shallow route mode
+
+La pipeline supporta anche una route shallow opt-in:
+
+```bash
+tools/pet_triage_pipeline.sh N --route-only --decimal-rigid-shallow-route
+```
+
+Se il preflight produce `decimal_rigid_border_hint = yes`, la pipeline evita la
+race PET completa e produce una route classica conservativa:
+
+```text
+shallow_route_status = available
+shallow_route_kind = decimal-rigid-border-shallow-classic-probe
+suggested_command = python -m pet.cli opaque-probe N --trial-limit 20
+```
+
+Questa route non fattorizza `N` e non afferma che il probe classico troverà un
+fattore. È un handoff conservativo che evita il percorso PET costoso.
+
+### Esempio
+
+Per:
+
+```text
+9999999999000000000119
+```
+
+il preflight riporta:
+
+```text
+decimal_rigid_border_score = 0.302
+decimal_rigid_border_hint = yes
+```
+
+Con `--decimal-rigid-shallow-route`, la pipeline emette rapidamente:
+
+```text
+shallow_route_kind = decimal-rigid-border-shallow-classic-probe
+suggested_command = python -m pet.cli opaque-probe 9999999999000000000119 --trial-limit 20
+```
+
+Questo trasforma un input soggetto a timeout nella race PET in un caso
+classificato e instradato in modo shallow.
+
+### Relazione con balanced-flat-border
+
+`decimal-rigid-border` è indipendente da `balanced-flat-border`.
+
+- `balanced-flat-border` descrive una relazione PET/composite-border.
+- `decimal-rigid-border` descrive un segnale nella rappresentazione decimale di
+  `N` che può rendere costosa la diagnostica PET completa.
+
+Un numero può quindi essere:
+
+```text
+balanced-flat-border
+balanced-flat-border + decimal-rigid-border
+```
+
+Nel secondo caso la pipeline può usare guard o shallow route per evitare di
+calcolare subito la firma PET completa.
