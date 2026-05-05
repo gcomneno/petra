@@ -147,6 +147,14 @@ and documentation examples:
 - `research/surface_signature.py` — surface signature helper
 - `research/exponent_shape_trace.py` — exponent-shape trace reporting over known ranges
 
+PET-shadow / backbone-closure research helpers:
+
+- `research/pet_shape_scale_compare_study.py` — compares PET-shadow local projection summaries across scale rules.
+- `research/pet_shape_overlap_projection_study.py` — studies positional overlap of PET-shadow visible segment projections.
+- `research/pet_shadow_route_correlation_study.py` — correlates PET-shadow summaries with decimal rigidity and full signature cost.
+- `research/pet_backbone_closure_basis_study.py` — generates PET-native target bases from shallow flat-backbone closures.
+- `research/pet_backbone_closure_shadow_matrix.py` — compares PET-shadow summaries across backbone-closure target bases.
+
 ## Notes
 
 - Do not infer interface stability from directory placement alone.
