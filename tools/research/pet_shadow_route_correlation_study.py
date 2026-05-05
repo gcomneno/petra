@@ -110,6 +110,9 @@ def shadow_summary(
     n_text: str,
     scale_rules: str,
     target_generators: str,
+    target_basis_source: str,
+    backbone_orders: str,
+    backbone_depth: int,
 ) -> ShadowSummary:
     output = run_command(
         [
@@ -118,6 +121,18 @@ def shadow_summary(
             n_text,
             "--scale-rules",
             scale_rules,
+            "--target-basis-source",
+            target_basis_source,
+            "--backbone-orders",
+            backbone_orders,
+            "--backbone-depth",
+            str(backbone_depth),
+            "--target-basis-source",
+            target_basis_source,
+            "--backbone-orders",
+            backbone_orders,
+            "--backbone-depth",
+            str(backbone_depth),
             "--target-generators",
             target_generators,
             "--format",
@@ -139,6 +154,9 @@ def overlap_summary(
     n_text: str,
     scale_rules: str,
     target_generators: str,
+    target_basis_source: str,
+    backbone_orders: str,
+    backbone_depth: int,
 ) -> OverlapSummary:
     output = run_command(
         [
@@ -302,6 +320,23 @@ def main() -> int:
         "--target-generators",
         default="2,4,6,12,30,36,60,210",
     )
+    parser.add_argument(
+        "--target-basis-source",
+        choices=("manual", "backbone-closure"),
+        default="manual",
+        help="Target generator basis source for PET-shadow studies. Default: manual",
+    )
+    parser.add_argument(
+        "--backbone-orders",
+        default="2",
+        help="Comma-separated flat backbone orders used when --target-basis-source=backbone-closure. Default: 2",
+    )
+    parser.add_argument(
+        "--backbone-depth",
+        type=int,
+        default=2,
+        help="Shape closure depth used when --target-basis-source=backbone-closure. Default: 2",
+    )
     args = parser.parse_args()
 
     rows: list[dict[str, str]] = []
@@ -312,11 +347,17 @@ def main() -> int:
             n_text=n_text,
             scale_rules=args.scale_rules,
             target_generators=args.target_generators,
+            target_basis_source=args.target_basis_source,
+            backbone_orders=args.backbone_orders,
+            backbone_depth=args.backbone_depth,
         )
         overlap = overlap_summary(
             n_text=n_text,
             scale_rules=args.scale_rules,
             target_generators=args.target_generators,
+            target_basis_source=args.target_basis_source,
+            backbone_orders=args.backbone_orders,
+            backbone_depth=args.backbone_depth,
         )
         cost = signature_cost(n_text=n_text, timeout_seconds=args.timeout)
 
