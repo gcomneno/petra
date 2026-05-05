@@ -1043,3 +1043,81 @@ balanced-flat-border + decimal-rigid-border
 
 Nel secondo caso la pipeline può usare guard o shallow route per evitare di
 calcolare subito la firma PET completa.
+
+## Fronte aperto: large non-rigid opaque inputs
+
+Il preflight `decimal-rigid-border` copre una famiglia specifica: numeri con
+blocchi decimali rigidi di `0`/`9` e transizioni forti. Non copre tutti i casi
+in cui la diagnostica PET completa può essere costosa.
+
+Sono stati osservati input grandi e non decimal-rigid che possono comunque
+rendere costosa la costruzione della firma PET completa o della race locale.
+
+Esempi sperimentali:
+
+```text
+1234567891234567891234567
+3141592653589793238462643
+2718281828459045235360287
+8675309867530986753098675
+```
+
+Questi input hanno tipicamente:
+
+```text
+decimal_rigid_border_hint = no
+```
+
+ma possono comunque andare in timeout nella route PET completa.
+
+### Interpretazione
+
+Questi casi non appartengono alla famiglia `decimal-rigid-border`.
+Sono meglio descritti, per ora, come:
+
+```text
+large non-rigid opaque inputs
+```
+
+La causa non è ancora stata isolata in una metrica leggera affidabile.
+
+Prime osservazioni:
+
+- il numero di cifre da solo non basta;
+- la struttura decimale da sola non basta;
+- la presenza di piccoli fattori può aiutare, ma non spiega tutti i casi;
+- il residuale dopo piccoli fattori può rimanere strutturalmente costoso.
+
+### Stato della policy
+
+Non esiste ancora una policy PET stabile per questi input.
+
+In particolare, la pipeline non deve trattarli automaticamente come
+`decimal-rigid-border`, perché il segnale decimale non lo giustifica.
+
+La classificazione corrente è quindi:
+
+```text
+known open research front
+```
+
+Una futura policy dovrà essere basata su evidenza empirica aggiuntiva, non su una
+soglia generica sul numero di cifre.
+
+### Relazione con decimal-rigid-border
+
+`decimal-rigid-border` resta una famiglia specifica e utile:
+
+```text
+pattern decimale rigido visibile
+→ preflight veloce
+→ guard/shallow route giustificati
+```
+
+I `large non-rigid opaque inputs` sono diversi:
+
+```text
+nessun pattern decimale rigido sufficiente
+→ possibile costo alto della firma PET
+→ nessuna route shallow automatica ancora giustificata
+```
