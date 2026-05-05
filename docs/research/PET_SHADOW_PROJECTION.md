@@ -73,6 +73,31 @@ Early reading:
   at the `sqrt-digits` / `log2-digits` alias band;
 - this is still projection-only evidence and does not identify `PET(N)`.
 
+### Target-generator sensitivity
+
+A small target-basis check suggests that the broad field-class separation is
+more stable than the exact winning scale.
+
+Across the tested target generator sets:
+
+- sparse zero fields remained in `has-strong-scale` / `has-weak-scale`;
+- saturated 9/0 fields remained in `has-strong-scale`;
+- digit-mixed opaque inputs remained in `diffuse-all-scales`;
+- periodic fields remained structured when their visible generator basis was
+  included.
+
+The important caveat is target sensitivity for single-generator resonance.
+For example, `9090909090909090909090909` exposes a clean generator-12 resonance
+at the `sqrt-digits` / `log2-digits` alias band when `12` is included in the
+target generator set.  If `12` is excluded, the same input can become
+`no-visible-target-shape`.
+
+So the current empirical claim is:
+
+> `field_class` appears useful for separating digit-mixed opaque inputs from
+> structured decimal fields, but single-generator outcomes depend on the chosen
+> target generator basis.
+
 ## Motivazione
 
 La costruzione completa di `PET(N)` può diventare troppo costosa per input
