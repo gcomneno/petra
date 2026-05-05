@@ -183,3 +183,23 @@ def test_pet_triage_pipeline_legacy_diagnostics_are_opt_in() -> None:
     assert "7. Legacy mass response" in output
     assert "8. Legacy focused peel classic handoff diagnostic" in output
 
+def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
+    output = run_pipeline_with_args(
+        "9999999999000000000119",
+        "--operator-depth",
+        "0",
+        "--blade-window",
+        "active",
+        "--route-only",
+        "--rigid-border-guard",
+    )
+
+    assert "0. PET decimal boundary preflight" in output
+    assert "9999999999000000000119" in output
+    assert "decimal_rigid_border_hint" in output
+    assert "preflight_guard_status = stopped" in output
+    assert "reason = decimal rigid border detected; skipping PET race diagnostic" in output
+
+    assert "0. PET race diagnostic" not in output
+    assert "1. PET classic handoff policy" not in output
+

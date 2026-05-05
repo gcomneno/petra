@@ -22,6 +22,7 @@ Options:
   --no-classic-scan             skip PET verified divisor summary and classic scan policy
   --route-only                  run only PET race diagnostic and classic handoff policy
   --legacy-diagnostics          run legacy diagnostics sections 4-8
+  --rigid-border-guard          stop after preflight when decimal rigid border is detected
   --no-recursive                skip legacy recursive diagnostics
 
 Examples:
@@ -49,6 +50,7 @@ RUN_CLASSIC_SCAN_POLICY=1
 RUN_LEGACY_LENS=0
 RUN_LEGACY_MASS=0
 RUN_LEGACY_FOCUSED=0
+RUN_RIGID_BORDER_GUARD=0
 
 if [[ $# -lt 1 ]]; then
   usage
@@ -130,6 +132,10 @@ while [[ $# -gt 0 ]]; do
       RUN_LEGACY_FOCUSED=1
       shift
       ;;
+    --rigid-border-guard)
+      RUN_RIGID_BORDER_GUARD=1
+      shift
+      ;;
     --no-recursive)
       RUN_RECURSIVE=0
       shift
@@ -202,10 +208,19 @@ echo
 echo "claim = PET triage pipeline only; classic stages verify divisors only when explicitly reported"
 
 proposal_file="$(mktemp)"
-trap 'rm -f "$proposal_file"' EXIT
+decimal_boundary_file="$(mktemp)"
+trap 'rm -f "$proposal_file" "$decimal_boundary_file"' EXIT
 
 section "0. PET decimal boundary preflight"
-tools/research/pet_decimal_boundary_study.py "$N"
+tools/research/pet_decimal_boundary_study.py "$N" | tee "$decimal_boundary_file"
+decimal_rigid_border_hint="$(awk 'NR == 2 {print $NF}' "$decimal_boundary_file")"
+if [[ "$RUN_RIGID_BORDER_GUARD" -eq 1 && "$decimal_rigid_border_hint" == "yes" ]]; then
+  echo
+  echo "preflight_guard_status = stopped"
+  echo "reason = decimal rigid border detected; skipping PET race diagnostic"
+  echo "claim = PET decimal boundary preflight only; this does not factor N"
+  exit 0
+fi
 
 section "0. PET race diagnostic"
 tools/pet_local_probe_proposal.py "$N"   --operator-depth "$OPERATOR_DEPTH"   --backbone-selection race   --blade-window "$BLADE_WINDOW" | tee "$proposal_file"
