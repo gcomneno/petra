@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import math
 from collections import Counter
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
 from pet.core import shape_signature_dict
@@ -48,6 +50,66 @@ def parse_csv_strings(raw: str) -> tuple[str, ...]:
             values.append(item)
     return tuple(values)
 
+
+
+def load_shape_algebra_module():
+    module_path = (
+        Path(__file__).resolve().parents[2]
+        / "tools"
+        / "research"
+        / "pet_shape_algebra.py"
+    )
+    spec = importlib.util.spec_from_file_location("pet_shape_algebra_for_basis", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def backbone_closure_target_generators(
+    orders: tuple[int, ...],
+    depth: int,
+) -> tuple[int, ...]:
+    if depth < 0:
+        raise ValueError("backbone closure depth must be >= 0")
+
+    algebra = load_shape_algebra_module()
+    gammas: set[int] = set()
+
+    for order in orders:
+        if order < 1:
+            raise ValueError("backbone orders must be positive integers")
+
+        root = algebra.normalize_shape(tuple(() for _ in range(order)))
+        for shape in algebra.shape_closure(root, depth):
+            if shape == ():
+                continue
+            try:
+                gammas.add(int(algebra.shape_gamma(shape)))
+            except ValueError:
+                continue
+
+    return tuple(sorted(gammas))
+
+
+def resolve_target_generators(
+    source: str,
+    manual_target_generators: str,
+    backbone_orders: str,
+    backbone_depth: int,
+) -> tuple[int, ...]:
+    if source == "manual":
+        return parse_csv_ints(manual_target_generators)
+
+    if source == "backbone-closure":
+        return backbone_closure_target_generators(
+            orders=parse_csv_ints(backbone_orders),
+            depth=backbone_depth,
+        )
+
+    raise ValueError(f"unsupported target basis source: {source}")
 
 def clamp_length(value: int, digits: int) -> int:
     return max(1, min(digits, value))
@@ -393,6 +455,23 @@ def main() -> int:
         help="Radius around the center segment length. Default: 1",
     )
     parser.add_argument(
+        "--target-basis-source",
+        choices=("manual", "backbone-closure"),
+        default="manual",
+        help="Target generator basis source. Default: manual",
+    )
+    parser.add_argument(
+        "--backbone-orders",
+        default="2",
+        help="Comma-separated flat backbone orders used when --target-basis-source=backbone-closure. Default: 2",
+    )
+    parser.add_argument(
+        "--backbone-depth",
+        type=int,
+        default=2,
+        help="Shape closure depth used when --target-basis-source=backbone-closure. Default: 2",
+    )
+    parser.add_argument(
         "--target-generators",
         default=",".join(str(value) for value in DEFAULT_TARGET_GENERATORS),
         help="Comma-separated PET generator targets. Default: 2,4,6,12,30,36,60,210",
@@ -409,7 +488,14 @@ def main() -> int:
         raise SystemExit("--scale-radius must be >= 0")
 
     scale_rules = parse_csv_strings(args.scale_rules)
-    target_generators = set(parse_csv_ints(args.target_generators))
+    target_generators = set(
+        resolve_target_generators(
+            source=args.target_basis_source,
+            manual_target_generators=args.target_generators,
+            backbone_orders=args.backbone_orders,
+            backbone_depth=args.backbone_depth,
+        )
+    )
     rows: list[dict[str, object]] = []
     for n_text in args.numbers:
         for scale_name in scale_rules:
