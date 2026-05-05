@@ -212,6 +212,14 @@ def print_tsv(rows: list[dict[str, str]]) -> None:
         print("\t".join(row[column] for column in columns))
 
 
+def no_coherent_support(group: list[dict[str, str]]) -> bool:
+    return all(
+        row["field_class"] == "diffuse-all-scales"
+        and row["best_overlap_hint"] == "diffuse-overlap-field"
+        for row in group
+    )
+
+
 def print_summary_by_n(rows: list[dict[str, str]]) -> None:
     columns = (
         "N",
@@ -234,6 +242,27 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
         grouped.setdefault(row["N"], []).append(row)
 
     for n_text, group in grouped.items():
+        if no_coherent_support(group):
+            first = group[0]
+            print(
+                "\t".join(
+                    (
+                        n_text,
+                        first["digits"],
+                        "none",
+                        first["backbone_depth"],
+                        "diffuse-all-scales",
+                        "diffuse-overlap-field",
+                        "-",
+                        "-",
+                        "-",
+                        "-",
+                        "no coherent backbone support selected; not PET(N)",
+                    )
+                )
+            )
+            continue
+
         selected = max(group, key=support_score)
         print(
             "\t".join(
