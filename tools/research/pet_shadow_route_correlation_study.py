@@ -35,6 +35,17 @@ class ShadowSummary:
 
 
 @dataclass(frozen=True)
+class OverlapSummary:
+    best_overlap_scale: str
+    best_overlap_hint: str
+    best_position_coverage_ratio: str
+    best_position_agreement_ratio: str
+    best_dominant_position_generator: str
+    best_dominant_position_ratio: str
+    best_average_position_entropy: str
+
+
+@dataclass(frozen=True)
 class SignatureCost:
     status: str
     elapsed_seconds: str
@@ -121,6 +132,36 @@ def shadow_summary(
         highest_dominant_ratio=row["highest_dominant_ratio"],
         pi_effective_scale_alias=row["pi_effective_scale_alias"],
         field_class=row["field_class"],
+    )
+
+
+def overlap_summary(
+    n_text: str,
+    scale_rules: str,
+    target_generators: str,
+) -> OverlapSummary:
+    output = run_command(
+        [
+            sys.executable,
+            "tools/research/pet_shape_overlap_projection_study.py",
+            n_text,
+            "--scale-rules",
+            scale_rules,
+            "--target-generators",
+            target_generators,
+            "--format",
+            "summary-by-n",
+        ]
+    )
+    row = parse_tsv_single_row(output)
+    return OverlapSummary(
+        best_overlap_scale=row["best_overlap_scale"],
+        best_overlap_hint=row["best_overlap_hint"],
+        best_position_coverage_ratio=row["best_position_coverage_ratio"],
+        best_position_agreement_ratio=row["best_position_agreement_ratio"],
+        best_dominant_position_generator=row["best_dominant_position_generator"],
+        best_dominant_position_ratio=row["best_dominant_position_ratio"],
+        best_average_position_entropy=row["best_average_position_entropy"],
     )
 
 
@@ -215,6 +256,13 @@ def print_tsv(rows: list[dict[str, str]]) -> None:
         "highest_dominant_scale",
         "highest_dominant_ratio",
         "pi_effective_scale_alias",
+        "best_overlap_scale",
+        "best_overlap_hint",
+        "best_position_coverage_ratio",
+        "best_position_agreement_ratio",
+        "best_dominant_position_generator",
+        "best_dominant_position_ratio",
+        "best_average_position_entropy",
         "signature_status",
         "signature_elapsed_seconds",
         "route_pressure_hint",
@@ -265,6 +313,11 @@ def main() -> int:
             scale_rules=args.scale_rules,
             target_generators=args.target_generators,
         )
+        overlap = overlap_summary(
+            n_text=n_text,
+            scale_rules=args.scale_rules,
+            target_generators=args.target_generators,
+        )
         cost = signature_cost(n_text=n_text, timeout_seconds=args.timeout)
 
         rows.append(
@@ -279,6 +332,13 @@ def main() -> int:
                 "highest_dominant_scale": shadow.highest_dominant_scale,
                 "highest_dominant_ratio": shadow.highest_dominant_ratio,
                 "pi_effective_scale_alias": shadow.pi_effective_scale_alias,
+                "best_overlap_scale": overlap.best_overlap_scale,
+                "best_overlap_hint": overlap.best_overlap_hint,
+                "best_position_coverage_ratio": overlap.best_position_coverage_ratio,
+                "best_position_agreement_ratio": overlap.best_position_agreement_ratio,
+                "best_dominant_position_generator": overlap.best_dominant_position_generator,
+                "best_dominant_position_ratio": overlap.best_dominant_position_ratio,
+                "best_average_position_entropy": overlap.best_average_position_entropy,
                 "signature_status": cost.status,
                 "signature_elapsed_seconds": cost.elapsed_seconds,
                 "route_pressure_hint": route_pressure_hint(
