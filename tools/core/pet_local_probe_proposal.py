@@ -2,14 +2,22 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from collections import Counter
 from math import prod
+from pathlib import Path
 
 from pet_backbone_race import shape_diagnostic
 
 from pet.algebra import distance, structural_distance
 from pet.core import encode, shape_signature_dict
 from pet_shape_algebra import shape_apply, shape_can_apply, shape_paths
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.research.pet_decimal_boundary_study import decimal_boundary_profile
 
 
 def yes_no(value: bool) -> str:
@@ -408,6 +416,7 @@ def main() -> int:
     digit_repetition_ratio = max_digit_frequency / len(digits)
     all_digits_same = digit_unique_count == 1
     palindrome = digits == list(reversed(digits))
+    decimal_boundary = decimal_boundary_profile(args.n)
 
     n_signature_data = shape_signature_dict(args.n)
 
@@ -537,6 +546,20 @@ def main() -> int:
     print(f"digit_weight_ratios = {format_float_list(positional_ratios)}")
     print(f"digit_delta = {digit_delta(digits)}")
     print(f"digit_gradient = {digit_gradient(digits)}")
+    print()
+    print("Decimal boundary profile")
+    print(f"digit_block_count = {decimal_boundary['digit_block_count']}")
+    print(f"longest_digit_run = {decimal_boundary['longest_digit_run']}")
+    print(f"longest_zero_run = {decimal_boundary['longest_zero_run']}")
+    print(f"longest_nine_run = {decimal_boundary['longest_nine_run']}")
+    print(f"zero_run_weighted_pressure = {decimal_boundary['zero_run_weighted_pressure']:.3f}")
+    print(f"nine_run_weighted_pressure = {decimal_boundary['nine_run_weighted_pressure']:.3f}")
+    print(f"decimal_boundary_pressure = {decimal_boundary['decimal_boundary_pressure']:.3f}")
+    print(f"digit_island_count = {decimal_boundary['digit_island_count']}")
+    print(f"digit_island_span_ratio = {decimal_boundary['digit_island_span_ratio']:.3f}")
+    print(f"digit_transition_pressure = {decimal_boundary['digit_transition_pressure']:.3f}")
+    print(f"decimal_rigid_border_score = {decimal_boundary['decimal_rigid_border_score']:.3f}")
+    print(f"decimal_rigid_border_hint = {decimal_boundary['decimal_rigid_border_hint']}")
     print()
     print("Backbone selection")
     print(f"selection_rule = {selection_rule}")

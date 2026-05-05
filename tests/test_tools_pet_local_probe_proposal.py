@@ -302,3 +302,46 @@ def test_local_probe_active_blade_window_can_shift_candidate_orders() -> None:
     assert "race_candidate_orders = 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32" in output
     assert "selected_backbone_order = 30" in output
     assert "race_shape_diagnostic = complex-border" in output
+
+
+def test_pet_local_probe_proposal_reports_decimal_rigid_border_hint() -> None:
+    soft_result = subprocess.run(
+        [
+            "tools/pet_local_probe_proposal.py",
+            "10000030000091",
+            "--operator-depth",
+            "0",
+            "--backbone-selection",
+            "race",
+            "--blade-window",
+            "active",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    hard_result = subprocess.run(
+        [
+            "tools/pet_local_probe_proposal.py",
+            "100000000003900000091",
+            "--operator-depth",
+            "0",
+            "--backbone-selection",
+            "race",
+            "--blade-window",
+            "active",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    assert "Decimal boundary profile" in soft_result.stdout
+    assert "decimal_rigid_border_score = 0.232" in soft_result.stdout
+    assert "decimal_rigid_border_hint = no" in soft_result.stdout
+
+    assert "Decimal boundary profile" in hard_result.stdout
+    assert "decimal_rigid_border_score = 0.311" in hard_result.stdout
+    assert "decimal_rigid_border_hint = yes" in hard_result.stdout
+
