@@ -70,6 +70,95 @@ def format_generator(signature: dict[str, Any] | None) -> str:
         return "1"
     return str(signature.get("generator", "unknown"))
 
+def compact_signature(signature: dict[str, Any] | None) -> str:
+    return format_signature(signature)
+
+
+def summarize_projection(
+    blocks: list[str],
+    full_signature: dict[str, Any] | None,
+    block_records: list[dict[str, Any]],
+    transition_kinds: list[str],
+) -> dict[str, str]:
+    informative_records = [
+        record
+        for record in block_records
+        if record["signature_status"] != "unit-or-empty"
+    ]
+    unit_or_empty_count = len(block_records) - len(informative_records)
+
+    local_generators = [
+        str(record["generator"])
+        for record in informative_records
+        if str(record["generator"]) != "unknown"
+    ]
+    local_generator_set = sorted(set(local_generators), key=lambda value: int(value))
+
+    local_signature_set = sorted(
+        {
+            str(record["signature"])
+            for record in informative_records
+            if str(record["signature"]) != "unknown"
+        }
+    )
+
+    generator_counts: dict[str, int] = {}
+    for generator in local_generators:
+        generator_counts[generator] = generator_counts.get(generator, 0) + 1
+
+    if generator_counts:
+        dominant_local_generator = sorted(
+            generator_counts.items(),
+            key=lambda item: (-item[1], int(item[0])),
+        )[0][0]
+    else:
+        dominant_local_generator = "1"
+
+    full_generator = format_generator(full_signature)
+    full_generator_in_local_set = (
+        "yes" if full_generator in local_generator_set else "no"
+    )
+
+    transition_kind_set = sorted(set(transition_kinds)) if transition_kinds else []
+
+    has_empty_edge = any("empty" in kind for kind in transition_kinds)
+    has_saturated_edge = any("saturated" in kind for kind in transition_kinds)
+
+    if len(blocks) == 1:
+        shadow_coupling_hint = "identity-single-block"
+        candidate_shadow_generator = full_generator
+        candidate_shadow_basis = "single block equals whole input"
+    elif has_saturated_edge:
+        shadow_coupling_hint = "saturated-edge-coupled"
+        candidate_shadow_generator = dominant_local_generator
+        candidate_shadow_basis = "dominant local generator with saturated positional edge"
+    elif has_empty_edge:
+        shadow_coupling_hint = "empty-edge-coupled"
+        candidate_shadow_generator = dominant_local_generator
+        candidate_shadow_basis = "dominant local generator with empty positional edge"
+    elif full_generator_in_local_set == "yes":
+        shadow_coupling_hint = "local-generator-hit"
+        candidate_shadow_generator = full_generator
+        candidate_shadow_basis = "full generator appears among local block generators"
+    else:
+        shadow_coupling_hint = "positional-coupling-created-generator"
+        candidate_shadow_generator = dominant_local_generator
+        candidate_shadow_basis = "dominant local generator only; global generator not locally present"
+
+    return {
+        "informative_block_count": str(len(informative_records)),
+        "unit_or_empty_block_count": str(unit_or_empty_count),
+        "local_generator_set": ",".join(local_generator_set) if local_generator_set else "none",
+        "dominant_local_generator": dominant_local_generator,
+        "full_generator_in_local_set": full_generator_in_local_set,
+        "local_signature_family_count": str(len(local_signature_set)),
+        "transition_kinds": ",".join(transition_kind_set) if transition_kind_set else "none",
+        "shadow_coupling_hint": shadow_coupling_hint,
+        "candidate_shadow_generator": candidate_shadow_generator,
+        "candidate_shadow_basis": candidate_shadow_basis,
+        "candidate_shadow_claim": "local projection only; not PET(N)",
+    }
+
 
 def format_float(value: float) -> str:
     return f"{value:.3f}"
@@ -97,35 +186,64 @@ def print_block_projection(n: int, block_width: int, timeout_seconds: float) -> 
         "decimal_rigid_border_score decimal_rigid_border_hint"
     )
 
+    block_records: list[dict[str, Any]] = []
     for index, block_text in enumerate(blocks):
         block_value = int(block_text)
         profile = decimal_boundary_profile(block_value)
         status, elapsed, signature = run_signature_with_timeout(block_value, timeout_seconds)
+        generator = format_generator(signature)
+        signature_text = format_signature(signature)
+
+        record = {
+            "block_index": index,
+            "block_text": block_text,
+            "block_value": block_value,
+            "block_digits": len(block_text),
+            "signature_status": status,
+            "signature_elapsed_seconds": elapsed,
+            "generator": generator,
+            "signature": signature_text,
+            "decimal_rigid_border_score": format_float(
+                float(profile["decimal_rigid_border_score"])
+            ),
+            "decimal_rigid_border_hint": profile["decimal_rigid_border_hint"],
+        }
+        block_records.append(record)
 
         print(
-            f"{index} "
-            f"{block_text} "
-            f"{block_value} "
-            f"{len(block_text)} "
-            f"{status} "
-            f"{elapsed:.2f} "
-            f"{format_generator(signature)} "
-            f"{format_signature(signature)} "
-            f"{format_float(float(profile['decimal_rigid_border_score']))} "
-            f"{profile['decimal_rigid_border_hint']}"
+            f"{record['block_index']} "
+            f"{record['block_text']} "
+            f"{record['block_value']} "
+            f"{record['block_digits']} "
+            f"{record['signature_status']} "
+            f"{record['signature_elapsed_seconds']:.2f} "
+            f"{record['generator']} "
+            f"{record['signature']} "
+            f"{record['decimal_rigid_border_score']} "
+            f"{record['decimal_rigid_border_hint']}"
         )
 
     print()
     print("Block transitions")
     print("left_index right_index left_text right_text transition_kind")
+    transition_kinds: list[str] = []
     for index, (left, right) in enumerate(zip(blocks, blocks[1:])):
+        transition_kind = block_transition_kind(left, right)
+        transition_kinds.append(transition_kind)
         print(
             f"{index} "
             f"{index + 1} "
             f"{left} "
             f"{right} "
-            f"{block_transition_kind(left, right)}"
+            f"{transition_kind}"
         )
+
+    summary = summarize_projection(blocks, full_signature, block_records, transition_kinds)
+
+    print()
+    print("Packed shadow summary")
+    for key, value in summary.items():
+        print(f"{key} = {value}")
 
     print()
     print("claim = block projection only; this does not reconstruct PET(N)")
