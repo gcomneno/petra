@@ -98,6 +98,109 @@ So the current empirical claim is:
 > structured decimal fields, but single-generator outcomes depend on the chosen
 > target generator basis.
 
+## Projection operators
+
+The current PET-shadow line can be described with two projection operators.
+
+These operators are research tools.  They do not reconstruct `PET(N)`, do not
+identify the true PET generator of `N`, and do not prove a mathematical
+classification.
+
+### Π_shape: local visible segment projection
+
+`Π_shape` is the local projection layer.
+
+Given an opaque integer `N`, a visible base, a scale rule, and a target generator
+basis, it:
+
+1. writes `N` in the visible base, currently decimal;
+2. extracts visible digit segments at the selected scale;
+3. computes local PET signatures for those segments;
+4. keeps the local generators that resonate with the target basis;
+5. summarizes the resulting local shadow field.
+
+The current helper tool is:
+
+    tools/research/pet_shape_scale_compare_study.py
+
+Its summary fields include:
+
+- `field_class`;
+- `lowest_noise_scale`;
+- `highest_dominant_scale`;
+- `highest_dominant_ratio`;
+- `pi_effective_scale_alias`.
+
+The main empirical lesson so far is:
+
+> `Π_shape` can expose local PET-style resonances, but local resonance does not
+> imply a coherent global shadow.
+
+### Ω_shape: positional overlap projection
+
+`Ω_shape` is the positional overlap layer.
+
+It starts from the same visible segment projections as `Π_shape`, but instead of
+only counting local generator matches, it overlays them across the digit
+positions of `N`.
+
+For each digit position, it records which local shadow generators cover that
+position.  This gives a positional overlap field.
+
+The current helper tool is:
+
+    tools/research/pet_shape_overlap_projection_study.py
+
+Its summary fields include:
+
+- `best_overlap_scale`;
+- `best_overlap_hint`;
+- `best_position_coverage_ratio`;
+- `best_position_agreement_ratio`;
+- `best_dominant_position_generator`;
+- `best_dominant_position_ratio`;
+- `best_average_position_entropy`.
+
+Observed overlap hints include:
+
+- `coherent-single-generator-overlap`;
+- `coherent-dominant-overlap`;
+- `dominant-diffuse-overlap`;
+- `diffuse-overlap-field`;
+- `mixed-overlap-field`;
+- `sparse-overlap-field`;
+- `no-visible-overlap`.
+
+The main empirical lesson so far is:
+
+> `Ω_shape` separates local resonance from positional coherence.
+
+For example:
+
+| N | Π_shape reading | Ω_shape reading |
+|---|---|---|
+| `9090909090909090909090909` | `has-single-generator-scale` | `coherent-single-generator-overlap` |
+| `1212121212121212121212121` | `has-strong-scale` | `dominant-diffuse-overlap` |
+| `1234567891234567891234567` | `diffuse-all-scales` | `diffuse-overlap-field` |
+
+This distinction matters because a number may show strong local resonance while
+still producing a noisy positional overlap field.
+
+### Route correlation layer
+
+A third research helper compares PET-shadow observations against decimal
+rigidity and full PET signature cost:
+
+    tools/research/pet_shadow_route_correlation_study.py
+
+The current empirical claim is limited:
+
+> PET-shadow route correlation does not yet separate timeout from non-timeout,
+> but it can distinguish decimal-rigid structured timeouts from diffuse opaque
+> timeouts on the tested sample.
+
+This is still triage evidence only.
+
 ## Motivazione
 
 La costruzione completa di `PET(N)` può diventare troppo costosa per input
