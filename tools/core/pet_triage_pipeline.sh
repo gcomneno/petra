@@ -18,6 +18,9 @@ Options:
   --fork-follow SIDE            run legacy fork follow-up diagnostics for NEW, DROP, or BOTH; default: BOTH
   --no-fork-follow              skip legacy fork follow-up diagnostics
   --no-fork                     skip legacy focused peel fork diagnostics
+  --no-scan-summary             skip PET verified divisor summary
+  --no-classic-scan             skip PET verified divisor summary and classic scan policy
+  --route-only                  run only PET race diagnostic and classic handoff policy
   --no-recursive                skip legacy recursive diagnostics
 
 Examples:
@@ -40,6 +43,11 @@ RUN_FORK=1
 RUN_FORK_FOLLOW=1
 FORK_FOLLOW=BOTH
 RUN_RECURSIVE=1
+RUN_SCAN_SUMMARY=1
+RUN_CLASSIC_SCAN_POLICY=1
+RUN_LEGACY_LENS=1
+RUN_LEGACY_MASS=1
+RUN_LEGACY_FOCUSED=1
 
 if [[ $# -lt 1 ]]; then
   usage
@@ -93,6 +101,26 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-fork)
       RUN_FORK=0
+      shift
+      ;;
+    --no-scan-summary)
+      RUN_SCAN_SUMMARY=0
+      shift
+      ;;
+    --no-classic-scan)
+      RUN_SCAN_SUMMARY=0
+      RUN_CLASSIC_SCAN_POLICY=0
+      shift
+      ;;
+    --route-only)
+      RUN_SCAN_SUMMARY=0
+      RUN_CLASSIC_SCAN_POLICY=0
+      RUN_LEGACY_LENS=0
+      RUN_LEGACY_MASS=0
+      RUN_LEGACY_FOCUSED=0
+      RUN_FORK=0
+      RUN_FORK_FOLLOW=0
+      RUN_RECURSIVE=0
       shift
       ;;
     --no-recursive)
@@ -175,26 +203,36 @@ tools/pet_local_probe_proposal.py "$N"   --operator-depth "$OPERATOR_DEPTH"   --
 section "1. PET classic handoff policy"
 tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"
 
-section "2. PET verified divisor summary"
-run_optional tools/pet_classic_scan_summary.py "$N"
+if [[ "$RUN_SCAN_SUMMARY" -eq 1 ]]; then
+  section "2. PET verified divisor summary"
+  run_optional tools/pet_classic_scan_summary.py "$N"
+fi
 
-section "3. PET classic scan policy"
-run_optional tools/pet_classic_scan_policy.py "$N"
+if [[ "$RUN_CLASSIC_SCAN_POLICY" -eq 1 ]]; then
+  section "3. PET classic scan policy"
+  run_optional tools/pet_classic_scan_policy.py "$N"
+fi
 
-section "4. Legacy lens hint"
-run_optional tools/pet_lens_hint.py "$N"   --schedule-limit 8   --max-leaves 8   --summary
+if [[ "$RUN_LEGACY_LENS" -eq 1 ]]; then
+  section "4. Legacy lens hint"
+  run_optional tools/pet_lens_hint.py "$N"   --schedule-limit 8   --max-leaves 8   --summary
 
-section "5. Legacy lens candidates"
-run_optional tools/pet_lens_candidates.py "$N"   --max-leaves 8
+  section "5. Legacy lens candidates"
+  run_optional tools/pet_lens_candidates.py "$N"   --max-leaves 8
 
-section "6. Legacy lens transition"
-run_optional tools/pet_lens_transition.py "$N"   --max-leaves 8
+  section "6. Legacy lens transition"
+  run_optional tools/pet_lens_transition.py "$N"   --max-leaves 8
+fi
 
-section "7. Legacy mass response"
-run_optional python -m pet.cli opaque-mass-response "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --bands   "${JSON_ARG[@]}"
+if [[ "$RUN_LEGACY_MASS" -eq 1 ]]; then
+  section "7. Legacy mass response"
+  run_optional python -m pet.cli opaque-mass-response "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --bands   "${JSON_ARG[@]}"
+fi
 
-section "8. Legacy focused peel classic handoff diagnostic"
-run_optional python -m pet.cli opaque-focused-peel "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --classic-handoff   --handoff-radius "$HANDOFF_RADIUS"   "${JSON_ARG[@]}"
+if [[ "$RUN_LEGACY_FOCUSED" -eq 1 ]]; then
+  section "8. Legacy focused peel classic handoff diagnostic"
+  run_optional python -m pet.cli opaque-focused-peel "$N"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --classic-handoff   --handoff-radius "$HANDOFF_RADIUS"   "${JSON_ARG[@]}"
+fi
 
 if [[ "$RUN_FORK" -eq 1 ]]; then
   section "9. Legacy focused peel fork diagnostic"

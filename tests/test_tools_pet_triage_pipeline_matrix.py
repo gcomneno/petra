@@ -118,3 +118,28 @@ def test_pet_triage_pipeline_passes_active_blade_window_options() -> None:
         "387456687301039324825975283416 --trial-limit 20"
     ) in output
 
+def test_pet_triage_pipeline_route_only_skips_classic_and_legacy_sections() -> None:
+    output = run_pipeline_with_args(
+        "10000030000091",
+        "--operator-depth",
+        "0",
+        "--blade-window",
+        "active",
+        "--route-only",
+    )
+
+    assert "0. PET race diagnostic" in output
+    assert "1. PET classic handoff policy" in output
+    assert "route_kind = balanced-flat-border-lens-drop-classic-probe" in output
+
+    assert "2. PET verified divisor summary" not in output
+    assert "3. PET classic scan policy" not in output
+    assert "4. Legacy lens hint" not in output
+    assert "5. Legacy lens candidates" not in output
+    assert "6. Legacy lens transition" not in output
+    assert "7. Legacy mass response" not in output
+    assert "8. Legacy focused peel classic handoff diagnostic" not in output
+    assert "9. Legacy focused peel fork diagnostic" not in output
+    assert "10. Legacy fork-follow diagnostic" not in output
+    assert "11. Legacy recursive lens diagnostic" not in output
+
