@@ -474,6 +474,51 @@ by these criteria:
 - How can we constrain the support search without smuggling in classical
   arithmetic?
 
+## First operational matrix tool
+
+A first research helper now exists:
+
+    tools/research/pet_backbone_closure_shadow_matrix.py
+
+It evaluates a compact `N × backbone_order` matrix using target bases generated
+from shallow PE-Tree closure around flat backbone nodes.
+
+For each input `N` and each tested backbone order, it records:
+
+- `field_class` from `Π_shape`;
+- `lowest_noise_score`;
+- `best_overlap_hint` from `Ω_shape`;
+- `dominant_position_generator`;
+- `dominant_position_ratio`;
+- `average_position_entropy`.
+
+The summary mode is the first operational approximation of `Σ_backbone(N)`:
+
+    tools/research/pet_backbone_closure_shadow_matrix.py N... --format summary-by-n
+
+Current behavior:
+
+- if a non-diffuse support is found, the tool selects a diagnostic backbone
+  order;
+- if all tested orders are `diffuse-all-scales` plus `diffuse-overlap-field`,
+  the tool returns `selected_backbone_order = none`.
+
+This `none` result is intentional.  It prevents the tool from inventing a
+backbone support when the PET-shadow field is diffuse across all tested local
+backbone closures.
+
+Example current reading:
+
+| N | selected support |
+|---|---|
+| `100000000003900000091` | diagnostic support, noisy |
+| `9999999999000000000119` | coherent/dominant support |
+| `1234567891234567891234567` | none |
+| `9090909090909090909090909` | coherent single-generator support |
+
+The selected support is diagnostic only.  It is not `PET(N)`, not a factorization,
+and not the true generator of `N`.
+
 ## Current status
 
 This is a research hypothesis.
