@@ -266,6 +266,64 @@ def print_tsv(rows: list[dict[str, object]]) -> None:
         print("\t".join(str(row[column]) for column in columns))
 
 
+def print_summary_by_n(rows: list[dict[str, object]]) -> None:
+    columns = (
+        "N",
+        "digits",
+        "lowest_noise_scale",
+        "lowest_noise_score",
+        "highest_dominant_scale",
+        "highest_dominant_ratio",
+        "pi_effective_scale_alias",
+        "field_class",
+    )
+    print("\t".join(columns))
+
+    grouped: dict[str, list[dict[str, object]]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["N"]), []).append(row)
+
+    for n_text, group in grouped.items():
+        lowest_noise = min(group, key=lambda row: float(row["noise_score"]))
+        highest_dominant = max(
+            group,
+            key=lambda row: float(row["dominant_matched_generator_ratio"]),
+        )
+        pi_rows = [row for row in group if row["scale_name"] == "pi"]
+        pi_alias = str(pi_rows[0]["effective_scale_alias"]) if pi_rows else "-"
+
+        hints = Counter(str(row["shape_basis_hint"]) for row in group)
+        if hints.get("diffuse-full-coverage-shape-field", 0) == len(group):
+            field_class = "diffuse-all-scales"
+        elif any(
+            str(row["shape_basis_hint"]) == "strong-dominant-generator-resonance"
+            for row in group
+        ):
+            field_class = "has-strong-scale"
+        elif any(
+            str(row["shape_basis_hint"]) == "weak-dominant-generator-resonance"
+            for row in group
+        ):
+            field_class = "has-weak-scale"
+        else:
+            field_class = "mixed-or-empty"
+
+        print(
+            "\t".join(
+                (
+                    n_text,
+                    str(group[0]["digits"]),
+                    str(lowest_noise["scale_name"]),
+                    str(lowest_noise["noise_score"]),
+                    str(highest_dominant["scale_name"]),
+                    str(highest_dominant["dominant_matched_generator_ratio"]),
+                    pi_alias,
+                    field_class,
+                )
+            )
+        )
+
+
 def print_blocks(rows: list[dict[str, object]]) -> None:
     previous_n = None
     for row in rows:
@@ -325,7 +383,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("tsv", "blocks"),
+        choices=("tsv", "blocks", "summary-by-n"),
         default="tsv",
         help="Output format. Default: tsv",
     )
@@ -351,6 +409,8 @@ def main() -> int:
 
     if args.format == "blocks":
         print_blocks(rows)
+    elif args.format == "summary-by-n":
+        print_summary_by_n(rows)
     else:
         print_tsv(rows)
 
