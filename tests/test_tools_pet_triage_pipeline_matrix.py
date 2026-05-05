@@ -128,9 +128,11 @@ def test_pet_triage_pipeline_route_only_skips_classic_and_legacy_sections() -> N
         "--route-only",
     )
 
+    assert "0. PET decimal boundary preflight" in output
     assert "0. PET race diagnostic" in output
     assert "1. PET classic handoff policy" in output
     assert "route_kind = balanced-flat-border-lens-drop-classic-probe" in output
+    assert "decimal_rigid_border_hint" in output
 
     assert "2. PET verified divisor summary" not in output
     assert "3. PET classic scan policy" not in output

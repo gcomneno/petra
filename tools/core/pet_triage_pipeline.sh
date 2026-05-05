@@ -204,6 +204,9 @@ echo "claim = PET triage pipeline only; classic stages verify divisors only when
 proposal_file="$(mktemp)"
 trap 'rm -f "$proposal_file"' EXIT
 
+section "0. PET decimal boundary preflight"
+tools/research/pet_decimal_boundary_study.py "$N"
+
 section "0. PET race diagnostic"
 tools/pet_local_probe_proposal.py "$N"   --operator-depth "$OPERATOR_DEPTH"   --backbone-selection race   --blade-window "$BLADE_WINDOW" | tee "$proposal_file"
 
