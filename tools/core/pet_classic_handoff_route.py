@@ -125,6 +125,8 @@ def main() -> int:
     print(f"proposal_operator_depth = {args.operator_depth}")
     print(f"proposal_blade_window = {args.blade_window}")
     print(f"classic_probe_policy = {policy}")
+    if decimal_rigid_border_hint == "yes":
+        print("route_note = decimal rigid border detected; route-only benchmark may be expensive")
     print()
 
     if policy == "primality-check-only":

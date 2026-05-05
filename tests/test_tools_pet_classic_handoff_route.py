@@ -194,6 +194,7 @@ def test_classic_handoff_route_reports_decimal_rigid_border_fields_from_proposal
     assert "proposal_decimal_rigid_border_score = 0.311" in output
     assert "proposal_decimal_rigid_border_hint = yes" in output
     assert "classic_probe_policy = complex-border-route-needed" in output
+    assert "route_note = decimal rigid border detected; route-only benchmark may be expensive" in output
     assert "route_status = available" in output
     assert "route_kind = balanced-flat-border-lens-drop-classic-probe" in output
 
