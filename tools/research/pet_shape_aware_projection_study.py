@@ -82,6 +82,29 @@ def classify_projection(
 
     return "weak-shape-resonance"
 
+def shape_basis_hint(
+    matched_count: int,
+    generator_unique_count: int,
+    dominant_ratio: float,
+    coverage_ratio: float,
+) -> str:
+    if matched_count == 0:
+        return "no-visible-target-shape"
+
+    if generator_unique_count == 1:
+        return "single-generator-resonance"
+
+    if dominant_ratio >= 0.50:
+        return "strong-dominant-generator-resonance"
+
+    if dominant_ratio >= 0.33:
+        return "weak-dominant-generator-resonance"
+
+    if coverage_ratio >= 0.90:
+        return "diffuse-full-coverage-shape-field"
+
+    return "diffuse-partial-shape-field"
+
 
 def covered_positions(segments: list[dict[str, Any]], digits: int) -> int:
     covered = set()
@@ -187,6 +210,12 @@ def main() -> int:
         covered = covered_positions(matched_segments, len(digits))
         coverage_ratio = covered / len(digits) if digits else 0.0
         projection_hint = classify_projection(matched_segments, target_generators)
+        basis_hint = shape_basis_hint(
+            matched_count,
+            generator_unique_count,
+            dominant_ratio,
+            coverage_ratio,
+        )
 
         print("PET SHAPE-AWARE PROJECTION STUDY")
         print()
@@ -207,6 +236,8 @@ def main() -> int:
         print(f"dominant_matched_generator_count = {dominant_count}")
         print(f"dominant_matched_generator_ratio = {dominant_ratio:.3f}")
         print(f"shape_aware_projection_hint = {projection_hint}")
+        print(f"shape_basis_hint = {basis_hint}")
+        print("shape_basis_claim = visible segment projection only; not PET(N)")
         print()
         print("Matched segments")
         print("start end text value digits generator signature")
