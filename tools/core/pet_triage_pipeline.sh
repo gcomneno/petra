@@ -23,6 +23,7 @@ Options:
   --route-only                  run only PET race diagnostic and classic handoff policy
   --legacy-diagnostics          run legacy diagnostics sections 4-8
   --rigid-border-guard          stop after preflight when decimal rigid border is detected
+  --decimal-rigid-shallow-route emit a conservative shallow route for decimal rigid borders
   --no-recursive                skip legacy recursive diagnostics
 
 Examples:
@@ -51,6 +52,7 @@ RUN_LEGACY_LENS=0
 RUN_LEGACY_MASS=0
 RUN_LEGACY_FOCUSED=0
 RUN_RIGID_BORDER_GUARD=0
+RUN_DECIMAL_RIGID_SHALLOW_ROUTE=0
 
 if [[ $# -lt 1 ]]; then
   usage
@@ -134,6 +136,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --rigid-border-guard)
       RUN_RIGID_BORDER_GUARD=1
+      shift
+      ;;
+    --decimal-rigid-shallow-route)
+      RUN_DECIMAL_RIGID_SHALLOW_ROUTE=1
       shift
       ;;
     --no-recursive)
@@ -221,6 +227,15 @@ if [[ "$RUN_RIGID_BORDER_GUARD" -eq 1 && "$decimal_rigid_border_hint" == "yes" ]
   echo "reason = decimal rigid border detected; skipping PET race diagnostic"
   echo "preflight_guard_suggested_next = use shallow decimal-rigid route or rerun without --rigid-border-guard to force PET race"
   echo "claim = PET decimal boundary preflight only; this does not factor N"
+  exit 0
+fi
+if [[ "$RUN_DECIMAL_RIGID_SHALLOW_ROUTE" -eq 1 && "$decimal_rigid_border_hint" == "yes" ]]; then
+  echo
+  echo "shallow_route_status = available"
+  echo "shallow_route_kind = decimal-rigid-border-shallow-classic-probe"
+  echo "reason = decimal rigid border detected; using conservative shallow route without PET race diagnostic"
+  echo "suggested_command = python -m pet.cli opaque-probe $N --trial-limit 20"
+  echo "claim = PET decimal rigid shallow route only; classic verification required"
   exit 0
 fi
 

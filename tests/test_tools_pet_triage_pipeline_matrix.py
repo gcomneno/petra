@@ -208,3 +208,31 @@ def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
     assert "0. PET race diagnostic" not in output
     assert "1. PET classic handoff policy" not in output
 
+def test_pet_triage_pipeline_decimal_rigid_shallow_route_skips_race() -> None:
+    output = run_pipeline_with_args(
+        "9999999999000000000119",
+        "--operator-depth",
+        "0",
+        "--blade-window",
+        "active",
+        "--route-only",
+        "--decimal-rigid-shallow-route",
+    )
+
+    assert "0. PET decimal boundary preflight" in output
+    assert "9999999999000000000119" in output
+    assert "decimal_rigid_border_hint" in output
+    assert "shallow_route_status = available" in output
+    assert "shallow_route_kind = decimal-rigid-border-shallow-classic-probe" in output
+    assert (
+        "reason = decimal rigid border detected; using conservative shallow route "
+        "without PET race diagnostic"
+    ) in output
+    assert (
+        "suggested_command = python -m pet.cli opaque-probe "
+        "9999999999000000000119 --trial-limit 20"
+    ) in output
+
+    assert "0. PET race diagnostic" not in output
+    assert "1. PET classic handoff policy" not in output
+
