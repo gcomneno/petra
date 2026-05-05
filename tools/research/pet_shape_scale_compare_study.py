@@ -284,29 +284,45 @@ def print_summary_by_n(rows: list[dict[str, object]]) -> None:
         grouped.setdefault(str(row["N"]), []).append(row)
 
     for n_text, group in grouped.items():
-        lowest_noise = min(group, key=lambda row: float(row["noise_score"]))
+        visible_group = [
+            row for row in group if int(row["matched_segment_count"]) > 0
+        ]
+
+        ranking_group = visible_group or group
+
+        lowest_noise = min(
+            ranking_group,
+            key=lambda row: float(row["noise_score"]),
+        )
         highest_dominant = max(
-            group,
+            ranking_group,
             key=lambda row: float(row["dominant_matched_generator_ratio"]),
         )
         pi_rows = [row for row in group if row["scale_name"] == "pi"]
         pi_alias = str(pi_rows[0]["effective_scale_alias"]) if pi_rows else "-"
 
         hints = Counter(str(row["shape_basis_hint"]) for row in group)
-        if hints.get("diffuse-full-coverage-shape-field", 0) == len(group):
+        if not visible_group:
+            field_class = "no-visible-target-shape"
+        elif any(
+            str(row["shape_basis_hint"]) == "single-generator-resonance"
+            for row in visible_group
+        ):
+            field_class = "has-single-generator-scale"
+        elif hints.get("diffuse-full-coverage-shape-field", 0) == len(group):
             field_class = "diffuse-all-scales"
         elif any(
             str(row["shape_basis_hint"]) == "strong-dominant-generator-resonance"
-            for row in group
+            for row in visible_group
         ):
             field_class = "has-strong-scale"
         elif any(
             str(row["shape_basis_hint"]) == "weak-dominant-generator-resonance"
-            for row in group
+            for row in visible_group
         ):
             field_class = "has-weak-scale"
         else:
-            field_class = "mixed-or-empty"
+            field_class = "mixed-visible-field"
 
         print(
             "\t".join(
