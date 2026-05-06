@@ -239,6 +239,51 @@ def print_tsv(rows: list[dict[str, str]]) -> None:
         print("\t".join(row[column] for column in columns))
 
 
+def group_rows_by_n(rows: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+    grouped: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        grouped.setdefault(row["N"], []).append(row)
+    return grouped
+
+
+def selected_support_row(group: list[dict[str, str]]) -> dict[str, str] | None:
+    usable = [row for row in group if row["support_status"] != "none"]
+    if not usable:
+        return None
+    return max(usable, key=support_score)
+
+
+def stability_status(
+    depth_row: dict[str, str] | None,
+    next_depth_row: dict[str, str] | None,
+) -> str:
+    depth_status = "none" if depth_row is None else depth_row["support_status"]
+    next_status = "none" if next_depth_row is None else next_depth_row["support_status"]
+
+    if depth_status == "coherent-support" and next_status == "coherent-support":
+        return "stable-coherent-support"
+
+    if depth_status == "coherent-support" and next_status == "weak-or-noisy-support":
+        return "stable-weakening-support"
+
+    if depth_status == "coherent-support" and next_status == "none":
+        return "fragile-depth-support"
+
+    if depth_status == "weak-or-noisy-support" and next_status in {
+        "coherent-support",
+        "weak-or-noisy-support",
+    }:
+        return "weak-stable-support"
+
+    if depth_status == "weak-or-noisy-support" and next_status == "none":
+        return "fragile-weak-support"
+
+    if depth_status == "none" and next_status == "none":
+        return "none"
+
+    return f"{depth_status}->{next_status}"
+
+
 def print_summary_by_n(rows: list[dict[str, str]]) -> None:
     columns = (
         "N",
@@ -257,13 +302,11 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
 
     print("\t".join(columns))
 
-    grouped: dict[str, list[dict[str, str]]] = {}
-    for row in rows:
-        grouped.setdefault(row["N"], []).append(row)
+    grouped = group_rows_by_n(rows)
 
     for n_text, group in grouped.items():
-        usable = [row for row in group if row["support_status"] != "none"]
-        if not usable:
+        selected = selected_support_row(group)
+        if selected is None:
             first = group[0]
             print(
                 "\t".join(
@@ -285,7 +328,6 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
             )
             continue
 
-        selected = max(usable, key=support_score)
         print(
             "\t".join(
                 (
@@ -301,6 +343,85 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
                     selected["dominant_position_ratio"],
                     selected["average_position_entropy"],
                     "selected support is diagnostic only; not PET(N)",
+                )
+            )
+        )
+
+
+def print_stability_by_n(
+    depth_rows: list[dict[str, str]],
+    next_depth_rows: list[dict[str, str]],
+) -> None:
+    columns = (
+        "N",
+        "digits",
+        "depth",
+        "depth_order",
+        "depth_status",
+        "depth_generator",
+        "next_depth",
+        "next_depth_order",
+        "next_depth_status",
+        "next_depth_generator",
+        "sigma_stability_status",
+        "support_selection_claim",
+    )
+
+    print("\t".join(columns))
+
+    grouped_depth = group_rows_by_n(depth_rows)
+    grouped_next = group_rows_by_n(next_depth_rows)
+
+    for n_text, depth_group in grouped_depth.items():
+        next_group = grouped_next.get(n_text, [])
+        depth_selected = selected_support_row(depth_group)
+        next_selected = selected_support_row(next_group) if next_group else None
+
+        first = depth_group[0]
+        next_first = next_group[0] if next_group else None
+
+        depth_order = "none" if depth_selected is None else depth_selected["backbone_order"]
+        depth_status = "none" if depth_selected is None else depth_selected["support_status"]
+        depth_generator = (
+            "-"
+            if depth_selected is None
+            else depth_selected["dominant_position_generator"]
+        )
+
+        next_depth = (
+            "-"
+            if next_first is None
+            else next_first["backbone_depth"]
+        )
+        next_depth_order = (
+            "none" if next_selected is None else next_selected["backbone_order"]
+        )
+        next_depth_status = (
+            "none" if next_selected is None else next_selected["support_status"]
+        )
+        next_depth_generator = (
+            "-"
+            if next_selected is None
+            else next_selected["dominant_position_generator"]
+        )
+
+        status = stability_status(depth_selected, next_selected)
+
+        print(
+            "\t".join(
+                (
+                    n_text,
+                    first["digits"],
+                    first["backbone_depth"],
+                    depth_order,
+                    depth_status,
+                    depth_generator,
+                    next_depth,
+                    next_depth_order,
+                    next_depth_status,
+                    next_depth_generator,
+                    status,
+                    "support stability is diagnostic only; not PET(N)",
                 )
             )
         )
@@ -337,7 +458,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("tsv", "summary-by-n"),
+        choices=("tsv", "summary-by-n", "stability-by-n"),
         default="tsv",
     )
     args = parser.parse_args()
@@ -345,9 +466,11 @@ def main() -> int:
     if args.depth < 0:
         raise SystemExit("--depth must be >= 0")
 
+    orders = parse_csv_ints(args.orders)
+
     rows: list[dict[str, str]] = []
     for n_text in args.numbers:
-        for order in parse_csv_ints(args.orders):
+        for order in orders:
             rows.append(
                 matrix_row(
                     n_text=n_text,
@@ -357,7 +480,20 @@ def main() -> int:
                 )
             )
 
-    if args.format == "summary-by-n":
+    if args.format == "stability-by-n":
+        next_rows: list[dict[str, str]] = []
+        for n_text in args.numbers:
+            for order in orders:
+                next_rows.append(
+                    matrix_row(
+                        n_text=n_text,
+                        order=order,
+                        depth=args.depth + 1,
+                        scale_rules=args.scale_rules,
+                    )
+                )
+        print_stability_by_n(rows, next_rows)
+    elif args.format == "summary-by-n":
         print_summary_by_n(rows)
     else:
         print_tsv(rows)
