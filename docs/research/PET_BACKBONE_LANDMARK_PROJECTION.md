@@ -516,6 +516,59 @@ Example current reading:
 | `1234567891234567891234567` | none |
 | `9090909090909090909090909` | coherent single-generator support |
 
+### Current support classification guardrail
+
+The matrix summary now reports an explicit support status:
+
+- `coherent-support`;
+- `weak-or-noisy-support`;
+- `none`.
+
+The current approximation of `Σ_backbone(N)` is intentionally conservative:
+
+- `coherent-single-generator-overlap` with high agreement, high dominant ratio,
+  and low entropy is classified as `coherent-support`;
+- `coherent-dominant-overlap` with sufficient agreement and low entropy is also
+  classified as `coherent-support`;
+- `mixed-overlap-field` is classified as `weak-or-noisy-support`;
+- `dominant-diffuse-overlap` and `diffuse-overlap-field` are not enough to
+  select support.
+
+This guardrail matters because local or dominant-looking statistics can still
+come from a diffuse shadow field.  In the current policy, `Π_shape` local
+strength alone is not sufficient to select a backbone support.  The selection
+must be backed by `Ω_shape` overlap evidence.
+
+Current empirical check, using orders 1..5, depth 2, and scale rules excluding
+the earlier pi/third lenses:
+
+| input family | observed summary |
+|---|---|
+| sparse zero / decimal-rigid fields | `coherent-support` or `weak-or-noisy-support` |
+| saturated 9/0 fields | `coherent-support` or `weak-or-noisy-support` |
+| periodic fields | `coherent-support` |
+| digit-mixed opaque fields | `none` |
+
+In this sample, digit-mixed opaque inputs such as:
+
+    1234567891234567891234567
+    3141592653589793238462643
+    2718281828459045235360287
+    8675309867530986753098675
+
+return:
+
+    selected_backbone_order = none
+
+This is the desired behavior.  The tool should not invent a backbone support
+when the PET-shadow field is diffuse.
+
+Current claim:
+
+> The current `Σ_backbone` approximation distinguishes coherent backbone
+> support from diffuse shadow fog on the tested sample, but the selected support
+> remains diagnostic only and is not `PET(N)`.
+
 The selected support is diagnostic only.  It is not `PET(N)`, not a factorization,
 and not the true generator of `N`.
 
