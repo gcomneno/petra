@@ -569,6 +569,48 @@ Current claim:
 > support from diffuse shadow fog on the tested sample, but the selected support
 > remains diagnostic only and is not `PET(N)`.
 
+### Support stability summary
+
+The matrix tool now also supports:
+
+    --format stability-by-n
+
+This compares support selected at depth `D` with support selected at depth
+`D + 1`.
+
+This is useful because closure depth is not neutral:
+
+- depth 1 can be under-expanded and produce false coherent support;
+- depth 2 is the current useful working depth;
+- depth 3 can over-expand the basis and dissolve some structured support.
+
+The stability summary reports:
+
+- `stable-coherent-support`;
+- `stable-weakening-support`;
+- `fragile-depth-support`;
+- `weak-stable-support`;
+- `fragile-weak-support`;
+- `none`.
+
+Current depth 2 -> 3 sample:
+
+| N | stability status |
+|---|---|
+| `100000000003900000091` | `fragile-depth-support` |
+| `9999999999000000000119` | `stable-weakening-support` |
+| `1234567891234567891234567` | `none` |
+| `3141592653589793238462643` | `none` |
+| `1212121212121212121212121` | `fragile-depth-support` |
+| `9090909090909090909090909` | `stable-coherent-support` |
+
+Current reading:
+
+> `Σ_backbone` should be read through support stability, not only through a
+> single fixed-depth support selection.
+
+This remains diagnostic only and does not identify `PET(N)`.
+
 The selected support is diagnostic only.  It is not `PET(N)`, not a factorization,
 and not the true generator of `N`.
 
