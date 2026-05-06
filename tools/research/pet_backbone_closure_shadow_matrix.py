@@ -135,7 +135,7 @@ def matrix_row(
         scale_rules=scale_rules,
     )
 
-    return {
+    row = {
         "N": n_text,
         "digits": str(len(n_text)),
         "backbone_order": str(order),
@@ -147,6 +147,7 @@ def matrix_row(
         "highest_dominant_ratio": shape["highest_dominant_ratio"],
         "best_overlap_scale": overlap["best_overlap_scale"],
         "best_overlap_hint": overlap["best_overlap_hint"],
+        "support_status": "",
         "position_coverage_ratio": overlap["best_position_coverage_ratio"],
         "position_agreement_ratio": overlap["best_position_agreement_ratio"],
         "dominant_position_generator": overlap["best_dominant_position_generator"],
@@ -155,17 +156,42 @@ def matrix_row(
         "pi_effective_scale_alias": shape["pi_effective_scale_alias"],
         "claim": CLAIM,
     }
+    row["support_status"] = support_status(row)
+    return row
 
+
+def support_status(row: dict[str, str]) -> str:
+    overlap_hint = row["best_overlap_hint"]
+    dominant_ratio = float(row["dominant_position_ratio"])
+    agreement_ratio = float(row["position_agreement_ratio"])
+    entropy = float(row["average_position_entropy"])
+
+    if (
+        overlap_hint == "coherent-single-generator-overlap"
+        and dominant_ratio >= 0.90
+        and agreement_ratio >= 0.90
+        and entropy <= 0.10
+    ):
+        return "coherent-support"
+
+    if (
+        overlap_hint == "coherent-dominant-overlap"
+        and dominant_ratio >= 0.60
+        and agreement_ratio >= 0.70
+        and entropy <= 0.50
+    ):
+        return "coherent-support"
+
+    if overlap_hint == "mixed-overlap-field":
+        return "weak-or-noisy-support"
+
+    return "none"
 
 def support_score(row: dict[str, str]) -> tuple[int, float, float, float, float]:
-    hint_rank = {
-        "coherent-single-generator-overlap": 6,
-        "coherent-dominant-overlap": 5,
-        "dominant-diffuse-overlap": 4,
-        "mixed-overlap-field": 3,
-        "diffuse-overlap-field": 2,
-        "sparse-overlap-field": 1,
-        "no-visible-overlap": 0,
+    status_rank = {
+        "coherent-support": 3,
+        "weak-or-noisy-support": 1,
+        "none": 0,
     }
 
     field_rank = {
@@ -177,7 +203,7 @@ def support_score(row: dict[str, str]) -> tuple[int, float, float, float, float]
     }
 
     return (
-        hint_rank.get(row["best_overlap_hint"], -1),
+        status_rank.get(row["support_status"], -1),
         field_rank.get(row["field_class"], -1),
         float(row["dominant_position_ratio"]),
         float(row["position_agreement_ratio"]),
@@ -198,6 +224,7 @@ def print_tsv(rows: list[dict[str, str]]) -> None:
         "highest_dominant_ratio",
         "best_overlap_scale",
         "best_overlap_hint",
+        "support_status",
         "position_coverage_ratio",
         "position_agreement_ratio",
         "dominant_position_generator",
@@ -212,14 +239,6 @@ def print_tsv(rows: list[dict[str, str]]) -> None:
         print("\t".join(row[column] for column in columns))
 
 
-def no_coherent_support(group: list[dict[str, str]]) -> bool:
-    return all(
-        row["field_class"] == "diffuse-all-scales"
-        and row["best_overlap_hint"] == "diffuse-overlap-field"
-        for row in group
-    )
-
-
 def print_summary_by_n(rows: list[dict[str, str]]) -> None:
     columns = (
         "N",
@@ -228,6 +247,7 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
         "backbone_depth",
         "selected_field_class",
         "selected_overlap_hint",
+        "selected_support_status",
         "selected_lowest_noise_score",
         "selected_dominant_position_generator",
         "selected_dominant_position_ratio",
@@ -242,7 +262,8 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
         grouped.setdefault(row["N"], []).append(row)
 
     for n_text, group in grouped.items():
-        if no_coherent_support(group):
+        usable = [row for row in group if row["support_status"] != "none"]
+        if not usable:
             first = group[0]
             print(
                 "\t".join(
@@ -253,6 +274,7 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
                         first["backbone_depth"],
                         "diffuse-all-scales",
                         "diffuse-overlap-field",
+                        "none",
                         "-",
                         "-",
                         "-",
@@ -263,7 +285,7 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
             )
             continue
 
-        selected = max(group, key=support_score)
+        selected = max(usable, key=support_score)
         print(
             "\t".join(
                 (
@@ -273,6 +295,7 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
                     selected["backbone_depth"],
                     selected["field_class"],
                     selected["best_overlap_hint"],
+                    selected["support_status"],
                     selected["lowest_noise_score"],
                     selected["dominant_position_generator"],
                     selected["dominant_position_ratio"],
