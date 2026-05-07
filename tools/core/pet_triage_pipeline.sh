@@ -311,9 +311,9 @@ fi
 
 section "1. PET classic handoff policy"
 if [[ -s "$proposal_file" ]]; then
-  tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
+  tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --monster-route-file "$monster_router_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
 else
-  tools/pet_classic_handoff_route.py "$N"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
+  tools/pet_classic_handoff_route.py "$N"   --monster-route-file "$monster_router_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
 fi
 
 if [[ "$RUN_SCAN_SUMMARY" -eq 1 ]]; then

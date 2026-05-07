@@ -94,6 +94,27 @@ def monster_route_summary(n: int) -> dict[str, str]:
     }
 
 
+def monster_route_summary_from_file(path: Path) -> dict[str, str]:
+    rows = list(csv.DictReader(StringIO(path.read_text(encoding="utf-8")), delimiter="\t"))
+    if len(rows) != 1:
+        return {
+            "monster_route_status": "unavailable",
+            "monster_route_error": f"expected 1 router row, got {len(rows)}",
+        }
+
+    row = rows[0]
+    return {
+        "monster_route_status": "available",
+        "monster_class": row.get("monster_class", "-"),
+        "recommended_strategy": row.get("recommended_strategy", "-"),
+        "route_confidence": row.get("route_confidence", "-"),
+        "sigma_stability_status": row.get("sigma_stability_status", "-"),
+        "sigma_depth_generator": row.get("sigma_depth_generator", "-"),
+        "chunk_failure_mode": row.get("chunk_failure_mode", "-"),
+        "chunk_best_merge_generator": row.get("chunk_best_merge_generator", "-"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build a PET-guided route from local probe proposal to classic handoff."
@@ -117,6 +138,11 @@ def main() -> int:
         help="Reuse a precomputed pet_local_probe_proposal output instead of recomputing it.",
     )
     parser.add_argument(
+        "--monster-route-file",
+        type=Path,
+        help="Reuse a precomputed PET shadow monster router TSV row instead of recomputing it.",
+    )
+    parser.add_argument(
         "--include-monster-route",
         action="store_true",
         help="Append PET shadow monster router diagnostics to the handoff output.",
@@ -126,11 +152,14 @@ def main() -> int:
     if args.n < 1:
         raise SystemExit("pet_classic_handoff_route expects integers >= 1")
 
-    monster_route = (
-        monster_route_summary(args.n)
-        if args.include_monster_route
-        else {"monster_route_status": "skipped"}
-    )
+    if args.include_monster_route:
+        monster_route = (
+            monster_route_summary_from_file(args.monster_route_file)
+            if args.monster_route_file is not None
+            else monster_route_summary(args.n)
+        )
+    else:
+        monster_route = {"monster_route_status": "skipped"}
     monster_class = monster_route.get("monster_class", "unknown")
 
     if (
