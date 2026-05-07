@@ -243,8 +243,117 @@ def candidate_rows(
     return candidates
 
 
-def print_candidates(candidates: list[dict[str, str]]) -> None:
+def divisors_desc(value: int) -> list[int]:
+    divisors: set[int] = set()
+    limit = int(value ** 0.5)
+    for candidate in range(2, limit + 1):
+        if value % candidate == 0:
+            divisors.add(candidate)
+            divisors.add(value // candidate)
+    divisors.add(value)
+    return sorted(divisors, reverse=True)
+
+
+def confidence_rank(confidence: str) -> int:
+    return {
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+    }.get(confidence, 0)
+
+
+def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, str]]:
+    expanded: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def add(kind: str, value: str, source: str, confidence: str, note: str) -> None:
+        if value in {"", "-", "unknown", "none", "skipped-by-router"}:
+            return
+        if value in seen:
+            return
+        seen.add(value)
+        expanded.append(
+            {
+                "kind": kind,
+                "value": value,
+                "source": source,
+                "confidence": confidence,
+                "note": note,
+            }
+        )
+
+    # keep base candidates first
+    for candidate in base_candidates:
+        add(
+            candidate["kind"],
+            candidate["value"],
+            candidate["source"],
+            candidate["confidence"],
+            candidate["note"],
+        )
+
+    numeric_values: list[int] = []
+    for candidate in base_candidates:
+        try:
+            numeric_values.append(int(candidate["value"]))
+        except ValueError:
+            continue
+
+    numeric_values = [value for value in numeric_values if value >= 2]
+    numeric_values = sorted(set(numeric_values), reverse=True)
+
+    # divisors of the strongest two candidates only
+    for root in numeric_values[:2]:
+        for divisor in divisors_desc(root):
+            if divisor == root or divisor < 2:
+                continue
+            add(
+                "derived-divisor",
+                str(divisor),
+                "candidate_expansion",
+                "medium" if divisor >= 4 else "low",
+                f"non-trivial divisor of {root}",
+            )
+
+    # gcd/lcm between candidate pairs
+    import math
+
+    pair_values = numeric_values[:3]
+    for index, left in enumerate(pair_values):
+        for right in pair_values[index + 1 :]:
+            gcd_value = math.gcd(left, right)
+            if gcd_value >= 2:
+                add(
+                    "derived-gcd",
+                    str(gcd_value),
+                    "candidate_expansion",
+                    "medium" if gcd_value >= 4 else "low",
+                    f"gcd({left},{right})",
+                )
+
+            lcm_value = (left * right) // math.gcd(left, right)
+            if 2 <= lcm_value <= max(pair_values) * 2:
+                add(
+                    "derived-lcm",
+                    str(lcm_value),
+                    "candidate_expansion",
+                    "low",
+                    f"bounded lcm({left},{right})",
+                )
+
+    expanded.sort(
+        key=lambda candidate: (
+            -confidence_rank(candidate["confidence"]),
+            -int(candidate["value"]),
+            candidate["kind"],
+        )
+    )
+    return expanded
+
+
+def print_candidates(candidates: list[dict[str, str]], *, base_count: int) -> None:
     print("PET candidate forms")
+    print(f"candidate_base_count = {base_count}")
     print(f"candidate_count = {len(candidates)}")
     for index, candidate in enumerate(candidates, start=1):
         print(f"candidate_{index}_kind = {candidate['kind']}")
@@ -416,17 +525,17 @@ def main() -> int:
             print(f"chunk_failure_mode = {monster_route['chunk_failure_mode']}")
             print(f"chunk_best_merge_generator = {monster_route['chunk_best_merge_generator']}")
             print()
-        print_candidates(
-            candidate_rows(
-                monster_route=monster_route,
-                selected_backbone_generator="skipped-by-router",
-                selected_backbone_order="skipped-by-router",
-            )
+        router_base_candidates = candidate_rows(
+            monster_route=monster_route,
+            selected_backbone_generator="skipped-by-router",
+            selected_backbone_order="skipped-by-router",
         )
+        router_candidates = expand_candidates(router_base_candidates)
+        print_candidates(router_candidates, base_count=len(router_base_candidates))
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
         print("reason = router preempted local probe recomputation for a large or diffuse field")
-        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidate_rows(monster_route=monster_route, selected_backbone_generator='skipped-by-router', selected_backbone_order='skipped-by-router'))}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, router_candidates)}")
         print("route_trial_limit_hint = avoid-sigma-expansion")
         print("route_trial_limit_reason = router classified the field before local probe")
         print("route_warning = local probe skipped because router already classified the field as non-local or large-shortcut")
@@ -522,12 +631,13 @@ def main() -> int:
 
     route_trial_limit_hint = "none"
     route_trial_limit_reason = "no router-guided trial-limit hint"
-    candidates = candidate_rows(
+    base_candidates = candidate_rows(
         monster_route=monster_route,
         selected_backbone_generator=selected_backbone_generator,
         selected_backbone_order=selected_backbone_order,
     )
-    print_candidates(candidates)
+    candidates = expand_candidates(base_candidates)
+    print_candidates(candidates, base_count=len(base_candidates))
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
         if monster_class == "deceptive-stable-sigma":
