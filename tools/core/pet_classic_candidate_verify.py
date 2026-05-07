@@ -23,11 +23,27 @@ def main() -> int:
 
     seen: set[int] = set()
     verified = 0
+    usable = 0
+    best_factor = 1
+    best_residual = args.n
 
-    for index, raw in enumerate(args.candidate, start=1):
+    candidate_values: list[int | None] = []
+    for raw in args.candidate:
         try:
-            candidate = int(raw)
+            candidate_values.append(int(raw))
         except ValueError:
+            candidate_values.append(None)
+
+    ordered_pairs = sorted(
+        enumerate(candidate_values, start=1),
+        key=lambda item: -1 if item[1] is None else -item[1],
+    )
+
+    raw_values = args.candidate
+
+    for index, candidate in ordered_pairs:
+        raw = raw_values[index - 1]
+        if candidate is None:
             print(f"candidate_{index}_raw = {raw}")
             print(f"candidate_{index}_status = invalid")
             continue
@@ -58,12 +74,26 @@ def main() -> int:
 
         residual = args.n // gcd_value
         verified += 1
+        if gcd_value >= 4:
+            usable += 1
+            hit_kind = "usable-hit"
+        else:
+            hit_kind = "weak-hit"
+
+        if gcd_value > best_factor:
+            best_factor = gcd_value
+            best_residual = residual
+
         print(f"candidate_{index}_status = verified-factor")
+        print(f"candidate_{index}_hit_kind = {hit_kind}")
         print(f"candidate_{index}_factor = {gcd_value}")
         print(f"candidate_{index}_residual = {residual}")
 
     print()
     print(f"verified_factor_count = {verified}")
+    print(f"usable_factor_count = {usable}")
+    print(f"best_factor = {best_factor if best_factor > 1 else '-'}")
+    print(f"best_residual = {best_residual if best_factor > 1 else '-'}")
     print("claim = verifies only supplied candidates; does not search for new factors")
     return 0
 
