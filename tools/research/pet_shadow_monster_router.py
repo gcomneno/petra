@@ -3,14 +3,74 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
 
+ROUTER_CACHE_VERSION = "v1"
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
+
+
+def router_cache_dir() -> Path:
+    return repo_root() / ".tmp" / "pet_router_cache"
+
+
+def cache_key(
+    n_text: str,
+    orders: str,
+    depth: int,
+    scale_rules: str,
+    max_chunk_digits: int,
+) -> str:
+    raw = "|".join(
+        (
+            ROUTER_CACHE_VERSION,
+            n_text,
+            orders,
+            str(depth),
+            scale_rules,
+            str(max_chunk_digits),
+        )
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def cache_path(
+    n_text: str,
+    orders: str,
+    depth: int,
+    scale_rules: str,
+    max_chunk_digits: int,
+) -> Path:
+    return router_cache_dir() / f"{cache_key(n_text, orders, depth, scale_rules, max_chunk_digits)}.tsv"
+
+
+def materialize_output_row(
+    row: dict[str, str],
+    monster_class: str,
+    strategy: str,
+    confidence: str,
+) -> dict[str, str]:
+    return {
+        "N": row["N"],
+        "digits": row["digits"],
+        "decimal_morphology": row.get("decimal_morphology", decimal_morphology(row["N"])),
+        "sigma_stability_status": row["sigma_stability_status"],
+        "sigma_depth_generator": row.get("depth_generator", row.get("sigma_depth_generator", "-")),
+        "chunk_failure_mode": row.get("chunk_failure_mode", "-"),
+        "chunk_split_status": row.get("chunk_split_status", "-"),
+        "chunk_best_merge_generator": row.get("chunk_best_merge_generator", "-"),
+        "chunk_lcm_matches_parent": row.get("chunk_lcm_matches_parent", "-"),
+        "monster_class": monster_class,
+        "recommended_strategy": strategy,
+        "route_confidence": confidence,
+        "router_claim": "routing is diagnostic only; not PET(N)",
+    }
 
 
 def run_command(args: list[str]) -> str:
@@ -291,6 +351,11 @@ def main() -> int:
         action="store_true",
         help="Print per-number progress messages to stderr.",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable router file cache and recompute all rows.",
+    )
     args = parser.parse_args()
 
     columns = (
@@ -312,6 +377,8 @@ def main() -> int:
     print("\t".join(columns))
 
     rows: list[dict[str, str]] = []
+    cache_directory = router_cache_dir()
+    cache_directory.mkdir(parents=True, exist_ok=True)
 
     for index, n_text in enumerate(args.numbers, start=1):
         if args.progress:
@@ -321,23 +388,54 @@ def main() -> int:
                 flush=True,
             )
 
-        shortcut = fast_pre_route(n_text)
-        if shortcut is not None:
-            rows.append(shortcut)
-            continue
-
-        include_chunk = len(n_text) <= args.max_chunk_digits
-        row = shadow_rows(
-            [n_text],
+        row_cache_path = cache_path(
+            n_text,
             args.orders,
             args.depth,
             args.scale_rules,
-            include_chunk=include_chunk,
-        )[0]
+            args.max_chunk_digits,
+        )
 
-        if not include_chunk:
-            row.update(skipped_chunk_fields())
+        if not args.no_cache and row_cache_path.exists():
+            cached_rows = parse_rows(row_cache_path.read_text(encoding="utf-8"))
+            if len(cached_rows) == 1:
+                rows.append(cached_rows[0])
+                if args.progress:
+                    print(
+                        f"[router] cache hit for {n_text}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                continue
 
+        shortcut = fast_pre_route(n_text)
+        if shortcut is not None:
+            row = shortcut
+        else:
+            include_chunk = len(n_text) <= args.max_chunk_digits
+            row = shadow_rows(
+                [n_text],
+                args.orders,
+                args.depth,
+                args.scale_rules,
+                include_chunk=include_chunk,
+            )[0]
+
+            if not include_chunk:
+                row.update(skipped_chunk_fields())
+
+        if row["sigma_stability_status"] == "shortcut-skipped":
+            monster_class = row["monster_class"]
+            strategy = row["recommended_strategy"]
+            confidence = row["route_confidence"]
+        else:
+            monster_class, strategy, confidence = route_decision(row)
+
+        cache_row = materialize_output_row(row, monster_class, strategy, confidence)
+        row_cache_path.write_text(
+            "\t".join(columns) + "\n" + "\t".join(cache_row.get(column, "-") for column in columns) + "\n",
+            encoding="utf-8",
+        )
         rows.append(row)
 
     rows_by_n = {row["N"]: row for row in rows}
@@ -350,21 +448,7 @@ def main() -> int:
             confidence = row["route_confidence"]
         else:
             monster_class, strategy, confidence = route_decision(row)
-        out = {
-            "N": row["N"],
-            "digits": row["digits"],
-            "decimal_morphology": decimal_morphology(row["N"]),
-            "sigma_stability_status": row["sigma_stability_status"],
-            "sigma_depth_generator": row["depth_generator"],
-            "chunk_failure_mode": row.get("chunk_failure_mode", "-"),
-            "chunk_split_status": row.get("chunk_split_status", "-"),
-            "chunk_best_merge_generator": row.get("chunk_best_merge_generator", "-"),
-            "chunk_lcm_matches_parent": row.get("chunk_lcm_matches_parent", "-"),
-            "monster_class": monster_class,
-            "recommended_strategy": strategy,
-            "route_confidence": confidence,
-            "router_claim": "routing is diagnostic only; not PET(N)",
-        }
+        out = materialize_output_row(row, monster_class, strategy, confidence)
         print("\t".join(out[column] for column in columns))
 
     return 0
