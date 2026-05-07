@@ -172,6 +172,103 @@ def skipped_chunk_fields() -> dict[str, str]:
     }
 
 
+def digit_run_lengths(digits: str, target: str) -> list[int]:
+    runs: list[int] = []
+    current = 0
+    for ch in digits:
+        if ch == target:
+            current += 1
+        elif current:
+            runs.append(current)
+            current = 0
+    if current:
+        runs.append(current)
+    return runs
+
+
+def border_non_90_tail_length(digits: str) -> int:
+    index = len(digits) - 1
+    while index >= 0 and digits[index] not in {"0", "9"}:
+        index -= 1
+    return len(digits) - 1 - index
+
+
+def fast_pre_route(n_text: str) -> dict[str, str] | None:
+    digits = n_text.strip()
+    digit_len = len(digits)
+    morphology = decimal_morphology(digits)
+
+    zero_runs = digit_run_lengths(digits, "0")
+    nine_runs = digit_run_lengths(digits, "9")
+    longest_zero = max(zero_runs, default=0)
+    longest_nine = max(nine_runs, default=0)
+    non_zero_count = sum(1 for ch in digits if ch != "0")
+    non_zero_ratio = non_zero_count / digit_len if digit_len else 0.0
+    border_tail = border_non_90_tail_length(digits)
+
+    if (
+        digit_len >= 24
+        and longest_zero >= 8
+        and longest_nine >= 8
+        and border_tail <= 4
+    ):
+        return {
+            "N": n_text,
+            "digits": str(digit_len),
+            "decimal_morphology": "saturated-border-field",
+            "sigma_stability_status": "shortcut-skipped",
+            "depth_generator": "-",
+            "chunk_failure_mode": "shortcut-morphology",
+            "chunk_split_status": "-",
+            "chunk_best_merge_generator": "-",
+            "chunk_lcm_matches_parent": "-",
+            "monster_class": "saturated-border-field",
+            "recommended_strategy": "use-sigma-shortcut-border-diagnostic",
+            "route_confidence": "medium",
+            "router_claim": "routing is diagnostic only; not PET(N)",
+        }
+
+    if (
+        digit_len >= 20
+        and longest_zero >= 10
+        and non_zero_ratio <= 0.20
+    ):
+        return {
+            "N": n_text,
+            "digits": str(digit_len),
+            "decimal_morphology": "sparse-zero-border-field",
+            "sigma_stability_status": "shortcut-skipped",
+            "depth_generator": "-",
+            "chunk_failure_mode": "shortcut-morphology",
+            "chunk_split_status": "-",
+            "chunk_best_merge_generator": "-",
+            "chunk_lcm_matches_parent": "-",
+            "monster_class": "sparse-zero-border-field",
+            "recommended_strategy": "use-sigma-shortcut-sparse-zero-diagnostic",
+            "route_confidence": "medium",
+            "router_claim": "routing is diagnostic only; not PET(N)",
+        }
+
+    if morphology == "periodic" and digit_len >= 20:
+        return {
+            "N": n_text,
+            "digits": str(digit_len),
+            "decimal_morphology": "obvious-periodic-field",
+            "sigma_stability_status": "shortcut-skipped",
+            "depth_generator": "-",
+            "chunk_failure_mode": "shortcut-morphology",
+            "chunk_split_status": "-",
+            "chunk_best_merge_generator": "-",
+            "chunk_lcm_matches_parent": "-",
+            "monster_class": "obvious-periodic-field",
+            "recommended_strategy": "use-sigma-shortcut-periodic-diagnostic",
+            "route_confidence": "medium",
+            "router_claim": "routing is diagnostic only; not PET(N)",
+        }
+
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Route PET shadow/chunk diagnostics into monster classes and recommended strategies."
@@ -214,13 +311,6 @@ def main() -> int:
 
     print("\t".join(columns))
 
-    small_numbers = [
-        n_text for n_text in args.numbers if len(n_text) <= args.max_chunk_digits
-    ]
-    large_numbers = [
-        n_text for n_text in args.numbers if len(n_text) > args.max_chunk_digits
-    ]
-
     rows: list[dict[str, str]] = []
 
     for index, n_text in enumerate(args.numbers, start=1):
@@ -230,6 +320,11 @@ def main() -> int:
                 file=sys.stderr,
                 flush=True,
             )
+
+        shortcut = fast_pre_route(n_text)
+        if shortcut is not None:
+            rows.append(shortcut)
+            continue
 
         include_chunk = len(n_text) <= args.max_chunk_digits
         row = shadow_rows(
@@ -249,7 +344,12 @@ def main() -> int:
 
     for n_text in args.numbers:
         row = rows_by_n[n_text]
-        monster_class, strategy, confidence = route_decision(row)
+        if row["sigma_stability_status"] == "shortcut-skipped":
+            monster_class = row["monster_class"]
+            strategy = row["recommended_strategy"]
+            confidence = row["route_confidence"]
+        else:
+            monster_class, strategy, confidence = route_decision(row)
         out = {
             "N": row["N"],
             "digits": row["digits"],
