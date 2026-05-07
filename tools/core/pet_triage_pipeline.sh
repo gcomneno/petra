@@ -271,7 +271,8 @@ fi
 
 if [[ "$RUN_MONSTER_ROUTER" -eq 1 ]]; then
   section "0b. PET shadow monster router"
-  tools/research/pet_shadow_monster_router.py "$N" --progress | tee "$monster_router_file"
+  tools/research/pet_shadow_monster_router.py "$N" --progress > "$monster_router_file"
+  column -t -s $'\t' "$monster_router_file"
 
   triage_router_monster_class="$(extract_tsv_value "$monster_router_file" "monster_class")"
   triage_router_strategy="$(extract_tsv_value "$monster_router_file" "recommended_strategy")"
