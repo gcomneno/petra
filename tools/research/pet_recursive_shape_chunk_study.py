@@ -133,6 +133,38 @@ def split_score(
     )
 
 
+
+def classify_failure_mode(
+    parent: ShapeInfo,
+    left: ShapeInfo,
+    right: ShapeInfo,
+    lcm_generator: int | None,
+    condensation_gain: int,
+    parent_seen_in_child: bool,
+    lcm_matches_parent: bool,
+) -> str:
+    if parent_seen_in_child or lcm_matches_parent:
+        return "local-preservation-success"
+
+    local_generators = [
+        left.generator,
+        right.generator,
+    ]
+
+    if lcm_generator is not None:
+        local_generators.append(lcm_generator)
+
+    local_max = max(local_generators)
+
+    if parent.generator > local_max:
+        return "emergent-global-generator"
+
+    if condensation_gain > 0:
+        return "split-overcompression"
+
+    return "no-local-support"
+
+
 def classify_split(
     condensation_gain: int,
     generator_match_bonus: int,
@@ -214,6 +246,15 @@ def best_split(segment: str):
             "best_merge_matches_parent": best_merge_matches_parent,
             "parent_seen_in_child": parent.generator in (left.generator, right.generator),
             "lcm_matches_parent": all_merge_candidates["lcm"][1] == parent.generator,
+            "failure_mode": classify_failure_mode(
+                parent,
+                left,
+                right,
+                all_merge_candidates["lcm"][1],
+                condensation_gain,
+                parent.generator in (left.generator, right.generator),
+                all_merge_candidates["lcm"][1] == parent.generator,
+            ),
             "split_status": classify_split(
                 condensation_gain,
                 generator_match_bonus,
@@ -266,6 +307,7 @@ def walk(root: str, max_depth: int):
                 "best_merge_matches_parent": "-",
                 "parent_seen_in_child": "-",
                 "lcm_matches_parent": "-",
+                "failure_mode": "-",
                 "split_status": "atomic",
             })
             return
@@ -296,6 +338,7 @@ def walk(root: str, max_depth: int):
                 "best_merge_matches_parent": "-",
                 "parent_seen_in_child": "-",
                 "lcm_matches_parent": "-",
+                "failure_mode": "-",
                 "split_status": "no-split",
             })
             return
@@ -324,6 +367,7 @@ def walk(root: str, max_depth: int):
             "best_merge_matches_parent": split["best_merge_matches_parent"],
             "parent_seen_in_child": split["parent_seen_in_child"],
             "lcm_matches_parent": split["lcm_matches_parent"],
+            "failure_mode": split["failure_mode"],
             "split_status": split["split_status"],
         })
 
@@ -352,7 +396,8 @@ def main() -> None:
         "product_value\tproduct_generator\tgcd_value\tgcd_generator\t"
         "lcm_value\tlcm_generator\tbest_merge_source\tbest_merge_value\t"
         "best_merge_generator\tbest_merge_matches_parent\t"
-        "parent_seen_in_child\tlcm_matches_parent\tsplit_status"
+        "parent_seen_in_child\tlcm_matches_parent\t"
+        "failure_mode\tsplit_status"
     )
 
     for raw in args.numbers:
@@ -385,6 +430,7 @@ def main() -> None:
                 f"{row['best_merge_matches_parent']}\t"
                 f"{row['parent_seen_in_child']}\t"
                 f"{row['lcm_matches_parent']}\t"
+                f"{row['failure_mode']}\t"
                 f"{row['split_status']}"
             )
 
