@@ -20,6 +20,16 @@ def rank(row: dict[str, str]) -> int:
         return -1
 
 
+def row_key(row: dict[str, str], key: str) -> str:
+    if "+" not in key:
+        return row.get(key, "unknown")
+
+    return "+".join(
+        row.get(part, "unknown")
+        for part in key.split("+")
+    )
+
+
 def summarize(
     rows: list[dict[str, str]],
     key: str,
@@ -28,7 +38,7 @@ def summarize(
     counts: dict[str, int] = defaultdict(int)
 
     for row in rows:
-        value = row.get(key, "unknown")
+        value = row_key(row, key)
         sums[value] += rank(row)
         counts[value] += 1
 
@@ -77,6 +87,8 @@ def main() -> int:
         "signature_suffix_match",
         "distance_to_n",
         "gcd_class",
+        "monster_class+candidate_source",
+        "monster_class+candidate_is_base",
     ):
         print_summary(
             key,
