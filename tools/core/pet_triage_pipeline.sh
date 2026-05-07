@@ -206,6 +206,28 @@ run_optional() {
   return 0
 }
 
+extract_tsv_value() {
+  local file="$1"
+  local column_name="$2"
+  python - "$file" "$column_name" <<'PY2'
+import csv
+import sys
+from pathlib import Path
+
+file_path = Path(sys.argv[1])
+column_name = sys.argv[2]
+
+with file_path.open("r", encoding="utf-8") as handle:
+    rows = list(csv.DictReader(handle, delimiter="\t"))
+
+if not rows:
+    print("unknown")
+    raise SystemExit(0)
+
+print(rows[0].get(column_name, "unknown"))
+PY2
+}
+
 echo "PET TRIAGE PIPELINE"
 echo "N_digits = ${#N}"
 echo "max_generator_count = $MAX_GENERATOR_COUNT"
@@ -222,7 +244,8 @@ echo "claim = PET triage pipeline only; classic stages verify divisors only when
 
 proposal_file="$(mktemp)"
 decimal_boundary_file="$(mktemp)"
-trap 'rm -f "$proposal_file" "$decimal_boundary_file"' EXIT
+monster_router_file="$(mktemp)"
+trap 'rm -f "$proposal_file" "$decimal_boundary_file" "$monster_router_file"' EXIT
 
 section "0. PET decimal boundary preflight"
 tools/research/pet_decimal_boundary_study.py "$N" | tee "$decimal_boundary_file"
@@ -248,14 +271,35 @@ fi
 
 if [[ "$RUN_MONSTER_ROUTER" -eq 1 ]]; then
   section "0b. PET shadow monster router"
-  run_optional tools/research/pet_shadow_monster_router.py "$N" --progress
+  tools/research/pet_shadow_monster_router.py "$N" --progress | tee "$monster_router_file"
+
+  triage_router_monster_class="$(extract_tsv_value "$monster_router_file" "monster_class")"
+  triage_router_strategy="$(extract_tsv_value "$monster_router_file" "recommended_strategy")"
+  triage_router_confidence="$(extract_tsv_value "$monster_router_file" "route_confidence")"
+
+  echo
+  echo "triage_router_monster_class = $triage_router_monster_class"
+  echo "triage_router_strategy = $triage_router_strategy"
+  echo "triage_router_confidence = $triage_router_confidence"
+
+  if [[ "$triage_router_monster_class" == "deceptive-stable-sigma" ]]; then
+    echo "triage_warning = do not trust sigma generator directly"
+  elif [[ "$triage_router_monster_class" == "local-preserved-shadow-coherent" ]]; then
+    echo "triage_note = local lambda preservation agrees with sigma diagnostics"
+  elif [[ "$triage_router_monster_class" == "local-preserved-sigma-floor-risk" ]]; then
+    echo "triage_warning = local PET generator appears preserved but sigma may be collapsed to a low floor"
+  elif [[ "$triage_router_monster_class" == "fragile-shadow-field" ]]; then
+    echo "triage_warning = sigma support is depth-fragile; treat downstream route as conservative only"
+  elif [[ "$triage_router_monster_class" == "diffuse-field" || "$triage_router_monster_class" == "diffuse-digit-mixed-field" ]]; then
+    echo "triage_recommendation = prefer handoff-or-new-operator over sigma-style confidence"
+  fi
 fi
 
 section "0. PET race diagnostic"
 tools/pet_local_probe_proposal.py "$N"   --operator-depth "$OPERATOR_DEPTH"   --backbone-selection race   --blade-window "$BLADE_WINDOW" | tee "$proposal_file"
 
 section "1. PET classic handoff policy"
-tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"
+tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
 
 if [[ "$RUN_SCAN_SUMMARY" -eq 1 ]]; then
   section "2. PET verified divisor summary"
