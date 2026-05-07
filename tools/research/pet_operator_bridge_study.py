@@ -212,8 +212,10 @@ def tsv_rows(
 
     n_sig_data = shape_signature_dict(n)
 
-    n_signature = str(n_sig_data["signature"])
+    n_signature_raw = n_sig_data["signature"]
+    n_signature = str(n_signature_raw)
     n_generator = str(n_sig_data["generator"])
+    n_width = len(n_signature_raw)
 
     rows: list[dict[str, str]] = []
 
@@ -240,13 +242,17 @@ def tsv_rows(
 
         candidate_sig_data = shape_signature_dict(candidate_value)
 
+        candidate_signature_raw = candidate_sig_data["signature"]
+
         candidate_signature = str(
-            candidate_sig_data["signature"]
+            candidate_signature_raw
         )
 
         candidate_generator = str(
             candidate_sig_data["generator"]
         )
+
+        candidate_width = len(candidate_signature_raw)
 
         distance_to_n = structural_distance(
             encode(candidate_value),
@@ -269,6 +275,7 @@ def tsv_rows(
                 "monster_class": monster_class,
                 "n_signature": n_signature,
                 "n_generator": n_generator,
+                "n_width": str(n_width),
                 "candidate_kind": candidate["kind"],
                 "candidate_source": candidate["source"],
                 "candidate_confidence": candidate["confidence"],
@@ -276,6 +283,8 @@ def tsv_rows(
                 "candidate_value": str(candidate_value),
                 "candidate_signature": candidate_signature,
                 "candidate_generator": candidate_generator,
+                "candidate_width": str(candidate_width),
+                "width_gap": str(n_width - candidate_width),
                 "distance_to_n": str(distance_to_n),
                 "hit_kind": hit_kind,
                 "gcd_value": gcd_value,
@@ -307,6 +316,7 @@ def main() -> int:
         "monster_class",
         "n_signature",
         "n_generator",
+        "n_width",
         "candidate_kind",
         "candidate_source",
         "candidate_confidence",
@@ -314,6 +324,8 @@ def main() -> int:
         "candidate_value",
         "candidate_signature",
         "candidate_generator",
+        "candidate_width",
+        "width_gap",
         "distance_to_n",
         "hit_kind",
         "gcd_value",
