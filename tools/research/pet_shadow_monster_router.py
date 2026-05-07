@@ -122,24 +122,41 @@ def route_decision(row: dict[str, str]) -> tuple[str, str, str]:
     )
 
 
-def shadow_rows(numbers: list[str], orders: str, depth: int, scale_rules: str) -> list[dict[str, str]]:
-    output = run_command(
-        [
-            sys.executable,
-            "tools/research/pet_backbone_closure_shadow_matrix.py",
-            *numbers,
-            "--orders",
-            orders,
-            "--depth",
-            str(depth),
-            "--scale-rules",
-            scale_rules,
-            "--format",
-            "stability-by-n",
-            "--include-recursive-chunk-diagnosis",
-        ]
-    )
+def shadow_rows(
+    numbers: list[str],
+    orders: str,
+    depth: int,
+    scale_rules: str,
+    include_chunk: bool,
+) -> list[dict[str, str]]:
+    command = [
+        sys.executable,
+        "tools/research/pet_backbone_closure_shadow_matrix.py",
+        *numbers,
+        "--orders",
+        orders,
+        "--depth",
+        str(depth),
+        "--scale-rules",
+        scale_rules,
+        "--format",
+        "stability-by-n",
+    ]
+
+    if include_chunk:
+        command.append("--include-recursive-chunk-diagnosis")
+
+    output = run_command(command)
     return parse_rows(output)
+
+
+def skipped_chunk_fields() -> dict[str, str]:
+    return {
+        "chunk_failure_mode": "skipped-large-input",
+        "chunk_split_status": "-",
+        "chunk_best_merge_generator": "-",
+        "chunk_lcm_matches_parent": "-",
+    }
 
 
 def main() -> int:
@@ -152,6 +169,12 @@ def main() -> int:
     parser.add_argument(
         "--scale-rules",
         default="half,quarter,sqrt-digits,log2-digits",
+    )
+    parser.add_argument(
+        "--max-chunk-digits",
+        type=int,
+        default=8,
+        help="Run Λ_chunk only for inputs with at most this many digits. Default: 8.",
     )
     args = parser.parse_args()
 
@@ -173,7 +196,41 @@ def main() -> int:
 
     print("\t".join(columns))
 
-    for row in shadow_rows(args.numbers, args.orders, args.depth, args.scale_rules):
+    small_numbers = [
+        n_text for n_text in args.numbers if len(n_text) <= args.max_chunk_digits
+    ]
+    large_numbers = [
+        n_text for n_text in args.numbers if len(n_text) > args.max_chunk_digits
+    ]
+
+    rows: list[dict[str, str]] = []
+
+    if small_numbers:
+        rows.extend(
+            shadow_rows(
+                small_numbers,
+                args.orders,
+                args.depth,
+                args.scale_rules,
+                include_chunk=True,
+            )
+        )
+
+    if large_numbers:
+        for row in shadow_rows(
+            large_numbers,
+            args.orders,
+            args.depth,
+            args.scale_rules,
+            include_chunk=False,
+        ):
+            row.update(skipped_chunk_fields())
+            rows.append(row)
+
+    rows_by_n = {row["N"]: row for row in rows}
+
+    for n_text in args.numbers:
+        row = rows_by_n[n_text]
         monster_class, strategy, confidence = route_decision(row)
         out = {
             "N": row["N"],
