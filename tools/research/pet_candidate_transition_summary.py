@@ -71,6 +71,8 @@ def main() -> int:
         "candidate_kind",
         "candidate_is_base",
         "monster_class",
+        "width_gap",
+        "depth_sum_gap",
         "distance_to_n",
         "gcd_class",
     ):
