@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
 
 
@@ -51,6 +53,47 @@ def classic_probe_policy(shape_diagnostic: str) -> str:
     }.get(shape_diagnostic, "route-needed")
 
 
+
+def monster_route_summary(n: int) -> dict[str, str]:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_shadow_monster_router.py",
+            str(n),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        message = (result.stderr or result.stdout).strip().splitlines()
+        return {
+            "monster_route_status": "unavailable",
+            "monster_route_error": message[0] if message else "unknown router error",
+        }
+
+    rows = list(csv.DictReader(StringIO(result.stdout), delimiter="\t"))
+    if len(rows) != 1:
+        return {
+            "monster_route_status": "unavailable",
+            "monster_route_error": f"expected 1 router row, got {len(rows)}",
+        }
+
+    row = rows[0]
+    return {
+        "monster_route_status": "available",
+        "monster_class": row.get("monster_class", "-"),
+        "recommended_strategy": row.get("recommended_strategy", "-"),
+        "route_confidence": row.get("route_confidence", "-"),
+        "sigma_stability_status": row.get("sigma_stability_status", "-"),
+        "sigma_depth_generator": row.get("sigma_depth_generator", "-"),
+        "chunk_failure_mode": row.get("chunk_failure_mode", "-"),
+        "chunk_best_merge_generator": row.get("chunk_best_merge_generator", "-"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build a PET-guided route from local probe proposal to classic handoff."
@@ -72,6 +115,11 @@ def main() -> int:
         "--proposal-file",
         type=Path,
         help="Reuse a precomputed pet_local_probe_proposal output instead of recomputing it.",
+    )
+    parser.add_argument(
+        "--include-monster-route",
+        action="store_true",
+        help="Append PET shadow monster router diagnostics to the handoff output.",
     )
     args = parser.parse_args()
 
@@ -107,6 +155,11 @@ def main() -> int:
     decimal_rigid_border_score = extract_value(proposal, "decimal_rigid_border_score")
     decimal_rigid_border_hint = extract_value(proposal, "decimal_rigid_border_hint")
     policy = classic_probe_policy(race_shape_diagnostic)
+    monster_route = (
+        monster_route_summary(args.n)
+        if args.include_monster_route
+        else {"monster_route_status": "skipped"}
+    )
 
     print("PET CLASSIC HANDOFF ROUTE")
     print()
@@ -128,6 +181,20 @@ def main() -> int:
     if decimal_rigid_border_hint == "yes":
         print("route_note = decimal rigid border detected; route-only benchmark may be expensive")
     print()
+    if args.include_monster_route:
+        print("PET shadow monster route")
+        print(f"monster_route_status = {monster_route['monster_route_status']}")
+        if monster_route["monster_route_status"] == "available":
+            print(f"monster_class = {monster_route['monster_class']}")
+            print(f"recommended_strategy = {monster_route['recommended_strategy']}")
+            print(f"route_confidence = {monster_route['route_confidence']}")
+            print(f"sigma_stability_status = {monster_route['sigma_stability_status']}")
+            print(f"sigma_depth_generator = {monster_route['sigma_depth_generator']}")
+            print(f"chunk_failure_mode = {monster_route['chunk_failure_mode']}")
+            print(f"chunk_best_merge_generator = {monster_route['chunk_best_merge_generator']}")
+        else:
+            print(f"monster_route_error = {monster_route.get('monster_route_error', '-')}")
+        print()
 
     if policy == "primality-check-only":
         suggested_parts = [
