@@ -120,6 +120,12 @@ def handoff_output(n_text: str) -> str:
     return result.stdout
 
 
+def signature_depth_sum(value: object) -> int:
+    if isinstance(value, list):
+        return len(value) + sum(signature_depth_sum(item) for item in value)
+    return 0
+
+
 def hit_rank(gcd_class_value: str) -> int:
     return {
         "verified": 3,
@@ -216,6 +222,7 @@ def tsv_rows(
     n_signature = str(n_signature_raw)
     n_generator = str(n_sig_data["generator"])
     n_width = len(n_signature_raw)
+    n_depth_sum = signature_depth_sum(n_signature_raw)
 
     rows: list[dict[str, str]] = []
 
@@ -253,6 +260,7 @@ def tsv_rows(
         )
 
         candidate_width = len(candidate_signature_raw)
+        candidate_depth_sum = signature_depth_sum(candidate_signature_raw)
 
         distance_to_n = structural_distance(
             encode(candidate_value),
@@ -276,6 +284,7 @@ def tsv_rows(
                 "n_signature": n_signature,
                 "n_generator": n_generator,
                 "n_width": str(n_width),
+                "n_depth_sum": str(n_depth_sum),
                 "candidate_kind": candidate["kind"],
                 "candidate_source": candidate["source"],
                 "candidate_confidence": candidate["confidence"],
@@ -284,6 +293,8 @@ def tsv_rows(
                 "candidate_signature": candidate_signature,
                 "candidate_generator": candidate_generator,
                 "candidate_width": str(candidate_width),
+                "candidate_depth_sum": str(candidate_depth_sum),
+                "depth_sum_gap": str(n_depth_sum - candidate_depth_sum),
                 "width_gap": str(n_width - candidate_width),
                 "distance_to_n": str(distance_to_n),
                 "hit_kind": hit_kind,
@@ -317,6 +328,7 @@ def main() -> int:
         "n_signature",
         "n_generator",
         "n_width",
+        "n_depth_sum",
         "candidate_kind",
         "candidate_source",
         "candidate_confidence",
@@ -325,6 +337,8 @@ def main() -> int:
         "candidate_signature",
         "candidate_generator",
         "candidate_width",
+        "candidate_depth_sum",
+        "depth_sum_gap",
         "width_gap",
         "distance_to_n",
         "hit_kind",
