@@ -195,6 +195,27 @@ def main() -> int:
         else:
             print(f"monster_route_error = {monster_route.get('monster_route_error', '-')}")
         print()
+    route_warning = None
+    route_note = None
+    if monster_route.get("monster_route_status") == "available":
+        monster_class = monster_route.get("monster_class", "unknown")
+        if monster_class == "deceptive-stable-sigma":
+            route_warning = (
+                "sigma support appears stable but locally deceptive; avoid trusting sigma generator directly"
+            )
+        elif monster_class == "local-preserved-shadow-coherent":
+            route_note = (
+                "local lambda preservation detected; sigma and local chunk diagnostics agree"
+            )
+        elif monster_class == "local-preserved-sigma-floor-risk":
+            route_warning = (
+                "local PET generator appears preserved, but sigma support may be collapsed to a low floor"
+            )
+        elif monster_class == "fragile-shadow-field":
+            route_warning = (
+                "sigma support is depth-fragile; treat route as conservative only"
+            )
+
 
     if policy == "primality-check-only":
         suggested_parts = [
@@ -210,6 +231,10 @@ def main() -> int:
         print("route_kind = primality-check-only")
         print("reason = atomic PET shape; run minimal classic residual/primality probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        if route_note is not None:
+            print(f"route_note = {route_note}")
+        if route_warning is not None:
+            print(f"route_warning = {route_warning}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
         return 0
@@ -228,6 +253,10 @@ def main() -> int:
         print("route_kind = power-like-local-check")
         print("reason = narrow deep PET shape; run minimal classic check for repeated small factors")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        if route_note is not None:
+            print(f"route_note = {route_note}")
+        if route_warning is not None:
+            print(f"route_warning = {route_warning}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
         return 0
@@ -246,6 +275,10 @@ def main() -> int:
         print("route_kind = backbone-wide-structural-check")
         print("reason = wide exact PET shape; run classic probe bounded by selected backbone order")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        if route_note is not None:
+            print(f"route_note = {route_note}")
+        if route_warning is not None:
+            print(f"route_warning = {route_warning}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
         return 0
@@ -264,6 +297,10 @@ def main() -> int:
         print("route_kind = operator-neighborhood-check")
         print("reason = near PET shape; run classic probe bounded by selected operator neighborhood")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        if route_note is not None:
+            print(f"route_note = {route_note}")
+        if route_warning is not None:
+            print(f"route_warning = {route_warning}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
         return 0
@@ -305,6 +342,10 @@ def main() -> int:
             print("route_kind = complex-border-classic-probe")
             print("reason = complex border PET shape; run conservative classic residual probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        if route_note is not None:
+            print(f"route_note = {route_note}")
+        if route_warning is not None:
+            print(f"route_warning = {route_warning}")
         print()
         print("claim = PET classic handoff route only; classic verification required")
         return 0
@@ -312,6 +353,10 @@ def main() -> int:
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")
+    if route_note is not None:
+        print(f"route_note = {route_note}")
+    if route_warning is not None:
+        print(f"route_warning = {route_warning}")
     print()
     print("claim = PET classic handoff route only; classic verification required")
 
