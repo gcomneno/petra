@@ -126,6 +126,64 @@ def main() -> int:
     if args.n < 1:
         raise SystemExit("pet_classic_handoff_route expects integers >= 1")
 
+    monster_route = (
+        monster_route_summary(args.n)
+        if args.include_monster_route
+        else {"monster_route_status": "skipped"}
+    )
+    monster_class = monster_route.get("monster_class", "unknown")
+
+    if (
+        args.proposal_file is None
+        and monster_route.get("monster_route_status") == "available"
+        and monster_class in {
+            "diffuse-field",
+            "diffuse-digit-mixed-field",
+            "saturated-border-field",
+            "sparse-zero-border-field",
+            "obvious-periodic-field",
+            "sigma-coherent-large-field",
+        }
+    ):
+        print("PET CLASSIC HANDOFF ROUTE")
+        print()
+        print(f"N = {args.n}")
+        print(f"proposal_transition = skipped-by-router")
+        print(f"proposal_transition_side = skipped-by-router")
+        print(f"proposal_status = skipped-by-router")
+        print(f"proposal_primary_band = skipped-by-router")
+        print(f"proposal_side_band = skipped-by-router")
+        print(f"proposal_selected_backbone_order = skipped-by-router")
+        print(f"proposal_race_shape_diagnostic = skipped-by-router")
+        print(f"proposal_selected_operator_sequence = skipped-by-router")
+        print(f"proposal_composite_border_hint = skipped-by-router")
+        print(f"proposal_decimal_rigid_border_score = skipped-by-router")
+        print(f"proposal_decimal_rigid_border_hint = skipped-by-router")
+        print(f"proposal_operator_depth = {args.operator_depth}")
+        print(f"proposal_blade_window = {args.blade_window}")
+        print("classic_probe_policy = router-preempted")
+        print()
+        if args.include_monster_route:
+            print("PET shadow monster route")
+            print(f"monster_route_status = {monster_route['monster_route_status']}")
+            print(f"monster_class = {monster_route['monster_class']}")
+            print(f"recommended_strategy = {monster_route['recommended_strategy']}")
+            print(f"route_confidence = {monster_route['route_confidence']}")
+            print(f"sigma_stability_status = {monster_route['sigma_stability_status']}")
+            print(f"sigma_depth_generator = {monster_route['sigma_depth_generator']}")
+            print(f"chunk_failure_mode = {monster_route['chunk_failure_mode']}")
+            print(f"chunk_best_merge_generator = {monster_route['chunk_best_merge_generator']}")
+            print()
+        print("route_status = unavailable")
+        print(f"route_kind = {monster_class}")
+        print("reason = router preempted local probe recomputation for a large or diffuse field")
+        print("route_trial_limit_hint = avoid-sigma-expansion")
+        print("route_trial_limit_reason = router classified the field before local probe")
+        print("route_warning = local probe skipped because router already classified the field as non-local or large-shortcut")
+        print()
+        print("claim = PET classic handoff route only; classic verification required")
+        return 0
+
     if args.proposal_file is None:
         proposal = run_command(
             [
@@ -155,11 +213,6 @@ def main() -> int:
     decimal_rigid_border_score = extract_value(proposal, "decimal_rigid_border_score")
     decimal_rigid_border_hint = extract_value(proposal, "decimal_rigid_border_hint")
     policy = classic_probe_policy(race_shape_diagnostic)
-    monster_route = (
-        monster_route_summary(args.n)
-        if args.include_monster_route
-        else {"monster_route_status": "skipped"}
-    )
 
     print("PET CLASSIC HANDOFF ROUTE")
     print()
@@ -216,6 +269,29 @@ def main() -> int:
                 "sigma support is depth-fragile; treat route as conservative only"
             )
 
+    route_trial_limit_hint = "none"
+    route_trial_limit_reason = "no router-guided trial-limit hint"
+    if monster_route.get("monster_route_status") == "available":
+        monster_class = monster_route.get("monster_class", "unknown")
+        if monster_class == "deceptive-stable-sigma":
+            route_trial_limit_hint = "keep-conservative-20"
+            route_trial_limit_reason = "stable sigma appears deceptive"
+        elif monster_class == "local-preserved-shadow-coherent":
+            route_trial_limit_hint = "keep-structural-bound"
+            route_trial_limit_reason = "local lambda preservation agrees with sigma"
+        elif monster_class == "local-preserved-sigma-floor-risk":
+            route_trial_limit_hint = "avoid-low-sigma-floor-shortcut"
+            route_trial_limit_reason = "local generator is preserved but sigma may be collapsed to a low floor"
+        elif monster_class == "fragile-shadow-field":
+            route_trial_limit_hint = "keep-conservative-current-limit"
+            route_trial_limit_reason = "sigma support is depth-fragile"
+        elif monster_class in {"diffuse-field", "diffuse-digit-mixed-field"}:
+            route_trial_limit_hint = "avoid-sigma-expansion"
+            route_trial_limit_reason = "no coherent sigma support detected"
+        elif monster_class in {"saturated-shadow-coherent", "sigma-coherent-large-field"}:
+            route_trial_limit_hint = "keep-sigma-guided-limit"
+            route_trial_limit_reason = "coherent large-field sigma support detected"
+
 
     if policy == "primality-check-only":
         suggested_parts = [
@@ -231,6 +307,8 @@ def main() -> int:
         print("route_kind = primality-check-only")
         print("reason = atomic PET shape; run minimal classic residual/primality probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+        print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
             print(f"route_note = {route_note}")
         if route_warning is not None:
@@ -253,6 +331,8 @@ def main() -> int:
         print("route_kind = power-like-local-check")
         print("reason = narrow deep PET shape; run minimal classic check for repeated small factors")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+        print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
             print(f"route_note = {route_note}")
         if route_warning is not None:
@@ -275,6 +355,8 @@ def main() -> int:
         print("route_kind = backbone-wide-structural-check")
         print("reason = wide exact PET shape; run classic probe bounded by selected backbone order")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+        print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
             print(f"route_note = {route_note}")
         if route_warning is not None:
@@ -297,6 +379,8 @@ def main() -> int:
         print("route_kind = operator-neighborhood-check")
         print("reason = near PET shape; run classic probe bounded by selected operator neighborhood")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+        print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
             print(f"route_note = {route_note}")
         if route_warning is not None:
@@ -342,6 +426,8 @@ def main() -> int:
             print("route_kind = complex-border-classic-probe")
             print("reason = complex border PET shape; run conservative classic residual probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+        print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
             print(f"route_note = {route_note}")
         if route_warning is not None:
@@ -353,6 +439,8 @@ def main() -> int:
     print("route_status = unavailable")
     print(f"route_kind = {policy}")
     print("reason = classic probe policy route not implemented yet")
+    print(f"route_trial_limit_hint = {route_trial_limit_hint}")
+    print(f"route_trial_limit_reason = {route_trial_limit_reason}")
     if route_note is not None:
         print(f"route_note = {route_note}")
     if route_warning is not None:
