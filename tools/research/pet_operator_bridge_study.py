@@ -120,6 +120,16 @@ def handoff_output(n_text: str) -> str:
     return result.stdout
 
 
+def hit_rank(gcd_class_value: str) -> int:
+    return {
+        "verified": 3,
+        "usable": 2,
+        "weak": 1,
+        "none": 0,
+        "unknown": -1,
+    }.get(gcd_class_value, -1)
+
+
 def gcd_class(
     *,
     hit_kind: str,
@@ -248,6 +258,11 @@ def tsv_rows(
             str(candidate_value),
         )
 
+        gcd_class_value = gcd_class(
+            hit_kind=hit_kind,
+            gcd_value=gcd_value,
+        )
+
         rows.append(
             {
                 "N": n_text,
@@ -264,10 +279,8 @@ def tsv_rows(
                 "distance_to_n": str(distance_to_n),
                 "hit_kind": hit_kind,
                 "gcd_value": gcd_value,
-                "gcd_class": gcd_class(
-                    hit_kind=hit_kind,
-                    gcd_value=gcd_value,
-                ),
+                "gcd_class": gcd_class_value,
+                "hit_rank": str(hit_rank(gcd_class_value)),
             }
         )
 
@@ -305,6 +318,7 @@ def main() -> int:
         "hit_kind",
         "gcd_value",
         "gcd_class",
+        "hit_rank",
     )
 
     print("\t".join(columns))
