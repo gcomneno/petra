@@ -168,3 +168,28 @@ PET-shadow / backbone-closure research helpers:
   - Compares local PET generators using product/gcd/lcm-style merge candidates.
   - Classifies local preservation versus `emergent-global-generator` failures.
 
+
+## PET shadow monster router
+
+`tools/research/pet_shadow_monster_router.py` combines the global `Σ_backbone`
+signal with optional local `Λ_chunk` diagnostics and routes each input into a
+diagnostic monster class.
+
+It does not factor `N` and does not reconstruct `PET(N)`.
+
+Current route classes include:
+
+- `saturated-shadow-coherent`
+- `sigma-coherent-large-field`
+- `weak-or-unstable-shadow-field`
+- `fragile-shadow-field`
+- `local-preserved-shadow-coherent`
+- `local-preserved-sigma-floor-risk`
+- `deceptive-stable-sigma`
+- `diffuse-field`
+
+Large inputs skip recursive chunk diagnosis by default through
+`--max-chunk-digits 8`, avoiding expensive local segmentation on opaque numbers.
+
+Use `--progress` to print per-number progress messages to stderr.
+
