@@ -120,6 +120,28 @@ def handoff_output(n_text: str) -> str:
     return result.stdout
 
 
+def prefix_match_count(left: list[object], right: list[object]) -> int:
+    count = 0
+
+    for left_item, right_item in zip(left, right):
+        if left_item != right_item:
+            break
+        count += 1
+
+    return count
+
+
+def suffix_match_count(left: list[object], right: list[object]) -> int:
+    count = 0
+
+    for left_item, right_item in zip(reversed(left), reversed(right)):
+        if left_item != right_item:
+            break
+        count += 1
+
+    return count
+
+
 def signature_depth_sum(value: object) -> int:
     if isinstance(value, list):
         return len(value) + sum(signature_depth_sum(item) for item in value)
@@ -261,6 +283,14 @@ def tsv_rows(
 
         candidate_width = len(candidate_signature_raw)
         candidate_depth_sum = signature_depth_sum(candidate_signature_raw)
+        signature_prefix_match = prefix_match_count(
+            n_signature_raw,
+            candidate_signature_raw,
+        )
+        signature_suffix_match = suffix_match_count(
+            n_signature_raw,
+            candidate_signature_raw,
+        )
 
         distance_to_n = structural_distance(
             encode(candidate_value),
@@ -296,6 +326,8 @@ def tsv_rows(
                 "candidate_depth_sum": str(candidate_depth_sum),
                 "depth_sum_gap": str(n_depth_sum - candidate_depth_sum),
                 "width_gap": str(n_width - candidate_width),
+                "signature_prefix_match": str(signature_prefix_match),
+                "signature_suffix_match": str(signature_suffix_match),
                 "distance_to_n": str(distance_to_n),
                 "hit_kind": hit_kind,
                 "gcd_value": gcd_value,
@@ -340,6 +372,8 @@ def main() -> int:
         "candidate_depth_sum",
         "depth_sum_gap",
         "width_gap",
+        "signature_prefix_match",
+        "signature_suffix_match",
         "distance_to_n",
         "hit_kind",
         "gcd_value",
