@@ -88,6 +88,19 @@ def route_decision(row: dict[str, str]) -> tuple[str, str, str]:
             "high",
         )
 
+    if sigma_status == "stable-coherent-support" and chunk_failure == "skipped-large-input":
+        if morphology == "saturated-9-0":
+            return (
+                "saturated-shadow-coherent",
+                "use-sigma-backbone",
+                "high",
+            )
+        return (
+            "sigma-coherent-large-field",
+            "use-sigma-as-global-diagnostic",
+            "medium",
+        )
+
     if sigma_status == "fragile-depth-support":
         return (
             "fragile-shadow-field",
@@ -176,6 +189,11 @@ def main() -> int:
         default=8,
         help="Run Λ_chunk only for inputs with at most this many digits. Default: 8.",
     )
+    parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Print per-number progress messages to stderr.",
+    )
     args = parser.parse_args()
 
     columns = (
@@ -205,27 +223,27 @@ def main() -> int:
 
     rows: list[dict[str, str]] = []
 
-    if small_numbers:
-        rows.extend(
-            shadow_rows(
-                small_numbers,
-                args.orders,
-                args.depth,
-                args.scale_rules,
-                include_chunk=True,
+    for index, n_text in enumerate(args.numbers, start=1):
+        if args.progress:
+            print(
+                f"[router] processing {index}/{len(args.numbers)}: {n_text}",
+                file=sys.stderr,
+                flush=True,
             )
-        )
 
-    if large_numbers:
-        for row in shadow_rows(
-            large_numbers,
+        include_chunk = len(n_text) <= args.max_chunk_digits
+        row = shadow_rows(
+            [n_text],
             args.orders,
             args.depth,
             args.scale_rules,
-            include_chunk=False,
-        ):
+            include_chunk=include_chunk,
+        )[0]
+
+        if not include_chunk:
             row.update(skipped_chunk_fields())
-            rows.append(row)
+
+        rows.append(row)
 
     rows_by_n = {row["N"]: row for row in rows}
 
