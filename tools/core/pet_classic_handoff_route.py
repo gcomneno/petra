@@ -282,7 +282,6 @@ def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, s
             }
         )
 
-    # keep base candidates first
     for candidate in base_candidates:
         add(
             candidate["kind"],
@@ -302,43 +301,38 @@ def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, s
     numeric_values = [value for value in numeric_values if value >= 2]
     numeric_values = sorted(set(numeric_values), reverse=True)
 
-    # divisors of the strongest two candidates only
+    derived_divisors_added = 0
     for root in numeric_values[:2]:
         for divisor in divisors_desc(root):
-            if divisor == root or divisor < 2:
+            if divisor == root or divisor < 4:
                 continue
+            if derived_divisors_added >= 4:
+                break
             add(
                 "derived-divisor",
                 str(divisor),
                 "candidate_expansion",
-                "medium" if divisor >= 4 else "low",
+                "medium",
                 f"non-trivial divisor of {root}",
             )
+            if str(divisor) in seen:
+                derived_divisors_added += 1
+        if derived_divisors_added >= 4:
+            break
 
-    # gcd/lcm between candidate pairs
     import math
 
     pair_values = numeric_values[:3]
     for index, left in enumerate(pair_values):
         for right in pair_values[index + 1 :]:
             gcd_value = math.gcd(left, right)
-            if gcd_value >= 2:
+            if gcd_value >= 4:
                 add(
                     "derived-gcd",
                     str(gcd_value),
                     "candidate_expansion",
-                    "medium" if gcd_value >= 4 else "low",
+                    "medium",
                     f"gcd({left},{right})",
-                )
-
-            lcm_value = (left * right) // math.gcd(left, right)
-            if 2 <= lcm_value <= max(pair_values) * 2:
-                add(
-                    "derived-lcm",
-                    str(lcm_value),
-                    "candidate_expansion",
-                    "low",
-                    f"bounded lcm({left},{right})",
                 )
 
     expanded.sort(
@@ -348,7 +342,14 @@ def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, s
             candidate["kind"],
         )
     )
-    return expanded
+
+    # Keep base candidates first, then cap derived expansion rows.
+    base_values = {candidate["value"] for candidate in base_candidates}
+    base_rows = [candidate for candidate in expanded if candidate["value"] in base_values]
+    derived_rows = [candidate for candidate in expanded if candidate["value"] not in base_values]
+
+    derived_rows = derived_rows[: max(0, 8 - len(base_rows))]
+    return base_rows + derived_rows
 
 
 def print_candidates(candidates: list[dict[str, str]], *, base_count: int) -> None:
