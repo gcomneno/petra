@@ -160,3 +160,11 @@ PET-shadow / backbone-closure research helpers:
 - Do not infer interface stability from directory placement alone.
 - Do not use this README as the source of truth for workflow or artifact policy;
   use the docs under `docs/reports/`.
+
+
+- `tools/research/pet_recursive_shape_chunk_study.py`
+  - Diagnostic study for small digit-mixed numbers with computable real PET.
+  - Recursively searches PET-guided decimal splits.
+  - Compares local PET generators using product/gcd/lcm-style merge candidates.
+  - Classifies local preservation versus `emergent-global-generator` failures.
+

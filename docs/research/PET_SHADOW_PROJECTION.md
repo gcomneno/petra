@@ -561,3 +561,46 @@ Le evidenze attuali suggeriscono:
 Le patatone motivano l'operatore.
 Le patatine lo insegnano.
 ```
+
+
+## Recursive PET shape chunk study
+
+`tools/research/pet_recursive_shape_chunk_study.py` is a diagnostic study for
+small digit-mixed numbers where the real PET signature is still computable.
+
+The goal is not to reconstruct `PET(N)` for opaque inputs. The goal is to test
+whether the real PET generator is locally preserved in decimal subsegments.
+
+The study recursively searches decimal split points and compares:
+
+- the parent segment PET generator;
+- the left/right child segment PET generators;
+- product, gcd, and lcm merge candidates over the local PET generators;
+- whether the parent generator is preserved locally;
+- whether the lcm-style merge is stable;
+- whether the generator appears to be globally emergent.
+
+Important diagnostic statuses:
+
+- `local-preservation-success`: the parent PET generator is visible in a child
+  segment or through the lcm-style local generator merge.
+- `parent-preserved-locally`: the parent generator appears directly in one side
+  of the split.
+- `parent-preserved-and-lcm-stable`: the parent generator appears locally and
+  the lcm-style generator merge agrees with it.
+- `emergent-global-generator`: the parent generator is not visible locally and
+  is larger than the local/lcm support seen by the split.
+- `no-local-support`: the chosen split does not preserve the parent generator.
+
+Current empirical result on small digit-mixed samples:
+
+- `Σ_backbone` often collapses to low generic support such as `6`.
+- `Λ_chunk` can distinguish local-preservation cases from globally emergent
+  generator cases.
+- This is diagnostic only; it does not reconstruct `PET(N)` for opaque inputs.
+
+Interpretation:
+
+`Σ_backbone` remains a global shadow/support sensor. `Λ_chunk` acts as a local
+PET-shape microscope for digit-mixed fields.
+
