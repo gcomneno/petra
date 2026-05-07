@@ -24,6 +24,7 @@ Options:
   --legacy-diagnostics          run legacy diagnostics sections 4-8
   --rigid-border-guard          stop after preflight when decimal rigid border is detected
   --decimal-rigid-shallow-route emit a conservative shallow route for decimal rigid borders
+  --no-monster-router         skip PET shadow monster router preflight
   --no-recursive                skip legacy recursive diagnostics
 
 Examples:
@@ -53,6 +54,7 @@ RUN_LEGACY_MASS=0
 RUN_LEGACY_FOCUSED=0
 RUN_RIGID_BORDER_GUARD=0
 RUN_DECIMAL_RIGID_SHALLOW_ROUTE=0
+RUN_MONSTER_ROUTER=1
 
 if [[ $# -lt 1 ]]; then
   usage
@@ -142,6 +144,10 @@ while [[ $# -gt 0 ]]; do
       RUN_DECIMAL_RIGID_SHALLOW_ROUTE=1
       shift
       ;;
+    --no-monster-router)
+      RUN_MONSTER_ROUTER=0
+      shift
+      ;;
     --no-recursive)
       RUN_RECURSIVE=0
       shift
@@ -207,6 +213,7 @@ echo "excluded_support_limit = $EXCLUDED_SUPPORT_LIMIT"
 echo "max_move_span = $MAX_MOVE_SPAN"
 echo "depth = $DEPTH"
 echo "handoff_radius = $HANDOFF_RADIUS"
+echo "monster_router = $RUN_MONSTER_ROUTER"
 echo "operator_depth = $OPERATOR_DEPTH"
 echo "blade_window = $BLADE_WINDOW"
 echo "legacy_fork_follow = ${FORK_FOLLOW:-disabled}"
@@ -237,6 +244,11 @@ if [[ "$RUN_DECIMAL_RIGID_SHALLOW_ROUTE" -eq 1 && "$decimal_rigid_border_hint" =
   echo "suggested_command = python -m pet.cli opaque-probe $N --trial-limit 20"
   echo "claim = PET decimal rigid shallow route only; classic verification required"
   exit 0
+fi
+
+if [[ "$RUN_MONSTER_ROUTER" -eq 1 ]]; then
+  section "0b. PET shadow monster router"
+  run_optional tools/research/pet_shadow_monster_router.py "$N" --progress
 fi
 
 section "0. PET race diagnostic"
