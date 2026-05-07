@@ -54,6 +54,219 @@ def classic_probe_policy(shape_diagnostic: str) -> str:
 
 
 
+def append_candidate(
+    candidates: list[dict[str, str]],
+    *,
+    kind: str,
+    value: str,
+    source: str,
+    confidence: str,
+    note: str,
+) -> None:
+    if value in {"", "-", "unknown", "skipped-by-router", "none"}:
+        return
+    if any(existing["value"] == value for existing in candidates):
+        return
+    candidates.append(
+        {
+            "kind": kind,
+            "value": value,
+            "source": source,
+            "confidence": confidence,
+            "note": note,
+        }
+    )
+
+
+def candidate_rows(
+    *,
+    monster_route: dict[str, str],
+    selected_backbone_generator: str,
+    selected_backbone_order: str,
+) -> list[dict[str, str]]:
+    candidates: list[dict[str, str]] = []
+
+    monster_class = monster_route.get("monster_class", "unknown")
+    sigma_value = monster_route.get("sigma_depth_generator", "-")
+    chunk_value = monster_route.get("chunk_best_merge_generator", "-")
+
+    if monster_class == "local-preserved-shadow-coherent":
+        append_candidate(
+            candidates,
+            kind="local-preserved-generator",
+            value=chunk_value,
+            source="lambda_chunk",
+            confidence="high",
+            note="local chunk merge agrees with sigma",
+        )
+        append_candidate(
+            candidates,
+            kind="selected-backbone-generator",
+            value=selected_backbone_generator,
+            source="local_probe",
+            confidence="medium",
+            note=f"selected backbone order {selected_backbone_order}",
+        )
+        append_candidate(
+            candidates,
+            kind="sigma-depth-generator",
+            value=sigma_value,
+            source="sigma_backbone",
+            confidence="medium",
+            note="global sigma support",
+        )
+        return candidates
+
+    if monster_class == "local-preserved-sigma-floor-risk":
+        append_candidate(
+            candidates,
+            kind="local-preserved-generator",
+            value=chunk_value,
+            source="lambda_chunk",
+            confidence="high",
+            note="local generator preserved while sigma may be collapsed",
+        )
+        append_candidate(
+            candidates,
+            kind="selected-backbone-generator",
+            value=selected_backbone_generator,
+            source="local_probe",
+            confidence="medium",
+            note=f"selected backbone order {selected_backbone_order}",
+        )
+        append_candidate(
+            candidates,
+            kind="sigma-depth-generator",
+            value=sigma_value,
+            source="sigma_backbone",
+            confidence="low",
+            note="sigma floor risk",
+        )
+        return candidates
+
+    if monster_class == "deceptive-stable-sigma":
+        append_candidate(
+            candidates,
+            kind="selected-backbone-generator",
+            value=selected_backbone_generator,
+            source="local_probe",
+            confidence="medium",
+            note=f"selected backbone order {selected_backbone_order}",
+        )
+        append_candidate(
+            candidates,
+            kind="chunk-merge-generator",
+            value=chunk_value,
+            source="lambda_chunk",
+            confidence="low",
+            note="available but globally emergent case",
+        )
+        append_candidate(
+            candidates,
+            kind="sigma-depth-generator",
+            value=sigma_value,
+            source="sigma_backbone",
+            confidence="low",
+            note="do not trust directly",
+        )
+        return candidates
+
+    if monster_class == "fragile-shadow-field":
+        append_candidate(
+            candidates,
+            kind="selected-backbone-generator",
+            value=selected_backbone_generator,
+            source="local_probe",
+            confidence="low",
+            note=f"fragile field, backbone order {selected_backbone_order}",
+        )
+        append_candidate(
+            candidates,
+            kind="chunk-merge-generator",
+            value=chunk_value,
+            source="lambda_chunk",
+            confidence="low",
+            note="fragile field",
+        )
+        append_candidate(
+            candidates,
+            kind="sigma-depth-generator",
+            value=sigma_value,
+            source="sigma_backbone",
+            confidence="low",
+            note="depth fragile support",
+        )
+        return candidates
+
+    if monster_class in {
+        "diffuse-field",
+        "diffuse-digit-mixed-field",
+        "saturated-border-field",
+        "sparse-zero-border-field",
+        "obvious-periodic-field",
+        "sigma-coherent-large-field",
+    }:
+        append_candidate(
+            candidates,
+            kind="selected-backbone-generator",
+            value=selected_backbone_generator,
+            source="local_probe",
+            confidence="low",
+            note="router-classified field; no strong PET candidate",
+        )
+        return candidates
+
+    append_candidate(
+        candidates,
+        kind="selected-backbone-generator",
+        value=selected_backbone_generator,
+        source="local_probe",
+        confidence="medium",
+        note=f"default candidate from backbone order {selected_backbone_order}",
+    )
+    append_candidate(
+        candidates,
+        kind="sigma-depth-generator",
+        value=sigma_value,
+        source="sigma_backbone",
+        confidence="low",
+        note="default sigma candidate",
+    )
+    append_candidate(
+        candidates,
+        kind="chunk-merge-generator",
+        value=chunk_value,
+        source="lambda_chunk",
+        confidence="low",
+        note="default chunk candidate",
+    )
+    return candidates
+
+
+def print_candidates(candidates: list[dict[str, str]]) -> None:
+    print("PET candidate forms")
+    print(f"candidate_count = {len(candidates)}")
+    for index, candidate in enumerate(candidates, start=1):
+        print(f"candidate_{index}_kind = {candidate['kind']}")
+        print(f"candidate_{index}_value = {candidate['value']}")
+        print(f"candidate_{index}_source = {candidate['source']}")
+        print(f"candidate_{index}_confidence = {candidate['confidence']}")
+        print(f"candidate_{index}_note = {candidate['note']}")
+    print()
+
+
+def verifier_command_text(n: int, candidates: list[dict[str, str]]) -> str:
+    parts = [
+        sys.executable,
+        "tools/core/pet_classic_candidate_verify.py",
+        str(n),
+    ]
+    for candidate in candidates:
+        parts.extend(["--candidate", candidate["value"]])
+    return command_text(parts)
+
+
+
 def monster_route_summary(n: int) -> dict[str, str]:
     result = subprocess.run(
         [
@@ -203,9 +416,17 @@ def main() -> int:
             print(f"chunk_failure_mode = {monster_route['chunk_failure_mode']}")
             print(f"chunk_best_merge_generator = {monster_route['chunk_best_merge_generator']}")
             print()
+        print_candidates(
+            candidate_rows(
+                monster_route=monster_route,
+                selected_backbone_generator="skipped-by-router",
+                selected_backbone_order="skipped-by-router",
+            )
+        )
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
         print("reason = router preempted local probe recomputation for a large or diffuse field")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidate_rows(monster_route=monster_route, selected_backbone_generator='skipped-by-router', selected_backbone_order='skipped-by-router'))}")
         print("route_trial_limit_hint = avoid-sigma-expansion")
         print("route_trial_limit_reason = router classified the field before local probe")
         print("route_warning = local probe skipped because router already classified the field as non-local or large-shortcut")
@@ -236,6 +457,7 @@ def main() -> int:
     primary_band = extract_value(proposal, "primary_band")
     side_band = extract_value(proposal, "side_band")
     selected_backbone_order = extract_value(proposal, "selected_backbone_order")
+    selected_backbone_generator = extract_value(proposal, "selected_backbone_generator")
     race_shape_diagnostic = extract_value(proposal, "race_shape_diagnostic")
     selected_operator_sequence = extract_value(proposal, "selected_operator_sequence")
     composite_border_hint = extract_value(proposal, "composite_border_hint")
@@ -300,6 +522,12 @@ def main() -> int:
 
     route_trial_limit_hint = "none"
     route_trial_limit_reason = "no router-guided trial-limit hint"
+    candidates = candidate_rows(
+        monster_route=monster_route,
+        selected_backbone_generator=selected_backbone_generator,
+        selected_backbone_order=selected_backbone_order,
+    )
+    print_candidates(candidates)
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
         if monster_class == "deceptive-stable-sigma":
@@ -336,6 +564,7 @@ def main() -> int:
         print("route_kind = primality-check-only")
         print("reason = atomic PET shape; run minimal classic residual/primality probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidates)}")
         print(f"route_trial_limit_hint = {route_trial_limit_hint}")
         print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
@@ -360,6 +589,7 @@ def main() -> int:
         print("route_kind = power-like-local-check")
         print("reason = narrow deep PET shape; run minimal classic check for repeated small factors")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidates)}")
         print(f"route_trial_limit_hint = {route_trial_limit_hint}")
         print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
@@ -384,6 +614,7 @@ def main() -> int:
         print("route_kind = backbone-wide-structural-check")
         print("reason = wide exact PET shape; run classic probe bounded by selected backbone order")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidates)}")
         print(f"route_trial_limit_hint = {route_trial_limit_hint}")
         print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
@@ -408,6 +639,7 @@ def main() -> int:
         print("route_kind = operator-neighborhood-check")
         print("reason = near PET shape; run classic probe bounded by selected operator neighborhood")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidates)}")
         print(f"route_trial_limit_hint = {route_trial_limit_hint}")
         print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
@@ -455,6 +687,7 @@ def main() -> int:
             print("route_kind = complex-border-classic-probe")
             print("reason = complex border PET shape; run conservative classic residual probe")
         print(f"suggested_command = {command_text(suggested_parts)}")
+        print(f"suggested_verifier_command = {verifier_command_text(args.n, candidates)}")
         print(f"route_trial_limit_hint = {route_trial_limit_hint}")
         print(f"route_trial_limit_reason = {route_trial_limit_reason}")
         if route_note is not None:
