@@ -393,6 +393,14 @@ def print_stability_by_n(
         "support_selection_claim",
     )
 
+    if include_recursive_chunk_diagnosis:
+        columns = columns + (
+            "chunk_failure_mode",
+            "chunk_split_status",
+            "chunk_best_merge_generator",
+            "chunk_lcm_matches_parent",
+        )
+
     print("\t".join(columns))
 
     grouped_depth = group_rows_by_n(depth_rows)

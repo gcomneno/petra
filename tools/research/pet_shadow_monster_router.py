@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import csv
+import subprocess
+import sys
+from io import StringIO
+from pathlib import Path
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def run_command(args: list[str]) -> str:
+    result = subprocess.run(
+        args,
+        cwd=repo_root(),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            "command failed: "
+            + " ".join(args)
+            + "\nstdout:\n"
+            + result.stdout
+            + "\nstderr:\n"
+            + result.stderr
+        )
+
+    return result.stdout
+
+
+def parse_rows(output: str) -> list[dict[str, str]]:
+    return list(csv.DictReader(StringIO(output), delimiter="\t"))
+
+
+def decimal_morphology(n_text: str) -> str:
+    digits = n_text.strip()
+    unique = set(digits)
+
+    if len(unique) <= 2 and "0" in unique and "9" in unique:
+        return "saturated-9-0"
+
+    if len(unique) <= 2 and "0" in unique:
+        return "sparse-zero"
+
+    if len(digits) >= 4:
+        for period in range(1, min(6, len(digits) // 2 + 1)):
+            pattern = digits[:period]
+            if pattern * (len(digits) // period) + pattern[: len(digits) % period] == digits:
+                return "periodic"
+
+    if len(unique) >= max(4, len(digits) // 2):
+        return "digit-mixed"
+
+    return "structured-decimal"
+
+
+def route_decision(row: dict[str, str]) -> tuple[str, str, str]:
+    morphology = decimal_morphology(row["N"])
+    sigma_status = row["sigma_stability_status"]
+    chunk_failure = row.get("chunk_failure_mode", "-")
+    chunk_lcm_matches = row.get("chunk_lcm_matches_parent", "-")
+
+    if sigma_status == "stable-coherent-support" and chunk_failure == "local-preservation-success":
+        if chunk_lcm_matches == "True":
+            return (
+                "local-preserved-shadow-coherent",
+                "sigma-plus-lambda",
+                "high",
+            )
+        return (
+            "local-preserved-sigma-floor-risk",
+            "prefer-lambda-diagnostic-over-sigma-generator",
+            "medium",
+        )
+
+    if sigma_status == "stable-coherent-support" and chunk_failure == "emergent-global-generator":
+        return (
+            "deceptive-stable-sigma",
+            "do-not-trust-sigma-generator",
+            "high",
+        )
+
+    if sigma_status == "fragile-depth-support":
+        return (
+            "fragile-shadow-field",
+            "depth-sensitive-review",
+            "medium",
+        )
+
+    if sigma_status in {"stable-weakening-support", "weak-stable-support", "fragile-weak-support"}:
+        return (
+            "weak-or-unstable-shadow-field",
+            "review-sigma-as-diagnostic-only",
+            "medium",
+        )
+
+    if sigma_status == "none":
+        if morphology == "digit-mixed":
+            return (
+                "diffuse-digit-mixed-field",
+                "handoff-to-new-operator",
+                "medium",
+            )
+        return (
+            "diffuse-field",
+            "handoff-or-new-operator",
+            "medium",
+        )
+
+    return (
+        "unclassified-monster",
+        "manual-review",
+        "low",
+    )
+
+
+def shadow_rows(numbers: list[str], orders: str, depth: int, scale_rules: str) -> list[dict[str, str]]:
+    output = run_command(
+        [
+            sys.executable,
+            "tools/research/pet_backbone_closure_shadow_matrix.py",
+            *numbers,
+            "--orders",
+            orders,
+            "--depth",
+            str(depth),
+            "--scale-rules",
+            scale_rules,
+            "--format",
+            "stability-by-n",
+            "--include-recursive-chunk-diagnosis",
+        ]
+    )
+    return parse_rows(output)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Route PET shadow/chunk diagnostics into monster classes and recommended strategies."
+    )
+    parser.add_argument("numbers", nargs="+")
+    parser.add_argument("--orders", default="1,2,3,4,5")
+    parser.add_argument("--depth", type=int, default=2)
+    parser.add_argument(
+        "--scale-rules",
+        default="half,quarter,sqrt-digits,log2-digits",
+    )
+    args = parser.parse_args()
+
+    columns = (
+        "N",
+        "digits",
+        "decimal_morphology",
+        "sigma_stability_status",
+        "sigma_depth_generator",
+        "chunk_failure_mode",
+        "chunk_split_status",
+        "chunk_best_merge_generator",
+        "chunk_lcm_matches_parent",
+        "monster_class",
+        "recommended_strategy",
+        "route_confidence",
+        "router_claim",
+    )
+
+    print("\t".join(columns))
+
+    for row in shadow_rows(args.numbers, args.orders, args.depth, args.scale_rules):
+        monster_class, strategy, confidence = route_decision(row)
+        out = {
+            "N": row["N"],
+            "digits": row["digits"],
+            "decimal_morphology": decimal_morphology(row["N"]),
+            "sigma_stability_status": row["sigma_stability_status"],
+            "sigma_depth_generator": row["depth_generator"],
+            "chunk_failure_mode": row.get("chunk_failure_mode", "-"),
+            "chunk_split_status": row.get("chunk_split_status", "-"),
+            "chunk_best_merge_generator": row.get("chunk_best_merge_generator", "-"),
+            "chunk_lcm_matches_parent": row.get("chunk_lcm_matches_parent", "-"),
+            "monster_class": monster_class,
+            "recommended_strategy": strategy,
+            "route_confidence": confidence,
+            "router_claim": "routing is diagnostic only; not PET(N)",
+        }
+        print("\t".join(out[column] for column in columns))
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
