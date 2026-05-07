@@ -73,6 +73,8 @@ def main() -> int:
         "monster_class",
         "width_gap",
         "depth_sum_gap",
+        "signature_prefix_match",
+        "signature_suffix_match",
         "distance_to_n",
         "gcd_class",
     ):
