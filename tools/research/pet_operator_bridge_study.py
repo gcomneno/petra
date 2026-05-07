@@ -120,6 +120,27 @@ def handoff_output(n_text: str) -> str:
     return result.stdout
 
 
+def gcd_class(
+    *,
+    hit_kind: str,
+    gcd_value: str,
+) -> str:
+    if hit_kind == "verified-factor":
+        return "verified"
+    if hit_kind == "usable-hit":
+        return "usable"
+
+    try:
+        gcd_int = int(gcd_value)
+    except ValueError:
+        return "unknown"
+
+    if gcd_int <= 1:
+        return "none"
+
+    return "weak"
+
+
 def verify_candidate(
     n_text: str,
     candidate_value: str,
@@ -186,7 +207,20 @@ def tsv_rows(
 
     rows: list[dict[str, str]] = []
 
-    for candidate in parse_candidate_block(handoff_text):
+    base_count_raw = extract_key(
+        handoff_text,
+        "candidate_base_count",
+    )
+
+    try:
+        base_count = int(base_count_raw)
+    except ValueError:
+        base_count = 0
+
+    for index, candidate in enumerate(
+        parse_candidate_block(handoff_text),
+        start=1,
+    ):
         value_raw = candidate["value"]
 
         try:
@@ -223,12 +257,17 @@ def tsv_rows(
                 "candidate_kind": candidate["kind"],
                 "candidate_source": candidate["source"],
                 "candidate_confidence": candidate["confidence"],
+                "candidate_is_base": "yes" if index <= base_count else "no",
                 "candidate_value": str(candidate_value),
                 "candidate_signature": candidate_signature,
                 "candidate_generator": candidate_generator,
                 "distance_to_n": str(distance_to_n),
                 "hit_kind": hit_kind,
                 "gcd_value": gcd_value,
+                "gcd_class": gcd_class(
+                    hit_kind=hit_kind,
+                    gcd_value=gcd_value,
+                ),
             }
         )
 
@@ -258,12 +297,14 @@ def main() -> int:
         "candidate_kind",
         "candidate_source",
         "candidate_confidence",
+        "candidate_is_base",
         "candidate_value",
         "candidate_signature",
         "candidate_generator",
         "distance_to_n",
         "hit_kind",
         "gcd_value",
+        "gcd_class",
     )
 
     print("\t".join(columns))
