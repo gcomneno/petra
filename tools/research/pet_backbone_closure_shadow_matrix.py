@@ -64,6 +64,23 @@ def parse_tsv_single_row(output: str) -> dict[str, str]:
     return dict(rows[0])
 
 
+def recursive_chunk_root_diagnosis(n_text: str) -> dict[str, str]:
+    output = run_command(
+        [
+            sys.executable,
+            "tools/research/pet_recursive_shape_chunk_study.py",
+            n_text,
+            "--max-depth",
+            "1",
+        ]
+    )
+    reader = csv.DictReader(StringIO(output), delimiter="\t")
+    for row in reader:
+        if row.get("path") == "root":
+            return dict(row)
+    raise RuntimeError(f"expected root chunk diagnosis for {n_text}")
+
+
 def shape_summary(
     n_text: str,
     order: int,
@@ -300,6 +317,14 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
         "support_selection_claim",
     )
 
+    if include_recursive_chunk_diagnosis:
+        columns = columns + (
+            "chunk_failure_mode",
+            "chunk_split_status",
+            "chunk_best_merge_generator",
+            "chunk_lcm_matches_parent",
+        )
+
     print("\t".join(columns))
 
     grouped = group_rows_by_n(rows)
@@ -351,6 +376,7 @@ def print_summary_by_n(rows: list[dict[str, str]]) -> None:
 def print_stability_by_n(
     depth_rows: list[dict[str, str]],
     next_depth_rows: list[dict[str, str]],
+    include_recursive_chunk_diagnosis: bool = False,
 ) -> None:
     columns = (
         "N",
@@ -406,6 +432,11 @@ def print_stability_by_n(
         )
 
         status = stability_status(depth_selected, next_selected)
+        chunk_diagnosis = (
+            recursive_chunk_root_diagnosis(n_text)
+            if include_recursive_chunk_diagnosis
+            else {}
+        )
 
         print(
             "\t".join(
@@ -422,6 +453,16 @@ def print_stability_by_n(
                     next_depth_generator,
                     status,
                     "support stability is diagnostic only; not PET(N)",
+                )
+                + (
+                    (
+                        chunk_diagnosis["failure_mode"],
+                        chunk_diagnosis["split_status"],
+                        chunk_diagnosis["best_merge_generator"],
+                        chunk_diagnosis["lcm_matches_parent"],
+                    )
+                    if include_recursive_chunk_diagnosis
+                    else ()
                 )
             )
         )
@@ -461,6 +502,11 @@ def main() -> int:
         choices=("tsv", "summary-by-n", "stability-by-n"),
         default="tsv",
     )
+    parser.add_argument(
+        "--include-recursive-chunk-diagnosis",
+        action="store_true",
+        help="Append root-level Λ_chunk diagnostics to stability-by-n output.",
+    )
     args = parser.parse_args()
 
     if args.depth < 0:
@@ -492,7 +538,11 @@ def main() -> int:
                         scale_rules=args.scale_rules,
                     )
                 )
-        print_stability_by_n(rows, next_rows)
+        print_stability_by_n(
+            rows,
+            next_rows,
+            include_recursive_chunk_diagnosis=args.include_recursive_chunk_diagnosis,
+        )
     elif args.format == "summary-by-n":
         print_summary_by_n(rows)
     else:
