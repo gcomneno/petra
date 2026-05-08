@@ -296,7 +296,18 @@ if [[ "$RUN_MONSTER_ROUTER" -eq 1 ]]; then
   fi
 fi
 
-if [[ "${triage_router_monster_class:-unknown}" == "diffuse-field"    || "${triage_router_monster_class:-unknown}" == "diffuse-digit-mixed-field"    || "${triage_router_monster_class:-unknown}" == "saturated-border-field"    || "${triage_router_monster_class:-unknown}" == "sparse-zero-border-field"    || "${triage_router_monster_class:-unknown}" == "obvious-periodic-field"    || "${triage_router_monster_class:-unknown}" == "sigma-coherent-large-field" ]]; then
+ROUTER_CAN_PREEMPT=0
+
+if [[ "$OPERATOR_DEPTH" == "auto" && "$BLADE_WINDOW" == "full" ]]; then
+  if [[ "${triage_router_monster_class:-unknown}" == "diffuse-field" \
+    || "${triage_router_monster_class:-unknown}" == "diffuse-digit-mixed-field" \
+    || "${triage_router_monster_class:-unknown}" == "saturated-border-field" \
+    || "${triage_router_monster_class:-unknown}" == "sparse-zero-border-field" ]]; then
+    ROUTER_CAN_PREEMPT=1
+  fi
+fi
+
+if [[ "$ROUTER_CAN_PREEMPT" -eq 1 ]]; then
   section "0. PET race diagnostic"
   echo "pet_race_status = skipped-by-router"
   echo "pet_race_reason = router classified the field before local probe"

@@ -169,6 +169,51 @@ The current claim is intentionally limited:
 - unsupported shapes are reported explicitly;
 - final route status is always surfaced in the route execution summary.
 
+
+## Residual descent
+
+The residual descent route recursively reuses the PET route pipeline on residuals.
+
+When a route produces verified anchor factors but does not close a full factorization,
+the residual descent driver computes:
+
+- `anchor_factor`
+- `residual = current / anchor_factor`
+- a new PET route on the residual
+
+The driver does not factor residuals by magic. Each new anchor must come from verified
+route output.
+
+### Residual anchor selection
+
+Anchor selection is PET-style:
+
+- prefer the verified anchor that transforms the residual into the simplest supported PET shape;
+- prefer supported residual shapes over unsupported ones;
+- prefer lower residual shape complexity;
+- use numeric anchor size only as a final tie-breaker.
+
+Operational reason:
+
+    best-pet-residual-shape-descent
+
+For example, with `24680`, the verified anchors are `2`, `10`, and `20`.
+
+Their residual shapes are:
+
+    24680 / 2  = 12340  -> [[], [], [[]]]
+    24680 / 10 = 2468   -> [[], [[]]]
+    24680 / 20 = 1234   -> [[], []]
+
+The selected anchor is `20`, not because it is numerically largest, but because it
+transforms the residual into the simplest supported PET shape.
+
+This gives the verified residual reduction chain:
+
+    20 * 2 * 617
+
+The terminal residual is not automatically claimed to be prime.
+
 ## Non-goals for this milestone
 
 The following are future optional features, not required for this completed milestone:
