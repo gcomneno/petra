@@ -252,7 +252,7 @@ def test_classic_handoff_route_reports_verify_policy_for_arithmetic_grip() -> No
     assert "auto_same_shape_scan_status = running" not in output
 
 
-def test_classic_handoff_route_reports_unsupported_same_shape_scan_policy() -> None:
+def test_classic_handoff_route_reports_atomic_leaf_policy() -> None:
     output = run_tool_with_args(
         2147483647,
         "--include-monster-route",
@@ -260,11 +260,14 @@ def test_classic_handoff_route_reports_unsupported_same_shape_scan_policy() -> N
     )
 
     assert "pet_grip_status = structural-match-no-grip" in output
-    assert "route_escalation_policy = same-shape-scan" in output
-    assert "same_shape_scan_support = unsupported-shape" in output
+    assert "shape_family_route = atomic-leaf" in output
+    assert "route_escalation_policy = leaf-primality-route" in output
+    assert "route_suggestion_kind = atomic-leaf-primality-route" in output
     assert "auto_same_shape_scan_status = skipped" in output
-    assert "auto_same_shape_scan_skip_reason = unsupported-shape" in output
-    assert "route_final_status = classic-route-suggested-only" in output
+    assert "auto_same_shape_scan_skip_reason = route-policy-leaf-primality-route" in output
+    assert "route_execution_status = leaf-route-suggested" in output
+    assert "route_execution_reason = atomic-pet-shape" in output
+    assert "route_final_status = stopped-at-atomic-leaf" in output
 
 def test_classic_handoff_route_summary_reports_same_shape_solution() -> None:
     output = run_tool_with_args(
@@ -292,7 +295,7 @@ def test_classic_handoff_route_summary_reports_candidate_partial_factorization()
     assert "summary_route_final_status = partial-factorization-by-pet-candidate" in output
 
 
-def test_classic_handoff_route_summary_reports_unsupported_same_shape_route() -> None:
+def test_classic_handoff_route_summary_reports_atomic_leaf_route() -> None:
     output = run_tool_with_args(
         2147483647,
         "--include-monster-route",
@@ -300,7 +303,7 @@ def test_classic_handoff_route_summary_reports_unsupported_same_shape_route() ->
     )
 
     assert "PET route execution summary" in output
-    assert "summary_route_escalation_policy = same-shape-scan" in output
-    assert "summary_route_execution_status = same-shape-scan-skipped" in output
-    assert "summary_route_final_status = classic-route-suggested-only" in output
+    assert "summary_route_escalation_policy = leaf-primality-route" in output
+    assert "summary_route_execution_status = leaf-route-suggested" in output
+    assert "summary_route_final_status = stopped-at-atomic-leaf" in output
 

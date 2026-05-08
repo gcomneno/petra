@@ -287,14 +287,19 @@ def residual_descent(
         anchors = verified_anchor_factors(n=current, values=values)
 
         if not anchors:
-            print(f"depth_{depth}_status = stopped-no-verified-anchor")
-            print(f"depth_{depth}_anchor_factor = -")
-            print(f"depth_{depth}_residual = -")
-
-            if route_final_status == "classic-route-suggested-only":
+            if route_final_status == "stopped-at-atomic-leaf":
+                depth_status = "stopped-at-leaf"
+                final_status = "stopped-at-leaf"
+            elif route_final_status == "classic-route-suggested-only":
+                depth_status = "stopped-no-verified-anchor"
                 final_status = "stopped-at-classic-suggestion"
             else:
+                depth_status = "stopped-no-verified-anchor"
                 final_status = "blocked-no-verified-anchor"
+
+            print(f"depth_{depth}_status = {depth_status}")
+            print(f"depth_{depth}_anchor_factor = -")
+            print(f"depth_{depth}_residual = -")
 
             break
 

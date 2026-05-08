@@ -685,6 +685,30 @@ def route_escalation_policy_for_grip(grip_status: str) -> str:
 
     return "unknown"
 
+
+def shape_family_route_for_signature(target_signature: str) -> str:
+    if target_signature == "[[]]":
+        return "atomic-leaf"
+
+    if target_signature == "[[], []]":
+        return "same-shape-flat"
+
+    return "standard"
+
+
+def route_escalation_policy_for_shape(
+    *,
+    grip_status: str,
+    target_signature: str,
+) -> str:
+    if (
+        target_signature == "[[]]"
+        and grip_status == "structural-match-no-grip"
+    ):
+        return "leaf-primality-route"
+
+    return route_escalation_policy_for_grip(grip_status)
+
 def same_shape_factor_hits_from_output(output: str) -> list[int]:
     factors: list[int] = []
 
@@ -872,7 +896,12 @@ def print_pet_grip_diagnostic(
         grip_status = "no-structural-grip"
         no_grip_hint = "unknown"
 
-    route_escalation_policy = route_escalation_policy_for_grip(grip_status)
+    target_signature = str(shape_signature_dict(n)["signature"])
+    shape_family_route = shape_family_route_for_signature(target_signature)
+    route_escalation_policy = route_escalation_policy_for_shape(
+        grip_status=grip_status,
+        target_signature=target_signature,
+    )
     route_execution_status = "not-executed"
     route_execution_reason = "-"
     route_final_status = "classic-route-suggested-only"
@@ -883,9 +912,8 @@ def print_pet_grip_diagnostic(
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
+    print(f"shape_family_route = {shape_family_route}")
     print(f"route_escalation_policy = {route_escalation_policy}")
-
-    target_signature = str(shape_signature_dict(n)["signature"])
 
     if route_escalation_policy == "verify-pet-candidates":
         print("route_suggestion_status = available")
@@ -922,6 +950,25 @@ def print_pet_grip_diagnostic(
         route_execution_status = "stopped"
         route_execution_reason = "no-pet-structural-anchor"
         route_final_status = "stopped-no-pet-anchor"
+
+        print(f"route_execution_status = {route_execution_status}")
+        print(f"route_execution_reason = {route_execution_reason}")
+        print(f"route_final_status = {route_final_status}")
+
+    if route_escalation_policy == "leaf-primality-route":
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = atomic-leaf-primality-route")
+
+        if auto_same_shape_scan:
+            print("auto_same_shape_scan_status = skipped")
+            print(
+                "auto_same_shape_scan_skip_reason = "
+                "route-policy-leaf-primality-route"
+            )
+
+        route_execution_status = "leaf-route-suggested"
+        route_execution_reason = "atomic-pet-shape"
+        route_final_status = "stopped-at-atomic-leaf"
 
         print(f"route_execution_status = {route_execution_status}")
         print(f"route_execution_reason = {route_execution_reason}")

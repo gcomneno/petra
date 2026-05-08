@@ -170,6 +170,33 @@ The current claim is intentionally limited:
 - final route status is always surfaced in the route execution summary.
 
 
+
+## Atomic leaf route
+
+The atomic PET shape is:
+
+    [[]]
+
+This shape is treated as a terminal leaf route, not as an unsupported
+same-shape scan.
+
+When an input or residual reaches this shape with structural match but no
+arithmetic grip, the route reports:
+
+    shape_family_route = atomic-leaf
+    route_escalation_policy = leaf-primality-route
+    route_execution_status = leaf-route-suggested
+    route_final_status = stopped-at-atomic-leaf
+
+In residual descent this becomes:
+
+    depth_N_status = stopped-at-leaf
+    residual_descent_status = stopped-at-leaf
+
+This does not claim that the terminal residual is prime. It only records that
+PET reached an atomic leaf and that any primality decision belongs to the
+classic route.
+
 ## Residual descent
 
 The residual descent route recursively reuses the PET route pipeline on residuals.
