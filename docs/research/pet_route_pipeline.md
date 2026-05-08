@@ -171,6 +171,28 @@ The current claim is intentionally limited:
 
 
 
+
+## Shape-family support routing
+
+The handoff route now reports an explicit shape-family support route.
+
+Initial registry:
+
+    [[]]              -> atomic-leaf
+    [[], []]          -> same-shape-flat
+    [[], [[]]]        -> candidate-verification-residual-descent
+    [[], [], [[]]]    -> candidate-verification-residual-descent
+    other             -> unclassified-shape-family
+
+These fields are reported:
+
+    shape_family_support_status
+    shape_family_route
+    shape_family_route_reason
+
+This registry does not factor by itself. It records which operational route is
+currently known for a PET shape family.
+
 ## Atomic leaf route
 
 The atomic PET shape is:

@@ -686,14 +686,55 @@ def route_escalation_policy_for_grip(grip_status: str) -> str:
     return "unknown"
 
 
+SHAPE_FAMILY_ROUTES: dict[str, dict[str, str]] = {
+    "[[]]": {
+        "support_status": "supported",
+        "route": "atomic-leaf",
+        "reason": "atomic PET leaf; stop at primality route",
+    },
+    "[[], []]": {
+        "support_status": "supported",
+        "route": "same-shape-flat",
+        "reason": "flat two-leaf shape supports same-shape support scan",
+    },
+    "[[], [[]]]": {
+        "support_status": "routed",
+        "route": "candidate-verification-residual-descent",
+        "reason": "grip-capable residual family; use candidate verification and residual descent",
+    },
+    "[[], [], [[]]]": {
+        "support_status": "routed",
+        "route": "candidate-verification-residual-descent",
+        "reason": "near-shape grip family; use candidate verification and residual descent",
+    },
+}
+
+
+def shape_family_route_record_for_signature(
+    target_signature: str,
+) -> dict[str, str]:
+    return SHAPE_FAMILY_ROUTES.get(
+        target_signature,
+        {
+            "support_status": "unclassified",
+            "route": "unclassified-shape-family",
+            "reason": "no explicit shape-family route is registered",
+        },
+    )
+
+
 def shape_family_route_for_signature(target_signature: str) -> str:
-    if target_signature == "[[]]":
-        return "atomic-leaf"
+    return shape_family_route_record_for_signature(target_signature)["route"]
 
-    if target_signature == "[[], []]":
-        return "same-shape-flat"
 
-    return "standard"
+def shape_family_support_status_for_signature(target_signature: str) -> str:
+    return shape_family_route_record_for_signature(
+        target_signature
+    )["support_status"]
+
+
+def shape_family_route_reason_for_signature(target_signature: str) -> str:
+    return shape_family_route_record_for_signature(target_signature)["reason"]
 
 
 def route_escalation_policy_for_shape(
@@ -898,6 +939,12 @@ def print_pet_grip_diagnostic(
 
     target_signature = str(shape_signature_dict(n)["signature"])
     shape_family_route = shape_family_route_for_signature(target_signature)
+    shape_family_support_status = shape_family_support_status_for_signature(
+        target_signature
+    )
+    shape_family_route_reason = shape_family_route_reason_for_signature(
+        target_signature
+    )
     route_escalation_policy = route_escalation_policy_for_shape(
         grip_status=grip_status,
         target_signature=target_signature,
@@ -912,7 +959,9 @@ def print_pet_grip_diagnostic(
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
+    print(f"shape_family_support_status = {shape_family_support_status}")
     print(f"shape_family_route = {shape_family_route}")
+    print(f"shape_family_route_reason = {shape_family_route_reason}")
     print(f"route_escalation_policy = {route_escalation_policy}")
 
     if route_escalation_policy == "verify-pet-candidates":

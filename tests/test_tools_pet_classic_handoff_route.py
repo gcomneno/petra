@@ -307,3 +307,49 @@ def test_classic_handoff_route_summary_reports_atomic_leaf_route() -> None:
     assert "summary_route_execution_status = leaf-route-suggested" in output
     assert "summary_route_final_status = stopped-at-atomic-leaf" in output
 
+
+def test_shape_family_route_registry_maps_known_shapes() -> None:
+    module_path = Path("tools/pet_classic_handoff_route.py")
+    spec = importlib.util.spec_from_file_location(
+        "pet_classic_handoff_route",
+        module_path,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.shape_family_route_for_signature("[[]]") == "atomic-leaf"
+    assert (
+        module.shape_family_support_status_for_signature("[[]]")
+        == "supported"
+    )
+
+    assert (
+        module.shape_family_route_for_signature("[[], []]")
+        == "same-shape-flat"
+    )
+    assert (
+        module.shape_family_support_status_for_signature("[[], []]")
+        == "supported"
+    )
+
+    assert (
+        module.shape_family_route_for_signature("[[], [[]]]")
+        == "candidate-verification-residual-descent"
+    )
+    assert (
+        module.shape_family_route_for_signature("[[], [], [[]]]")
+        == "candidate-verification-residual-descent"
+    )
+
+    assert (
+        module.shape_family_route_for_signature("[[], [], []]")
+        == "unclassified-shape-family"
+    )
+    assert (
+        module.shape_family_support_status_for_signature("[[], [], []]")
+        == "unclassified"
+    )
+
