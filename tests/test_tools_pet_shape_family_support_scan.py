@@ -83,3 +83,24 @@ def test_shape_family_support_scan_rejects_unsupported_family() -> None:
     assert "shape_family_class = semiprime-flat" in output
     assert "scan_status = unsupported-shape-family" in output
     assert "reason = shape family is not supported by this structural support scan" in output
+
+
+def test_shape_family_support_scan_handles_one_deep_tail_shape() -> None:
+    output = run_shape_family_scan(
+        52,
+        "--shape",
+        "[[], [[]]]",
+        "--support-limit",
+        "1000",
+        "--max-supports",
+        "500",
+        "--max-factor-lines",
+        "10",
+    )
+
+    assert "shape_family_class = one-deep-tail" in output
+    assert "scan_status = complete" in output
+    assert "unique_factor_hit_count = 4" in output
+    assert "factor_selection_policy = deferred-to-residual-descent" in output
+    assert "best_factor = deferred" in output
+

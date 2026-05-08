@@ -96,3 +96,38 @@ def test_residual_descent_can_use_auto_flat_k_scan() -> None:
     assert "depth_0_selected_anchor_reason = best-pet-residual-shape-descent" in output
     assert "residual_reduction_chain =" in output
     assert "terminal_residual =" in output
+
+
+def test_residual_descent_completes_one_deep_tail_no_grip_cases() -> None:
+    output_52 = run_residual_descent(
+        52,
+        "--max-depth",
+        "6",
+        "--auto-flat-k-scan",
+        "--auto-shape-family-scan",
+        "--flat-k-prime-limit",
+        "20",
+        "--shape-family-support-limit",
+        "1000",
+    )
+
+    assert "residual_descent_status = complete" in output_52
+    assert "residual_reduction_chain = 2 * 2 * 13" in output_52
+    assert "terminal_residual = 1" in output_52
+
+    output_75 = run_residual_descent(
+        75,
+        "--max-depth",
+        "6",
+        "--auto-flat-k-scan",
+        "--auto-shape-family-scan",
+        "--flat-k-prime-limit",
+        "20",
+        "--shape-family-support-limit",
+        "1000",
+    )
+
+    assert "residual_descent_status = complete" in output_75
+    assert "residual_reduction_chain = 5 * 3 * 5" in output_75
+    assert "terminal_residual = 1" in output_75
+

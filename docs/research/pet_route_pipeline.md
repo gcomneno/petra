@@ -334,3 +334,39 @@ large benchmark matrix
 advanced scan pruning
 full mathematical equivalence theorem
 ```
+
+## Small-number residual descent milestone
+
+The PET-guided residual descent pipeline has been validated on the full range:
+
+    2..99
+
+Validation result:
+
+    ok = 98
+    bad = 0
+
+This means every integer in `2..99` reached:
+
+    residual_descent_status = complete
+    terminal_residual = 1
+
+Operational interpretation:
+
+    PET classifies the structure.
+    PET chooses the route.
+    PET proposes anchors or support families.
+    Classic bounded checks verify arithmetic factors.
+    Residual descent restarts from PET-routing on each verified residual.
+
+This is not a claim that PET performs pure arithmetic factorization by itself.
+It is a PET-guided indirect factorization pipeline with bounded classic
+verification.
+
+The final missing cases in the sweep were:
+
+    52 = 2 * 2 * 13
+    75 = 5 * 3 * 5
+
+They were closed by routing `one-deep-tail` shapes with `no-structural-grip`
+through the bounded shape-family support scan.

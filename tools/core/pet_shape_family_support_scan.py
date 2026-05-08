@@ -19,6 +19,7 @@ from tools.research.pet_operator_bridge_study import shape_signature_dict
 SUPPORTED_SHAPE_FAMILIES = {
     "branchy-shape",
     "mixed-depth",
+    "one-deep-tail",
 }
 
 

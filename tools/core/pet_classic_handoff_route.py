@@ -850,6 +850,12 @@ def route_escalation_policy_for_shape(
         return "shape-family-support-scan"
 
     if (
+        shape_family_class == "one-deep-tail"
+        and grip_status == "no-structural-grip"
+    ):
+        return "shape-family-support-scan"
+
+    if (
         shape_family_class == "narrow-deep-chain"
         and grip_status == "structural-match-no-grip"
     ):
@@ -1747,6 +1753,16 @@ def main() -> int:
             n=args.n,
             candidates=router_candidates,
             auto_same_shape_scan=False,
+            same_shape_prime_limit=getattr(args, "same_shape_prime_limit", 200),
+            auto_flat_k_scan=getattr(args, "auto_flat_k_scan", False),
+            flat_k_prime_limit=getattr(args, "flat_k_prime_limit", 50),
+            flat_k_max_supports=getattr(args, "flat_k_max_supports", 5000),
+            flat_k_max_factor_lines=getattr(args, "flat_k_max_factor_lines", 25),
+            auto_shape_family_scan=getattr(args, "auto_shape_family_scan", False),
+            shape_family_support_limit=getattr(args, "shape_family_support_limit", 10000),
+            shape_family_max_supports=getattr(args, "shape_family_max_supports", 5000),
+            shape_family_max_factor_lines=getattr(args, "shape_family_max_factor_lines", 25),
+            prime_power_trial_limit=getattr(args, "prime_power_trial_limit", 10000),
         )
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
