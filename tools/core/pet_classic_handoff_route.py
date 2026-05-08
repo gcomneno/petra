@@ -806,17 +806,35 @@ def print_pet_grip_diagnostic(
 
     target_signature = str(shape_signature_dict(n)["signature"])
 
+    if route_escalation_policy == "verify-pet-candidates":
+        print("route_execution_status = candidate-verification-required")
+        print("route_execution_reason = pet-candidates-have-arithmetic-grip")
+        print("route_final_status = candidate-verification-required")
+
+    if route_escalation_policy == "stop-no-pet-anchor":
+        print("route_execution_status = stopped")
+        print("route_execution_reason = no-pet-structural-anchor")
+        print("route_final_status = stopped-no-pet-anchor")
+
     if route_escalation_policy == "same-shape-scan":
+        same_shape_scan_supported = target_signature == "[[], []]"
+        same_shape_scan_support = (
+            "supported" if same_shape_scan_supported else "unsupported-shape"
+        )
+
+        print(f"same_shape_scan_support = {same_shape_scan_support}")
         print(
             "suggested_same_shape_support_scan_command = "
             f"{sys.executable} tools/core/pet_same_shape_support_scan.py "
             f"{n} --shape '{target_signature}' --prime-limit 200"
         )
 
-        if (
-            auto_same_shape_scan
-            and target_signature == "[[], []]"
-        ):
+        if auto_same_shape_scan and not same_shape_scan_supported:
+            print("auto_same_shape_scan_status = skipped")
+            print("auto_same_shape_scan_skip_reason = unsupported-shape")
+            print("route_final_status = classic-route-suggested-only")
+
+        if auto_same_shape_scan and same_shape_scan_supported:
             print("auto_same_shape_scan_status = running")
 
             result = subprocess.run(

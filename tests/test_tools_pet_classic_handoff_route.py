@@ -222,6 +222,7 @@ def test_classic_handoff_route_promotes_auto_same_shape_factor_hits() -> None:
 
     assert "pet_grip_status = structural-match-no-grip" in output
     assert "route_escalation_policy = same-shape-scan" in output
+    assert "same_shape_scan_support = supported" in output
     assert "auto_same_shape_scan_status = running" in output
     assert "unique_factor_hit_count = 2" in output
     assert "factor_1 = 101" in output
@@ -242,5 +243,23 @@ def test_classic_handoff_route_reports_verify_policy_for_arithmetic_grip() -> No
 
     assert "pet_grip_status = has-arithmetic-grip" in output
     assert "route_escalation_policy = verify-pet-candidates" in output
+    assert "route_execution_status = candidate-verification-required" in output
+    assert "route_execution_reason = pet-candidates-have-arithmetic-grip" in output
+    assert "route_final_status = candidate-verification-required" in output
     assert "auto_same_shape_scan_status = running" not in output
+
+
+def test_classic_handoff_route_reports_unsupported_same_shape_scan_policy() -> None:
+    output = run_tool_with_args(
+        2147483647,
+        "--include-monster-route",
+        "--auto-same-shape-scan",
+    )
+
+    assert "pet_grip_status = structural-match-no-grip" in output
+    assert "route_escalation_policy = same-shape-scan" in output
+    assert "same_shape_scan_support = unsupported-shape" in output
+    assert "auto_same_shape_scan_status = skipped" in output
+    assert "auto_same_shape_scan_skip_reason = unsupported-shape" in output
+    assert "route_final_status = classic-route-suggested-only" in output
 
