@@ -794,20 +794,19 @@ def print_pet_grip_diagnostic(
         grip_status = "no-structural-grip"
         no_grip_hint = "unknown"
 
+    route_escalation_policy = route_escalation_policy_for_grip(grip_status)
+
     print("PET grip diagnostic")
     print(f"pet_structural_match_count = {structural_match_count}")
     print(f"pet_arithmetic_grip_count = {arithmetic_grip_count}")
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
-    print(
-        "route_escalation_policy = "
-        f"{route_escalation_policy_for_grip(grip_status)}"
-    )
+    print(f"route_escalation_policy = {route_escalation_policy}")
 
     target_signature = str(shape_signature_dict(n)["signature"])
 
-    if grip_status == "structural-match-no-grip":
+    if route_escalation_policy == "same-shape-scan":
         print(
             "suggested_same_shape_support_scan_command = "
             f"{sys.executable} tools/core/pet_same_shape_support_scan.py "
