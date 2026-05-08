@@ -370,3 +370,63 @@ The final missing cases in the sweep were:
 
 They were closed by routing `one-deep-tail` shapes with `no-structural-grip`
 through the bounded shape-family support scan.
+
+## Main triage pipeline validation: 100..199
+
+The main PET triage pipeline now includes residual descent as an integrated
+routing stage:
+
+    PET triage pipeline
+    PET classic handoff policy
+    PET residual descent route
+
+The integrated pipeline was validated on the full range:
+
+    100..199
+
+Validation command used the main pipeline:
+
+    tools/pet_triage_pipeline.sh N
+    --no-fork
+    --no-fork-follow
+    --no-recursive
+    --no-scan-summary
+    --no-classic-scan
+    --residual-max-depth 8
+
+Validation result:
+
+    ok = 100
+    bad = 0
+
+This means every integer in `100..199` reached:
+
+    residual_descent_status = complete
+    terminal_residual = 1
+
+Combined with the previous `2..99` validation:
+
+    2..99     ok = 98   bad = 0
+    100..199 ok = 100  bad = 0
+
+Current validated small-number coverage:
+
+    2..199    ok = 198  bad = 0
+
+The residual reduction chain is intentionally not normalized into canonical
+prime factorization. It records the verified anchors selected by recursive
+PET-routing. For example, chains such as:
+
+    120 = 60 * 2
+    180 = 30 * 2 * 3
+    192 = 6 * 4 * 2 * 4
+
+are accepted when they are verified and reduce the terminal residual to `1`.
+
+This remains a PET-guided indirect factorization pipeline:
+
+    PET classifies structure.
+    PET selects routes.
+    PET proposes anchors or support families.
+    Classic bounded checks verify arithmetic factors.
+    Residual descent restarts from PET-routing on each verified residual.
