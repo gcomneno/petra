@@ -4,10 +4,72 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from tools.research.pet_operator_bridge_study import (
+    prefix_match_count,
+    shape_signature_dict,
+    signature_depth_sum,
+    suffix_match_count,
+)
+
+
+def apply_new(signature: list[object]) -> list[object]:
+    return [*signature, []]
+
+
+def apply_inc(signature: list[object]) -> list[object]:
+    if not signature:
+        return [[[]]]
+
+    updated = list(signature)
+    updated[-1] = [updated[-1]]
+    return updated
+
+
+def simulate_transition_path(
+    candidate_signature: list[object],
+    *,
+    target_signature: list[object],
+) -> tuple[list[str], bool]:
+    current = list(candidate_signature)
+
+    steps = [str(current)]
+
+    max_iterations = 16
+
+    for _ in range(max_iterations):
+        if current == target_signature:
+            return steps, True
+
+        current_width = len(current)
+        target_width = len(target_signature)
+
+        current_depth = signature_depth_sum(current)
+        target_depth = signature_depth_sum(target_signature)
+
+        if current_width < target_width:
+            current = apply_new(current)
+            steps.append(f"NEW -> {current}")
+            continue
+
+        if current_depth < target_depth:
+            current = apply_inc(current)
+            steps.append(f"INC -> {current}")
+            continue
+
+        break
+
+    return steps, current == target_signature
+
 
 
 def run_command(args: list[str]) -> str:
@@ -262,7 +324,59 @@ def confidence_rank(confidence: str) -> int:
     }.get(confidence, 0)
 
 
-def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, str]]:
+def append_derived_lcm_merge(
+    candidates: list[dict[str, str]],
+    *,
+    base_count: int,
+) -> list[dict[str, str]]:
+    derived_values: list[int] = []
+
+    for candidate in candidates[base_count:]:
+        try:
+            value = int(candidate["value"])
+        except ValueError:
+            continue
+
+        if value >= 2:
+            derived_values.append(value)
+
+    if not derived_values:
+        return candidates
+
+    merged_value = math.lcm(*derived_values)
+    merged_text = str(merged_value)
+
+    if any(candidate["value"] == merged_text for candidate in candidates):
+        return candidates
+
+    return candidates + [
+        {
+            "kind": "derived-lcm-merge",
+            "value": merged_text,
+            "source": "candidate_merge",
+            "confidence": "high",
+            "note": "lcm of derived expansion candidates",
+        }
+    ]
+
+
+def candidate_has_verified_factor(
+    n: int,
+    candidate_value: int,
+) -> bool:
+    if candidate_value < 2:
+        return False
+
+    gcd_value = math.gcd(n, candidate_value)
+
+    return 1 < gcd_value < n
+
+
+def expand_candidates(
+    base_candidates: list[dict[str, str]],
+    *,
+    target_n: int | None = None,
+) -> list[dict[str, str]]:
     expanded: list[dict[str, str]] = []
     seen: set[str] = set()
 
@@ -300,6 +414,20 @@ def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, s
 
     numeric_values = [value for value in numeric_values if value >= 2]
     numeric_values = sorted(set(numeric_values), reverse=True)
+
+    if target_n is not None:
+        saturated_values: list[int] = []
+
+        for value in numeric_values:
+            if candidate_has_verified_factor(
+                target_n,
+                value,
+            ):
+                continue
+
+            saturated_values.append(value)
+
+        numeric_values = saturated_values
 
     derived_divisors_added = 0
     for root in numeric_values[:2]:
@@ -352,18 +480,126 @@ def expand_candidates(base_candidates: list[dict[str, str]]) -> list[dict[str, s
     return base_rows + derived_rows
 
 
-def print_candidates(candidates: list[dict[str, str]], *, base_count: int) -> None:
+def print_candidates(
+    candidates: list[dict[str, str]],
+    *,
+    base_count: int,
+    target_n: int,
+) -> None:
+    target_sig_data = shape_signature_dict(target_n)
+    target_signature_raw = target_sig_data["signature"]
+    target_signature = str(target_signature_raw)
+    target_width = len(target_signature_raw)
+    target_depth_sum = signature_depth_sum(target_signature_raw)
+
     print("PET candidate forms")
     print(f"candidate_base_count = {base_count}")
     print(f"candidate_count = {len(candidates)}")
+    print()
+
+    print("PET signature target")
+    print(f"target_n = {target_n}")
+    print(f"target_signature = {target_signature}")
+    print(f"target_width = {target_width}")
+    print(f"target_depth_sum = {target_depth_sum}")
+    print()
+
     for index, candidate in enumerate(candidates, start=1):
+        candidate_value = int(candidate["value"])
+
+        candidate_sig_data = shape_signature_dict(candidate_value)
+        candidate_signature_raw = candidate_sig_data["signature"]
+        candidate_signature = str(candidate_signature_raw)
+
+        candidate_width = len(candidate_signature_raw)
+        candidate_depth_sum = signature_depth_sum(
+            candidate_signature_raw
+        )
+
+        prefix_match = prefix_match_count(
+            target_signature_raw,
+            candidate_signature_raw,
+        )
+
+        suffix_match = suffix_match_count(
+            target_signature_raw,
+            candidate_signature_raw,
+        )
+
+        width_gap = target_width - candidate_width
+        depth_gap = target_depth_sum - candidate_depth_sum
+
+        transition_path, transition_verified = (
+            simulate_transition_path(
+                candidate_signature_raw,
+                target_signature=target_signature_raw,
+            )
+        )
+
+        transition_ops: list[str] = []
+
+        for step in transition_path[1:]:
+            transition_ops.append(step.split(" -> ", maxsplit=1)[0])
+
+        if not transition_ops:
+            transition_label = "IDENTITY"
+        else:
+            transition_label = " + ".join(transition_ops)
+
+        if transition_label == "IDENTITY":
+            transition_hint = "exact-structural-match"
+        elif transition_label.startswith("NEW") and "INC" in transition_ops:
+            transition_hint = "width-then-depth-growth"
+        elif transition_label.startswith("NEW"):
+            transition_hint = "width-growth"
+        elif transition_label.startswith("INC"):
+            transition_hint = "depth-only-growth"
+        else:
+            transition_hint = "mixed-growth"
+
         print(f"candidate_{index}_kind = {candidate['kind']}")
         print(f"candidate_{index}_value = {candidate['value']}")
         print(f"candidate_{index}_source = {candidate['source']}")
         print(f"candidate_{index}_confidence = {candidate['confidence']}")
         print(f"candidate_{index}_note = {candidate['note']}")
-    print()
 
+        print(f"candidate_{index}_signature = {candidate_signature}")
+        print(f"candidate_{index}_width = {candidate_width}")
+        print(f"candidate_{index}_depth_sum = {candidate_depth_sum}")
+
+        print(f"candidate_{index}_width_gap = {width_gap}")
+        print(f"candidate_{index}_depth_gap = {depth_gap}")
+
+        print(f"candidate_{index}_prefix_match = {prefix_match}")
+        print(f"candidate_{index}_suffix_match = {suffix_match}")
+
+        print(
+            f"candidate_{index}_estimated_transition = "
+            f"{transition_label}"
+        )
+
+        print(
+            f"candidate_{index}_transition_hint = "
+            f"{transition_hint}"
+        )
+
+        for step_index, step in enumerate(
+            transition_path,
+            start=1,
+        ):
+            print(
+                f"candidate_{index}_transition_step_"
+                f"{step_index} = {step}"
+            )
+
+        print(
+            f"candidate_{index}_transition_verified = "
+            f"{'yes' if transition_verified else 'no'}"
+        )
+
+        print()
+
+    print()
 
 def verifier_command_text(n: int, candidates: list[dict[str, str]]) -> str:
     parts = [
@@ -531,8 +767,16 @@ def main() -> int:
             selected_backbone_generator="skipped-by-router",
             selected_backbone_order="skipped-by-router",
         )
-        router_candidates = expand_candidates(router_base_candidates)
-        print_candidates(router_candidates, base_count=len(router_base_candidates))
+        router_base_count = len(router_base_candidates)
+        router_candidates = expand_candidates(
+            router_base_candidates,
+            target_n=args.n,
+        )
+        router_candidates = append_derived_lcm_merge(
+            router_candidates,
+            base_count=router_base_count,
+        )
+        print_candidates(router_candidates, base_count=router_base_count, target_n=args.n)
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
         print("reason = router preempted local probe recomputation for a large or diffuse field")
@@ -637,8 +881,16 @@ def main() -> int:
         selected_backbone_generator=selected_backbone_generator,
         selected_backbone_order=selected_backbone_order,
     )
-    candidates = expand_candidates(base_candidates)
-    print_candidates(candidates, base_count=len(base_candidates))
+    base_count = len(base_candidates)
+    candidates = expand_candidates(
+        base_candidates,
+        target_n=args.n,
+    )
+    candidates = append_derived_lcm_merge(
+        candidates,
+        base_count=base_count,
+    )
+    print_candidates(candidates, base_count=base_count, target_n=args.n)
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
         if monster_class == "deceptive-stable-sigma":
