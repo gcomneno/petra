@@ -20,6 +20,8 @@ Options:
   --no-fork                     skip legacy focused peel fork diagnostics
   --no-scan-summary             skip PET verified divisor summary
   --no-classic-scan             skip PET verified divisor summary and classic scan policy
+  --no-residual-descent         skip PET residual descent routing section
+  --residual-max-depth D        residual descent max depth; default: 6
   --route-only                  run only PET race diagnostic and classic handoff policy
   --legacy-diagnostics          run legacy diagnostics sections 4-8
   --rigid-border-guard          stop after preflight when decimal rigid border is detected
@@ -49,6 +51,8 @@ FORK_FOLLOW=BOTH
 RUN_RECURSIVE=1
 RUN_SCAN_SUMMARY=1
 RUN_CLASSIC_SCAN_POLICY=1
+RUN_RESIDUAL_DESCENT=1
+RESIDUAL_MAX_DEPTH=6
 RUN_LEGACY_LENS=0
 RUN_LEGACY_MASS=0
 RUN_LEGACY_FOCUSED=0
@@ -119,9 +123,18 @@ while [[ $# -gt 0 ]]; do
       RUN_CLASSIC_SCAN_POLICY=0
       shift
       ;;
+    --no-residual-descent)
+      RUN_RESIDUAL_DESCENT=0
+      shift
+      ;;
+    --residual-max-depth)
+      RESIDUAL_MAX_DEPTH="$2"
+      shift 2
+      ;;
     --route-only)
       RUN_SCAN_SUMMARY=0
       RUN_CLASSIC_SCAN_POLICY=0
+      RUN_RESIDUAL_DESCENT=0
       RUN_LEGACY_LENS=0
       RUN_LEGACY_MASS=0
       RUN_LEGACY_FOCUSED=0
@@ -239,6 +252,8 @@ echo "monster_router = $RUN_MONSTER_ROUTER"
 echo "operator_depth = $OPERATOR_DEPTH"
 echo "blade_window = $BLADE_WINDOW"
 echo "legacy_fork_follow = ${FORK_FOLLOW:-disabled}"
+echo "residual_descent = $RUN_RESIDUAL_DESCENT"
+echo "residual_max_depth = $RESIDUAL_MAX_DEPTH"
 echo
 echo "claim = PET triage pipeline only; classic stages verify divisors only when explicitly reported"
 
@@ -325,6 +340,17 @@ if [[ -s "$proposal_file" ]]; then
   tools/pet_classic_handoff_route.py "$N"   --proposal-file "$proposal_file"   --monster-route-file "$monster_router_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
 else
   tools/pet_classic_handoff_route.py "$N"   --monster-route-file "$monster_router_file"   --operator-depth "$OPERATOR_DEPTH"   --blade-window "$BLADE_WINDOW"   --max-generator-count "$MAX_GENERATOR_COUNT"   --excluded-support-limit "$EXCLUDED_SUPPORT_LIMIT"   --max-move-span "$MAX_MOVE_SPAN"   --include-monster-route
+fi
+
+if [[ "$RUN_RESIDUAL_DESCENT" -eq 1 ]]; then
+  section "1b. PET residual descent route"
+  run_optional tools/pet_residual_descent_route.py "$N" \
+    --max-depth "$RESIDUAL_MAX_DEPTH" \
+    --auto-flat-k-scan \
+    --auto-shape-family-scan \
+    --flat-k-prime-limit 50 \
+    --shape-family-support-limit 5000 \
+    --shape-family-max-supports 1000
 fi
 
 if [[ "$RUN_SCAN_SUMMARY" -eq 1 ]]; then
