@@ -672,6 +672,53 @@ def print_candidates(
 
     print()
 
+def print_pet_grip_diagnostic(
+    *,
+    n: int,
+    candidates: list[dict[str, str]],
+) -> None:
+    arithmetic_grip_count = 0
+    structural_match_count = 0
+    best_gcd = 1
+
+    for candidate in candidates:
+        try:
+            candidate_value = int(candidate["value"])
+        except ValueError:
+            continue
+
+        gcd_value = math.gcd(n, candidate_value)
+        best_gcd = max(best_gcd, gcd_value)
+
+        if 1 < gcd_value < n:
+            arithmetic_grip_count += 1
+
+        if transition_verified_for_candidate(
+            target_n=n,
+            candidate_value=candidate_value,
+        ):
+            structural_match_count += 1
+
+    if arithmetic_grip_count > 0:
+        grip_status = "has-arithmetic-grip"
+        no_grip_hint = "no"
+    elif structural_match_count > 0:
+        grip_status = "structural-match-no-grip"
+        no_grip_hint = "yes"
+    else:
+        grip_status = "no-structural-grip"
+        no_grip_hint = "unknown"
+
+    print("PET grip diagnostic")
+    print(f"pet_structural_match_count = {structural_match_count}")
+    print(f"pet_arithmetic_grip_count = {arithmetic_grip_count}")
+    print(f"pet_best_candidate_gcd = {best_gcd}")
+    print(f"pet_grip_status = {grip_status}")
+    print(f"pet_no_grip_hint = {no_grip_hint}")
+    print()
+
+
+
 def verifier_command_text(n: int, candidates: list[dict[str, str]]) -> str:
     parts = [
         sys.executable,
@@ -852,6 +899,10 @@ def main() -> int:
             target_n=args.n,
         )
         print_candidates(router_candidates, base_count=router_base_count, target_n=args.n)
+        print_pet_grip_diagnostic(
+            n=args.n,
+            candidates=router_candidates,
+        )
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
         print("reason = router preempted local probe recomputation for a large or diffuse field")
@@ -970,6 +1021,10 @@ def main() -> int:
         target_n=args.n,
     )
     print_candidates(candidates, base_count=base_count, target_n=args.n)
+    print_pet_grip_diagnostic(
+        n=args.n,
+        candidates=candidates,
+    )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
         if monster_class == "deceptive-stable-sigma":
