@@ -221,6 +221,7 @@ def test_classic_handoff_route_promotes_auto_same_shape_factor_hits() -> None:
     )
 
     assert "pet_grip_status = structural-match-no-grip" in output
+    assert "route_escalation_policy = same-shape-scan" in output
     assert "auto_same_shape_scan_status = running" in output
     assert "unique_factor_hit_count = 2" in output
     assert "factor_1 = 101" in output
@@ -230,4 +231,16 @@ def test_classic_handoff_route_promotes_auto_same_shape_factor_hits() -> None:
     assert "promoted_cofactor_1 = 103" in output
     assert "verified_factorization = 101 * 103" in output
     assert "route_final_status = solved-by-same-shape-scan" in output
+
+
+def test_classic_handoff_route_reports_verify_policy_for_arithmetic_grip() -> None:
+    output = run_tool_with_args(
+        24680,
+        "--include-monster-route",
+        "--auto-same-shape-scan",
+    )
+
+    assert "pet_grip_status = has-arithmetic-grip" in output
+    assert "route_escalation_policy = verify-pet-candidates" in output
+    assert "auto_same_shape_scan_status = running" not in output
 

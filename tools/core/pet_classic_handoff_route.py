@@ -673,6 +673,18 @@ def print_candidates(
     print()
 
 
+def route_escalation_policy_for_grip(grip_status: str) -> str:
+    if grip_status == "has-arithmetic-grip":
+        return "verify-pet-candidates"
+
+    if grip_status == "structural-match-no-grip":
+        return "same-shape-scan"
+
+    if grip_status == "no-structural-grip":
+        return "stop-no-pet-anchor"
+
+    return "unknown"
+
 def same_shape_factor_hits_from_output(output: str) -> list[int]:
     factors: list[int] = []
 
@@ -788,6 +800,10 @@ def print_pet_grip_diagnostic(
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
+    print(
+        "route_escalation_policy = "
+        f"{route_escalation_policy_for_grip(grip_status)}"
+    )
 
     target_signature = str(shape_signature_dict(n)["signature"])
 
