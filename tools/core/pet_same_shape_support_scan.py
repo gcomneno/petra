@@ -87,9 +87,11 @@ def main() -> int:
     )
 
     unique_hits: dict[int, tuple[int, int]] = {}
+    hit_frequencies: dict[int, int] = {}
 
     for left, right, gcd_value in hits:
         unique_hits.setdefault(gcd_value, (left, right))
+        hit_frequencies[gcd_value] = hit_frequencies.get(gcd_value, 0) + 1
 
     print(f"hit_count = {len(hits)}")
     print(f"unique_factor_hit_count = {len(unique_hits)}")
@@ -103,6 +105,7 @@ def main() -> int:
         left, right = support
 
         print(f"factor_{index} = {gcd_value}")
+        print(f"factor_{index}_hit_frequency = {hit_frequencies[gcd_value]}")
         print(f"factor_{index}_first_support = {left}*{right}")
         print(f"factor_{index}_first_support_value = {left * right}")
 

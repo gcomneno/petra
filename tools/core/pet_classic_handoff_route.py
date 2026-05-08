@@ -717,7 +717,7 @@ def print_same_shape_factor_promotion(
     *,
     n: int,
     factors: list[int],
-) -> None:
+) -> str:
     promoted: list[tuple[int, int]] = []
 
     for factor in sorted(set(factors)):
@@ -725,9 +725,10 @@ def print_same_shape_factor_promotion(
             promoted.append((factor, n // factor))
 
     if not promoted:
+        route_final_status = "unresolved-no-grip"
         print("auto_factor_promotion_status = no-factor-promoted")
-        print("route_final_status = unresolved-no-grip")
-        return
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
 
     promoted_factors = {factor for factor, _cofactor in promoted}
     complete_pair: tuple[int, int] | None = None
@@ -754,6 +755,82 @@ def print_same_shape_factor_promotion(
 
     print(f"verified_factorization = {verified_factorization}")
     print(f"route_final_status = {final_status}")
+    return final_status
+
+
+
+def print_pet_candidate_factor_verification(
+    *,
+    n: int,
+    candidates: list[dict[str, str]],
+) -> str:
+    verified_hits: list[tuple[int, int, int, int]] = []
+
+    for index, candidate in enumerate(candidates, start=1):
+        try:
+            candidate_value = int(candidate["value"])
+        except ValueError:
+            continue
+
+        gcd_value = math.gcd(n, candidate_value)
+
+        if 1 < gcd_value < n:
+            verified_hits.append(
+                (
+                    index,
+                    candidate_value,
+                    gcd_value,
+                    n // gcd_value,
+                )
+            )
+
+    if not verified_hits:
+        route_final_status = "candidate-verification-required"
+        print("candidate_verify_status = no-verified-factor")
+        print("candidate_verified_factor_count = 0")
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
+
+    unique_factors = sorted({gcd_value for *_prefix, gcd_value, _cofactor in verified_hits})
+    unique_factor_set = set(unique_factors)
+
+    complete_pair: tuple[int, int] | None = None
+
+    for factor in unique_factors:
+        cofactor = n // factor
+
+        if factor * cofactor == n and cofactor in unique_factor_set:
+            complete_pair = (factor, cofactor)
+            break
+
+    print("candidate_verify_status = verified-factor")
+    print(f"candidate_verified_factor_count = {len(unique_factors)}")
+
+    for index, factor in enumerate(unique_factors, start=1):
+        print(f"candidate_verified_factor_{index} = {factor}")
+        print(f"candidate_verified_cofactor_{index} = {n // factor}")
+
+    for hit_index, (
+        candidate_index,
+        candidate_value,
+        gcd_value,
+        cofactor,
+    ) in enumerate(verified_hits, start=1):
+        print(f"candidate_verify_hit_{hit_index}_candidate_index = {candidate_index}")
+        print(f"candidate_verify_hit_{hit_index}_candidate_value = {candidate_value}")
+        print(f"candidate_verify_hit_{hit_index}_factor = {gcd_value}")
+        print(f"candidate_verify_hit_{hit_index}_cofactor = {cofactor}")
+
+    if complete_pair is None:
+        route_final_status = "partial-factorization-by-pet-candidate"
+        print("verified_factorization = -")
+        print(f"route_final_status = {route_final_status}")
+    else:
+        route_final_status = "solved-by-pet-candidate"
+        print(f"verified_factorization = {complete_pair[0]} * {complete_pair[1]}")
+        print(f"route_final_status = {route_final_status}")
+
+    return route_final_status
 
 
 def print_pet_grip_diagnostic(
@@ -761,6 +838,7 @@ def print_pet_grip_diagnostic(
     n: int,
     candidates: list[dict[str, str]],
     auto_same_shape_scan: bool = False,
+    same_shape_prime_limit: int = 200,
 ) -> None:
     arithmetic_grip_count = 0
     structural_match_count = 0
@@ -795,6 +873,9 @@ def print_pet_grip_diagnostic(
         no_grip_hint = "unknown"
 
     route_escalation_policy = route_escalation_policy_for_grip(grip_status)
+    route_execution_status = "not-executed"
+    route_execution_reason = "-"
+    route_final_status = "classic-route-suggested-only"
 
     print("PET grip diagnostic")
     print(f"pet_structural_match_count = {structural_match_count}")
@@ -807,16 +888,48 @@ def print_pet_grip_diagnostic(
     target_signature = str(shape_signature_dict(n)["signature"])
 
     if route_escalation_policy == "verify-pet-candidates":
-        print("route_execution_status = candidate-verification-required")
-        print("route_execution_reason = pet-candidates-have-arithmetic-grip")
-        print("route_final_status = candidate-verification-required")
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = pet-candidate-verification")
+
+        if auto_same_shape_scan:
+            print("auto_same_shape_scan_status = skipped")
+            print(
+                "auto_same_shape_scan_skip_reason = "
+                "route-policy-verify-pet-candidates"
+            )
+
+        route_execution_status = "candidate-verification"
+        route_execution_reason = "pet-candidates-have-arithmetic-grip"
+
+        print(f"route_execution_status = {route_execution_status}")
+        print(f"route_execution_reason = {route_execution_reason}")
+        route_final_status = print_pet_candidate_factor_verification(
+            n=n,
+            candidates=candidates,
+        )
 
     if route_escalation_policy == "stop-no-pet-anchor":
-        print("route_execution_status = stopped")
-        print("route_execution_reason = no-pet-structural-anchor")
-        print("route_final_status = stopped-no-pet-anchor")
+        print("route_suggestion_status = unavailable")
+        print("route_suggestion_kind = none")
+
+        if auto_same_shape_scan:
+            print("auto_same_shape_scan_status = skipped")
+            print(
+                "auto_same_shape_scan_skip_reason = "
+                "route-policy-stop-no-pet-anchor"
+            )
+
+        route_execution_status = "stopped"
+        route_execution_reason = "no-pet-structural-anchor"
+        route_final_status = "stopped-no-pet-anchor"
+
+        print(f"route_execution_status = {route_execution_status}")
+        print(f"route_execution_reason = {route_execution_reason}")
+        print(f"route_final_status = {route_final_status}")
 
     if route_escalation_policy == "same-shape-scan":
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = same-shape-support-scan")
         same_shape_scan_supported = target_signature == "[[], []]"
         same_shape_scan_support = (
             "supported" if same_shape_scan_supported else "unsupported-shape"
@@ -826,15 +939,35 @@ def print_pet_grip_diagnostic(
         print(
             "suggested_same_shape_support_scan_command = "
             f"{sys.executable} tools/core/pet_same_shape_support_scan.py "
-            f"{n} --shape '{target_signature}' --prime-limit 200"
+            f"{n} --shape '{target_signature}' --prime-limit {same_shape_prime_limit}"
         )
 
+        if not auto_same_shape_scan:
+            route_execution_status = "same-shape-scan-required"
+            route_execution_reason = "auto-same-shape-scan-disabled"
+            route_final_status = "same-shape-scan-required"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
+            print(f"route_final_status = {route_final_status}")
+
         if auto_same_shape_scan and not same_shape_scan_supported:
+            route_execution_status = "same-shape-scan-skipped"
+            route_execution_reason = "unsupported-shape"
+            route_final_status = "classic-route-suggested-only"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
             print("auto_same_shape_scan_status = skipped")
             print("auto_same_shape_scan_skip_reason = unsupported-shape")
-            print("route_final_status = classic-route-suggested-only")
+            print(f"route_final_status = {route_final_status}")
 
         if auto_same_shape_scan and same_shape_scan_supported:
+            route_execution_status = "same-shape-scan-running"
+            route_execution_reason = "supported-shape-and-auto-scan-enabled"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
             print("auto_same_shape_scan_status = running")
 
             result = subprocess.run(
@@ -845,7 +978,7 @@ def print_pet_grip_diagnostic(
                     "--shape",
                     target_signature,
                     "--prime-limit",
-                    "200",
+                    str(same_shape_prime_limit),
                 ],
                 capture_output=True,
                 text=True,
@@ -860,12 +993,17 @@ def print_pet_grip_diagnostic(
             print("auto_same_shape_scan_output_end")
 
             factor_hits = same_shape_factor_hits_from_output(result.stdout)
-            print_same_shape_factor_promotion(
+            route_final_status = print_same_shape_factor_promotion(
                 n=n,
                 factors=factor_hits,
             )
 
-
+    print()
+    print("PET route execution summary")
+    print(f"summary_route_escalation_policy = {route_escalation_policy}")
+    print(f"summary_route_execution_status = {route_execution_status}")
+    print(f"summary_route_execution_reason = {route_execution_reason}")
+    print(f"summary_route_final_status = {route_final_status}")
     print()
 
 
@@ -979,6 +1117,12 @@ def main() -> int:
         "--auto-same-shape-scan",
         action="store_true",
         help="Run automatic same-shape support scan for PET no-grip cases.",
+    )
+    parser.add_argument(
+        "--same-shape-prime-limit",
+        type=int,
+        default=200,
+        help="Prime limit for automatic same-shape support scans.",
     )
     args = parser.parse_args()
 
@@ -1182,6 +1326,7 @@ def main() -> int:
         n=args.n,
         candidates=candidates,
         auto_same_shape_scan=args.auto_same_shape_scan,
+        same_shape_prime_limit=getattr(args, "same_shape_prime_limit", 200),
     )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
