@@ -676,6 +676,7 @@ def print_pet_grip_diagnostic(
     *,
     n: int,
     candidates: list[dict[str, str]],
+    auto_same_shape_scan: bool = False,
 ) -> None:
     arithmetic_grip_count = 0
     structural_match_count = 0
@@ -724,6 +725,35 @@ def print_pet_grip_diagnostic(
             f"{sys.executable} tools/core/pet_same_shape_support_scan.py "
             f"{n} --shape '{target_signature}' --prime-limit 200"
         )
+
+        if (
+            auto_same_shape_scan
+            and target_signature == "[[], []]"
+        ):
+            print("auto_same_shape_scan_status = running")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/core/pet_same_shape_support_scan.py",
+                    str(n),
+                    "--shape",
+                    target_signature,
+                    "--prime-limit",
+                    "200",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            print("auto_same_shape_scan_output_start")
+
+            for line in result.stdout.strip().splitlines():
+                print(line)
+
+            print("auto_same_shape_scan_output_end")
+
 
     print()
 
@@ -834,6 +864,11 @@ def main() -> int:
         action="store_true",
         help="Append PET shadow monster router diagnostics to the handoff output.",
     )
+    parser.add_argument(
+        "--auto-same-shape-scan",
+        action="store_true",
+        help="Run automatic same-shape support scan for PET no-grip cases.",
+    )
     args = parser.parse_args()
 
     if args.n < 1:
@@ -912,6 +947,7 @@ def main() -> int:
         print_pet_grip_diagnostic(
             n=args.n,
             candidates=router_candidates,
+            auto_same_shape_scan=False,
         )
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
@@ -1034,6 +1070,7 @@ def main() -> int:
     print_pet_grip_diagnostic(
         n=args.n,
         candidates=candidates,
+        auto_same_shape_scan=args.auto_same_shape_scan,
     )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")
