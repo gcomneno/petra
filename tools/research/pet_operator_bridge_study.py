@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -198,13 +199,13 @@ def verify_candidate(
 
     hit_kind = extract_key(
         result.stdout,
-        "candidate_1_hit_kind",
+        "candidate_1_status",
     )
 
     if hit_kind == "unknown":
         hit_kind = extract_key(
             result.stdout,
-            "candidate_1_status",
+            "candidate_1_hit_kind",
         )
 
     gcd_value = extract_key(
@@ -258,8 +259,10 @@ def tsv_rows(
     except ValueError:
         base_count = 0
 
+    candidates = parse_candidate_block(handoff_text)
+
     for index, candidate in enumerate(
-        parse_candidate_block(handoff_text),
+        candidates,
         start=1,
     ):
         value_raw = candidate["value"]
@@ -320,6 +323,85 @@ def tsv_rows(
                 "candidate_confidence": candidate["confidence"],
                 "candidate_is_base": "yes" if index <= base_count else "no",
                 "candidate_value": str(candidate_value),
+                "candidate_signature": candidate_signature,
+                "candidate_generator": candidate_generator,
+                "candidate_width": str(candidate_width),
+                "candidate_depth_sum": str(candidate_depth_sum),
+                "depth_sum_gap": str(n_depth_sum - candidate_depth_sum),
+                "width_gap": str(n_width - candidate_width),
+                "signature_prefix_match": str(signature_prefix_match),
+                "signature_suffix_match": str(signature_suffix_match),
+                "distance_to_n": str(distance_to_n),
+                "hit_kind": hit_kind,
+                "gcd_value": gcd_value,
+                "gcd_class": gcd_class_value,
+                "hit_rank": str(hit_rank(gcd_class_value)),
+            }
+        )
+
+    derived_values: list[int] = []
+
+    for index, candidate in enumerate(
+        candidates,
+        start=1,
+    ):
+        if index <= base_count:
+            continue
+
+        try:
+            derived_values.append(int(candidate["value"]))
+        except ValueError:
+            continue
+
+    if derived_values:
+        merged_value = math.lcm(*derived_values)
+
+        candidate_sig_data = shape_signature_dict(merged_value)
+        candidate_signature_raw = candidate_sig_data["signature"]
+
+        candidate_signature = str(candidate_signature_raw)
+        candidate_generator = str(candidate_sig_data["generator"])
+
+        candidate_width = len(candidate_signature_raw)
+        candidate_depth_sum = signature_depth_sum(candidate_signature_raw)
+
+        signature_prefix_match = prefix_match_count(
+            n_signature_raw,
+            candidate_signature_raw,
+        )
+        signature_suffix_match = suffix_match_count(
+            n_signature_raw,
+            candidate_signature_raw,
+        )
+
+        distance_to_n = structural_distance(
+            encode(merged_value),
+            encode(n),
+        )
+
+        hit_kind, gcd_value = verify_candidate(
+            n_text,
+            str(merged_value),
+        )
+
+        gcd_class_value = gcd_class(
+            hit_kind=hit_kind,
+            gcd_value=gcd_value,
+        )
+
+        rows.append(
+            {
+                "N": n_text,
+                "monster_class": monster_class,
+                "n_signature": n_signature,
+                "n_generator": n_generator,
+                "n_width": str(n_width),
+                "n_depth_sum": str(n_depth_sum),
+                "candidate_kind": "derived-lcm-merge",
+                "candidate_source": "candidate_merge",
+                "candidate_confidence": "observed",
+                "candidate_is_base": "no",
+                "candidate_value": str(merged_value),
                 "candidate_signature": candidate_signature,
                 "candidate_generator": candidate_generator,
                 "candidate_width": str(candidate_width),
