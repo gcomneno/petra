@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import json
 import math
@@ -686,26 +687,118 @@ def route_escalation_policy_for_grip(grip_status: str) -> str:
     return "unknown"
 
 
-SHAPE_FAMILY_ROUTES: dict[str, dict[str, str]] = {
-    "[[]]": {
+def parse_shape_signature(target_signature: str) -> object:
+    try:
+        return ast.literal_eval(target_signature)
+    except (SyntaxError, ValueError):
+        return target_signature
+
+
+def shape_node_depth(node: object) -> int:
+    if not isinstance(node, list) or node == []:
+        return 1
+
+    return 1 + max(shape_node_depth(child) for child in node)
+
+
+def shape_depth_profile(signature: object) -> list[int]:
+    if not isinstance(signature, list):
+        return []
+
+    return [shape_node_depth(child) for child in signature]
+
+
+def shape_has_internal_branch(signature: object) -> bool:
+    if not isinstance(signature, list):
+        return False
+
+    def visit(node: object) -> bool:
+        if not isinstance(node, list) or node == []:
+            return False
+
+        if len(node) > 1:
+            return True
+
+        return any(visit(child) for child in node)
+
+    return any(visit(child) for child in signature)
+
+
+def shape_family_class_for_signature(target_signature: str) -> str:
+    signature = parse_shape_signature(target_signature)
+
+    if not isinstance(signature, list):
+        return "unclassified-shape-family"
+
+    width = len(signature)
+    depth_profile = shape_depth_profile(signature)
+    deep_child_count = sum(1 for depth in depth_profile if depth > 1)
+    is_flat = all(child == [] for child in signature)
+
+    if width == 1 and is_flat:
+        return "atomic-leaf"
+
+    if width == 2 and is_flat:
+        return "semiprime-flat"
+
+    if width >= 3 and is_flat:
+        return "flat-k-leaf"
+
+    if width == 1 and deep_child_count == 1:
+        return "narrow-deep-chain"
+
+    if deep_child_count == 1 and not shape_has_internal_branch(signature):
+        return "one-deep-tail"
+
+    if shape_has_internal_branch(signature):
+        return "branchy-shape"
+
+    if deep_child_count > 1:
+        return "mixed-depth"
+
+    return "unclassified-shape-family"
+
+
+SHAPE_FAMILY_ROUTE_RECORDS: dict[str, dict[str, str]] = {
+    "atomic-leaf": {
         "support_status": "supported",
         "route": "atomic-leaf",
         "reason": "atomic PET leaf; stop at primality route",
     },
-    "[[], []]": {
+    "semiprime-flat": {
         "support_status": "supported",
         "route": "same-shape-flat",
         "reason": "flat two-leaf shape supports same-shape support scan",
     },
-    "[[], [[]]]": {
+    "one-deep-tail": {
         "support_status": "routed",
         "route": "candidate-verification-residual-descent",
-        "reason": "grip-capable residual family; use candidate verification and residual descent",
+        "reason": "single deep-tail family; use candidate verification and residual descent",
     },
-    "[[], [], [[]]]": {
+    "narrow-deep-chain": {
         "support_status": "routed",
-        "route": "candidate-verification-residual-descent",
-        "reason": "near-shape grip family; use candidate verification and residual descent",
+        "route": "power-like-local-check",
+        "reason": "narrow deep chain; use power-like local route",
+    },
+    "flat-k-leaf": {
+        "support_status": "recognized",
+        "route": "flat-k-support-route-needed",
+        "reason": "wide flat PET family recognized; no dedicated k-support scan yet",
+    },
+    "branchy-shape": {
+        "support_status": "recognized",
+        "route": "branch-route-needed",
+        "reason": "branching PET family recognized; no dedicated branch scan yet",
+    },
+    "mixed-depth": {
+        "support_status": "recognized",
+        "route": "mixed-depth-route-needed",
+        "reason": "mixed-depth PET family recognized; no dedicated route yet",
+    },
+    "unclassified-shape-family": {
+        "support_status": "unclassified",
+        "route": "unclassified-shape-family",
+        "reason": "no shape-family route is registered for this structure",
     },
 }
 
@@ -713,14 +806,8 @@ SHAPE_FAMILY_ROUTES: dict[str, dict[str, str]] = {
 def shape_family_route_record_for_signature(
     target_signature: str,
 ) -> dict[str, str]:
-    return SHAPE_FAMILY_ROUTES.get(
-        target_signature,
-        {
-            "support_status": "unclassified",
-            "route": "unclassified-shape-family",
-            "reason": "no explicit shape-family route is registered",
-        },
-    )
+    shape_family_class = shape_family_class_for_signature(target_signature)
+    return SHAPE_FAMILY_ROUTE_RECORDS[shape_family_class]
 
 
 def shape_family_route_for_signature(target_signature: str) -> str:
@@ -938,6 +1025,7 @@ def print_pet_grip_diagnostic(
         no_grip_hint = "unknown"
 
     target_signature = str(shape_signature_dict(n)["signature"])
+    shape_family_class = shape_family_class_for_signature(target_signature)
     shape_family_route = shape_family_route_for_signature(target_signature)
     shape_family_support_status = shape_family_support_status_for_signature(
         target_signature
@@ -959,6 +1047,7 @@ def print_pet_grip_diagnostic(
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
+    print(f"shape_family_class = {shape_family_class}")
     print(f"shape_family_support_status = {shape_family_support_status}")
     print(f"shape_family_route = {shape_family_route}")
     print(f"shape_family_route_reason = {shape_family_route_reason}")

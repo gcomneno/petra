@@ -320,12 +320,14 @@ def test_shape_family_route_registry_maps_known_shapes() -> None:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
+    assert module.shape_family_class_for_signature("[[]]") == "atomic-leaf"
     assert module.shape_family_route_for_signature("[[]]") == "atomic-leaf"
     assert (
         module.shape_family_support_status_for_signature("[[]]")
         == "supported"
     )
 
+    assert module.shape_family_class_for_signature("[[], []]") == "semiprime-flat"
     assert (
         module.shape_family_route_for_signature("[[], []]")
         == "same-shape-flat"
@@ -335,21 +337,40 @@ def test_shape_family_route_registry_maps_known_shapes() -> None:
         == "supported"
     )
 
+    assert module.shape_family_class_for_signature("[[], [[]]]") == "one-deep-tail"
     assert (
         module.shape_family_route_for_signature("[[], [[]]]")
         == "candidate-verification-residual-descent"
+    )
+
+    assert (
+        module.shape_family_class_for_signature("[[], [], [[]]]")
+        == "one-deep-tail"
     )
     assert (
         module.shape_family_route_for_signature("[[], [], [[]]]")
         == "candidate-verification-residual-descent"
     )
 
+    assert module.shape_family_class_for_signature("[[], [], []]") == "flat-k-leaf"
     assert (
         module.shape_family_route_for_signature("[[], [], []]")
-        == "unclassified-shape-family"
+        == "flat-k-support-route-needed"
     )
     assert (
         module.shape_family_support_status_for_signature("[[], [], []]")
-        == "unclassified"
+        == "recognized"
+    )
+
+    assert module.shape_family_class_for_signature("[[[]]]") == "narrow-deep-chain"
+    assert (
+        module.shape_family_route_for_signature("[[[]]]")
+        == "power-like-local-check"
+    )
+
+    assert module.shape_family_class_for_signature("[[], [[], []]]") == "branchy-shape"
+    assert (
+        module.shape_family_route_for_signature("[[], [[], []]]")
+        == "branch-route-needed"
     )
 

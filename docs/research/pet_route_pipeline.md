@@ -174,24 +174,31 @@ The current claim is intentionally limited:
 
 ## Shape-family support routing
 
-The handoff route now reports an explicit shape-family support route.
+The handoff route reports an explicit shape-family classification and support route.
 
-Initial registry:
+The classifier is structural. It does not try to enumerate every possible exact
+PET shape by hand.
+
+Current families:
 
     [[]]              -> atomic-leaf
-    [[], []]          -> same-shape-flat
-    [[], [[]]]        -> candidate-verification-residual-descent
-    [[], [], [[]]]    -> candidate-verification-residual-descent
-    other             -> unclassified-shape-family
+    [[], []]          -> semiprime-flat / same-shape-flat
+    [[], [], ...]     -> flat-k-leaf
+    [[], [[]]]        -> one-deep-tail
+    [[], [], [[]]]    -> one-deep-tail
+    [[[]]]            -> narrow-deep-chain
+    [[], [[], []]]    -> branchy-shape
+    mixed deep shapes -> mixed-depth
 
 These fields are reported:
 
+    shape_family_class
     shape_family_support_status
     shape_family_route
     shape_family_route_reason
 
-This registry does not factor by itself. It records which operational route is
-currently known for a PET shape family.
+The classifier does not factor by itself. It records which operational route is
+currently known, routed, recognized, or missing for a PET shape family.
 
 ## Atomic leaf route
 
