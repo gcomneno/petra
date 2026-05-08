@@ -1,0 +1,184 @@
+# PET route pipeline
+
+Status: completed, tested, documented.
+
+This document describes the current PET route pipeline as an operational research pipeline.
+
+PET does not directly claim to factor integers by itself. PET acts as a structural sensor:
+
+- it detects structural shape families;
+- it diagnoses whether PET candidates have arithmetic grip;
+- it selects an escalation route;
+- it hands off to classic verification or same-shape support scan;
+- it promotes verified factors only after classic arithmetic checks.
+
+## Pipeline
+
+```text
+N
+→ PET structural diagnosis
+→ PET grip diagnostic
+→ route escalation policy
+→ route suggestion
+→ route execution
+→ PET candidate verification / same-shape support scan
+→ factor promotion
+→ route_final_status
+→ PET route execution summary
+```
+
+## Core route states
+
+### PET grip status
+
+```text
+has-arithmetic-grip
+structural-match-no-grip
+no-structural-grip
+```
+
+### Route escalation policy
+
+```text
+has-arithmetic-grip       → verify-pet-candidates
+structural-match-no-grip → same-shape-scan
+no-structural-grip       → stop-no-pet-anchor
+```
+
+### Route execution status
+
+```text
+candidate-verification
+same-shape-scan-required
+same-shape-scan-running
+same-shape-scan-skipped
+stopped
+```
+
+### Final route status
+
+```text
+solved-by-pet-candidate
+partial-factorization-by-pet-candidate
+solved-by-same-shape-scan
+partial-factorization-by-same-shape-scan
+same-shape-scan-required
+classic-route-suggested-only
+stopped-no-pet-anchor
+unresolved-no-grip
+```
+
+## Canonical examples
+
+### 10403
+
+```text
+N = 10403
+factorization = 101 * 103
+pet_grip_status = structural-match-no-grip
+route_escalation_policy = same-shape-scan
+route_execution_status = same-shape-scan-running
+auto_factor_promotion_status = complete-factorization
+summary_route_final_status = solved-by-same-shape-scan
+```
+
+Interpretation:
+
+PET detects the semiprime-like shape family but has no direct arithmetic grip. The same-shape support scan finds repeated GCD hits, promotes the verified factors, and closes the route.
+
+### 24680
+
+```text
+N = 24680
+pet_grip_status = has-arithmetic-grip
+route_escalation_policy = verify-pet-candidates
+route_execution_status = candidate-verification
+candidate_verify_status = verified-factor
+summary_route_final_status = partial-factorization-by-pet-candidate
+```
+
+Interpretation:
+
+PET candidates have arithmetic grip. Candidate verification finds real divisors, but the candidate set does not close a complete factorization pair, so the route is partial.
+
+### 2147483647
+
+```text
+N = 2147483647
+pet_grip_status = structural-match-no-grip
+route_escalation_policy = same-shape-scan
+same_shape_scan_support = unsupported-shape
+route_execution_status = same-shape-scan-skipped
+summary_route_final_status = classic-route-suggested-only
+```
+
+Interpretation:
+
+PET detects structural compatibility, but the current same-shape scan supports only the semiprime-like shape. The scan is skipped explicitly and the route remains a classic suggestion.
+
+## Same-shape support scan
+
+The current same-shape scan supports:
+
+```text
+[[], []]
+```
+
+The scan is intentionally classic arithmetic work guided by PET shape selection. It reports:
+
+```text
+hit_count
+unique_factor_hit_count
+factor_N
+factor_N_hit_frequency
+factor_N_first_support
+factor_N_first_support_value
+best_factor
+```
+
+PET selects the structural family. Classic GCD verification confirms whether any support actually exposes a divisor.
+
+## Prime-limit control
+
+Automatic same-shape scans are controlled by:
+
+```text
+--same-shape-prime-limit
+```
+
+Default:
+
+```text
+200
+```
+
+This prevents the route from silently baking in an unchangeable scan bound.
+
+## Operational claim
+
+The PET route pipeline is complete as a tested text-output pipeline:
+
+```text
+PET route pipeline: completed, tested, documented.
+```
+
+The current claim is intentionally limited:
+
+- PET is a structural routing and diagnostic layer;
+- factor claims are accepted only after classic arithmetic verification;
+- unsupported shapes are reported explicitly;
+- final route status is always surfaced in the route execution summary.
+
+## Non-goals for this milestone
+
+The following are future optional features, not required for this completed milestone:
+
+```text
+JSON output
+adaptive prime-limit
+support entropy
+support clustering
+large benchmark matrix
+advanced scan pruning
+full mathematical equivalence theorem
+```

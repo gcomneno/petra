@@ -37,6 +37,14 @@ Look in:
 
 - `archive/`
 
+## Operational PET route pipeline
+
+The current PET-to-classic routing pipeline is documented in:
+
+- `pet_route_pipeline.md`
+
+It describes the completed text-output pipeline: structural diagnosis, grip diagnostic, route escalation policy, route execution, factor promotion, final status, and canonical examples.
+
 ## PET-METICA reading map
 
 PET-METICA material is intentionally split by stability level.
