@@ -201,6 +201,31 @@ The classifier does not factor by itself. It records which operational route is
 currently known, routed, recognized, or missing for a PET shape family.
 
 
+
+## Branchy and mixed-depth support scan
+
+`branchy-shape` and `mixed-depth` families are recognized structurally.
+
+When they have arithmetic grip, the route remains:
+
+    verify-pet-candidates
+
+When they have structural match but no arithmetic grip, the route is:
+
+    shape-family-support-scan
+
+The scan is bounded:
+
+    --shape-family-support-limit
+    --shape-family-max-supports
+    --shape-family-max-factor-lines
+
+The scan reports verified factor hits, but factor selection is deferred:
+
+    factor_selection_policy = deferred-to-residual-descent
+
+Anchor selection remains PET-style through residual descent.
+
 ## Flat-k support scan
 
 `flat-k-leaf` families are recognized structurally.

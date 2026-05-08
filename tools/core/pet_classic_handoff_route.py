@@ -843,6 +843,12 @@ def route_escalation_policy_for_shape(
     ):
         return "flat-k-support-scan"
 
+    if (
+        shape_family_class in {"branchy-shape", "mixed-depth"}
+        and grip_status == "structural-match-no-grip"
+    ):
+        return "shape-family-support-scan"
+
     return route_escalation_policy_for_grip(grip_status)
 
 def same_shape_factor_hits_from_output(output: str) -> list[int]:
@@ -1026,6 +1032,39 @@ def print_flat_k_factor_candidates(
 
     return route_final_status
 
+
+
+def print_shape_family_factor_candidates(
+    *,
+    n: int,
+    factors: list[int],
+) -> str:
+    promoted: list[tuple[int, int]] = []
+
+    for factor in sorted(set(factors)):
+        if 1 < factor < n and n % factor == 0:
+            promoted.append((factor, n // factor))
+
+    if not promoted:
+        route_final_status = "unresolved-shape-family-scan"
+        print("auto_shape_family_factor_promotion_status = no-factor-promoted")
+        print("verified_factorization = -")
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
+
+    route_final_status = "partial-factorization-by-shape-family-scan"
+    print("auto_shape_family_factor_promotion_status = factors-promoted")
+    print(f"shape_family_promoted_factor_count = {len(promoted)}")
+
+    for index, (factor, cofactor) in enumerate(promoted, start=1):
+        print(f"promoted_factor_{index} = {factor}")
+        print(f"promoted_cofactor_{index} = {cofactor}")
+
+    print("verified_factorization = -")
+    print(f"route_final_status = {route_final_status}")
+
+    return route_final_status
+
 def print_pet_grip_diagnostic(
     *,
     n: int,
@@ -1036,6 +1075,10 @@ def print_pet_grip_diagnostic(
     flat_k_prime_limit: int = 50,
     flat_k_max_supports: int = 5000,
     flat_k_max_factor_lines: int = 25,
+    auto_shape_family_scan: bool = False,
+    shape_family_support_limit: int = 10000,
+    shape_family_max_supports: int = 5000,
+    shape_family_max_factor_lines: int = 25,
 ) -> None:
     arithmetic_grip_count = 0
     structural_match_count = 0
@@ -1156,6 +1199,70 @@ def print_pet_grip_diagnostic(
         print(f"route_execution_status = {route_execution_status}")
         print(f"route_execution_reason = {route_execution_reason}")
         print(f"route_final_status = {route_final_status}")
+
+    if route_escalation_policy == "shape-family-support-scan":
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = shape-family-support-scan")
+        print("shape_family_scan_support = supported")
+        print(
+            "suggested_shape_family_support_scan_command = "
+            f"{sys.executable} tools/core/pet_shape_family_support_scan.py "
+            f"{n} --shape '{target_signature}' "
+            f"--support-limit {shape_family_support_limit} "
+            f"--max-supports {shape_family_max_supports} "
+            f"--max-factor-lines {shape_family_max_factor_lines}"
+        )
+
+        if not auto_shape_family_scan:
+            route_execution_status = "shape-family-scan-required"
+            route_execution_reason = "auto-shape-family-scan-disabled"
+            route_final_status = "shape-family-scan-required"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
+            print(f"route_final_status = {route_final_status}")
+
+        if auto_shape_family_scan:
+            route_execution_status = "shape-family-scan-running"
+            route_execution_reason = (
+                "supported-shape-family-and-auto-scan-enabled"
+            )
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
+            print("auto_shape_family_scan_status = running")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/core/pet_shape_family_support_scan.py",
+                    str(n),
+                    "--shape",
+                    target_signature,
+                    "--support-limit",
+                    str(shape_family_support_limit),
+                    "--max-supports",
+                    str(shape_family_max_supports),
+                    "--max-factor-lines",
+                    str(shape_family_max_factor_lines),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            print("auto_shape_family_scan_output_start")
+
+            for line in result.stdout.strip().splitlines():
+                print(line)
+
+            print("auto_shape_family_scan_output_end")
+
+            factor_hits = same_shape_factor_hits_from_output(result.stdout)
+            route_final_status = print_shape_family_factor_candidates(
+                n=n,
+                factors=factor_hits,
+            )
 
     if route_escalation_policy == "flat-k-support-scan":
         print("route_suggestion_status = available")
@@ -1434,6 +1541,29 @@ def main() -> int:
         help="Maximum factor lines printed by automatic flat-k support scans.",
     )
     parser.add_argument(
+        "--auto-shape-family-scan",
+        action="store_true",
+        help="Run automatic structural shape-family support scan.",
+    )
+    parser.add_argument(
+        "--shape-family-support-limit",
+        type=int,
+        default=10000,
+        help="Support value limit for automatic shape-family scans.",
+    )
+    parser.add_argument(
+        "--shape-family-max-supports",
+        type=int,
+        default=5000,
+        help="Maximum matching supports for automatic shape-family scans.",
+    )
+    parser.add_argument(
+        "--shape-family-max-factor-lines",
+        type=int,
+        default=25,
+        help="Maximum factor lines printed by automatic shape-family scans.",
+    )
+    parser.add_argument(
         "--same-shape-prime-limit",
         type=int,
         default=200,
@@ -1646,6 +1776,10 @@ def main() -> int:
         flat_k_prime_limit=getattr(args, "flat_k_prime_limit", 50),
         flat_k_max_supports=getattr(args, "flat_k_max_supports", 5000),
         flat_k_max_factor_lines=getattr(args, "flat_k_max_factor_lines", 25),
+        auto_shape_family_scan=getattr(args, "auto_shape_family_scan", False),
+        shape_family_support_limit=getattr(args, "shape_family_support_limit", 10000),
+        shape_family_max_supports=getattr(args, "shape_family_max_supports", 5000),
+        shape_family_max_factor_lines=getattr(args, "shape_family_max_factor_lines", 25),
     )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")

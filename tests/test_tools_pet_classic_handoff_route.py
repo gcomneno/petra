@@ -419,3 +419,40 @@ def test_classic_handoff_route_runs_auto_flat_k_scan_for_no_grip_flat_k() -> Non
     assert "route_final_status = partial-factorization-by-flat-k-scan" in output
     assert "summary_route_final_status = partial-factorization-by-flat-k-scan" in output
 
+
+def test_route_policy_supports_branchy_and_mixed_depth_scans() -> None:
+    module_path = Path("tools/pet_classic_handoff_route.py")
+    spec = importlib.util.spec_from_file_location(
+        "pet_classic_handoff_route",
+        module_path,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert (
+        module.route_escalation_policy_for_shape(
+            grip_status="structural-match-no-grip",
+            target_signature="[[], [[], []]]",
+        )
+        == "shape-family-support-scan"
+    )
+
+    assert (
+        module.route_escalation_policy_for_shape(
+            grip_status="structural-match-no-grip",
+            target_signature="[[[]], [[]]]",
+        )
+        == "shape-family-support-scan"
+    )
+
+    assert (
+        module.route_escalation_policy_for_shape(
+            grip_status="has-arithmetic-grip",
+            target_signature="[[], [[], []]]",
+        )
+        == "verify-pet-candidates"
+    )
+

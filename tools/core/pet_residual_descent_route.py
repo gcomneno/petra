@@ -74,6 +74,41 @@ def residual_shape_rank(raw_signature: str) -> tuple[int, int, int]:
     )
 
 
+
+
+def verified_factorization_terms(raw: str) -> list[int]:
+    if raw in {"", "-", "none", "unknown"}:
+        return []
+
+    terms: list[int] = []
+
+    for part in raw.split("*"):
+        part = part.strip()
+
+        if not part:
+            return []
+
+        try:
+            value = int(part)
+        except ValueError:
+            return []
+
+        if value < 2:
+            return []
+
+        terms.append(value)
+
+    return terms
+
+
+def verified_factorization_product(terms: list[int]) -> int:
+    product = 1
+
+    for term in terms:
+        product *= term
+
+    return product
+
 def verified_anchor_factors(
     *,
     n: int,
@@ -110,6 +145,10 @@ def run_handoff(
     flat_k_prime_limit: int,
     flat_k_max_supports: int,
     flat_k_max_factor_lines: int,
+    auto_shape_family_scan: bool,
+    shape_family_support_limit: int,
+    shape_family_max_supports: int,
+    shape_family_max_factor_lines: int,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         sys.executable,
@@ -126,6 +165,9 @@ def run_handoff(
     if auto_flat_k_scan:
         command.append("--auto-flat-k-scan")
 
+    if auto_shape_family_scan:
+        command.append("--auto-shape-family-scan")
+
     command.extend(
         [
             "--same-shape-prime-limit",
@@ -136,6 +178,12 @@ def run_handoff(
             str(flat_k_max_supports),
             "--flat-k-max-factor-lines",
             str(flat_k_max_factor_lines),
+            "--shape-family-support-limit",
+            str(shape_family_support_limit),
+            "--shape-family-max-supports",
+            str(shape_family_max_supports),
+            "--shape-family-max-factor-lines",
+            str(shape_family_max_factor_lines),
         ]
     )
 
@@ -159,6 +207,10 @@ def select_pet_residual_anchor(
     flat_k_prime_limit: int,
     flat_k_max_supports: int,
     flat_k_max_factor_lines: int,
+    auto_shape_family_scan: bool,
+    shape_family_support_limit: int,
+    shape_family_max_supports: int,
+    shape_family_max_factor_lines: int,
 ) -> int:
     ranked: list[tuple[tuple[int, int, int, int], int]] = []
 
@@ -174,6 +226,10 @@ def select_pet_residual_anchor(
             flat_k_prime_limit=flat_k_prime_limit,
             flat_k_max_supports=flat_k_max_supports,
             flat_k_max_factor_lines=flat_k_max_factor_lines,
+            auto_shape_family_scan=auto_shape_family_scan,
+            shape_family_support_limit=shape_family_support_limit,
+            shape_family_max_supports=shape_family_max_supports,
+            shape_family_max_factor_lines=shape_family_max_factor_lines,
         )
 
         if result.returncode != 0:
@@ -256,6 +312,10 @@ def residual_descent(
     flat_k_prime_limit: int,
     flat_k_max_supports: int,
     flat_k_max_factor_lines: int,
+    auto_shape_family_scan: bool,
+    shape_family_support_limit: int,
+    shape_family_max_supports: int,
+    shape_family_max_factor_lines: int,
     show_handoff_output: bool,
 ) -> int:
     current = n
@@ -273,6 +333,10 @@ def residual_descent(
     print(f"flat_k_prime_limit = {flat_k_prime_limit}")
     print(f"flat_k_max_supports = {flat_k_max_supports}")
     print(f"flat_k_max_factor_lines = {flat_k_max_factor_lines}")
+    print(f"auto_shape_family_scan = {'yes' if auto_shape_family_scan else 'no'}")
+    print(f"shape_family_support_limit = {shape_family_support_limit}")
+    print(f"shape_family_max_supports = {shape_family_max_supports}")
+    print(f"shape_family_max_factor_lines = {shape_family_max_factor_lines}")
     print()
 
     for depth in range(max_depth + 1):
@@ -288,6 +352,10 @@ def residual_descent(
             flat_k_prime_limit=flat_k_prime_limit,
             flat_k_max_supports=flat_k_max_supports,
             flat_k_max_factor_lines=flat_k_max_factor_lines,
+            auto_shape_family_scan=auto_shape_family_scan,
+            shape_family_support_limit=shape_family_support_limit,
+            shape_family_max_supports=shape_family_max_supports,
+            shape_family_max_factor_lines=shape_family_max_factor_lines,
         )
 
         if result.returncode != 0:
@@ -312,8 +380,23 @@ def residual_descent(
 
         if route_final_status.startswith("solved-by-"):
             verified_factorization = latest(values, "verified_factorization")
+            verified_terms = verified_factorization_terms(verified_factorization)
+
             print(f"depth_{depth}_status = solved")
             print(f"depth_{depth}_verified_factorization = {verified_factorization}")
+
+            if (
+                verified_terms
+                and verified_factorization_product(verified_terms) == current
+            ):
+                chain.extend(verified_terms)
+                current = 1
+                print(f"depth_{depth}_anchor_factor = -")
+                print(f"depth_{depth}_residual = 1")
+            else:
+                print(f"depth_{depth}_anchor_factor = -")
+                print(f"depth_{depth}_residual = -")
+
             final_status = "complete"
             break
 
@@ -347,6 +430,10 @@ def residual_descent(
             flat_k_prime_limit=flat_k_prime_limit,
             flat_k_max_supports=flat_k_max_supports,
             flat_k_max_factor_lines=flat_k_max_factor_lines,
+            auto_shape_family_scan=auto_shape_family_scan,
+            shape_family_support_limit=shape_family_support_limit,
+            shape_family_max_supports=shape_family_max_supports,
+            shape_family_max_factor_lines=shape_family_max_factor_lines,
         )
         residual = current // anchor
 
@@ -403,6 +490,10 @@ def main() -> int:
     parser.add_argument("--flat-k-prime-limit", type=int, default=50)
     parser.add_argument("--flat-k-max-supports", type=int, default=5000)
     parser.add_argument("--flat-k-max-factor-lines", type=int, default=25)
+    parser.add_argument("--auto-shape-family-scan", action="store_true")
+    parser.add_argument("--shape-family-support-limit", type=int, default=10000)
+    parser.add_argument("--shape-family-max-supports", type=int, default=5000)
+    parser.add_argument("--shape-family-max-factor-lines", type=int, default=25)
     parser.add_argument("--show-handoff-output", action="store_true")
     parser.add_argument("--no-include-monster-route", action="store_true")
     parser.add_argument("--no-auto-same-shape-scan", action="store_true")
@@ -426,6 +517,15 @@ def main() -> int:
     if args.flat_k_max_factor_lines < 0:
         raise SystemExit("--flat-k-max-factor-lines must be >= 0")
 
+    if args.shape_family_support_limit < 2:
+        raise SystemExit("--shape-family-support-limit must be >= 2")
+
+    if args.shape_family_max_supports < 1:
+        raise SystemExit("--shape-family-max-supports must be >= 1")
+
+    if args.shape_family_max_factor_lines < 0:
+        raise SystemExit("--shape-family-max-factor-lines must be >= 0")
+
     return residual_descent(
         n=args.n,
         max_depth=args.max_depth,
@@ -436,6 +536,10 @@ def main() -> int:
         flat_k_prime_limit=args.flat_k_prime_limit,
         flat_k_max_supports=args.flat_k_max_supports,
         flat_k_max_factor_lines=args.flat_k_max_factor_lines,
+        auto_shape_family_scan=args.auto_shape_family_scan,
+        shape_family_support_limit=args.shape_family_support_limit,
+        shape_family_max_supports=args.shape_family_max_supports,
+        shape_family_max_factor_lines=args.shape_family_max_factor_lines,
         show_handoff_output=args.show_handoff_output,
     )
 
