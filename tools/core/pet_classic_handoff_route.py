@@ -829,11 +829,19 @@ def route_escalation_policy_for_shape(
     grip_status: str,
     target_signature: str,
 ) -> str:
+    shape_family_class = shape_family_class_for_signature(target_signature)
+
     if (
-        target_signature == "[[]]"
+        shape_family_class == "atomic-leaf"
         and grip_status == "structural-match-no-grip"
     ):
         return "leaf-primality-route"
+
+    if (
+        shape_family_class == "flat-k-leaf"
+        and grip_status == "structural-match-no-grip"
+    ):
+        return "flat-k-support-scan"
 
     return route_escalation_policy_for_grip(grip_status)
 
@@ -985,12 +993,49 @@ def print_pet_candidate_factor_verification(
     return route_final_status
 
 
+
+
+def print_flat_k_factor_candidates(
+    *,
+    n: int,
+    factors: list[int],
+) -> str:
+    promoted: list[tuple[int, int]] = []
+
+    for factor in sorted(set(factors)):
+        if 1 < factor < n and n % factor == 0:
+            promoted.append((factor, n // factor))
+
+    if not promoted:
+        route_final_status = "unresolved-flat-k-scan"
+        print("auto_flat_k_factor_promotion_status = no-factor-promoted")
+        print("verified_factorization = -")
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
+
+    route_final_status = "partial-factorization-by-flat-k-scan"
+    print("auto_flat_k_factor_promotion_status = factors-promoted")
+    print(f"flat_k_promoted_factor_count = {len(promoted)}")
+
+    for index, (factor, cofactor) in enumerate(promoted, start=1):
+        print(f"promoted_factor_{index} = {factor}")
+        print(f"promoted_cofactor_{index} = {cofactor}")
+
+    print("verified_factorization = -")
+    print(f"route_final_status = {route_final_status}")
+
+    return route_final_status
+
 def print_pet_grip_diagnostic(
     *,
     n: int,
     candidates: list[dict[str, str]],
     auto_same_shape_scan: bool = False,
     same_shape_prime_limit: int = 200,
+    auto_flat_k_scan: bool = False,
+    flat_k_prime_limit: int = 50,
+    flat_k_max_supports: int = 5000,
+    flat_k_max_factor_lines: int = 25,
 ) -> None:
     arithmetic_grip_count = 0
     structural_match_count = 0
@@ -1111,6 +1156,68 @@ def print_pet_grip_diagnostic(
         print(f"route_execution_status = {route_execution_status}")
         print(f"route_execution_reason = {route_execution_reason}")
         print(f"route_final_status = {route_final_status}")
+
+    if route_escalation_policy == "flat-k-support-scan":
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = flat-k-support-scan")
+        print("flat_k_scan_support = supported")
+        print(
+            "suggested_flat_k_support_scan_command = "
+            f"{sys.executable} tools/core/pet_flat_k_support_scan.py "
+            f"{n} --shape '{target_signature}' "
+            f"--prime-limit {flat_k_prime_limit} "
+            f"--max-supports {flat_k_max_supports} "
+            f"--max-factor-lines {flat_k_max_factor_lines}"
+        )
+
+        if not auto_flat_k_scan:
+            route_execution_status = "flat-k-scan-required"
+            route_execution_reason = "auto-flat-k-scan-disabled"
+            route_final_status = "flat-k-scan-required"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
+            print(f"route_final_status = {route_final_status}")
+
+        if auto_flat_k_scan:
+            route_execution_status = "flat-k-scan-running"
+            route_execution_reason = "flat-k-shape-and-auto-scan-enabled"
+
+            print(f"route_execution_status = {route_execution_status}")
+            print(f"route_execution_reason = {route_execution_reason}")
+            print("auto_flat_k_scan_status = running")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/core/pet_flat_k_support_scan.py",
+                    str(n),
+                    "--shape",
+                    target_signature,
+                    "--prime-limit",
+                    str(flat_k_prime_limit),
+                    "--max-supports",
+                    str(flat_k_max_supports),
+                    "--max-factor-lines",
+                    str(flat_k_max_factor_lines),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            print("auto_flat_k_scan_output_start")
+
+            for line in result.stdout.strip().splitlines():
+                print(line)
+
+            print("auto_flat_k_scan_output_end")
+
+            factor_hits = same_shape_factor_hits_from_output(result.stdout)
+            route_final_status = print_flat_k_factor_candidates(
+                n=n,
+                factors=factor_hits,
+            )
 
     if route_escalation_policy == "same-shape-scan":
         print("route_suggestion_status = available")
@@ -1302,6 +1409,29 @@ def main() -> int:
         "--auto-same-shape-scan",
         action="store_true",
         help="Run automatic same-shape support scan for PET no-grip cases.",
+    )
+    parser.add_argument(
+        "--auto-flat-k-scan",
+        action="store_true",
+        help="Run automatic flat-k support scan for PET flat-k no-grip cases.",
+    )
+    parser.add_argument(
+        "--flat-k-prime-limit",
+        type=int,
+        default=50,
+        help="Prime limit for automatic flat-k support scans.",
+    )
+    parser.add_argument(
+        "--flat-k-max-supports",
+        type=int,
+        default=5000,
+        help="Maximum supports for automatic flat-k support scans.",
+    )
+    parser.add_argument(
+        "--flat-k-max-factor-lines",
+        type=int,
+        default=25,
+        help="Maximum factor lines printed by automatic flat-k support scans.",
     )
     parser.add_argument(
         "--same-shape-prime-limit",
@@ -1512,6 +1642,10 @@ def main() -> int:
         candidates=candidates,
         auto_same_shape_scan=args.auto_same_shape_scan,
         same_shape_prime_limit=getattr(args, "same_shape_prime_limit", 200),
+        auto_flat_k_scan=getattr(args, "auto_flat_k_scan", False),
+        flat_k_prime_limit=getattr(args, "flat_k_prime_limit", 50),
+        flat_k_max_supports=getattr(args, "flat_k_max_supports", 5000),
+        flat_k_max_factor_lines=getattr(args, "flat_k_max_factor_lines", 25),
     )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")

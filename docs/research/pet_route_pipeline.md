@@ -200,6 +200,32 @@ These fields are reported:
 The classifier does not factor by itself. It records which operational route is
 currently known, routed, recognized, or missing for a PET shape family.
 
+
+## Flat-k support scan
+
+`flat-k-leaf` families are recognized structurally.
+
+When a flat-k family has arithmetic grip, the normal route remains:
+
+    verify-pet-candidates
+
+When a flat-k family has structural match but no arithmetic grip, the route is:
+
+    flat-k-support-scan
+
+The flat-k support scan is bounded:
+
+    --flat-k-prime-limit
+    --flat-k-max-supports
+    --flat-k-max-factor-lines
+
+The scan reports verified factor hits, but factor selection is deferred:
+
+    factor_selection_policy = deferred-to-residual-descent
+
+This prevents the scan from selecting anchors by numeric order. Anchor selection
+remains PET-style through residual descent.
+
 ## Atomic leaf route
 
 The atomic PET shape is:

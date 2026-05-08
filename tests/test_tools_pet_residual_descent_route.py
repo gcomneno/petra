@@ -72,3 +72,27 @@ def test_residual_descent_rejects_negative_depth() -> None:
 
     assert result.returncode != 0
     assert "--max-depth must be >= 0" in result.stderr
+
+
+def test_residual_descent_can_use_auto_flat_k_scan() -> None:
+    output = run_residual_descent(
+        1001,
+        "--max-depth",
+        "4",
+        "--auto-flat-k-scan",
+        "--flat-k-prime-limit",
+        "20",
+        "--flat-k-max-supports",
+        "5000",
+        "--flat-k-max-factor-lines",
+        "10",
+    )
+
+    assert "depth_0_input = 1001" in output
+    assert "depth_0_route_escalation_policy = flat-k-support-scan" in output
+    assert "depth_0_route_execution_status = flat-k-scan-running" in output
+    assert "depth_0_route_final_status = partial-factorization-by-flat-k-scan" in output
+    assert "depth_0_anchor_candidate_" in output
+    assert "depth_0_selected_anchor_reason = best-pet-residual-shape-descent" in output
+    assert "residual_reduction_chain =" in output
+    assert "terminal_residual =" in output

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
 import subprocess
 import sys
 
@@ -373,4 +375,47 @@ def test_shape_family_route_registry_maps_known_shapes() -> None:
         module.shape_family_route_for_signature("[[], [[], []]]")
         == "branch-route-needed"
     )
+
+
+def test_classic_handoff_route_reports_flat_k_scan_required_for_no_grip_flat_k() -> None:
+    output = run_tool_with_args(
+        1001,
+        "--include-monster-route",
+        "--auto-same-shape-scan",
+    )
+
+    assert "target_signature = [[], [], []]" in output
+    assert "shape_family_class = flat-k-leaf" in output
+    assert "pet_grip_status = structural-match-no-grip" in output
+    assert "route_escalation_policy = flat-k-support-scan" in output
+    assert "flat_k_scan_support = supported" in output
+    assert "route_execution_status = flat-k-scan-required" in output
+    assert "route_final_status = flat-k-scan-required" in output
+
+
+def test_classic_handoff_route_runs_auto_flat_k_scan_for_no_grip_flat_k() -> None:
+    output = run_tool_with_args(
+        1001,
+        "--include-monster-route",
+        "--auto-flat-k-scan",
+        "--flat-k-prime-limit",
+        "20",
+        "--flat-k-max-supports",
+        "5000",
+        "--flat-k-max-factor-lines",
+        "10",
+    )
+
+    assert "target_signature = [[], [], []]" in output
+    assert "shape_family_class = flat-k-leaf" in output
+    assert "route_escalation_policy = flat-k-support-scan" in output
+    assert "route_execution_status = flat-k-scan-running" in output
+    assert "auto_flat_k_scan_status = running" in output
+    assert "unique_factor_hit_count = 6" in output
+    assert "factor_selection_policy = deferred-to-residual-descent" in output
+    assert "auto_flat_k_factor_promotion_status = factors-promoted" in output
+    assert "flat_k_promoted_factor_count = 6" in output
+    assert "promoted_factor_1 = 7" in output
+    assert "route_final_status = partial-factorization-by-flat-k-scan" in output
+    assert "summary_route_final_status = partial-factorization-by-flat-k-scan" in output
 
