@@ -849,6 +849,12 @@ def route_escalation_policy_for_shape(
     ):
         return "shape-family-support-scan"
 
+    if (
+        shape_family_class == "narrow-deep-chain"
+        and grip_status == "structural-match-no-grip"
+    ):
+        return "prime-power-local-check"
+
     return route_escalation_policy_for_grip(grip_status)
 
 def same_shape_factor_hits_from_output(output: str) -> list[int]:
@@ -1034,6 +1040,76 @@ def print_flat_k_factor_candidates(
 
 
 
+
+
+def classic_trial_factorization(
+    value: int,
+    *,
+    trial_limit: int,
+) -> list[int] | None:
+    if value < 2:
+        return None
+
+    remaining = value
+    factors: list[int] = []
+    divisor = 2
+
+    while divisor * divisor <= remaining and divisor <= trial_limit:
+        while remaining % divisor == 0:
+            factors.append(divisor)
+            remaining //= divisor
+
+        divisor += 1 if divisor == 2 else 2
+
+    if remaining > 1:
+        factors.append(remaining)
+
+    product = 1
+    for factor in factors:
+        product *= factor
+
+    if product != value:
+        return None
+
+    return factors
+
+
+def print_prime_power_local_check(
+    *,
+    n: int,
+    trial_limit: int,
+) -> str:
+    factors = classic_trial_factorization(n, trial_limit=trial_limit)
+
+    if not factors:
+        route_final_status = "prime-power-local-check-unresolved"
+        print("prime_power_local_check_status = unresolved")
+        print("verified_factorization = -")
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
+
+    unique_factors = sorted(set(factors))
+
+    if len(unique_factors) != 1 or len(factors) < 2:
+        route_final_status = "prime-power-local-check-unresolved"
+        print("prime_power_local_check_status = not-prime-power")
+        print("verified_factorization = -")
+        print(f"route_final_status = {route_final_status}")
+        return route_final_status
+
+    factor = unique_factors[0]
+    exponent = len(factors)
+    verified_factorization = " * ".join(str(item) for item in factors)
+    route_final_status = "solved-by-prime-power-local-check"
+
+    print("prime_power_local_check_status = verified-prime-power")
+    print(f"prime_power_base = {factor}")
+    print(f"prime_power_exponent = {exponent}")
+    print(f"verified_factorization = {verified_factorization}")
+    print(f"route_final_status = {route_final_status}")
+
+    return route_final_status
+
 def print_shape_family_factor_candidates(
     *,
     n: int,
@@ -1079,6 +1155,7 @@ def print_pet_grip_diagnostic(
     shape_family_support_limit: int = 10000,
     shape_family_max_supports: int = 5000,
     shape_family_max_factor_lines: int = 25,
+    prime_power_trial_limit: int = 10000,
 ) -> None:
     arithmetic_grip_count = 0
     structural_match_count = 0
@@ -1199,6 +1276,22 @@ def print_pet_grip_diagnostic(
         print(f"route_execution_status = {route_execution_status}")
         print(f"route_execution_reason = {route_execution_reason}")
         print(f"route_final_status = {route_final_status}")
+
+    if route_escalation_policy == "prime-power-local-check":
+        print("route_suggestion_status = available")
+        print("route_suggestion_kind = prime-power-local-check")
+        print(f"prime_power_trial_limit = {prime_power_trial_limit}")
+
+        route_execution_status = "prime-power-local-check-running"
+        route_execution_reason = "narrow-deep-chain-and-no-arithmetic-grip"
+
+        print(f"route_execution_status = {route_execution_status}")
+        print(f"route_execution_reason = {route_execution_reason}")
+
+        route_final_status = print_prime_power_local_check(
+            n=n,
+            trial_limit=prime_power_trial_limit,
+        )
 
     if route_escalation_policy == "shape-family-support-scan":
         print("route_suggestion_status = available")
@@ -1564,6 +1657,12 @@ def main() -> int:
         help="Maximum factor lines printed by automatic shape-family scans.",
     )
     parser.add_argument(
+        "--prime-power-trial-limit",
+        type=int,
+        default=10000,
+        help="Classic trial limit for prime-power local checks.",
+    )
+    parser.add_argument(
         "--same-shape-prime-limit",
         type=int,
         default=200,
@@ -1780,6 +1879,7 @@ def main() -> int:
         shape_family_support_limit=getattr(args, "shape_family_support_limit", 10000),
         shape_family_max_supports=getattr(args, "shape_family_max_supports", 5000),
         shape_family_max_factor_lines=getattr(args, "shape_family_max_factor_lines", 25),
+        prime_power_trial_limit=getattr(args, "prime_power_trial_limit", 10000),
     )
     if monster_route.get("monster_route_status") == "available":
         monster_class = monster_route.get("monster_class", "unknown")

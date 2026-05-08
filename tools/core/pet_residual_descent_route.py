@@ -76,6 +76,28 @@ def residual_shape_rank(raw_signature: str) -> tuple[int, int, int]:
 
 
 
+
+
+def is_prime_classic(value: int) -> bool:
+    if value < 2:
+        return False
+
+    if value == 2:
+        return True
+
+    if value % 2 == 0:
+        return False
+
+    divisor = 3
+
+    while divisor * divisor <= value:
+        if value % divisor == 0:
+            return False
+
+        divisor += 2
+
+    return True
+
 def verified_factorization_terms(raw: str) -> list[int]:
     if raw in {"", "-", "none", "unknown"}:
         return []
@@ -149,6 +171,7 @@ def run_handoff(
     shape_family_support_limit: int,
     shape_family_max_supports: int,
     shape_family_max_factor_lines: int,
+    prime_power_trial_limit: int,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         sys.executable,
@@ -184,6 +207,8 @@ def run_handoff(
             str(shape_family_max_supports),
             "--shape-family-max-factor-lines",
             str(shape_family_max_factor_lines),
+            "--prime-power-trial-limit",
+            str(prime_power_trial_limit),
         ]
     )
 
@@ -211,6 +236,7 @@ def select_pet_residual_anchor(
     shape_family_support_limit: int,
     shape_family_max_supports: int,
     shape_family_max_factor_lines: int,
+    prime_power_trial_limit: int,
 ) -> int:
     ranked: list[tuple[tuple[int, int, int, int], int]] = []
 
@@ -230,6 +256,7 @@ def select_pet_residual_anchor(
             shape_family_support_limit=shape_family_support_limit,
             shape_family_max_supports=shape_family_max_supports,
             shape_family_max_factor_lines=shape_family_max_factor_lines,
+            prime_power_trial_limit=prime_power_trial_limit,
         )
 
         if result.returncode != 0:
@@ -316,6 +343,7 @@ def residual_descent(
     shape_family_support_limit: int,
     shape_family_max_supports: int,
     shape_family_max_factor_lines: int,
+    prime_power_trial_limit: int,
     show_handoff_output: bool,
 ) -> int:
     current = n
@@ -337,6 +365,7 @@ def residual_descent(
     print(f"shape_family_support_limit = {shape_family_support_limit}")
     print(f"shape_family_max_supports = {shape_family_max_supports}")
     print(f"shape_family_max_factor_lines = {shape_family_max_factor_lines}")
+    print(f"prime_power_trial_limit = {prime_power_trial_limit}")
     print()
 
     for depth in range(max_depth + 1):
@@ -356,6 +385,7 @@ def residual_descent(
             shape_family_support_limit=shape_family_support_limit,
             shape_family_max_supports=shape_family_max_supports,
             shape_family_max_factor_lines=shape_family_max_factor_lines,
+            prime_power_trial_limit=prime_power_trial_limit,
         )
 
         if result.returncode != 0:
@@ -404,8 +434,14 @@ def residual_descent(
 
         if not anchors:
             if route_final_status == "stopped-at-atomic-leaf":
-                depth_status = "stopped-at-leaf"
-                final_status = "stopped-at-leaf"
+                if is_prime_classic(current):
+                    chain.append(current)
+                    current = 1
+                    depth_status = "complete-prime-leaf"
+                    final_status = "complete"
+                else:
+                    depth_status = "stopped-at-leaf"
+                    final_status = "stopped-at-leaf"
             elif route_final_status == "classic-route-suggested-only":
                 depth_status = "stopped-no-verified-anchor"
                 final_status = "stopped-at-classic-suggestion"
@@ -415,7 +451,7 @@ def residual_descent(
 
             print(f"depth_{depth}_status = {depth_status}")
             print(f"depth_{depth}_anchor_factor = -")
-            print(f"depth_{depth}_residual = -")
+            print(f"depth_{depth}_residual = {current if current == 1 else '-'}")
 
             break
 
@@ -434,6 +470,7 @@ def residual_descent(
             shape_family_support_limit=shape_family_support_limit,
             shape_family_max_supports=shape_family_max_supports,
             shape_family_max_factor_lines=shape_family_max_factor_lines,
+            prime_power_trial_limit=prime_power_trial_limit,
         )
         residual = current // anchor
 
@@ -494,6 +531,7 @@ def main() -> int:
     parser.add_argument("--shape-family-support-limit", type=int, default=10000)
     parser.add_argument("--shape-family-max-supports", type=int, default=5000)
     parser.add_argument("--shape-family-max-factor-lines", type=int, default=25)
+    parser.add_argument("--prime-power-trial-limit", type=int, default=10000)
     parser.add_argument("--show-handoff-output", action="store_true")
     parser.add_argument("--no-include-monster-route", action="store_true")
     parser.add_argument("--no-auto-same-shape-scan", action="store_true")
@@ -526,6 +564,9 @@ def main() -> int:
     if args.shape_family_max_factor_lines < 0:
         raise SystemExit("--shape-family-max-factor-lines must be >= 0")
 
+    if args.prime_power_trial_limit < 2:
+        raise SystemExit("--prime-power-trial-limit must be >= 2")
+
     return residual_descent(
         n=args.n,
         max_depth=args.max_depth,
@@ -540,6 +581,7 @@ def main() -> int:
         shape_family_support_limit=args.shape_family_support_limit,
         shape_family_max_supports=args.shape_family_max_supports,
         shape_family_max_factor_lines=args.shape_family_max_factor_lines,
+        prime_power_trial_limit=args.prime_power_trial_limit,
         show_handoff_output=args.show_handoff_output,
     )
 

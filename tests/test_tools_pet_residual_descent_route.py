@@ -47,13 +47,13 @@ def test_residual_descent_selects_anchor_by_pet_residual_shape() -> None:
     assert "depth_1_residual = 617" in output
 
     assert "depth_2_input = 617" in output
-    assert "depth_2_status = stopped-at-leaf" in output
+    assert "depth_2_status = complete-prime-leaf" in output
     assert "depth_2_anchor_factor = -" in output
-    assert "depth_2_residual = -" in output
+    assert "depth_2_residual = 1" in output
 
-    assert "residual_descent_status = stopped-at-leaf" in output
+    assert "residual_descent_status = complete" in output
     assert "residual_reduction_chain = 20 * 2 * 617" in output
-    assert "terminal_residual = 617" in output
+    assert "terminal_residual = 1" in output
     assert "terminal residual is not automatically prime" in output
 
 
