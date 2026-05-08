@@ -14,6 +14,20 @@ def run_tool(n: int) -> str:
     return result.stdout
 
 
+def run_tool_with_args(n: int, *args: str) -> str:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/pet_classic_handoff_route.py",
+            str(n),
+            *args,
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout
+
 def run_tool_with_proposal_file(n: int, proposal_file: str) -> str:
     result = subprocess.run(
         [
@@ -197,4 +211,23 @@ def test_classic_handoff_route_reports_decimal_rigid_border_fields_from_proposal
     assert "route_note = decimal rigid border detected; route-only benchmark may be expensive" in output
     assert "route_status = available" in output
     assert "route_kind = balanced-flat-border-lens-drop-classic-probe" in output
+
+
+def test_classic_handoff_route_promotes_auto_same_shape_factor_hits() -> None:
+    output = run_tool_with_args(
+        10403,
+        "--include-monster-route",
+        "--auto-same-shape-scan",
+    )
+
+    assert "pet_grip_status = structural-match-no-grip" in output
+    assert "auto_same_shape_scan_status = running" in output
+    assert "unique_factor_hit_count = 2" in output
+    assert "factor_1 = 101" in output
+    assert "factor_2 = 103" in output
+    assert "auto_factor_promotion_status = complete-factorization" in output
+    assert "promoted_factor_1 = 101" in output
+    assert "promoted_cofactor_1 = 103" in output
+    assert "verified_factorization = 101 * 103" in output
+    assert "route_final_status = solved-by-same-shape-scan" in output
 

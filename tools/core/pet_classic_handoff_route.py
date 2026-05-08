@@ -672,6 +672,78 @@ def print_candidates(
 
     print()
 
+
+def same_shape_factor_hits_from_output(output: str) -> list[int]:
+    factors: list[int] = []
+
+    for line in output.splitlines():
+        key, separator, raw_value = line.partition("=")
+
+        if separator == "":
+            continue
+
+        key = key.strip()
+        raw_value = raw_value.strip()
+
+        if not key.startswith("factor_"):
+            continue
+
+        suffix = key.removeprefix("factor_")
+
+        if not suffix.isdigit():
+            continue
+
+        try:
+            factors.append(int(raw_value))
+        except ValueError:
+            continue
+
+    return factors
+
+
+def print_same_shape_factor_promotion(
+    *,
+    n: int,
+    factors: list[int],
+) -> None:
+    promoted: list[tuple[int, int]] = []
+
+    for factor in sorted(set(factors)):
+        if 1 < factor < n and n % factor == 0:
+            promoted.append((factor, n // factor))
+
+    if not promoted:
+        print("auto_factor_promotion_status = no-factor-promoted")
+        print("route_final_status = unresolved-no-grip")
+        return
+
+    promoted_factors = {factor for factor, _cofactor in promoted}
+    complete_pair: tuple[int, int] | None = None
+
+    for factor, cofactor in promoted:
+        if factor * cofactor == n and cofactor in promoted_factors:
+            complete_pair = (factor, cofactor)
+            break
+
+    if complete_pair is None:
+        promotion_status = "partial-factorization"
+        final_status = "partial-factorization-by-same-shape-scan"
+        verified_factorization = "-"
+    else:
+        promotion_status = "complete-factorization"
+        final_status = "solved-by-same-shape-scan"
+        verified_factorization = f"{complete_pair[0]} * {complete_pair[1]}"
+
+    print(f"auto_factor_promotion_status = {promotion_status}")
+
+    for index, (factor, cofactor) in enumerate(promoted, start=1):
+        print(f"promoted_factor_{index} = {factor}")
+        print(f"promoted_cofactor_{index} = {cofactor}")
+
+    print(f"verified_factorization = {verified_factorization}")
+    print(f"route_final_status = {final_status}")
+
+
 def print_pet_grip_diagnostic(
     *,
     n: int,
@@ -753,6 +825,12 @@ def print_pet_grip_diagnostic(
                 print(line)
 
             print("auto_same_shape_scan_output_end")
+
+            factor_hits = same_shape_factor_hits_from_output(result.stdout)
+            print_same_shape_factor_promotion(
+                n=n,
+                factors=factor_hits,
+            )
 
 
     print()
