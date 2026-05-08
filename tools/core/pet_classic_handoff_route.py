@@ -715,6 +715,16 @@ def print_pet_grip_diagnostic(
     print(f"pet_best_candidate_gcd = {best_gcd}")
     print(f"pet_grip_status = {grip_status}")
     print(f"pet_no_grip_hint = {no_grip_hint}")
+
+    target_signature = str(shape_signature_dict(n)["signature"])
+
+    if grip_status == "structural-match-no-grip":
+        print(
+            "suggested_same_shape_support_scan_command = "
+            f"{sys.executable} tools/core/pet_same_shape_support_scan.py "
+            f"{n} --shape '{target_signature}' --prime-limit 200"
+        )
+
     print()
 
 
