@@ -35,6 +35,22 @@ def apply_inc(signature: list[object]) -> list[object]:
     return updated
 
 
+def apply_branch_at(
+    signature: list[object],
+    index: int,
+) -> list[object]:
+    updated = list(signature)
+
+    if not 0 <= index < len(updated):
+        return updated
+
+    if updated[index] != []:
+        return updated
+
+    updated[index] = [[], []]
+    return updated
+
+
 def simulate_transition_path(
     candidate_signature: list[object],
     *,
@@ -59,6 +75,20 @@ def simulate_transition_path(
         if current_width < target_width:
             current = apply_new(current)
             steps.append(f"NEW -> {current}")
+            continue
+
+        branched = False
+
+        for index, (current_item, target_item) in enumerate(
+            zip(current, target_signature)
+        ):
+            if current_item == [] and target_item == [[], []]:
+                current = apply_branch_at(current, index)
+                steps.append(f"BRANCH_AT({index}) -> {current}")
+                branched = True
+                break
+
+        if branched:
             continue
 
         if current_depth < target_depth:
@@ -480,6 +510,47 @@ def expand_candidates(
     return base_rows + derived_rows
 
 
+def transition_verified_for_candidate(
+    *,
+    target_n: int,
+    candidate_value: int,
+) -> bool:
+    target_signature = shape_signature_dict(target_n)["signature"]
+    candidate_signature = shape_signature_dict(candidate_value)["signature"]
+
+    _, verified = simulate_transition_path(
+        candidate_signature,
+        target_signature=target_signature,
+    )
+
+    return verified
+
+
+def rank_candidates_by_signature_transition(
+    candidates: list[dict[str, str]],
+    *,
+    target_n: int,
+) -> list[dict[str, str]]:
+    def key(candidate: dict[str, str]) -> tuple[int, int]:
+        try:
+            candidate_value = int(candidate["value"])
+        except ValueError:
+            return (1, 0)
+
+        verified = transition_verified_for_candidate(
+            target_n=target_n,
+            candidate_value=candidate_value,
+        )
+
+        return (
+            0 if verified else 1,
+            -int(candidate["value"]),
+        )
+
+    return sorted(candidates, key=key)
+
+
+
 def print_candidates(
     candidates: list[dict[str, str]],
     *,
@@ -776,6 +847,10 @@ def main() -> int:
             router_candidates,
             base_count=router_base_count,
         )
+        router_candidates = rank_candidates_by_signature_transition(
+            router_candidates,
+            target_n=args.n,
+        )
         print_candidates(router_candidates, base_count=router_base_count, target_n=args.n)
         print("route_status = unavailable")
         print(f"route_kind = {monster_class}")
@@ -889,6 +964,10 @@ def main() -> int:
     candidates = append_derived_lcm_merge(
         candidates,
         base_count=base_count,
+    )
+    candidates = rank_candidates_by_signature_transition(
+        candidates,
+        target_n=args.n,
     )
     print_candidates(candidates, base_count=base_count, target_n=args.n)
     if monster_route.get("monster_route_status") == "available":
