@@ -430,3 +430,48 @@ This remains a PET-guided indirect factorization pipeline:
     PET proposes anchors or support families.
     Classic bounded checks verify arithmetic factors.
     Residual descent restarts from PET-routing on each verified residual.
+
+## Main triage pipeline validation: 200..499
+
+The integrated main PET triage pipeline was validated on:
+
+    200..499
+
+Validation result:
+
+    ok = 300
+    bad = 0
+
+This means every integer in `200..499` reached:
+
+    residual_descent_status = complete
+    terminal_residual = 1
+
+The final missing cases in this sweep were:
+
+    245 = 5 * 7 * 7
+    252 = 4 * 9 * 7 / 2 * 2 * 3 * 3 * 7
+    325 = 5 * 5 * 13
+
+They were closed by routing recognized structural families through the bounded
+shape-family support scan when no direct candidate grip is available:
+
+    one-deep-tail / branchy-shape / mixed-depth
+    +
+    structural-match-no-grip / no-structural-grip
+    ->
+    shape-family-support-scan
+
+Updated validated small-number coverage:
+
+    2..99      ok = 98   bad = 0
+    100..199   ok = 100  bad = 0
+    200..499   ok = 300  bad = 0
+
+Current total:
+
+    2..499     ok = 498  bad = 0
+
+As before, the residual reduction chain is not required to be canonical prime
+factorization. It records the verified anchors selected by recursive
+PET-routing.

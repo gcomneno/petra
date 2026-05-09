@@ -844,14 +844,15 @@ def route_escalation_policy_for_shape(
         return "flat-k-support-scan"
 
     if (
-        shape_family_class in {"branchy-shape", "mixed-depth"}
-        and grip_status == "structural-match-no-grip"
-    ):
-        return "shape-family-support-scan"
-
-    if (
-        shape_family_class == "one-deep-tail"
-        and grip_status == "no-structural-grip"
+        shape_family_class in {
+            "one-deep-tail",
+            "branchy-shape",
+            "mixed-depth",
+        }
+        and grip_status in {
+            "structural-match-no-grip",
+            "no-structural-grip",
+        }
     ):
         return "shape-family-support-scan"
 
