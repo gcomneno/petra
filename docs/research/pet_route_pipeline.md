@@ -475,3 +475,40 @@ Current total:
 As before, the residual reduction chain is not required to be canonical prime
 factorization. It records the verified anchors selected by recursive
 PET-routing.
+
+## Main triage pipeline validation: 500..999
+
+The integrated main PET triage pipeline was validated on:
+
+    500..999
+
+Validation result:
+
+    ok = 500
+    bad = 0
+
+This means every integer in `500..999` reached:
+
+    residual_descent_status = complete
+    terminal_residual = 1
+
+Updated validated small-number coverage:
+
+    2..99      ok = 98   bad = 0
+    100..199   ok = 100  bad = 0
+    200..499   ok = 300  bad = 0
+    500..999   ok = 500  bad = 0
+
+Current total:
+
+    2..999     ok = 998  bad = 0
+
+This closes the planned consecutive small-number sweep phase.
+
+Future validation should avoid blindly extending consecutive ranges forever.
+Instead, validation should use targeted structural samples: larger prime powers,
+semiprimes, products with many factors, square-like composites, mixed-depth
+families, branchy shapes, and other PET-shape stress cases.
+
+As before, this remains a PET-guided indirect factorization pipeline: PET routes
+by structure and classic bounded checks verify arithmetic factors.
