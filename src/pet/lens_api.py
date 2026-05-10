@@ -11,13 +11,20 @@ side effects.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 
 API_VERSION = "pet.lens.v1"
 LENS_ID = "pet"
 UNKNOWN_TARGET = "unknown"
+
+REQUIRED_CONTEXT_FIELDS = (
+    "scope",
+    "metrics",
+    "available_layers",
+    "available_codecs",
+)
 
 
 def _normalize_target(value: object) -> str:
@@ -32,6 +39,16 @@ def _normalize_target(value: object) -> str:
         return str(value)
 
     return UNKNOWN_TARGET
+
+
+def _is_string_sequence(value: object) -> bool:
+    if isinstance(value, str | bytes):
+        return False
+
+    if not isinstance(value, Sequence):
+        return False
+
+    return all(isinstance(item, str) and item.strip() for item in value)
 
 
 def _fallback_result(
@@ -51,11 +68,42 @@ def _fallback_result(
     }
 
 
+def _fallback_reason_for_context(
+    context: Mapping[str, Any],
+    *,
+    target: str,
+) -> str:
+    if not context:
+        return "insufficient context for PET advisory"
+
+    if target == UNKNOWN_TARGET:
+        return "insufficient context for PET advisory: missing target"
+
+    for field in REQUIRED_CONTEXT_FIELDS:
+        if field not in context:
+            return f"insufficient context for PET advisory: missing {field}"
+
+    if not isinstance(context["metrics"], Mapping):
+        return "invalid context for PET advisory: invalid metrics"
+
+    if not _is_string_sequence(context["available_layers"]):
+        return "invalid context for PET advisory: invalid available_layers"
+
+    if not _is_string_sequence(context["available_codecs"]):
+        return "invalid context for PET advisory: invalid available_codecs"
+
+    if "constraints" in context and not isinstance(context["constraints"], Mapping):
+        return "invalid context for PET advisory: invalid constraints"
+
+    return "unsupported context for PET advisory"
+
+
 def analyze(context: Mapping[str, Any] | None) -> dict[str, Any]:
     """Return a deterministic PET advisory result.
 
-    The v1 contract is intentionally conservative. When the context is empty,
-    incomplete, or unsupported, PET returns an explicit fallback result.
+    The v1 fallback contract is intentionally conservative. When the context
+    is empty, incomplete, invalid, or unsupported, PET returns an explicit
+    fallback result.
 
     PET does not access network, filesystem, subprocesses, or mutable external
     state from this API.
@@ -67,8 +115,9 @@ def analyze(context: Mapping[str, Any] | None) -> dict[str, Any]:
         )
 
     target = _normalize_target(context.get("target"))
+    reason = _fallback_reason_for_context(context, target=target)
 
-    return _fallback_result(target=target)
+    return _fallback_result(target=target, reason=reason)
 
 
 __all__ = [
