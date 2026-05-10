@@ -200,3 +200,139 @@ def test_lens_api_valid_but_unsupported_context_returns_explicit_fallback() -> N
     assert result["candidate_plans"] == []
     assert result["confidence"] == "none"
     assert result["reason"] == "unsupported context for PET advisory"
+
+
+def test_numeric_candidate_uses_only_available_layer_and_codec() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.75,
+            },
+            "available_layers": ["TEXT", "NUMS"],
+            "available_codecs": ["raw", "num_v2"],
+            "constraints": {
+                "max_candidates": 3,
+            },
+        }
+    )
+
+    assert result["confidence"] == "low"
+    assert result["reason"] == "numeric-heavy metrics and num_v2 available"
+    assert result["hints"] == [
+        {
+            "kind": "numeric-heavy",
+            "message": "target metrics suggest numeric stream structure",
+        }
+    ]
+    assert result["candidate_plans"] == [
+        {
+            "layer_id": "NUMS",
+            "codec_text": "num_v2",
+            "stream_codecs": {
+                "NUMS": "num_v2",
+            },
+            "note": "PET advisory only; OCF autopick must measure and verify",
+        }
+    ]
+
+
+def test_numeric_candidate_respects_max_candidates_zero() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.75,
+            },
+            "available_layers": ["NUMS"],
+            "available_codecs": ["num_v2"],
+            "constraints": {
+                "max_candidates": 0,
+            },
+        }
+    )
+
+    assert result["candidate_plans"] == []
+    assert result["confidence"] == "none"
+    assert result["reason"] == "numeric-heavy metrics found but max_candidates is zero"
+
+
+def test_numeric_candidate_requires_nums_layer() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.75,
+            },
+            "available_layers": ["TEXT"],
+            "available_codecs": ["num_v2"],
+        }
+    )
+
+    assert result["candidate_plans"] == []
+    assert result["confidence"] == "none"
+    assert (
+        result["reason"]
+        == "numeric-heavy metrics found but NUMS layer is unavailable"
+    )
+
+
+def test_numeric_candidate_requires_num_v2_codec() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.75,
+            },
+            "available_layers": ["NUMS"],
+            "available_codecs": ["num_v1"],
+        }
+    )
+
+    assert result["candidate_plans"] == []
+    assert result["confidence"] == "none"
+    assert (
+        result["reason"]
+        == "numeric-heavy metrics found but num_v2 codec is unavailable"
+    )
+
+
+def test_numeric_candidate_requires_numeric_ratio_threshold() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.59,
+            },
+            "available_layers": ["NUMS"],
+            "available_codecs": ["num_v2"],
+        }
+    )
+
+    assert result["candidate_plans"] == []
+    assert result["confidence"] == "none"
+    assert result["reason"] == "unsupported context for PET advisory"
+
+
+def test_numeric_candidate_threshold_is_inclusive() -> None:
+    result = analyze(
+        {
+            "target": "bucket:00",
+            "scope": "dir-autopick",
+            "metrics": {
+                "numeric_ratio": 0.60,
+            },
+            "available_layers": ["NUMS"],
+            "available_codecs": ["num_v2"],
+        }
+    )
+
+    assert len(result["candidate_plans"]) == 1
+    assert result["candidate_plans"][0]["layer_id"] == "NUMS"
+    assert result["candidate_plans"][0]["codec_text"] == "num_v2"
+
