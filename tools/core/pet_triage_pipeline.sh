@@ -22,6 +22,7 @@ Options:
   --no-classic-scan             skip PET verified divisor summary and classic scan policy
   --no-residual-descent         skip PET residual descent routing section
   --residual-max-depth D        residual descent max depth; default: 6
+  --pest-json PATH             write optional research-only PEST JSON artifact
   --route-only                  run only PET race diagnostic and classic handoff policy
   --legacy-diagnostics          run legacy diagnostics sections 4-8
   --rigid-border-guard          stop after preflight when decimal rigid border is detected
@@ -53,6 +54,7 @@ RUN_SCAN_SUMMARY=1
 RUN_CLASSIC_SCAN_POLICY=1
 RUN_RESIDUAL_DESCENT=1
 RESIDUAL_MAX_DEPTH=6
+PEST_JSON_PATH=""
 RUN_LEGACY_LENS=0
 RUN_LEGACY_MASS=0
 RUN_LEGACY_FOCUSED=0
@@ -129,6 +131,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --residual-max-depth)
       RESIDUAL_MAX_DEPTH="$2"
+      shift 2
+      ;;
+    --pest-json)
+      PEST_JSON_PATH="$2"
       shift 2
       ;;
     --route-only)
@@ -254,6 +260,7 @@ echo "blade_window = $BLADE_WINDOW"
 echo "legacy_fork_follow = ${FORK_FOLLOW:-disabled}"
 echo "residual_descent = $RUN_RESIDUAL_DESCENT"
 echo "residual_max_depth = $RESIDUAL_MAX_DEPTH"
+echo "pest_json = ${PEST_JSON_PATH:-disabled}"
 echo
 echo "claim = PET triage pipeline only; classic stages verify divisors only when explicitly reported"
 
@@ -351,6 +358,15 @@ if [[ "$RUN_RESIDUAL_DESCENT" -eq 1 ]]; then
     --flat-k-prime-limit 50 \
     --shape-family-support-limit 5000 \
     --shape-family-max-supports 1000
+fi
+
+if [[ -n "$PEST_JSON_PATH" ]]; then
+  section "1c. PEST syntax tree JSON artifact"
+  mkdir -p "$(dirname "$PEST_JSON_PATH")"
+  python tools/research/pet_syntax_tree_probe.py "$N" \
+    --max-depth "$RESIDUAL_MAX_DEPTH" \
+    > "$PEST_JSON_PATH"
+  echo "pest_json_written = $PEST_JSON_PATH"
 fi
 
 if [[ "$RUN_SCAN_SUMMARY" -eq 1 ]]; then
