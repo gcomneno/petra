@@ -70,6 +70,7 @@ structure, local rewrite laws, or empirical vocabulary:
 - `notes/pet-shape-families-note.md`
 - `notes/pet-multiplicative-grammar.md`
 - `notes/pet-problem-statement.md`
+- `notes/pet-completion-aware-residual-descent.md`
 
 ### Experimental / not core
 
