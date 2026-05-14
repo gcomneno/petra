@@ -66,7 +66,7 @@ def test_peelator_wrapper_runs_pet_triage_pipeline_with_legacy_lens_hint() -> No
     )
 
     assert result.returncode == 0, result.stderr
-    assert "PET TRIAGE PIPELINE" in result.stdout
+    assert "PET STRUCTURAL FACTORIZATION PIPELINE" in result.stdout
     assert "0. PET race diagnostic" in result.stdout
     assert "1. PET classic handoff policy" in result.stdout
     assert "4. Legacy lens hint" in result.stdout

@@ -105,7 +105,7 @@ Use a small number with an implemented PET classic handoff route:
 
 Expected high-level signals:
 
-- `PET TRIAGE PIPELINE`
+- `PET STRUCTURAL FACTORIZATION PIPELINE`
 - `0. PET race diagnostic`
 - `1. PET classic handoff policy`
 - `classic_probe_policy = primality-check-only`

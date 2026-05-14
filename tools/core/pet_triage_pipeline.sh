@@ -20,7 +20,7 @@ Options:
   --no-fork                     skip legacy focused peel fork diagnostics
   --no-scan-summary             skip PET verified divisor summary
   --no-classic-scan             skip PET verified divisor summary and classic scan policy
-  --no-residual-descent         skip PET residual descent routing section
+  --no-residual-descent         skip PET structural residual descent routing section
   --residual-max-depth D        residual descent max depth; default: 6
   --pest-json PATH             write optional research-only PEST JSON artifact
   --route-only                  run only PET race diagnostic and classic handoff policy
@@ -247,7 +247,7 @@ print(rows[0].get(column_name, "unknown"))
 PY2
 }
 
-echo "PET TRIAGE PIPELINE"
+echo "PET STRUCTURAL FACTORIZATION PIPELINE"
 echo "N_digits = ${#N}"
 echo "max_generator_count = $MAX_GENERATOR_COUNT"
 echo "excluded_support_limit = $EXCLUDED_SUPPORT_LIMIT"
@@ -350,7 +350,7 @@ else
 fi
 
 if [[ "$RUN_RESIDUAL_DESCENT" -eq 1 ]]; then
-  section "1b. PET residual descent route"
+  section "1b. PET structural residual descent route"
   run_optional tools/pet_residual_descent_route.py "$N" \
     --max-depth "$RESIDUAL_MAX_DEPTH" \
     --auto-flat-k-scan \

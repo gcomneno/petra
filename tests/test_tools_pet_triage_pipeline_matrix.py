@@ -79,7 +79,7 @@ def test_pet_triage_pipeline_matrix_reports_expected_routes() -> None:
     ) in cases:
         output = run_pipeline(n)
 
-        assert "PET TRIAGE PIPELINE" in output
+        assert "PET STRUCTURAL FACTORIZATION PIPELINE" in output
         assert "0. PET race diagnostic" in output
         assert "1. PET classic handoff policy" in output
 

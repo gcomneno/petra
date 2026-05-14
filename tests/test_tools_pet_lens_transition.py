@@ -62,7 +62,7 @@ def test_peelator_wrapper_reports_legacy_lens_transition_section() -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "PET TRIAGE PIPELINE" in result.stdout
+    assert "PET STRUCTURAL FACTORIZATION PIPELINE" in result.stdout
     assert "0. PET race diagnostic" in result.stdout
     assert "1. PET classic handoff policy" in result.stdout
     assert "6. Legacy lens transition" in result.stdout
