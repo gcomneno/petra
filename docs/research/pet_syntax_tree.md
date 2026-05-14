@@ -535,3 +535,109 @@ residual descent and best-pet-residual-shape-descent.
 
 It should not be promoted to core behavior until it proves practical value beyond
 naming existing concepts differently.
+
+## Qualitative PEST examples
+
+The JSON probe is intentionally structural. It is not meant to produce a
+pretty tree renderer; `jq` or future visualization tools can consume the JSON
+when needed.
+
+The useful question is:
+
+    Does PEST explain how PET reached the result?
+
+The following examples show that the model captures different PET routing
+stories.
+
+### 245
+
+    residual_reduction_chain = 7 * 5 * 7
+
+    245 [one-deep-tail]
+    -> anchor 7 [classic-verified]
+    -> residual 35 [semiprime-flat]
+    -> factors 5 and 7 [classic-verified]
+
+This shows a one-deep-tail root reduced into a simpler semiprime-flat
+residual.
+
+### 252
+
+    residual_reduction_chain = 18 * 2 * 7
+
+    252 [mixed-depth]
+    -> anchor 18 [classic-verified]
+    -> residual 14 [semiprime-flat]
+    -> anchor 2 [classic-verified]
+    -> residual 7 [atomic-leaf]
+    -> prime leaf 7 [classic-verified]
+
+This is a good example of PEST explaining mixed-depth residual-shape descent.
+
+### 24680
+
+    residual_reduction_chain = 20 * 2 * 617
+
+    24680 [one-deep-tail]
+    -> anchor 20 [classic-verified]
+    -> residual 1234 [semiprime-flat]
+    -> anchor 2 [classic-verified]
+    -> residual 617 [atomic-leaf]
+    -> prime leaf 617 [classic-verified]
+
+This is the clearest example of recursive PET-routing over verified residuals.
+
+### 1001
+
+    residual_reduction_chain = 13 * 7 * 11
+
+    1001 [flat-k-leaf]
+    -> anchor 13 [classic-verified]
+    -> residual 77 [semiprime-flat]
+    -> factors 7 and 11 [classic-verified]
+
+This shows a flat-k route reducing into a semiprime-flat residual.
+
+### 512
+
+    residual_reduction_chain = 2 * 2 * 4 * 4 * 2 * 4
+
+    512 [narrow-deep-chain]
+    -> anchor 2 [classic-verified]
+    -> residual 256 [narrow-deep-chain]
+    -> anchor 2 [classic-verified]
+    -> residual 128 [narrow-deep-chain]
+    -> anchor 4 [classic-verified]
+    -> residual 32 [narrow-deep-chain]
+    -> anchor 4 [classic-verified]
+    -> residual 8 [narrow-deep-chain]
+    -> factors 2 and 4 [classic-verified]
+
+This example is intentionally not normalized into prime factors. PEST records
+the actual anchor sequence selected by PET residual descent.
+
+### 729
+
+    residual_reduction_chain = 3 * 3 * 3 * 3 * 3 * 3
+
+    729 [narrow-deep-chain]
+    -> factors 3, 3, 3, 3, 3, 3 [classic-verified]
+
+This shows a case where PET solves the root directly without a long residual
+chain.
+
+## Current qualitative conclusion
+
+PEST is useful when it explains how PET routed the number:
+
+    root shape
+    selected route
+    verified anchor
+    residual shape
+    terminal factor or prime leaf
+
+It should remain a JSON structural artifact for now.
+
+No compact text renderer is currently needed. A text renderer would introduce
+another representation to maintain, while the JSON already captures the
+research structure cleanly.
