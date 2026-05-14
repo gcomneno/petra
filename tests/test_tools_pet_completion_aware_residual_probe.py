@@ -118,3 +118,37 @@ def test_completion_aware_probe_exposes_357357_selected_trap_door() -> None:
     assert selected["expanded_profile_comparison"]["completion_delta"] == (
         "opens-with-flat-k"
     )
+
+def test_completion_aware_probe_reports_active_completion_signal() -> None:
+    probe = run_probe(21021)
+
+    by_anchor = {row["anchor"]: row for row in probe["candidates"]}
+
+    assert by_anchor["3"]["active_completion_signal"] == (
+        "inactive-shape-family-required"
+    )
+    assert by_anchor["21"]["active_completion_signal"] == (
+        "inactive-flat-k-required"
+    )
+
+
+def test_completion_aware_probe_distinguishes_357357_active_signal() -> None:
+    probe = run_probe(357357, "--compare-expanded-profile")
+
+    by_anchor = {row["anchor"]: row for row in probe["candidates"]}
+
+    assert by_anchor["3"]["classification"] == "expandable-with-active-mode"
+    assert by_anchor["3"]["active_completion_signal"] == (
+        "active-partial-expandable"
+    )
+    assert by_anchor["3"]["expanded_profile_comparison"]["completion_delta"] == (
+        "opens-with-flat-k"
+    )
+
+    assert by_anchor["231"]["classification"] == "selected-trap-door-candidate"
+    assert by_anchor["231"]["active_completion_signal"] == (
+        "inactive-flat-k-required"
+    )
+    assert by_anchor["231"]["expanded_profile_comparison"]["completion_delta"] == (
+        "opens-with-flat-k"
+    )

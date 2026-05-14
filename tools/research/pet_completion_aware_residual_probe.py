@@ -113,6 +113,27 @@ def classify_candidate(row: dict[str, str], selected_anchor: str) -> str:
     return "unclassified"
 
 
+def active_completion_signal(row: dict[str, str]) -> str:
+    final_status = row.get("residual_final_status", "-")
+
+    if final_status.startswith("solved-by-"):
+        return "active-complete"
+
+    if final_status == "stopped-at-atomic-leaf":
+        return "active-prime-leaf"
+
+    if final_status.startswith("partial-factorization-by-"):
+        return "active-partial-expandable"
+
+    if final_status == "flat-k-scan-required":
+        return "inactive-flat-k-required"
+
+    if final_status == "shape-family-scan-required":
+        return "inactive-shape-family-required"
+
+    return "blocked"
+
+
 def summarize_route(
     n: int,
     max_depth: int,
@@ -249,6 +270,7 @@ def build_probe(args: argparse.Namespace) -> dict[str, Any]:
 
     for row in candidates:
         row["classification"] = classify_candidate(row, selected_anchor)
+        row["active_completion_signal"] = active_completion_signal(row)
 
         if args.compare_expanded_profile:
             row["expanded_profile_comparison"] = compare_expanded_profile(row, args)
@@ -304,6 +326,10 @@ def print_text(probe: dict[str, Any]) -> None:
         )
         print(f"candidate_{row['index']}_selection_score = {row['selection_score']}")
         print(f"candidate_{row['index']}_classification = {row['classification']}")
+        print(
+            f"candidate_{row['index']}_active_completion_signal = "
+            f"{row['active_completion_signal']}"
+        )
 
         comparison = row.get("expanded_profile_comparison")
         if comparison:

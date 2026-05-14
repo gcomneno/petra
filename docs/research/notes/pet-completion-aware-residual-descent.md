@@ -438,3 +438,31 @@ It must not change:
 The intended purpose is to make candidate ranking evidence more explicit before
 any future completion-aware residual descent policy is considered.
 
+### Active completion signal implementation
+
+The completion-aware residual probe now reports an `active_completion_signal`
+for each depth-0 candidate.
+
+The signal is derived from the candidate residual status under the active
+profile. It does not change routing or candidate selection.
+
+Initial mapping:
+
+- `solved-by-*` -> `active-complete`
+- `stopped-at-atomic-leaf` -> `active-prime-leaf`
+- `partial-factorization-by-*` -> `active-partial-expandable`
+- `flat-k-scan-required` -> `inactive-flat-k-required`
+- `shape-family-scan-required` -> `inactive-shape-family-required`
+- anything else -> `blocked`
+
+This makes the `357357` distinction explicit:
+
+    anchor 3   -> active-partial-expandable
+    anchor 231 -> inactive-flat-k-required
+
+Both candidates can still have:
+
+    completion_delta = opens-with-flat-k
+
+So the active signal complements expanded completion. It remains research-only
+and must not be treated as a ranking policy by itself.
