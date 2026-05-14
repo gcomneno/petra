@@ -514,3 +514,38 @@ activity should be considered before relying only on expanded completion.
 
 This remains observational. It must not be treated as a production ranking
 policy without more evidence.
+
+### Shadow ranking matrix report
+
+A research-only matrix helper can reproduce targeted wall/context validation:
+
+    python tools/research/pet_shadow_ranking_matrix.py --changed-only
+
+The default matrix uses the wall/context families from issue #92.
+
+Default walls:
+
+- `1001`
+- `17017`
+- `323323`
+- `7436429`
+
+Default contexts:
+
+- `14`
+- `21`
+- `22`
+- `26`
+- `30`
+- `33`
+- `42`
+- `55`
+- `66`
+- `70`
+- `78`
+
+The report calls the completion-aware residual probe with
+`--compare-ranking-policy` and emits one row per wall/context pair.
+
+It is observational only and does not change PET routing, anchor selection,
+residual descent, verification, or stable CLI behavior.
