@@ -171,6 +171,55 @@ Esempi tipici:
 
 È utile quando vuoi separare la taglia numerica dalla forma strutturale.
 
+### Structural factorization
+
+PET espone la structural factorization come comando CLI ufficiale:
+
+```bash
+pet structural-factorization 24680 --max-depth 4
+```
+
+Output:
+
+```text
+PET STRUCTURAL FACTORIZATION
+
+N = 24680
+status = complete
+residual_reduction_chain = 20 * 2 * 617
+terminal_residual = 1
+claim = PET performs structural factorization of the PET shape; classic verification confirms arithmetic factors
+```
+
+Secondo esempio:
+
+```bash
+pet structural-factorization 1224180 --max-depth 4
+```
+
+Output:
+
+```text
+PET STRUCTURAL FACTORIZATION
+
+N = 1224180
+status = complete
+residual_reduction_chain = 180 * 3 * 2267
+terminal_residual = 1
+claim = PET performs structural factorization of the PET shape; classic verification confirms arithmetic factors
+```
+
+La structural factorization scompone la forma PET visibile del numero; la
+verifica classica conferma i fattori aritmetici reali.
+
+Per produrre anche un artifact PEST esplicativo:
+
+```bash
+pet structural-factorization 24680 --max-depth 4 --pest-json out.json
+```
+
+`--pest-json` produce un JSON `pet.syntax_tree.v0` opzionale e non decisionale.
+
 #### Signature canonica della shape
 
 ```bash
