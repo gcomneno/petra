@@ -110,7 +110,7 @@ Observed cases:
     17017 * 21  = 357357  -> 231 * 1547     -> blocked
     323323 * 21 = 6789783 -> 3003 * 2261    -> blocked
 
-This suggests a possible future trap-context catalogue or penalty table.
+This suggests a possible future route-pattern classifier, not a precomputed lookup table of known walls.
 
 ## Seed walls
 
@@ -262,24 +262,43 @@ This confirms the core research distinction:
     a route can be a trap-door in the conservative profile
     but become expandable when the required scan mode is active
 
-## Trap-context catalogue idea
+## Route-pattern trap-door detection
 
-A lightweight trap-context catalogue could record recurring non-closing
-contexts.
+A literal trap-context lookup table keyed by known walls or known numbers is not
+a good policy foundation.
 
-Possible fields:
+That would risk turning the research direction into a list of special cases:
 
-    wall
-    context_k
-    n
-    selected_anchor
-    terminal_residual
-    terminal_status
-    active_profile
-    completion_with_extended_profile
-    classification
+    wall = 1001
+    context = 21
+    avoid this route
 
-Seed classifications:
+This is not the goal.
+
+The useful generalization is route-pattern detection.
+
+A future completion-aware policy should observe the candidate route itself:
+
+    candidate anchor
+    candidate residual
+    residual route final status
+    active profile
+    required inactive scan mode
+    alternative candidates
+    selected candidate classification
+
+The relevant question is not:
+
+    have we seen this exact wall before?
+
+The relevant question is:
+
+    does this candidate leave a residual that the active profile cannot close,
+    while another candidate looks more completion-friendly?
+
+This keeps the idea general and PET-native.
+
+Seed classifications remain useful as observations:
 
     structural-wall
     structural-lateral-door
@@ -287,10 +306,14 @@ Seed classifications:
     trap-context
     completion-friendly-context
 
+But they should be derived from route behavior, not from a precomputed
+per-number table.
+
 Potential use:
 
 - compare current shape-descent-first selection with completion-aware ranking
-- detect recurring trap-contexts
+- detect recurring non-closing route patterns
+- avoid special-casing known numbers
 - provide evidence before changing any policy
 - keep the public CLI conservative
 
@@ -313,7 +336,8 @@ PEST remains explanatory-only.
    - residual route final status
    - whether completion requires inactive modes
 
-2. Build a tiny trap-context catalogue from seed walls:
+2. Collect route-pattern examples from seed walls without hardcoding
+   wall values into policy:
    - 1001
    - 17017
    - 323323
