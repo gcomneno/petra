@@ -152,3 +152,48 @@ def test_completion_aware_probe_distinguishes_357357_active_signal() -> None:
     assert by_anchor["231"]["expanded_profile_comparison"]["completion_delta"] == (
         "opens-with-flat-k"
     )
+
+def test_completion_aware_probe_shadow_ranking_suggests_357357_alternative() -> None:
+    probe = run_probe(357357, "--compare-ranking-policy")
+
+    ranking = probe["ranking_policy_comparison"]
+
+    assert probe["profile"]["compare_ranking_policy"] is True
+    assert ranking["policy"] == "research-shadow-active-completion-v0"
+    assert ranking["current_selected_anchor"] == "231"
+    assert ranking["current_selected_residual"] == "1547"
+    assert ranking["suggested_anchor"] == "3"
+    assert ranking["suggested_residual"] == "119119"
+    assert ranking["changed_selection"] is True
+    assert ranking["reason"] == (
+        "active-partial-expandable beats inactive-flat-k-required"
+    )
+
+    by_anchor = {row["anchor"]: row for row in probe["candidates"]}
+
+    assert by_anchor["3"]["completion_aware_rank"] == "1"
+    assert by_anchor["231"]["completion_aware_rank"] == "2"
+
+
+def test_completion_aware_probe_shadow_ranking_keeps_lateral_door() -> None:
+    probe = run_probe(30030, "--compare-ranking-policy")
+
+    ranking = probe["ranking_policy_comparison"]
+
+    assert ranking["current_selected_anchor"] == "5005"
+    assert ranking["suggested_anchor"] == "5005"
+    assert ranking["changed_selection"] is False
+    assert ranking["reason"] == (
+        "current-selection-matches-completion-aware-shadow-ranking"
+    )
+
+
+def test_completion_aware_probe_shadow_ranking_handles_no_candidates() -> None:
+    probe = run_probe(1001, "--compare-ranking-policy")
+
+    ranking = probe["ranking_policy_comparison"]
+
+    assert ranking["current_selected_anchor"] == "-"
+    assert ranking["suggested_anchor"] == "-"
+    assert ranking["changed_selection"] is False
+    assert ranking["reason"] == "no-depth-0-candidates"

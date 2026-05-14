@@ -466,3 +466,51 @@ Both candidates can still have:
 
 So the active signal complements expanded completion. It remains research-only
 and must not be treated as a ranking policy by itself.
+
+### Shadow completion-aware ranking comparison
+
+The completion-aware residual probe can now compare the current selected anchor
+against a research-only shadow ranking:
+
+    python tools/research/pet_completion_aware_residual_probe.py 357357 --compare-ranking-policy
+
+This mode does not change the selected anchor. It only reports what a
+completion-aware ranking would suggest.
+
+The initial shadow ranking uses:
+
+- `active_completion_signal`
+- `completion_delta`
+- candidate classification
+- current selection score as a tie-breaker
+
+Initial priority:
+
+1. `active-complete`
+2. `active-prime-leaf`
+3. `active-partial-expandable`
+4. `inactive-flat-k-required`
+5. `inactive-shape-family-required`
+6. `blocked`
+
+The key research case is:
+
+    N = 357357
+
+Current selected anchor:
+
+    anchor 231 -> inactive-flat-k-required
+
+Shadow completion-aware suggestion:
+
+    anchor 3 -> active-partial-expandable
+
+Both candidates still have:
+
+    completion_delta = opens-with-flat-k
+
+So the shadow ranking is specifically testing the hypothesis that active-profile
+activity should be considered before relying only on expanded completion.
+
+This remains observational. It must not be treated as a production ranking
+policy without more evidence.

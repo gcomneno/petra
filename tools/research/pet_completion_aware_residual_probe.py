@@ -227,6 +227,113 @@ def compare_expanded_profile(
     return comparison
 
 
+ACTIVE_SIGNAL_PRIORITY = {
+    "active-complete": 0,
+    "active-prime-leaf": 1,
+    "active-partial-expandable": 2,
+    "inactive-flat-k-required": 3,
+    "inactive-shape-family-required": 4,
+    "blocked": 9,
+}
+
+
+COMPLETION_DELTA_PRIORITY = {
+    "unchanged-complete": 0,
+    "opens-with-flat-k": 1,
+    "opens-with-shape-family": 2,
+    "remains-blocked": 9,
+}
+
+
+CLASSIFICATION_PRIORITY = {
+    "completion-friendly": 0,
+    "prime-leaf-friendly": 1,
+    "expandable-with-active-mode": 2,
+    "trap-door-candidate": 4,
+    "selected-trap-door-candidate": 4,
+    "requires-shape-family": 5,
+    "handoff-error": 9,
+    "unclassified": 9,
+}
+
+
+def parse_selection_score(raw: str) -> tuple[int, ...]:
+    try:
+        return tuple(int(part) for part in raw.split(","))
+    except ValueError:
+        return (999, 999, 999, 999)
+
+
+def completion_aware_rank_key(row: dict[str, str]) -> tuple[Any, ...]:
+    comparison = row.get("expanded_profile_comparison", {})
+    completion_delta_value = "remains-blocked"
+
+    if isinstance(comparison, dict):
+        completion_delta_value = str(
+            comparison.get("completion_delta", "remains-blocked")
+        )
+
+    return (
+        ACTIVE_SIGNAL_PRIORITY.get(row.get("active_completion_signal", "blocked"), 9),
+        COMPLETION_DELTA_PRIORITY.get(completion_delta_value, 9),
+        CLASSIFICATION_PRIORITY.get(row.get("classification", "unclassified"), 9),
+        parse_selection_score(row.get("selection_score", "-")),
+    )
+
+
+def ranking_reason(
+    suggested: dict[str, str] | None,
+    selected: dict[str, str] | None,
+) -> str:
+    if suggested is None:
+        return "no-depth-0-candidates"
+
+    if selected is None:
+        return "no-current-selected-anchor"
+
+    if suggested["anchor"] == selected["anchor"]:
+        return "current-selection-matches-completion-aware-shadow-ranking"
+
+    return (
+        f"{suggested['active_completion_signal']} beats "
+        f"{selected['active_completion_signal']}"
+    )
+
+
+def compare_ranking_policy(
+    candidates: list[dict[str, str]],
+    selected_anchor: str,
+) -> dict[str, Any]:
+    ranked = sorted(candidates, key=completion_aware_rank_key)
+
+    for index, row in enumerate(ranked, start=1):
+        row["completion_aware_rank"] = str(index)
+
+    suggested = ranked[0] if ranked else None
+    selected = next(
+        (row for row in candidates if row["anchor"] == selected_anchor),
+        None,
+    )
+
+    suggested_anchor = suggested["anchor"] if suggested else "-"
+    suggested_residual = suggested["residual"] if suggested else "-"
+    selected_residual = selected["residual"] if selected else "-"
+
+    return {
+        "policy": "research-shadow-active-completion-v0",
+        "current_selected_anchor": selected_anchor,
+        "current_selected_residual": selected_residual,
+        "suggested_anchor": suggested_anchor,
+        "suggested_residual": suggested_residual,
+        "changed_selection": (
+            suggested is not None
+            and selected_anchor != "-"
+            and suggested_anchor != selected_anchor
+        ),
+        "reason": ranking_reason(suggested, selected),
+    }
+
+
 def parse_depth_zero_candidates(values: dict[str, list[str]]) -> list[dict[str, str]]:
     candidate_indexes: set[int] = set()
 
@@ -272,13 +379,13 @@ def build_probe(args: argparse.Namespace) -> dict[str, Any]:
         row["classification"] = classify_candidate(row, selected_anchor)
         row["active_completion_signal"] = active_completion_signal(row)
 
-        if args.compare_expanded_profile:
+        if args.compare_expanded_profile or args.compare_ranking_policy:
             row["expanded_profile_comparison"] = compare_expanded_profile(row, args)
 
         if row["anchor"] == selected_anchor:
             selected_residual = row["residual"]
 
-    return {
+    result: dict[str, Any] = {
         "schema": "pet.completion_aware_residual_probe.v0",
         "n": args.n,
         "profile": {
@@ -286,6 +393,7 @@ def build_probe(args: argparse.Namespace) -> dict[str, Any]:
             "auto_flat_k_scan": args.auto_flat_k_scan,
             "auto_shape_family_scan": args.auto_shape_family_scan,
             "compare_expanded_profile": args.compare_expanded_profile,
+            "compare_ranking_policy": args.compare_ranking_policy,
         },
         "selected_anchor": selected_anchor,
         "selected_residual": selected_residual,
@@ -299,6 +407,14 @@ def build_probe(args: argparse.Namespace) -> dict[str, Any]:
         ),
     }
 
+    if args.compare_ranking_policy:
+        result["ranking_policy_comparison"] = compare_ranking_policy(
+            candidates,
+            selected_anchor,
+        )
+
+    return result
+
 
 def print_text(probe: dict[str, Any]) -> None:
     print("PET COMPLETION-AWARE RESIDUAL PROBE")
@@ -310,6 +426,19 @@ def print_text(probe: dict[str, Any]) -> None:
     print(f"residual_reduction_chain = {probe['residual_reduction_chain']}")
     print(f"terminal_residual = {probe['terminal_residual']}")
     print(f"claim = {probe['claim']}")
+
+    ranking = probe.get("ranking_policy_comparison")
+    if ranking:
+        print()
+        print("ranking_policy_comparison:")
+        print(f"ranking_policy = {ranking['policy']}")
+        print(f"current_selected_anchor = {ranking['current_selected_anchor']}")
+        print(f"current_selected_residual = {ranking['current_selected_residual']}")
+        print(f"completion_aware_suggested_anchor = {ranking['suggested_anchor']}")
+        print(f"completion_aware_suggested_residual = {ranking['suggested_residual']}")
+        print(f"changed_selection = {ranking['changed_selection']}")
+        print(f"ranking_reason = {ranking['reason']}")
+
     print()
     print("candidates:")
 
@@ -330,6 +459,13 @@ def print_text(probe: dict[str, Any]) -> None:
             f"candidate_{row['index']}_active_completion_signal = "
             f"{row['active_completion_signal']}"
         )
+
+        completion_aware_rank = row.get("completion_aware_rank")
+        if completion_aware_rank:
+            print(
+                f"candidate_{row['index']}_completion_aware_rank = "
+                f"{completion_aware_rank}"
+            )
 
         comparison = row.get("expanded_profile_comparison")
         if comparison:
@@ -382,6 +518,14 @@ def main() -> int:
         help=(
             "Compare each depth-0 candidate residual against expanded research "
             "profiles without changing candidate selection."
+        ),
+    )
+    parser.add_argument(
+        "--compare-ranking-policy",
+        action="store_true",
+        help=(
+            "Compare current anchor selection with a research-only "
+            "completion-aware shadow ranking."
         ),
     )
     parser.add_argument("--json", action="store_true")
