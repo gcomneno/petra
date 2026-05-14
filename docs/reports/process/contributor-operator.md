@@ -3,7 +3,8 @@
 ## Who this is for
 
 This guide is for contributors or operators who want to reproduce bounded PET
-reports, run the current PET triage workflow, or add a new report without
+reports, run structural factorization or the current PET triage workflow, or
+add a new report without
 reverse-engineering repo habits.
 
 ## Start here
@@ -19,12 +20,24 @@ Read these documents in this order:
 
 ## Current canonical workflows
 
-PET currently has two canonical workflow families.
+PET currently has three canonical workflow families.
+
+### Structural factorization CLI workflow
+
+Use this for stable single-number PET structural routes:
+
+    pet structural-factorization N
+
+Use `--pest-json PATH` when you also need an optional explanatory
+`pet.syntax_tree.v0` artifact.
+
+Structural factorization decomposes the PET-visible shape route; classic
+verification confirms the arithmetic factors.
 
 ### Operator-side triage workflow
 
-Use this for single-number PET structural diagnostics and bounded classic
-handoff.
+Use this for deeper single-number PET structural diagnostics and bounded
+classic handoff.
 
 Canonical implementation:
 
@@ -144,6 +157,10 @@ Current tool implementations are namespaced:
 - `tools/legacy/` — historical lens diagnostics
 - `tools/research/` — dataset/report and PET-METICA research helpers
 
+The first-class structural factorization entry point is the main PET CLI:
+
+    pet structural-factorization N
+
 Root-level `tools/*.py` and `tools/*.sh` entries are compatibility wrappers unless
 the tooling classification document says otherwise.
 
@@ -203,7 +220,7 @@ In practice:
 
 ## How to add a new operator workflow
 
-1. decide whether it extends PET triage, classic verification, legacy diagnostics, or research tooling
+1. decide whether it extends structural factorization, PET triage, classic verification, legacy diagnostics, or research tooling
 2. place the implementation under the appropriate namespace
 3. keep compatibility wrappers only when existing callers need them
 4. document whether the workflow is canonical, legacy, or research-facing

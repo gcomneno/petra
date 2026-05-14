@@ -23,9 +23,16 @@ pipelines, byte-stream discovery, preimage search, probe pipelines, or
 target-directed candidate search.
 
 
-## Current PET triage workflow
+## Structural factorization and current PET triage workflow
 
-The current canonical operator-side workflow is the PET triage pipeline:
+The first-class public CLI entry point for structural factorization is:
+
+```bash
+pet structural-factorization N
+```
+
+The `tools/` triage scripts remain the canonical operator-side workflow for
+deeper diagnostics, bounded classic handoff, and compatibility:
 
 - `core/pet_triage_pipeline.sh` — canonical PET triage pipeline implementation.
 - `pet_triage_pipeline.sh` — compatibility wrapper that delegates to `core/pet_triage_pipeline.sh`.
@@ -41,7 +48,8 @@ The triage pipeline follows this order:
 
 The core contract is:
 
-> PET does not factor opaque integers directly. PET selects a structural
+> Structural factorization decomposes the PET-visible shape route. PET does
+> not claim to factor opaque integers directly. PET selects a structural
 > diagnostic and a bounded classic verification policy. Classic stages only
 > accept divisors when explicitly verified.
 

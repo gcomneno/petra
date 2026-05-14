@@ -3,7 +3,8 @@
 ## Scope
 
 This document classifies the current `tools/` layout after the PET triage
-reorganization.
+reorganization. The first-class structural factorization CLI lives in the
+main `pet` command, not under `tools/`.
 
 The purpose of this classification is to keep PET focused on already-known
 inputs, PET artifacts, structural diagnostics, and bounded classic verification.
@@ -29,6 +30,19 @@ Tools should not implement:
 - target-directed opaque reconstruction
 - unbounded factor search presented as PET discovery
 - opaque-integer reconstruction without known structure
+
+## First-class structural factorization CLI
+
+The public structural factorization entry point is:
+
+    pet structural-factorization N
+
+This command emits a stable PET structural route summary and may optionally
+write a `pet.syntax_tree.v0` explanatory artifact with `--pest-json PATH`.
+
+`tools/` triage scripts remain operator-side diagnostics and compatibility
+entry points; they are not the public name of the structural factorization
+feature.
 
 ## Current tools layout
 

@@ -18,14 +18,34 @@ The canonical workflow exists to ensure that PET results are produced,
 summarized, and interpreted through stable, explicit pipelines rather than
 through scattered ad-hoc exploration.
 
-There are currently two canonical workflow families:
+There are currently three canonical workflow families:
 
-1. PET triage workflow for single-number structural diagnostics and bounded
-   classic handoff.
-2. Bounded report workflow for scan-backed reports, atlas summaries, and
+1. Structural factorization CLI workflow for stable single-number PET routes.
+2. PET triage workflow for deeper operator-side structural diagnostics and
+   bounded classic handoff.
+3. Bounded report workflow for scan-backed reports, atlas summaries, and
    generated research artifacts.
 
-## Canonical workflow A: PET triage
+## Canonical workflow A: structural factorization CLI
+
+The public first-class CLI entry point is:
+
+    pet structural-factorization N
+
+This command emits a stable summary of the PET structural route:
+
+- `status`
+- `residual_reduction_chain`
+- `terminal_residual`
+- an explicit PET/classic boundary claim
+
+Use `--pest-json PATH` to write an optional `pet.syntax_tree.v0`
+explanatory artifact.
+
+Structural factorization decomposes the PET-visible shape route; classic
+verification confirms the arithmetic factors.
+
+## Canonical workflow B: PET triage
 
 The current operator-side triage flow is policy-first:
 
@@ -35,7 +55,7 @@ The current operator-side triage flow is policy-first:
       -> verified classic scan summary / policy
       -> non-fatal legacy diagnostics
 
-### A1. Run the PET triage pipeline
+### B1. Run the PET triage pipeline
 
 Canonical implementation:
 
@@ -54,7 +74,7 @@ The pipeline starts with the PET race diagnostic and classic handoff policy.
 Legacy diagnostics are retained as non-fatal secondary output and must not
 override the PET race diagnostic or handoff policy.
 
-### A2. Run the PET race diagnostic directly
+### B2. Run the PET race diagnostic directly
 
 Canonical implementation:
 
