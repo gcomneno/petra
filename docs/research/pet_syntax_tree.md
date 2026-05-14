@@ -486,32 +486,37 @@ blocked
 The tree must never imply that PET visual structure alone proves arithmetic
 correctness.
 
-Possible future exploratory probe
+## Initial exploratory JSON probe
 
-A future research-only tool could be added later, after explicit approval:
+An initial research-only JSON probe exists:
 
-tools/research/pet_syntax_tree_probe.py
+    tools/research/pet_syntax_tree_probe.py
+
+It emits a `pet.syntax_tree.v0` JSON explanation of the current residual
+descent route for a small integer.
+
+This probe is intentionally explanatory. It does not change PET core behavior,
+does not add DOT output yet, and does not act as a proof engine.
+
+The initial probe is JSON-only.
+
+## Possible future exploratory DOT probe
+
+A future DOT export may be added later, after explicit approval.
 
 Possible behavior:
 
-python tools/research/pet_syntax_tree_probe.py 245 --json
-python tools/research/pet_syntax_tree_probe.py 245 --dot
+    python tools/research/pet_syntax_tree_probe.py 245 --dot
 
-Possible output schema:
+Constraints for any future DOT probe:
 
-pet.syntax_tree.v0
+- research-only;
+- no PET core refactor;
+- no runtime behavior change;
+- preserve verification boundaries;
+- do not replace pathwise graph output.
 
-Constraints for any future probe:
-
-research-only;
-no PET core refactor;
-no runtime behavior change;
-JSON/DOT export only;
-preserve verification boundaries;
-do not replace pathwise graph output.
-Current recommendation
-
-Start with documentation only.
+## Current recommendation
 
 The model is promising as an explanatory and visualization layer, especially for
 residual descent and best-pet-residual-shape-descent.
