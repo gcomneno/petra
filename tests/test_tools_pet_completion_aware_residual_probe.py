@@ -80,3 +80,41 @@ def test_completion_aware_probe_reflects_flat_k_profile() -> None:
 
     assert selected["residual_final_status"] == "partial-factorization-by-flat-k-scan"
     assert selected["classification"] == "expandable-with-active-mode"
+
+
+def test_completion_aware_probe_compares_expanded_profiles() -> None:
+    probe = run_probe(21021, "--compare-expanded-profile")
+
+    assert probe["profile"]["compare_expanded_profile"] is True
+
+    selected = next(
+        row
+        for row in probe["candidates"]
+        if row["anchor"] == probe["selected_anchor"]
+    )
+
+    comparison = selected["expanded_profile_comparison"]
+
+    assert comparison["flat_k"]["status"] == "complete"
+    assert comparison["flat_k"]["terminal_residual"] == "1"
+    assert comparison["completion_delta"] == "opens-with-flat-k"
+
+def test_completion_aware_probe_exposes_357357_selected_trap_door() -> None:
+    probe = run_probe(357357, "--compare-expanded-profile")
+
+    assert probe["status"] == "blocked-no-verified-anchor"
+    assert probe["selected_anchor"] == "231"
+    assert probe["selected_residual"] == "1547"
+
+    alternative = next(row for row in probe["candidates"] if row["anchor"] == "3")
+    selected = next(row for row in probe["candidates"] if row["anchor"] == "231")
+
+    assert alternative["classification"] == "expandable-with-active-mode"
+    assert alternative["expanded_profile_comparison"]["completion_delta"] == (
+        "opens-with-flat-k"
+    )
+
+    assert selected["classification"] == "selected-trap-door-candidate"
+    assert selected["expanded_profile_comparison"]["completion_delta"] == (
+        "opens-with-flat-k"
+    )

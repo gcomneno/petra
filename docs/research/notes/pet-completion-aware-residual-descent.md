@@ -347,3 +347,31 @@ PEST remains explanatory-only.
 4. Keep all behavior non-default and research-facing.
 
 5. Only consider CLI exposure after the policy is better understood and tested.
+
+### Active-vs-expanded profile comparison
+
+The completion-aware residual probe can optionally compare each depth-0
+candidate residual against expanded research profiles:
+
+    python tools/research/pet_completion_aware_residual_probe.py 21021 --compare-expanded-profile --json
+
+This mode is observational only. It does not change:
+
+- stable CLI behavior
+- routing
+- anchor selection
+- residual descent core
+- verification
+
+The comparison records whether a candidate residual remains blocked under the
+current active profile or opens when an expanded scan mode is enabled.
+
+Initial completion deltas:
+
+- `unchanged-complete`
+- `opens-with-flat-k`
+- `opens-with-shape-family`
+- `remains-blocked`
+
+The purpose is to make active-vs-expanded completion signals visible before
+considering any future completion-aware ranking policy.
