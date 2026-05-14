@@ -78,3 +78,40 @@ def test_pet_syntax_tree_probe_output_is_deterministic() -> None:
     second = run_probe(1001)
 
     assert first == second
+
+
+def test_pet_syntax_tree_probe_represents_terminal_prime_leaf() -> None:
+    tree = run_probe(24680)
+
+    prime_leaf_nodes = [
+        node
+        for node in tree["nodes"]
+        if node["role"] == "prime_leaf"
+    ]
+
+    assert prime_leaf_nodes == [
+        {
+            "id": "depth_2_prime_leaf",
+            "role": "prime_leaf",
+            "value": 617,
+            "shape_signature": None,
+            "shape_family_class": None,
+            "pet_grip_status": None,
+            "route_policy": None,
+            "route_status": None,
+            "terminal_status": "classic-verified",
+            "metadata": {
+                "depth": 2,
+                "verification_status": "classic-verified",
+            },
+        }
+    ]
+
+    assert {
+        "source": "depth_2_input",
+        "target": "depth_2_prime_leaf",
+        "edge_kind": "terminal_prime_leaf",
+        "move": "VERIFY",
+        "verification_status": "classic-verified",
+        "reason": "terminal prime leaf verified by leaf-primality-route",
+    } in tree["edges"]

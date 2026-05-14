@@ -290,6 +290,29 @@ def make_factor_node(
     }
 
 
+def make_prime_leaf_node(
+    *,
+    node_id: str,
+    value: int,
+    depth: int,
+) -> dict[str, Any]:
+    return {
+        "id": node_id,
+        "role": "prime_leaf",
+        "value": value,
+        "shape_signature": None,
+        "shape_family_class": None,
+        "pet_grip_status": None,
+        "route_policy": None,
+        "route_status": None,
+        "terminal_status": "classic-verified",
+        "metadata": {
+            "depth": depth,
+            "verification_status": "classic-verified",
+        },
+    }
+
+
 def build_tree(args: argparse.Namespace) -> dict[str, Any]:
     residual_result = run_command(residual_command(args))
 
@@ -431,6 +454,28 @@ def build_tree(args: argparse.Namespace) -> dict[str, Any]:
                     "move": "VERIFY",
                     "verification_status": "classic-verified",
                     "reason": f"verified_factorization = {verified_factorization}",
+                }
+            )
+
+        if depth_value(descent_values, depth, "status", "") == "complete-prime-leaf":
+            prime_leaf_id = f"depth_{depth}_prime_leaf"
+
+            nodes.append(
+                make_prime_leaf_node(
+                    node_id=prime_leaf_id,
+                    value=value,
+                    depth=depth,
+                )
+            )
+
+            edges.append(
+                {
+                    "source": source_id,
+                    "target": prime_leaf_id,
+                    "edge_kind": "terminal_prime_leaf",
+                    "move": "VERIFY",
+                    "verification_status": "classic-verified",
+                    "reason": "terminal prime leaf verified by leaf-primality-route",
                 }
             )
 

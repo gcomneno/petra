@@ -407,6 +407,18 @@ Possible PET Syntax Tree:
     └── residual 617
         └── prime leaf 617 [classic-verified]
 
+The research JSON probe represents terminal prime leaves explicitly:
+
+    role = prime_leaf
+    edge_kind = terminal_prime_leaf
+    move = VERIFY
+    verification_status = classic-verified
+
+This makes the explanatory tree show:
+
+    residual 617
+    └── prime leaf 617
+
 This tree explains recursive PET-routing over verified residuals.
 
 It should not be normalized into canonical prime factorization by default,
