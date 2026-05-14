@@ -49,6 +49,91 @@ def _hide_subparser(subparsers, name: str) -> None:
     ]
 
 
+STRUCTURAL_FACTORIZATION_CLAIM = (
+    "PET performs structural factorization of the PET shape; "
+    "classic verification confirms arithmetic factors"
+)
+
+
+def _repo_tool_path(*relative_parts: str) -> pathlib.Path:
+    return pathlib.Path(__file__).resolve().parents[2].joinpath(*relative_parts)
+
+
+def _run_repo_python_tool(tool_path: pathlib.Path, args: list[str]) -> str:
+    if not tool_path.exists():
+        raise FileNotFoundError(f"missing PET tool: {tool_path}")
+
+    result = subprocess.run(
+        [sys.executable, str(tool_path), *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise RuntimeError(f"{tool_path.name} failed: {detail}")
+
+    return result.stdout
+
+
+def _parse_key_value_summary(output: str) -> dict[str, str]:
+    values: dict[str, str] = {}
+
+    for line in output.splitlines():
+        if " = " not in line:
+            continue
+
+        key, value = line.split(" = ", 1)
+        values[key.strip()] = value.strip()
+
+    return values
+
+
+def _run_structural_factorization(args: argparse.Namespace) -> int:
+    if args.n < 1:
+        raise ValueError("structural-factorization expects integers >= 1")
+
+    if args.max_depth < 0:
+        raise ValueError("--max-depth must be >= 0")
+
+    route_output = _run_repo_python_tool(
+        _repo_tool_path("tools", "core", "pet_residual_descent_route.py"),
+        [str(args.n), "--max-depth", str(args.max_depth)],
+    )
+    values = _parse_key_value_summary(route_output)
+
+    required_keys = (
+        "residual_descent_status",
+        "residual_reduction_chain",
+        "terminal_residual",
+    )
+    missing = [key for key in required_keys if key not in values]
+
+    if missing:
+        raise RuntimeError(
+            "structural factorization route did not emit required summary keys: "
+            + ", ".join(missing)
+        )
+
+    if args.pest_json is not None:
+        pest_output = _run_repo_python_tool(
+            _repo_tool_path("tools", "research", "pet_syntax_tree_probe.py"),
+            [str(args.n), "--max-depth", str(args.max_depth)],
+        )
+        pathlib.Path(args.pest_json).write_text(pest_output, encoding="utf-8")
+
+    print("PET STRUCTURAL FACTORIZATION")
+    print()
+    print(f"N = {args.n}")
+    print(f"status = {values['residual_descent_status']}")
+    print(f"residual_reduction_chain = {values['residual_reduction_chain']}")
+    print(f"terminal_residual = {values['terminal_residual']}")
+    print(f"claim = {STRUCTURAL_FACTORIZATION_CLAIM}")
+
+    return 0
+
+
 def _shape_to_jsonable(shape):
     if shape is None:
         return None
@@ -5769,6 +5854,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_generator.add_argument("n", type=int, metavar="N")
 
+    # structural-factorization
+    p_structural_factorization = subparsers.add_parser(
+        "structural-factorization",
+        help="run PET structural factorization and print a stable summary",
+    )
+    p_structural_factorization.add_argument("n", type=int, metavar="N")
+    p_structural_factorization.add_argument("--max-depth", type=int, default=6)
+    p_structural_factorization.add_argument(
+        "--pest-json",
+        metavar="PATH",
+        help="write optional research-only PEST JSON artifact",
+    )
+
     # backbone-cache
     p_backbone_cache = subparsers.add_parser(
         "backbone-cache",
@@ -6704,6 +6802,9 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "generator":
             print(shape_generator(args.n))
+
+        elif args.command == "structural-factorization":
+            return _run_structural_factorization(args)
 
         elif args.command == "backbone-cache":
             if args.backbone_cache_command == "build":
