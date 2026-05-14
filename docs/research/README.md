@@ -70,7 +70,7 @@ structure, local rewrite laws, or empirical vocabulary:
 - `notes/pet-shape-families-note.md`
 - `notes/pet-multiplicative-grammar.md`
 - `notes/pet-problem-statement.md`
-- `notes/pet-completion-aware-residual-descent.md`
+- `notes/pet-completion-aware-residual-descent.md` — structural walls, lateral doors, trap-doors, and completion-aware residual descent observations
 
 ### Experimental / not core
 

@@ -217,6 +217,51 @@ Possible future rule sketch:
 
 This should remain research-only until better understood.
 
+## Research probe
+
+A non-default research probe is available at:
+
+    tools/research/pet_completion_aware_residual_probe.py
+
+The probe observes the current depth-0 residual candidate ranking without
+changing PET routing, CLI behavior, or anchor selection.
+
+Example:
+
+    python tools/research/pet_completion_aware_residual_probe.py 21021
+
+Seed output interpretation:
+
+    selected_anchor = 21
+    selected_residual = 1001
+    candidate_2_classification = selected-trap-door-candidate
+
+The same probe highlights structural lateral doors:
+
+    python tools/research/pet_completion_aware_residual_probe.py 30030
+
+Seed output interpretation:
+
+    selected_anchor = 5005
+    selected_residual = 6
+    candidate_2_classification = completion-friendly
+
+With flat-k enabled, the 21021 trap-door becomes expandable under the active
+profile:
+
+    python tools/research/pet_completion_aware_residual_probe.py 21021 --auto-flat-k-scan
+
+Seed output interpretation:
+
+    selected_anchor = 21
+    selected_residual = 1001
+    candidate_2_classification = expandable-with-active-mode
+
+This confirms the core research distinction:
+
+    a route can be a trap-door in the conservative profile
+    but become expandable when the required scan mode is active
+
 ## Trap-context catalogue idea
 
 A lightweight trap-context catalogue could record recurring non-closing
