@@ -375,3 +375,66 @@ Initial completion deltas:
 
 The purpose is to make active-vs-expanded completion signals visible before
 considering any future completion-aware ranking policy.
+
+### Active-vs-expanded candidate signal sketch
+
+The first `--compare-expanded-profile` matrix showed that `completion_delta`
+is useful but not sufficient on its own.
+
+The key seed case is:
+
+    N = 357357
+
+Observed candidates:
+
+    anchor 3   -> residual 119119 -> partial-factorization-by-pet-candidate
+    anchor 231 -> residual 1547   -> flat-k-scan-required
+
+Both candidates open with the expanded flat-k profile, so both receive:
+
+    completion_delta = opens-with-flat-k
+
+However, they are not equivalent under the active conservative profile.
+
+The important distinction is:
+
+- anchor `3` already exposes partial PET activity in the active profile
+- anchor `231` requires an inactive scan mode immediately
+
+This suggests that a future research signal should combine active-profile and
+expanded-profile information.
+
+Possible signal name:
+
+    active_completion_signal
+
+Initial value sketch:
+
+- `active-complete`
+  - the candidate residual already closes under the active profile
+- `active-prime-leaf`
+  - the candidate residual stops at an atomic leaf
+- `active-partial-expandable`
+  - the candidate residual exposes partial PET factorization before requiring
+    an expanded mode
+- `inactive-flat-k-required`
+  - the candidate residual requires flat-k immediately
+- `inactive-shape-family-required`
+  - the candidate residual requires shape-family immediately
+- `blocked`
+  - the candidate residual remains blocked without a clear active or expanded
+    completion signal
+
+This signal should remain research-only.
+
+It must not change:
+
+- stable CLI behavior
+- routing
+- anchor selection
+- residual descent core
+- verification
+
+The intended purpose is to make candidate ranking evidence more explicit before
+any future completion-aware residual descent policy is considered.
+
