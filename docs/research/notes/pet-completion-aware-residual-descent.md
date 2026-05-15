@@ -584,3 +584,42 @@ Expected keep decision:
 
 The experiment reports the inferred `structural_prefix`, but it remains
 observational only. It must not be treated as a production routing policy.
+
+### Guarded redirect execution probe
+
+A research-only execution probe can test whether a guarded structural-prefix
+redirect improves the actual residual route.
+
+Tool:
+
+    python tools/research/pet_guarded_redirect_execution_probe.py 357357
+
+The probe compares:
+
+- current route
+- guarded shadow redirect decision
+- redirected residual execution
+
+It reports:
+
+- `current_status`
+- `current_anchor`
+- `current_residual`
+- `guard_decision`
+- `shadow_anchor`
+- `shadow_residual`
+- `redirect_status`
+- `redirect_chain`
+- `redirect_terminal_residual`
+- `execution_delta`
+
+Initial execution deltas:
+
+- `guard-not-triggered`
+- `redirect-completes`
+- `redirect-expands-route`
+- `redirect-remains-blocked`
+
+This is the first research step that asks whether a guarded redirect is merely
+structurally elegant or actually improves execution. It remains observational
+and does not alter PET's real routing or anchor selection.
