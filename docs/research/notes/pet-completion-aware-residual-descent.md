@@ -623,3 +623,37 @@ Initial execution deltas:
 This is the first research step that asks whether a guarded redirect is merely
 structurally elegant or actually improves execution. It remains observational
 and does not alter PET's real routing or anchor selection.
+
+### Guarded redirect execution with expanded scan modes
+
+The guarded redirect execution probe also compares redirected residual execution
+under expanded scan modes:
+
+- flat-k
+- shape-family
+
+For a guarded redirect, the probe now reports:
+
+- `redirect_flat_k_status`
+- `redirect_flat_k_chain`
+- `redirect_flat_k_terminal_residual`
+- `redirect_shape_family_status`
+- `redirect_shape_family_chain`
+- `redirect_shape_family_terminal_residual`
+- `expanded_execution_delta`
+
+Initial expanded execution deltas:
+
+- `guard-not-triggered`
+- `redirect-completes-with-flat-k`
+- `redirect-completes-with-shape-family`
+- `redirect-still-blocked`
+
+This distinguishes three levels:
+
+1. the current route may be blocked
+2. the guarded redirect may expand the structural route
+3. the redirected route may complete under an expanded scan mode
+
+This remains research-only and does not change PET's real routing or anchor
+selection.

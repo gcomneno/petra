@@ -79,15 +79,29 @@ def run_probe(n: int, max_depth: int) -> dict[str, Any]:
     return json.loads(result.stdout)
 
 
-def run_route(n: int, max_depth: int) -> dict[str, str]:
+def run_route(
+    n: int,
+    max_depth: int,
+    *,
+    auto_flat_k_scan: bool = False,
+    auto_shape_family_scan: bool = False,
+) -> dict[str, str]:
+    command = [
+        sys.executable,
+        str(ROUTE_TOOL),
+        str(n),
+        "--max-depth",
+        str(max_depth),
+    ]
+
+    if auto_flat_k_scan:
+        command.append("--auto-flat-k-scan")
+
+    if auto_shape_family_scan:
+        command.append("--auto-shape-family-scan")
+
     result = subprocess.run(
-        [
-            sys.executable,
-            str(ROUTE_TOOL),
-            str(n),
-            "--max-depth",
-            str(max_depth),
-        ],
+        command,
         cwd=ROOT_DIR,
         capture_output=True,
         text=True,
@@ -202,6 +216,21 @@ def combine_chain(anchor: str, residual_chain: str) -> str:
     return f"{anchor} * {residual_chain}"
 
 
+def route_completed(route: dict[str, str]) -> bool:
+    return (
+        route.get("status") == "complete"
+        and route.get("terminal_residual") == "1"
+    )
+
+
+def empty_route() -> dict[str, str]:
+    return {
+        "status": "-",
+        "residual_reduction_chain": "-",
+        "terminal_residual": "-",
+    }
+
+
 def classify_execution_delta(
     *,
     guard_decision: str,
@@ -226,6 +255,24 @@ def classify_execution_delta(
     return "redirect-remains-blocked"
 
 
+def classify_expanded_execution_delta(
+    *,
+    guard_decision: str,
+    redirect_flat_k: dict[str, str],
+    redirect_shape_family: dict[str, str],
+) -> str:
+    if guard_decision != "would-redirect-to-shadow-anchor":
+        return "guard-not-triggered"
+
+    if route_completed(redirect_flat_k):
+        return "redirect-completes-with-flat-k"
+
+    if route_completed(redirect_shape_family):
+        return "redirect-completes-with-shape-family"
+
+    return "redirect-still-blocked"
+
+
 def build_row(n: int, max_depth: int) -> dict[str, Any]:
     probe = run_probe(n, max_depth)
     ranking = probe["ranking_policy_comparison"]
@@ -234,27 +281,56 @@ def build_row(n: int, max_depth: int) -> dict[str, Any]:
     shadow_anchor = ranking["suggested_anchor"]
     shadow_residual = ranking["suggested_residual"]
 
-    redirect_status = "-"
-    redirect_residual_chain = "-"
-    redirect_terminal_residual = "-"
+    redirect = empty_route()
+    redirect_flat_k = empty_route()
+    redirect_shape_family = empty_route()
+
     redirect_chain = "-"
+    redirect_flat_k_chain = "-"
+    redirect_shape_family_chain = "-"
 
     if (
         guard["guard_decision"] == "would-redirect-to-shadow-anchor"
         and is_positive_int_text(shadow_residual)
     ):
-        redirect = run_route(int(shadow_residual), max_depth)
-        redirect_status = redirect["status"]
-        redirect_residual_chain = redirect["residual_reduction_chain"]
-        redirect_terminal_residual = redirect["terminal_residual"]
-        redirect_chain = combine_chain(shadow_anchor, redirect_residual_chain)
+        shadow_residual_int = int(shadow_residual)
+
+        redirect = run_route(shadow_residual_int, max_depth)
+        redirect_flat_k = run_route(
+            shadow_residual_int,
+            max_depth,
+            auto_flat_k_scan=True,
+        )
+        redirect_shape_family = run_route(
+            shadow_residual_int,
+            max_depth,
+            auto_shape_family_scan=True,
+        )
+
+        redirect_chain = combine_chain(
+            shadow_anchor,
+            redirect["residual_reduction_chain"],
+        )
+        redirect_flat_k_chain = combine_chain(
+            shadow_anchor,
+            redirect_flat_k["residual_reduction_chain"],
+        )
+        redirect_shape_family_chain = combine_chain(
+            shadow_anchor,
+            redirect_shape_family["residual_reduction_chain"],
+        )
 
     execution_delta = classify_execution_delta(
         guard_decision=guard["guard_decision"],
         shadow_residual=shadow_residual,
-        redirect_status=redirect_status,
+        redirect_status=redirect["status"],
         redirect_chain=redirect_chain,
-        redirect_terminal_residual=redirect_terminal_residual,
+        redirect_terminal_residual=redirect["terminal_residual"],
+    )
+    expanded_execution_delta = classify_expanded_execution_delta(
+        guard_decision=guard["guard_decision"],
+        redirect_flat_k=redirect_flat_k,
+        redirect_shape_family=redirect_shape_family,
     )
 
     return {
@@ -271,11 +347,28 @@ def build_row(n: int, max_depth: int) -> dict[str, Any]:
         "shadow_signal": guard["shadow_signal"],
         "shadow_anchor": shadow_anchor,
         "shadow_residual": shadow_residual,
-        "redirect_status": redirect_status,
-        "redirect_residual_chain": redirect_residual_chain,
+        "redirect_status": redirect["status"],
+        "redirect_residual_chain": redirect["residual_reduction_chain"],
         "redirect_chain": redirect_chain,
-        "redirect_terminal_residual": redirect_terminal_residual,
+        "redirect_terminal_residual": redirect["terminal_residual"],
+        "redirect_flat_k_status": redirect_flat_k["status"],
+        "redirect_flat_k_residual_chain": redirect_flat_k[
+            "residual_reduction_chain"
+        ],
+        "redirect_flat_k_chain": redirect_flat_k_chain,
+        "redirect_flat_k_terminal_residual": redirect_flat_k[
+            "terminal_residual"
+        ],
+        "redirect_shape_family_status": redirect_shape_family["status"],
+        "redirect_shape_family_residual_chain": redirect_shape_family[
+            "residual_reduction_chain"
+        ],
+        "redirect_shape_family_chain": redirect_shape_family_chain,
+        "redirect_shape_family_terminal_residual": redirect_shape_family[
+            "terminal_residual"
+        ],
         "execution_delta": execution_delta,
+        "expanded_execution_delta": expanded_execution_delta,
     }
 
 
@@ -310,6 +403,27 @@ def print_text(rows: list[dict[str, Any]]) -> None:
         print(f"redirect_chain = {row['redirect_chain']}")
         print(f"redirect_terminal_residual = {row['redirect_terminal_residual']}")
         print(f"execution_delta = {row['execution_delta']}")
+        print()
+        print("redirect_expanded:")
+        print(f"redirect_flat_k_status = {row['redirect_flat_k_status']}")
+        print(f"redirect_flat_k_chain = {row['redirect_flat_k_chain']}")
+        print(
+            f"redirect_flat_k_terminal_residual = "
+            f"{row['redirect_flat_k_terminal_residual']}"
+        )
+        print(
+            f"redirect_shape_family_status = "
+            f"{row['redirect_shape_family_status']}"
+        )
+        print(
+            f"redirect_shape_family_chain = "
+            f"{row['redirect_shape_family_chain']}"
+        )
+        print(
+            f"redirect_shape_family_terminal_residual = "
+            f"{row['redirect_shape_family_terminal_residual']}"
+        )
+        print(f"expanded_execution_delta = {row['expanded_execution_delta']}")
 
 
 def main() -> int:

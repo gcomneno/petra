@@ -61,3 +61,29 @@ def test_guarded_redirect_execution_probe_text_output() -> None:
     assert "guard_decision = would-redirect-to-shadow-anchor" in result.stdout
     assert "shadow_anchor = 3" in result.stdout
     assert "redirect_chain = 3 * " in result.stdout
+
+def test_guarded_redirect_execution_probe_completes_with_flat_k() -> None:
+    result = run_probe("357357", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+
+    assert row["guard_decision"] == "would-redirect-to-shadow-anchor"
+    assert row["execution_delta"] == "redirect-expands-route"
+    assert row["redirect_flat_k_status"] == "complete"
+    assert row["redirect_flat_k_terminal_residual"] == "1"
+    assert row["redirect_flat_k_chain"].startswith("3 * ")
+    assert row["expanded_execution_delta"] == "redirect-completes-with-flat-k"
+
+
+def test_guarded_redirect_execution_probe_reports_expanded_guard_not_triggered() -> None:
+    result = run_probe("30030", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+
+    assert row["guard_decision"] == "keep-current"
+    assert row["execution_delta"] == "guard-not-triggered"
+    assert row["expanded_execution_delta"] == "guard-not-triggered"
+    assert row["redirect_flat_k_status"] == "-"
+    assert row["redirect_shape_family_status"] == "-"
