@@ -116,6 +116,84 @@ def _run_structural_factorization(args: argparse.Namespace) -> int:
             + ", ".join(missing)
         )
 
+    guarded_redirect_summary = {}
+
+    if args.guarded_redirect:
+        probe_output = _run_repo_python_tool(
+            _repo_tool_path(
+                "tools",
+                "research",
+                "pet_guarded_redirect_execution_probe.py",
+            ),
+            [
+                str(args.n),
+                "--max-depth",
+                str(args.max_depth),
+                "--json",
+            ],
+        )
+
+        probe_data = json.loads(probe_output)
+        row = probe_data["rows"][0]
+
+        execution_delta = row.get("expanded_execution_delta")
+        guard_reason = row.get("guard_reason")
+
+        if execution_delta == "redirect-completes-with-flat-k":
+            values["residual_descent_status"] = "complete"
+            values["residual_reduction_chain"] = row[
+                "redirect_flat_k_chain"
+            ]
+            values["terminal_residual"] = str(
+                row["redirect_flat_k_terminal_residual"]
+            )
+
+            guarded_redirect_summary = {
+                "guarded_redirect": "applied",
+                "guarded_redirect_mode": "flat-k",
+                "guarded_redirect_current_anchor": str(
+                    row["current_anchor"]
+                ),
+                "guarded_redirect_redirect_anchor": str(
+                    row["shadow_anchor"]
+                ),
+                "guarded_redirect_structural_prefix": str(
+                    row["structural_prefix"]
+                ),
+                "guarded_redirect_execution_delta": execution_delta,
+            }
+
+        elif execution_delta == "redirect-completes-with-shape-family":
+            values["residual_descent_status"] = "complete"
+            values["residual_reduction_chain"] = row[
+                "redirect_shape_family_chain"
+            ]
+            values["terminal_residual"] = str(
+                row["redirect_shape_family_terminal_residual"]
+            )
+
+            guarded_redirect_summary = {
+                "guarded_redirect": "applied",
+                "guarded_redirect_mode": "shape-family",
+                "guarded_redirect_current_anchor": str(
+                    row["current_anchor"]
+                ),
+                "guarded_redirect_redirect_anchor": str(
+                    row["shadow_anchor"]
+                ),
+                "guarded_redirect_structural_prefix": str(
+                    row["structural_prefix"]
+                ),
+                "guarded_redirect_execution_delta": execution_delta,
+            }
+
+        else:
+            guarded_redirect_summary = {
+                "guarded_redirect": "not-applied",
+                "guarded_redirect_reason": execution_delta,
+                "guarded_redirect_guard_reason": guard_reason,
+            }
+
     if args.pest_json is not None:
         pest_output = _run_repo_python_tool(
             _repo_tool_path("tools", "research", "pet_syntax_tree_probe.py"),
@@ -129,6 +207,10 @@ def _run_structural_factorization(args: argparse.Namespace) -> int:
     print(f"status = {values['residual_descent_status']}")
     print(f"residual_reduction_chain = {values['residual_reduction_chain']}")
     print(f"terminal_residual = {values['terminal_residual']}")
+
+    for key, value in guarded_redirect_summary.items():
+        print(f"{key} = {value}")
+
     print(f"claim = {STRUCTURAL_FACTORIZATION_CLAIM}")
 
     return 0
@@ -5866,6 +5948,12 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="write optional research-only PEST JSON artifact",
     )
+    p_structural_factorization.add_argument(
+        "--guarded-redirect",
+        action="store_true",
+        help="enable experimental guarded structural-prefix redirect mode",
+    )
+
 
     # backbone-cache
     p_backbone_cache = subparsers.add_parser(

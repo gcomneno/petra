@@ -220,6 +220,38 @@ pet structural-factorization 24680 --max-depth 4 --pest-json out.json
 
 `--pest-json` produce un JSON `pet.syntax_tree.v0` opzionale e non decisionale.
 
+
+
+Experimental guarded redirect mode:
+
+    pet structural-factorization 357357 --max-depth 4 --guarded-redirect
+
+Output:
+
+    PET STRUCTURAL FACTORIZATION
+
+    N = 357357
+    status = complete
+    residual_reduction_chain = 3 * 7 * 7 * 17 * 11 * 13
+    terminal_residual = 1
+    guarded_redirect = applied
+    guarded_redirect_mode = flat-k
+    guarded_redirect_current_anchor = 231
+    guarded_redirect_redirect_anchor = 3
+    guarded_redirect_structural_prefix = 77
+    guarded_redirect_execution_delta = redirect-completes-with-flat-k
+    claim = PET performs structural factorization of the PET shape; classic verification confirms arithmetic factors
+
+`--guarded-redirect` is explicit opt-in. The default structural-factorization
+route is unchanged.
+
+The guarded mode only reports an applied redirect when the structural-prefix
+guard triggers and the redirected route completes under an expanded scan mode.
+If the guard does not trigger, PET keeps the normal structural-factorization
+summary and reports `guarded_redirect = not-applied`.
+
+This mode is experimental and does not change default PET routing.
+
 #### Signature canonica della shape
 
 ```bash
