@@ -549,3 +549,38 @@ The report calls the completion-aware residual probe with
 
 It is observational only and does not change PET routing, anchor selection,
 residual descent, verification, or stable CLI behavior.
+
+### Guarded structural prefix trap policy experiment
+
+A research-only guarded policy experiment can evaluate when a shadow
+completion-aware suggestion would be allowed to redirect the current selected
+anchor.
+
+Tool:
+
+    python tools/research/pet_guarded_prefix_trap_policy_experiment.py --redirect-only
+
+The experiment does not change PET's real anchor selection.
+
+A redirect is allowed only when the structural prefix trap guard matches:
+
+- current status is `blocked-no-verified-anchor`
+- shadow ranking changed the selection
+- current selected anchor and shadow anchor are positive integers
+- current selected anchor is divisible by shadow anchor
+- `current_anchor / shadow_anchor > 1`
+- shadow candidate has `active_completion_signal = active-partial-expandable`
+- current selected candidate has an inactive signal:
+  - `inactive-flat-k-required`
+  - `inactive-shape-family-required`
+
+Expected redirect decision:
+
+    guard_decision = would-redirect-to-shadow-anchor
+
+Expected keep decision:
+
+    guard_decision = keep-current
+
+The experiment reports the inferred `structural_prefix`, but it remains
+observational only. It must not be treated as a production routing policy.
