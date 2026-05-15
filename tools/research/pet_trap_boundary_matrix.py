@@ -78,16 +78,26 @@ def parse_range(raw: str) -> list[int]:
     return list(range(start, end + 1))
 
 
-def run_probe(numbers: list[int], max_depth: int) -> dict[str, Any]:
+def run_probe(
+    numbers: list[int],
+    max_depth: int,
+    *,
+    scan_profile: str,
+) -> dict[str, Any]:
+    command = [
+        sys.executable,
+        str(PROBE_TOOL),
+        *[str(n) for n in numbers],
+        "--max-depth",
+        str(max_depth),
+        "--json",
+    ]
+
+    if scan_profile == "lightweight":
+        command.append("--skip-expanded-execution")
+
     result = subprocess.run(
-        [
-            sys.executable,
-            str(PROBE_TOOL),
-            *[str(n) for n in numbers],
-            "--max-depth",
-            str(max_depth),
-            "--json",
-        ],
+        command,
         cwd=ROOT_DIR,
         capture_output=True,
         text=True,
@@ -126,7 +136,11 @@ def classify_activity_transition(
     return "mixed"
 
 
-def classify_row(row: dict[str, Any]) -> str:
+def classify_row(
+    row: dict[str, Any],
+    *,
+    activity_transition: str,
+) -> str:
     expanded = row["expanded_execution_delta"]
 
     if expanded == "redirect-completes-with-flat-k":
@@ -137,6 +151,13 @@ def classify_row(row: dict[str, Any]) -> str:
 
     if expanded == "redirect-still-blocked":
         return "redirect-still-blocked"
+
+    if (
+        expanded == "skipped"
+        and activity_transition
+        == "inactive-to-active"
+    ):
+        return "redirect-candidate"
 
     if row["current_status"] == "complete":
         return "healthy-active"
@@ -153,6 +174,8 @@ def classify_row(row: dict[str, Any]) -> str:
 def build_rows(
     numbers: list[int],
     max_depth: int,
+    *,
+    scan_profile: str,
 ) -> list[dict[str, Any]]:
     print(
         f"[trap-boundary-matrix] probing "
@@ -160,7 +183,11 @@ def build_rows(
         file=sys.stderr,
     )
 
-    probe = run_probe(numbers, max_depth)
+    probe = run_probe(
+        numbers,
+        max_depth,
+        scan_profile=scan_profile,
+    )
 
     rows = []
 
@@ -176,7 +203,10 @@ def build_rows(
             row["shadow_signal"],
         )
 
-        classification = classify_row(row)
+        classification = classify_row(
+            row,
+            activity_transition=activity_transition,
+        )
 
         rows.append(
             {
@@ -247,6 +277,16 @@ def main() -> int:
     parser.add_argument("--max-depth", type=int, default=4)
 
     parser.add_argument(
+        "--scan-profile",
+        choices=["lightweight", "full"],
+        default="full",
+        help=(
+            "lightweight skips expanded redirect execution; "
+            "full preserves complete phenomenology"
+        ),
+    )
+
+    parser.add_argument(
         "--classification-filter",
         action="append",
         default=[],
@@ -268,7 +308,11 @@ def main() -> int:
     if not numbers:
         numbers = DEFAULT_NUMBERS
 
-    rows = build_rows(numbers, args.max_depth)
+    rows = build_rows(
+        numbers,
+        args.max_depth,
+        scan_profile=args.scan_profile,
+    )
 
     if args.classification_filter:
         rows = [

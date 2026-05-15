@@ -101,3 +101,35 @@ def test_trap_boundary_matrix_filter_can_return_empty() -> None:
     lines = result.stdout.strip().splitlines()
 
     assert len(lines) == 1
+
+
+def test_lightweight_scan_marks_redirect_candidate() -> None:
+    result = run_matrix(
+        "357357",
+        "--scan-profile",
+        "lightweight",
+    )
+
+    lines = result.stdout.strip().splitlines()
+
+    assert len(lines) == 2
+
+    assert "skipped" in lines[1]
+    assert "redirect-candidate" in lines[1]
+
+
+def test_full_scan_preserves_recoverable_classification() -> None:
+    result = run_matrix(
+        "357357",
+        "--scan-profile",
+        "full",
+    )
+
+    lines = result.stdout.strip().splitlines()
+
+    assert len(lines) == 2
+
+    assert (
+        "redirect-recoverable-flat-k"
+        in lines[1]
+    )
