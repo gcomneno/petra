@@ -57,6 +57,7 @@ The current research-only probes are:
 
 - `../../tools/research/pet_operator_axis_invariant_probe.py` — validates the first operator-axis invariants against the existing shape-level operator algebra.
 - `../../tools/research/pet_operator_address_probe.py` — resolves documented PET/PEG 2.0 recursive operator addresses against PET objects produced by `pet.encode(N)`.
+- `../../tools/research/pet_operator_x_address_probe.py` — classifies hypothetical address-aware X-axis operations using the uniform parent-support form `NEW(parent_address, q)` / `DROP(parent_address, p)`.
 
 These probes are not part of stable PET-Base behavior. They do not change CLI defaults, core operator semantics, routing, anchor selection, or residual descent.
 
