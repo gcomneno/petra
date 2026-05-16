@@ -273,7 +273,12 @@ def classify_expanded_execution_delta(
     return "redirect-still-blocked"
 
 
-def build_row(n: int, max_depth: int) -> dict[str, Any]:
+def build_row(
+    n: int,
+    max_depth: int,
+    *,
+    skip_expanded_execution: bool = False,
+) -> dict[str, Any]:
     probe = run_probe(n, max_depth)
     ranking = probe["ranking_policy_comparison"]
     guard = evaluate_guard(probe)
@@ -296,16 +301,18 @@ def build_row(n: int, max_depth: int) -> dict[str, Any]:
         shadow_residual_int = int(shadow_residual)
 
         redirect = run_route(shadow_residual_int, max_depth)
-        redirect_flat_k = run_route(
-            shadow_residual_int,
-            max_depth,
-            auto_flat_k_scan=True,
-        )
-        redirect_shape_family = run_route(
-            shadow_residual_int,
-            max_depth,
-            auto_shape_family_scan=True,
-        )
+
+        if not skip_expanded_execution:
+            redirect_flat_k = run_route(
+                shadow_residual_int,
+                max_depth,
+                auto_flat_k_scan=True,
+            )
+            redirect_shape_family = run_route(
+                shadow_residual_int,
+                max_depth,
+                auto_shape_family_scan=True,
+            )
 
         redirect_chain = combine_chain(
             shadow_anchor,
@@ -327,11 +334,16 @@ def build_row(n: int, max_depth: int) -> dict[str, Any]:
         redirect_chain=redirect_chain,
         redirect_terminal_residual=redirect["terminal_residual"],
     )
-    expanded_execution_delta = classify_expanded_execution_delta(
-        guard_decision=guard["guard_decision"],
-        redirect_flat_k=redirect_flat_k,
-        redirect_shape_family=redirect_shape_family,
-    )
+    if skip_expanded_execution:
+        expanded_execution_delta = "skipped"
+    else:
+        expanded_execution_delta = (
+            classify_expanded_execution_delta(
+                guard_decision=guard["guard_decision"],
+                redirect_flat_k=redirect_flat_k,
+                redirect_shape_family=redirect_shape_family,
+            )
+        )
 
     return {
         "n": n,
@@ -435,6 +447,16 @@ def main() -> int:
     )
     parser.add_argument("n", type=positive_int, nargs="+")
     parser.add_argument("--max-depth", type=int, default=4)
+
+    parser.add_argument(
+        "--skip-expanded-execution",
+        action="store_true",
+        help=(
+            "skip expanded redirect execution scans "
+            "(flat-k and shape-family)"
+        ),
+    )
+
     parser.add_argument("--json", action="store_true")
 
     args = parser.parse_args()
@@ -442,7 +464,16 @@ def main() -> int:
     if args.max_depth < 0:
         raise SystemExit("--max-depth must be >= 0")
 
-    rows = [build_row(n, args.max_depth) for n in args.n]
+    rows = [
+        build_row(
+            n,
+            args.max_depth,
+            skip_expanded_execution=(
+                args.skip_expanded_execution
+            ),
+        )
+        for n in args.n
+    ]
 
     if args.json:
         print(
