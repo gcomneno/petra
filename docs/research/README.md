@@ -45,6 +45,20 @@ The current PET-to-classic routing pipeline is documented in:
 
 It describes the completed text-output pipeline: structural diagnosis, grip diagnostic, route escalation policy, route execution, factor promotion, final status, and canonical examples.
 
+## PET/PEG 2.0 operator-axis probes
+
+The PET/PEG 2.0 foundation layer introduces X/Y/Z operator axes:
+
+- X — support topology
+- Y — recursive refinement
+- Z — connectivity dynamics
+
+The current research-only probe is:
+
+- `../../tools/research/pet_operator_axis_invariant_probe.py` — validates the first operator-axis invariants against the existing shape-level operator algebra.
+
+This probe is not part of stable PET-Base behavior. It does not change CLI defaults, routing, anchor selection, or residual descent.
+
 ## PET-METICA reading map
 
 PET-METICA material is intentionally split by stability level.
