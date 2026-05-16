@@ -12,7 +12,8 @@ residual-descent semantics.
 2. `operator-algebra.md` — support-preserving and support-expanding operators
 3. `projection-semantics.md` — projection and interpretation semantics
 4. `path-history.md` — transformational memory and path-dependent identity
-5. `pet-2-roadmap.md` — PET 2.0 research roadmap
+5. `operator-addresses.md` — recursive operator selectors and their PEG role
+6. `pet-2-roadmap.md` — PET 2.0 research roadmap
 
 ## Scope
 
@@ -24,6 +25,7 @@ The foundations layer separates:
 - projection semantics
 - support-preserving operators
 - support-expanding operators
+- recursive operator addresses
 
 This material is intended to make ongoing PET/PEG dynamics research more precise
 and less ad hoc.
