@@ -19,6 +19,7 @@ For the stable core and operational reference:
 
 ## Main areas
 
+- `foundations/` — PET/PEG 2.0 conceptual foundations and research roadmap
 - `reports/` — process docs, generated reports, and report data
 - `research/` — research notes, experiments, partial-shape material, and datasets that are not part of PET-Base
 
@@ -41,6 +42,13 @@ Read:
 
 1. `reference/CLI.md`
 
+### If you want the PET/PEG 2.0 foundation layer
+Read:
+
+1. `foundations/README.md`
+2. `foundations/pet-core-v0.md`
+3. `foundations/pet-2-roadmap.md`
+
 ### If you want the live research material
 Start from:
 
@@ -50,5 +58,6 @@ Start from:
 ## Source-of-truth notes
 
 - `research/notes/PET-METICA.md` is the current source of truth for the rewrite-geometric PET-METICA line.
+- `foundations/` contains PET/PEG 2.0 conceptual foundations and roadmap material.
 - `reference/SPEC.md` is the source of truth for PET-Base behavior.
 - `reports/STATUS.md` is the source of truth for what is stable, empirical, or exploratory.

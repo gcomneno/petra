@@ -125,6 +125,7 @@ pet query filter docs/reports/data/scan-2-1000.jsonl --where "height=2" --limit 
 
 ### Live research line
 - PET-METICA as rewrite geometry on canonical PET shapes
+- PET/PEG 2.0 foundations as conceptual research material for object structure, connectivity dynamics, path-history, and projection semantics
 
 Operational PET-METICA CLI core:
 
@@ -149,6 +150,7 @@ PET-METICA is operational but still research-facing: rewrite scans and hub/frict
 Start here depending on what you need:
 
 - [docs/README.md](docs/README.md) — documentation entry point
+- [docs/foundations/README.md](docs/foundations/README.md) — PET/PEG 2.0 conceptual foundations and roadmap
 - [docs/VISION.md](docs/VISION.md) — project vision and layer structure
 - [docs/reports/STATUS.md](docs/reports/STATUS.md) — what is stable, empirical, or exploratory
 - [docs/ROADMAP.md](docs/ROADMAP.md) — post-release development roadmap
