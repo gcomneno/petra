@@ -59,6 +59,7 @@ The current research-only probes are:
 - `../../tools/research/pet_operator_address_probe.py` — resolves documented PET/PEG 2.0 recursive operator addresses against PET objects produced by `pet.encode(N)`.
 - `../../tools/research/pet_operator_x_address_probe.py` — classifies hypothetical address-aware X-axis operations using the uniform parent-support form `NEW(parent_address, q)` / `DROP(parent_address, p)`.
 - `../../tools/research/pet_operator_y_address_probe.py` — classifies address-aware Y-axis targets for `INC(address)` / `DEC(address)` without mutating PET objects.
+- `../../tools/research/pet_operator_y_mutation_probe.py` — emits research-only hypothetical Y-axis value-level exponent mutations for `INC(address)` / `DEC(address)`.
 
 These probes are not part of stable PET-Base behavior. They do not change CLI defaults, core operator semantics, routing, anchor selection, or residual descent.
 
