@@ -60,6 +60,7 @@ The current research-only probes are:
 - `../../tools/research/pet_operator_x_address_probe.py` — classifies hypothetical address-aware X-axis operations using the uniform parent-support form `NEW(parent_address, q)` / `DROP(parent_address, p)`.
 - `../../tools/research/pet_operator_y_address_probe.py` — classifies address-aware Y-axis targets for `INC(address)` / `DEC(address)` without mutating PET objects.
 - `../../tools/research/pet_operator_y_mutation_probe.py` — emits research-only hypothetical Y-axis value-level exponent mutations for `INC(address)` / `DEC(address)`.
+- `../../tools/research/pet_operator_z_route_probe.py` — validates research-only Z-axis history-prefix route references for `REDIRECT(...)` / `SHADOW_SELECT(...)`.
 
 These probes are not part of stable PET-Base behavior. They do not change CLI defaults, core operator semantics, routing, anchor selection, or residual descent.
 
