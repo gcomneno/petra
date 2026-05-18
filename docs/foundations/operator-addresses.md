@@ -43,40 +43,50 @@ An operator invocation is an operator plus its address and arguments.
 
 Examples:
 
-    NEW(address=[], q=11)
-    DROP(address=[5])
+    NEW(parent_address=[], q=11)
+    DROP(parent_address=[], p=5)
     INC(address=[7])
     DEC(address=[7, 2])
 
+The current executable research snapshot refines X-axis operators to use a
+uniform parent-support form. See `operator-semantics-snapshot.md`.
+
 ## X-axis operators
 
-X-axis operators change support topology at the addressed PET object.
+X-axis operators change support topology at an addressed parent PET object.
 
-### NEW(address, q)
+The current executable research snapshot uses a uniform parent-support form:
 
-Adds a new primal root q to the baseline at address.
+    NEW(parent_address, q)
+    DROP(parent_address, p)
+
+### NEW(parent_address, q)
+
+Adds a new primal root q to the baseline of the PET object resolved by
+parent_address.
 
 Example:
 
-    NEW(address=[], q=11)
+    NEW(parent_address=[], q=11)
 
 adds 11 to the top-level baseline.
 
-    NEW(address=[7], q=11)
+    NEW(parent_address=[7], q=11)
 
 adds 11 inside the exponent-object associated with the top-level root 7.
 
-### DROP(address)
+### DROP(parent_address, p)
 
-Removes the selected primal root.
+Removes primal root p from the baseline of the PET object resolved by
+parent_address.
 
 Example:
 
-    DROP(address=[5])
+    DROP(parent_address=[], p=5)
 
 removes the top-level root 5.
 
-    DROP(address=[7, 3])
+    DROP(parent_address=[7], p=3)
 
 enters the exponent-object of 7 and removes the local root 3.
 
@@ -115,11 +125,12 @@ They affect route choice, connectivity, or traversal dynamics.
 
 Examples:
 
-    REDIRECT(from_route=A, to_route=B)
-    SHADOW_SELECT(route=A)
+    REDIRECT(at_history_prefix=H, from_next=A, to_next=B)
+    SHADOW_SELECT(at_history_prefix=H, selected_next=A)
 
-A Z-axis operator may reference addresses or routes, but it is not itself a
-support-topology or recursive-refinement mutation.
+A Z-axis operator may reference route/history semantics. Addresses may appear
+inside operator invocation labels, but Z is not itself a support-topology or
+recursive-refinement mutation.
 
 ## PEG role
 
@@ -148,7 +159,7 @@ Example:
 The corresponding path-history records the addressed invocation:
 
     [
-      NEW(address=[], q=7),
+      NEW(parent_address=[], q=7),
       INC(address=[7]),
       INC(address=[7,2]),
       DEC(address=[5])
