@@ -102,13 +102,14 @@ Current milestone:
 - X-axis support topology uses `NEW(parent_address, q)` and `DROP(parent_address, p)`
 - Y-axis recursive refinement uses `INC(address)` and `DEC(address)`
 - Y-axis hypothetical mutation probes model value-level exponent changes as `k -> k + 1` and `k -> k - 1`
+- X/Y commutativity probing compares `X then Y` vs `Y then X` orderings
 - Z-axis route dynamics use history-prefix references for `REDIRECT(...)` and `SHADOW_SELECT(...)`
 - the foundation snapshot is recorded in `docs/foundations/operator-semantics-snapshot.md`
 - full regression after the operator semantics tranche: `620 passed, 1 skipped`
 
 Next questions:
 
-- study X/Y commutativity and non-commutativity
+- expand X/Y commutativity and non-commutativity observations
 - study address stability across NEW, DROP, INC, and DEC
 - connect operator invocations to path-history identity
 - evolve synthetic Z-axis route labels into structured PEG edge payloads

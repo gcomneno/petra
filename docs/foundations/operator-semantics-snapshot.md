@@ -178,6 +178,41 @@ DEC(address)
 
 REDIRECT(at_history_prefix, from_next, to_next)
 SHADOW_SELECT(at_history_prefix, selected_next)
+X/Y composition observations
+
+A research-only X/Y commutativity probe now compares two orderings from the
+same starting PET object:
+
+    X then Y
+    Y then X
+
+The probe currently observes and classifies executable composition behavior.
+It does not promote a final algebra.
+
+Initial observed classifications include:
+
+    commutes
+    non-commutes
+    both-invalid
+    support-created-y-target
+    support-removed-y-target
+
+Observed examples:
+
+    NEW(parent_address=[], q=7) and INC(address=[3]) on 60 commute.
+
+    NEW(parent_address=[], q=7) before INC(address=[7]) creates a Y target
+    that does not exist in the reverse order.
+
+    DROP(parent_address=[], p=2) before INC(address=[2]) removes a Y target
+    that exists in the reverse order.
+
+    NEW(parent_address=[2], q=5) and INC(address=[2]) on 60 are both valid
+    in both orders, but do not commute.
+
+These observations are still research-only and value-level. They do not define
+final PET/PEG algebraic closure.
+
 Open questions
 Are value-level Y mutations the final Y-axis semantics, or only one candidate?
 How should X/Y mutations compose with path-history?
