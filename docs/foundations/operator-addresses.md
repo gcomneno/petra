@@ -182,6 +182,42 @@ Shape paths are useful for normalized structural probes.
 PET addresses are needed for labeled recursive PET semantics and PEG
 path-history.
 
+## Address stability observations
+
+A research-only address stability probe now resolves a tracked address before
+and after one operator invocation.
+
+The probe observes whether an address remains valid, becomes valid, becomes
+invalid, or survives while resolving to a changed target.
+
+Initial observed classifications include:
+
+    stable
+    created
+    destroyed
+    retargeted
+    leaf-blocked
+    still-invalid
+    operator-invalid
+
+Observed examples on 60:
+
+    NEW(parent_address=[], q=7) preserves unrelated address [3].
+
+    NEW(parent_address=[], q=7) creates address [7].
+
+    DROP(parent_address=[], p=2) destroys address [2].
+
+    INC(address=[2]) preserves address [2] syntactically, but changes the
+    selected exponent-object, so the tracked address is classified as
+    retargeted.
+
+    DEC(address=[2]) makes recursive address [2,2] leaf-blocked because the
+    exponent of 2 becomes a leaf exponent.
+
+These observations are research-only. They classify executable address behavior
+for current probes and do not define final PET/PEG address algebra.
+
 ## Open questions
 
 - Should addresses be primal-root based, shape-path based, or represented in both forms?

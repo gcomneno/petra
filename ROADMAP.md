@@ -103,6 +103,7 @@ Current milestone:
 - Y-axis recursive refinement uses `INC(address)` and `DEC(address)`
 - Y-axis hypothetical mutation probes model value-level exponent changes as `k -> k + 1` and `k -> k - 1`
 - X/Y commutativity probing compares `X then Y` vs `Y then X` orderings
+- address stability probing tracks recursive address resolution across one operator
 - Z-axis route dynamics use history-prefix references for `REDIRECT(...)` and `SHADOW_SELECT(...)`
 - the foundation snapshot is recorded in `docs/foundations/operator-semantics-snapshot.md`
 - full regression after the operator semantics tranche: `620 passed, 1 skipped`
@@ -110,7 +111,7 @@ Current milestone:
 Next questions:
 
 - expand X/Y commutativity and non-commutativity observations
-- study address stability across NEW, DROP, INC, and DEC
+- expand address stability observations across longer operator sequences
 - connect operator invocations to path-history identity
 - evolve synthetic Z-axis route labels into structured PEG edge payloads
 
