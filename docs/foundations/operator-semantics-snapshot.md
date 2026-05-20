@@ -213,6 +213,28 @@ Observed examples:
 These observations are still research-only and value-level. They do not define
 final PET/PEG algebraic closure.
 
+Address stability observations
+
+A research-only address stability probe now compares resolution of a tracked
+recursive address before and after one operator.
+
+Initial observed classifications include:
+
+    stable
+    created
+    destroyed
+    retargeted
+    leaf-blocked
+    still-invalid
+    operator-invalid
+
+The key distinction is that an address can remain syntactically valid while
+its resolved exponent-object changes. Current probes classify that case as
+retargeted.
+
+These observations remain research-only and do not define final address
+stability rules.
+
 Open questions
 Are value-level Y mutations the final Y-axis semantics, or only one candidate?
 How should X/Y mutations compose with path-history?
