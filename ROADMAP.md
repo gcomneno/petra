@@ -91,12 +91,12 @@ Focus areas:
 - identify robust hubs and family-level behavior
 - avoid overstating computational observations as proved mathematics
 
-### 7. Consolidate PET/PEG 2.0 operator semantics
+### 7. PET/PEG 2.0 executable operator semantics baseline — completed
 
-PET/PEG 2.0 now has a research-only executable operator semantics layer for
-recursive addresses and X/Y/Z operator roles.
+PET/PEG 2.0 now has a closed research-only executable operator semantics
+baseline for recursive addresses and X/Y/Z operator roles.
 
-Current milestone:
+Completed baseline:
 
 - recursive operator addresses are documented and probeable
 - X-axis support topology uses `NEW(parent_address, q)` and `DROP(parent_address, p)`
@@ -106,14 +106,16 @@ Current milestone:
 - address stability probing tracks recursive address resolution across one operator
 - Z-axis route dynamics use history-prefix references for `REDIRECT(...)` and `SHADOW_SELECT(...)`
 - the foundation snapshot is recorded in `docs/foundations/operator-semantics-snapshot.md`
+- the baseline closure is recorded in `docs/foundations/pet-peg-2.0-baseline.md`
 - full regression after the operator semantics tranche: `620 passed, 1 skipped`
 
-Next questions:
+Post-2.0 questions:
 
-- expand X/Y commutativity and non-commutativity observations
+- expand X/Y commutativity and non-commutativity observations across families
 - expand address stability observations across longer operator sequences
 - connect operator invocations to path-history identity
 - evolve synthetic Z-axis route labels into structured PEG edge payloads
+- investigate Z-axis route execution only as explicit research-only follow-up
 
 ### 8. Keep stable vs exploratory boundaries sharp
 

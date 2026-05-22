@@ -14,7 +14,8 @@ residual-descent semantics.
 4. `path-history.md` — transformational memory and path-dependent identity
 5. `operator-addresses.md` — recursive operator selectors and their PEG role
 6. `operator-semantics-snapshot.md` — current research-only executable X/Y/Z operator semantics
-7. `pet-2-roadmap.md` — PET 2.0 research roadmap
+7. `pet-peg-2.0-baseline.md` — closed executable PET/PEG 2.0 operator semantics baseline
+8. `pet-2-roadmap.md` — PET 2.0 research roadmap
 
 ## Scope
 
@@ -28,6 +29,7 @@ The foundations layer separates:
 - support-expanding operators
 - recursive operator addresses
 - executable research-only operator semantics snapshots
+- closed PET/PEG 2.0 executable operator semantics baseline
 
 This material is intended to make ongoing PET/PEG dynamics research more precise
 and less ad hoc.
