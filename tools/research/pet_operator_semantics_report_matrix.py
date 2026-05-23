@@ -182,6 +182,44 @@ def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return groups
 
 
+def filter_pattern_groups(
+    pattern_groups: list[dict[str, Any]],
+    *,
+    top_patterns: int | None = None,
+    min_count: int | None = None,
+    pattern: str | None = None,
+) -> list[dict[str, Any]]:
+    filtered = pattern_groups
+
+    if min_count is not None:
+        filtered = [group for group in filtered if group["count"] >= min_count]
+
+    if pattern is not None:
+        filtered = [
+            group
+            for group in filtered
+            if pattern in group["combined_pattern_signature"]
+        ]
+
+    if top_patterns is not None:
+        indexed_groups = list(enumerate(filtered))
+        indexed_groups.sort(key=lambda item: (-item[1]["count"], item[0]))
+        filtered = [group for _, group in indexed_groups[:top_patterns]]
+
+    return filtered
+
+
+def validate_pattern_group_filters(
+    *,
+    top_patterns: int | None = None,
+    min_count: int | None = None,
+) -> None:
+    if top_patterns is not None and top_patterns < 1:
+        raise ValueError("--top-patterns N requires N >= 1")
+    if min_count is not None and min_count < 1:
+        raise ValueError("--min-count N requires N >= 1")
+
+
 def inclusive_range(start: int, end: int) -> list[int]:
     if start > end:
         raise ValueError("--range START END requires START <= END")
@@ -211,15 +249,35 @@ def collect_numbers(
     return deduped
 
 
-def build_payload(numbers: list[int]) -> dict[str, Any]:
-    rows = [build_row(n) for n in numbers]
-    pattern_groups = group_rows_by_pattern(rows)
+def build_payload(
+    numbers: list[int],
+    *,
+    top_patterns: int | None = None,
+    min_count: int | None = None,
+    pattern: str | None = None,
+    include_rows: bool = True,
+) -> dict[str, Any]:
+    validate_pattern_group_filters(top_patterns=top_patterns, min_count=min_count)
 
-    return {
+    rows = [build_row(n) for n in numbers]
+    all_pattern_groups = group_rows_by_pattern(rows)
+    pattern_groups = filter_pattern_groups(
+        all_pattern_groups,
+        top_patterns=top_patterns,
+        min_count=min_count,
+        pattern=pattern,
+    )
+    filters_active = (
+        top_patterns is not None
+        or min_count is not None
+        or pattern is not None
+        or not include_rows
+    )
+
+    payload = {
         "schema": SCHEMA,
         "claim": CLAIM,
         "numbers": numbers,
-        "rows": rows,
         "summary": {
             "checked": len(rows),
             "axis_invariant_failures": sum(
@@ -228,15 +286,30 @@ def build_payload(numbers: list[int]) -> dict[str, Any]:
             "numbers_with_axis_invariant_failures": [
                 row["n"] for row in rows if row["axis_invariants_failed"] > 0
             ],
-            "pattern_count": len(pattern_groups),
+            "pattern_count": len(all_pattern_groups),
+            "emitted_pattern_count": len(pattern_groups),
+            "pattern_group_filter_active": filters_active,
             "numbers_by_pattern": {
                 group["combined_pattern_signature"]: group["numbers"]
-                for group in pattern_groups
+                for group in all_pattern_groups
             },
         },
         "pattern_groups": pattern_groups,
+        "pattern_group_filters": {
+            "top_patterns": top_patterns,
+            "min_count": min_count,
+            "pattern": pattern,
+            "include_rows": include_rows,
+            "active": filters_active,
+        },
         "boundaries": BOUNDARIES,
     }
+
+    if include_rows:
+        payload["rows"] = rows
+
+    return payload
+
 
 
 def print_text(payload: dict[str, Any]) -> None:
@@ -244,23 +317,28 @@ def print_text(payload: dict[str, Any]) -> None:
     print(f"claim = {payload['claim']}")
     print(f"numbers = {payload['numbers']}")
     print(f"summary = {payload['summary']}")
-    print()
-    print("rows:")
 
-    for row in payload["rows"]:
-        print(
-            f"- n={row['n']} "
-            f"baseline={row['top_level_baseline']} "
-            f"width={row['top_level_width']} "
-            f"sample_addresses={row['sample_address_count']} "
-            f"recursive={row['has_recursive_address']} "
-            f"leaf={row['has_leaf_address']} "
-            f"leaf_blocked={row['leaf_blocked_observed']} "
-            f"support_removed={row['support_removed_observed']} "
-            f"axis_failed={row['axis_invariants_failed']} "
-            f"xy_signature={row['xy_signature']} "
-            f"address_signature={row['address_stability_signature']}"
-        )
+    if payload["pattern_group_filters"]["active"]:
+        print(f"pattern_group_filters = {payload['pattern_group_filters']}")
+
+    if "rows" in payload:
+        print()
+        print("rows:")
+
+        for row in payload["rows"]:
+            print(
+                f"- n={row['n']} "
+                f"baseline={row['top_level_baseline']} "
+                f"width={row['top_level_width']} "
+                f"sample_addresses={row['sample_address_count']} "
+                f"recursive={row['has_recursive_address']} "
+                f"leaf={row['has_leaf_address']} "
+                f"leaf_blocked={row['leaf_blocked_observed']} "
+                f"support_removed={row['support_removed_observed']} "
+                f"axis_failed={row['axis_invariants_failed']} "
+                f"xy_signature={row['xy_signature']} "
+                f"address_signature={row['address_stability_signature']}"
+            )
 
     print()
     print("pattern_groups:")
@@ -278,6 +356,7 @@ def print_text(payload: dict[str, Any]) -> None:
         )
 
 
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Research-only PET/PEG operator semantics report matrix."
@@ -292,6 +371,28 @@ def main(argv: list[str] | None = None) -> int:
         metavar=("START", "END"),
         help="inclusive range of N values",
     )
+    parser.add_argument(
+        "--top-patterns",
+        type=int,
+        metavar="N",
+        help="emit only the N most frequent pattern groups",
+    )
+    parser.add_argument(
+        "--min-count",
+        type=int,
+        metavar="N",
+        help="emit only pattern groups with count >= N",
+    )
+    parser.add_argument(
+        "--pattern",
+        metavar="TEXT",
+        help="emit only pattern groups whose combined signature contains TEXT",
+    )
+    parser.add_argument(
+        "--no-rows",
+        action="store_true",
+        help="omit per-N rows and emit only summary plus pattern groups",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON output")
     args = parser.parse_args(argv)
 
@@ -301,7 +402,13 @@ def main(argv: list[str] | None = None) -> int:
         if n < 2:
             raise ValueError("all N values must be >= 2")
 
-    payload = build_payload(numbers)
+    payload = build_payload(
+        numbers,
+        top_patterns=args.top_patterns,
+        min_count=args.min_count,
+        pattern=args.pattern,
+        include_rows=not args.no_rows,
+    )
 
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))

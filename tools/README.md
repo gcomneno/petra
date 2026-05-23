@@ -228,3 +228,9 @@ Examples:
     python tools/research/pet_operator_semantics_report.py 60
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
     python tools/research/pet_operator_semantics_report_matrix.py 60 --range 12 14 --json
+
+For large ranges, the matrix report can emit filtered pattern-group views without
+per-number rows:
+
+    python tools/research/pet_operator_semantics_report_matrix.py --range 2 100 --top-patterns 3 --no-rows
+    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18 --min-count 2 --pattern leaf-blocked --no-rows --json

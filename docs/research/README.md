@@ -153,6 +153,13 @@ Example research report commands:
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
     python tools/research/pet_operator_semantics_report_matrix.py 60 --range 12 14 --json
 
+For large ranges, the matrix report can emit filtered pattern-group views without
+per-number rows:
+
+    python tools/research/pet_operator_semantics_report_matrix.py --range 2 100 --top-patterns 3 --no-rows
+    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18 --min-count 2 --pattern leaf-blocked --no-rows --json
+
+
 These probes and reports are not part of stable PET-Base behavior. They do not
 change CLI defaults, core operator semantics, routing, anchor selection, or
 residual descent.

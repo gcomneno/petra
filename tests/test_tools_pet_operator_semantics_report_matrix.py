@@ -340,3 +340,132 @@ def test_operator_semantics_report_matrix_pattern_group_anatomy_for_range() -> N
     assert groups[(16,)]["has_recursive_address_count"] == 1
     assert groups[(16,)]["leaf_blocked_count"] == 0
     assert groups[(16,)]["support_removed_count"] == 0
+
+
+def test_operator_semantics_report_matrix_filters_pattern_groups_by_min_count() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(list(range(12, 19)), min_count=2)
+
+    assert payload["summary"]["pattern_count"] == 4
+    assert payload["summary"]["emitted_pattern_count"] == 3
+    assert payload["summary"]["pattern_group_filter_active"] is True
+    assert [group["numbers"] for group in payload["pattern_groups"]] == [
+        [12, 18],
+        [13, 17],
+        [14, 15],
+    ]
+    assert payload["pattern_group_filters"]["min_count"] == 2
+
+
+def test_operator_semantics_report_matrix_filters_pattern_groups_by_signature_text() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload([12, 18, 60, 72], pattern="leaf-blocked")
+
+    assert payload["summary"]["pattern_count"] == 2
+    assert payload["summary"]["emitted_pattern_count"] == 1
+    assert payload["summary"]["numbers_by_pattern"] == {
+        EXPECTED_PATTERN_WITH_LEAF_BLOCKED: [12, 18, 60],
+        EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED: [72],
+    }
+    assert [group["numbers"] for group in payload["pattern_groups"]] == [
+        [12, 18, 60],
+    ]
+    assert "leaf-blocked" in payload["pattern_groups"][0]["combined_pattern_signature"]
+
+
+def test_operator_semantics_report_matrix_limits_top_patterns_by_frequency() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(list(range(2, 101)), top_patterns=3)
+
+    assert payload["summary"]["checked"] == 99
+    assert payload["summary"]["pattern_count"] == 10
+    assert payload["summary"]["emitted_pattern_count"] == 3
+    assert [group["count"] for group in payload["pattern_groups"]] == [34, 24, 14]
+
+
+def test_operator_semantics_report_matrix_can_omit_rows() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload([12, 18, 60, 72], include_rows=False)
+
+    assert payload["summary"]["checked"] == 4
+    assert payload["summary"]["pattern_count"] == 2
+    assert payload["summary"]["emitted_pattern_count"] == 2
+    assert payload["pattern_group_filters"]["include_rows"] is False
+    assert "rows" not in payload
+
+
+def test_operator_semantics_report_matrix_filter_json_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "12",
+            "18",
+            "--min-count",
+            "2",
+            "--pattern",
+            "leaf-blocked",
+            "--no-rows",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["schema"] == "pet.operator_semantics_report_matrix.v0"
+    assert payload["summary"]["checked"] == 7
+    assert payload["summary"]["pattern_count"] == 4
+    assert payload["summary"]["emitted_pattern_count"] == 1
+    assert payload["pattern_group_filters"]["active"] is True
+    assert payload["pattern_group_filters"]["include_rows"] is False
+    assert "rows" not in payload
+    assert [group["numbers"] for group in payload["pattern_groups"]] == [[12, 18]]
+
+
+def test_operator_semantics_report_matrix_no_rows_text_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "12",
+            "18",
+            "--min-count",
+            "2",
+            "--no-rows",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+
+    assert "schema = pet.operator_semantics_report_matrix.v0" in out
+    assert "pattern_group_filters =" in out
+    assert "'emitted_pattern_count': 3" in out
+    assert "rows:" not in out
+    assert "pattern_groups:" in out
+
+
+def test_operator_semantics_report_matrix_rejects_invalid_group_filters() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    for kwargs, expected in [
+        ({"top_patterns": 0}, "--top-patterns"),
+        ({"min_count": 0}, "--min-count"),
+    ]:
+        try:
+            build_payload([12], **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:  # pragma: no cover - defensive assertion
+            raise AssertionError(f"invalid filter should be rejected: {kwargs}")
