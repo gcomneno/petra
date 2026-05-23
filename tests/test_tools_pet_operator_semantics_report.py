@@ -34,7 +34,7 @@ def test_operator_semantics_report_for_60_has_expected_shape() -> None:
         [2, 2],
     ]
 
-    assert "research-only" in payload["boundaries"]
+    assert "experimental documented tooling" in payload["boundaries"]
     assert "no stable CLI behavior change" in payload["boundaries"]
     assert "no PEG algebra completeness claim" in payload["boundaries"]
 

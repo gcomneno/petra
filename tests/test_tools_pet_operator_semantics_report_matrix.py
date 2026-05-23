@@ -76,7 +76,7 @@ def test_operator_semantics_report_matrix_for_initial_seeds() -> None:
             "support-removed-y-target",
         ]
         assert row["xy_signature"] == EXPECTED_XY_SIGNATURE
-        assert row["boundary"] == "research-only"
+        assert row["boundary"] == "experimental"
 
     assert rows[60]["address_stability_classes"] == [
         "stable",

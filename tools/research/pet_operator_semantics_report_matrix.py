@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Research-only PET/PEG operator semantics report matrix.
+"""Experimental PET/PEG operator semantics report matrix.
 
 This tool aggregates the single-N operator semantics report across multiple
 integers and emits a compact deterministic matrix.
@@ -7,7 +7,7 @@ integers and emits a compact deterministic matrix.
 It also derives pattern signatures and groups numbers that share the same
 observed operator-semantics pattern.
 
-It is research-only. It does not change stable PET core behavior, CLI behavior,
+It is experimental documented tooling. It does not change stable PET core behavior, CLI behavior,
 routing, residual descent, anchor selection, verification, or factorization
 behavior.
 """
@@ -33,7 +33,7 @@ from tools.research.pet_operator_semantics_report import (  # noqa: E402
 
 SCHEMA = "pet.operator_semantics_report_matrix.v0"
 CLAIM = (
-    "research-only PET/PEG 2.0 experimental operator semantics report matrix; "
+    "experimental PET/PEG 2.0 operator semantics report matrix; "
     "aggregates single-N reports without changing stable behavior"
 )
 
@@ -126,7 +126,7 @@ def build_row(n: int) -> dict[str, Any]:
         "address_stability_classes": address_stability_classes,
         "address_stability_signature": address_stability_signature,
         "combined_pattern_signature": combined_pattern_signature,
-        "boundary": "research-only",
+        "boundary": "experimental",
     }
 
 
@@ -359,7 +359,7 @@ def print_text(payload: dict[str, Any]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Research-only PET/PEG operator semantics report matrix."
+        description="Experimental PET/PEG operator semantics report matrix."
     )
     parser.add_argument("numbers", type=int, nargs="*", metavar="N", help="integer N >= 2")
     parser.add_argument(

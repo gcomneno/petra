@@ -20,7 +20,8 @@ These reports are now classified as:
 
     experimental PET/PEG 2.0 operator semantics reports
 
-They remain outside the stable `pet` CLI contract.
+They remain outside the stable `pet` CLI contract, but may be exposed through
+an explicit opt-in `pet experimental ...` wrapper.
 
 ## Still research-only
 
@@ -86,14 +87,14 @@ This promotion does not change:
 - default operator semantics
 - PEG algebra completeness claims
 
-## Next possible promotion
+## Experimental CLI wrapper
 
-A future tranche may add an explicit opt-in experimental CLI wrapper, for
-example:
+The aggregated reports may be exposed through explicit opt-in commands:
 
     pet experimental operator-semantics report N
     pet experimental operator-semantics matrix --range START END
 
-That future step requires a separate decision and implementation tranche.
+This wrapper delegates to the experimental report tools. It must stay thin and
+must not redefine operator semantics in the stable CLI layer.
 
-It must not happen accidentally as part of research probe expansion.
+Promotion beyond this opt-in experimental wrapper requires a separate decision.

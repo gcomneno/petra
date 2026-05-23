@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Research-only PET/PEG operator semantics report.
+"""Experimental PET/PEG operator semantics report.
 
 This tool aggregates the PET/PEG 2.0 executable operator semantics probes into
 one deterministic inspection report for a given integer N.
 
-It is intentionally research-only. It does not change stable PET core behavior,
+It is experimental documented tooling. It does not change stable PET core behavior,
 CLI behavior, routing, residual descent, anchor selection, verification, or
 factorization behavior.
 """
@@ -47,12 +47,12 @@ from tools.research.pet_operator_y_mutation_probe import (  # noqa: E402
 
 SCHEMA = "pet.operator_semantics_report.v0"
 CLAIM = (
-    "research-only PET/PEG 2.0 experimental operator semantics report; "
+    "experimental PET/PEG 2.0 operator semantics report; "
     "aggregates executable probes without changing stable behavior"
 )
 
 BOUNDARIES = [
-    "research-only",
+    "experimental documented tooling",
     "no stable CLI behavior change",
     "no PET core factorization behavior change",
     "no residual routing change",
@@ -429,7 +429,7 @@ def print_text(payload: dict[str, Any]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Research-only PET/PEG operator semantics report."
+        description="Experimental PET/PEG operator semantics report."
     )
     parser.add_argument("n", type=int, metavar="N", help="integer N >= 2")
     parser.add_argument("--json", action="store_true", help="emit JSON output")

@@ -77,6 +77,54 @@ def _run_repo_python_tool(tool_path: pathlib.Path, args: list[str]) -> str:
     return result.stdout
 
 
+def _run_experimental_operator_semantics(args: argparse.Namespace) -> int:
+    if args.operator_semantics_command == "report":
+        tool_args = [str(args.n)]
+        if args.json:
+            tool_args.append("--json")
+
+        output = _run_repo_python_tool(
+            _repo_tool_path(
+                "tools",
+                "research",
+                "pet_operator_semantics_report.py",
+            ),
+            tool_args,
+        )
+        print(output, end="")
+        return 0
+
+    if args.operator_semantics_command == "matrix":
+        tool_args = [str(n) for n in args.numbers]
+
+        for start, end in args.ranges or []:
+            tool_args.extend(["--range", str(start), str(end)])
+
+        if args.top_patterns is not None:
+            tool_args.extend(["--top-patterns", str(args.top_patterns)])
+        if args.min_count is not None:
+            tool_args.extend(["--min-count", str(args.min_count)])
+        if args.pattern is not None:
+            tool_args.extend(["--pattern", args.pattern])
+        if args.no_rows:
+            tool_args.append("--no-rows")
+        if args.json:
+            tool_args.append("--json")
+
+        output = _run_repo_python_tool(
+            _repo_tool_path(
+                "tools",
+                "research",
+                "pet_operator_semantics_report_matrix.py",
+            ),
+            tool_args,
+        )
+        print(output, end="")
+        return 0
+
+    raise ValueError("unsupported experimental operator-semantics command")
+
+
 def _parse_key_value_summary(output: str) -> dict[str, str]:
     values: dict[str, str] = {}
 
@@ -5954,6 +6002,77 @@ def main(argv: list[str] | None = None) -> int:
         help="enable experimental guarded structural-prefix redirect mode",
     )
 
+    # experimental
+    p_experimental = subparsers.add_parser(
+        "experimental",
+        help="run opt-in experimental PET tooling",
+    )
+    experimental_subparsers = p_experimental.add_subparsers(
+        dest="experimental_command",
+        metavar="COMMAND",
+    )
+    experimental_subparsers.required = True
+
+    p_operator_semantics = experimental_subparsers.add_parser(
+        "operator-semantics",
+        help="run experimental PET/PEG 2.0 operator semantics reports",
+    )
+    operator_semantics_subparsers = p_operator_semantics.add_subparsers(
+        dest="operator_semantics_command",
+        metavar="COMMAND",
+    )
+    operator_semantics_subparsers.required = True
+
+    p_operator_semantics_report = operator_semantics_subparsers.add_parser(
+        "report",
+        help="run the experimental PET/PEG 2.0 single-number report",
+    )
+    p_operator_semantics_report.add_argument("n", type=int, metavar="N")
+    p_operator_semantics_report.add_argument("--json", action="store_true")
+
+    p_operator_semantics_matrix = operator_semantics_subparsers.add_parser(
+        "matrix",
+        help="run the experimental PET/PEG 2.0 multi-number matrix report",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "numbers",
+        type=int,
+        nargs="*",
+        metavar="N",
+        help="integer N >= 2",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--range",
+        dest="ranges",
+        type=int,
+        nargs=2,
+        action="append",
+        metavar=("START", "END"),
+        help="inclusive range of N values",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--top-patterns",
+        type=int,
+        metavar="N",
+        help="emit only the N most frequent pattern groups",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--min-count",
+        type=int,
+        metavar="N",
+        help="emit only pattern groups with count >= N",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--pattern",
+        metavar="TEXT",
+        help="emit only pattern groups whose combined signature contains TEXT",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--no-rows",
+        action="store_true",
+        help="omit per-N rows and emit only summary plus pattern groups",
+    )
+    p_operator_semantics_matrix.add_argument("--json", action="store_true")
 
     # backbone-cache
     p_backbone_cache = subparsers.add_parser(
@@ -6893,6 +7012,11 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "structural-factorization":
             return _run_structural_factorization(args)
+
+        elif args.command == "experimental":
+            if args.experimental_command == "operator-semantics":
+                return _run_experimental_operator_semantics(args)
+            raise ValueError("unsupported experimental command")
 
         elif args.command == "backbone-cache":
             if args.backbone_cache_command == "build":
