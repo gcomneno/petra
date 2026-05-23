@@ -70,17 +70,19 @@ def _run_repo_python_tool(
 
     result = subprocess.run(
         [sys.executable, str(tool_path), *args],
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=None if forward_stderr else subprocess.PIPE,
         text=True,
         check=False,
     )
 
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
+        detail = (
+            result.stderr
+            if result.stderr is not None
+            else result.stdout
+        ).strip()
         raise RuntimeError(f"{tool_path.name} failed: {detail}")
-
-    if forward_stderr and result.stderr:
-        print(result.stderr, end="", file=sys.stderr)
 
     return result.stdout
 
