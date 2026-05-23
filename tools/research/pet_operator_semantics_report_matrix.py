@@ -69,6 +69,25 @@ def make_combined_pattern_signature(
     )
 
 
+def first_recursive_sample_address(report: dict[str, Any]) -> list[int] | None:
+    for row in report["sample_addresses"]:
+        address = row["address"]
+        if row["valid"] and len(address) > 1:
+            return address
+    return None
+
+
+def has_leaf_sample_address(report: dict[str, Any]) -> bool:
+    return any(
+        row["valid"] and row["selected_exponent_kind"] == "leaf"
+        for row in report["sample_addresses"]
+    )
+
+
+def has_recursive_sample_address(report: dict[str, Any]) -> bool:
+    return first_recursive_sample_address(report) is not None
+
+
 def build_row(n: int) -> dict[str, Any]:
     report = build_report_payload(n)
     axis_summary = report["axis_invariants"]["summary"]
@@ -88,10 +107,18 @@ def build_row(n: int) -> dict[str, Any]:
         axis_invariants_failed=axis_summary["failed"],
     )
 
+    first_recursive_address = first_recursive_sample_address(report)
+
     return {
         "n": n,
         "top_level_baseline": report["top_level_baseline"],
+        "top_level_width": len(report["top_level_baseline"]),
         "sample_address_count": len(report["sample_addresses"]),
+        "has_leaf_address": has_leaf_sample_address(report),
+        "has_recursive_address": first_recursive_address is not None,
+        "first_recursive_address": first_recursive_address,
+        "leaf_blocked_observed": "leaf-blocked" in address_stability_classes,
+        "support_removed_observed": "support-removed-y-target" in xy_relations,
         "axis_invariants_passed": axis_summary["passed"],
         "axis_invariants_failed": axis_summary["failed"],
         "xy_relations": xy_relations,
@@ -198,7 +225,12 @@ def print_text(payload: dict[str, Any]) -> None:
         print(
             f"- n={row['n']} "
             f"baseline={row['top_level_baseline']} "
+            f"width={row['top_level_width']} "
             f"sample_addresses={row['sample_address_count']} "
+            f"recursive={row['has_recursive_address']} "
+            f"leaf={row['has_leaf_address']} "
+            f"leaf_blocked={row['leaf_blocked_observed']} "
+            f"support_removed={row['support_removed_observed']} "
             f"axis_failed={row['axis_invariants_failed']} "
             f"xy_signature={row['xy_signature']} "
             f"address_signature={row['address_stability_signature']}"

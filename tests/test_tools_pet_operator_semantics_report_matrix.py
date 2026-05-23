@@ -52,7 +52,20 @@ def test_operator_semantics_report_matrix_for_initial_seeds() -> None:
     assert rows[72]["top_level_baseline"] == [2, 3]
 
     assert rows[60]["sample_address_count"] == 5
+    assert rows[60]["top_level_width"] == 3
+    assert rows[60]["has_leaf_address"] is True
+    assert rows[60]["has_recursive_address"] is True
+    assert rows[60]["first_recursive_address"] == [2, 2]
+    assert rows[60]["leaf_blocked_observed"] is True
+    assert rows[60]["support_removed_observed"] is True
+
     assert rows[72]["sample_address_count"] == 4
+    assert rows[72]["top_level_width"] == 2
+    assert rows[72]["has_leaf_address"] is True
+    assert rows[72]["has_recursive_address"] is True
+    assert rows[72]["first_recursive_address"] == [2, 3]
+    assert rows[72]["leaf_blocked_observed"] is False
+    assert rows[72]["support_removed_observed"] is True
 
     for row in rows.values():
         assert row["axis_invariants_passed"] == 6
@@ -139,8 +152,13 @@ def test_operator_semantics_report_matrix_json_cli_contract() -> None:
     assert payload["summary"]["pattern_count"] == 2
     assert [row["n"] for row in payload["rows"]] == [12, 18, 60, 72]
     assert payload["rows"][2]["top_level_baseline"] == [2, 3, 5]
+    assert payload["rows"][2]["top_level_width"] == 3
+    assert payload["rows"][2]["has_recursive_address"] is True
+    assert payload["rows"][2]["leaf_blocked_observed"] is True
     assert payload["rows"][2]["combined_pattern_signature"] == EXPECTED_PATTERN_WITH_LEAF_BLOCKED
     assert payload["rows"][3]["combined_pattern_signature"] == EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED
+    assert payload["rows"][3]["has_leaf_address"] is True
+    assert payload["rows"][3]["leaf_blocked_observed"] is False
 
 
 def test_operator_semantics_report_matrix_text_cli_contract() -> None:
@@ -163,8 +181,10 @@ def test_operator_semantics_report_matrix_text_cli_contract() -> None:
     assert "schema = pet.operator_semantics_report_matrix.v0" in out
     assert "numbers = [12, 18, 60, 72]" in out
     assert "'pattern_count': 2" in out
-    assert "n=60 baseline=[2, 3, 5]" in out
-    assert "n=72 baseline=[2, 3]" in out
+    assert "n=60 baseline=[2, 3, 5] width=3" in out
+    assert "n=72 baseline=[2, 3] width=2" in out
+    assert "leaf_blocked=True" in out
+    assert "leaf_blocked=False" in out
     assert "pattern_groups:" in out
     assert "numbers=[12, 18, 60]" in out
     assert "numbers=[72]" in out
@@ -245,3 +265,26 @@ def test_operator_semantics_report_matrix_mixed_input_text_cli_contract() -> Non
     assert "schema = pet.operator_semantics_report_matrix.v0" in out
     assert "numbers = [60, 12, 13, 14]" in out
     assert "pattern_groups:" in out
+
+
+def test_operator_semantics_report_matrix_anatomy_for_prime_and_prime_power() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload([13, 16])
+    rows = {row["n"]: row for row in payload["rows"]}
+
+    assert rows[13]["top_level_baseline"] == [13]
+    assert rows[13]["top_level_width"] == 1
+    assert rows[13]["has_leaf_address"] is True
+    assert rows[13]["has_recursive_address"] is False
+    assert rows[13]["first_recursive_address"] is None
+    assert rows[13]["leaf_blocked_observed"] is False
+    assert rows[13]["support_removed_observed"] is False
+
+    assert rows[16]["top_level_baseline"] == [2]
+    assert rows[16]["top_level_width"] == 1
+    assert rows[16]["has_leaf_address"] is False
+    assert rows[16]["has_recursive_address"] is True
+    assert rows[16]["first_recursive_address"] == [2, 2]
+    assert rows[16]["leaf_blocked_observed"] is False
+    assert rows[16]["support_removed_observed"] is False
