@@ -129,3 +129,35 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--no-rows" in result.stdout
     assert "--json" in result.stdout
     assert "emit JSON output" in result.stdout
+
+
+def test_cli_experimental_operator_semantics_report_json_status_fields() -> None:
+    result = _run_cli(
+        "experimental",
+        "operator-semantics",
+        "report",
+        "60",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["tooling_status"] == "experimental documented tooling"
+    assert payload["stable_cli_contract"] is False
+
+
+def test_cli_experimental_operator_semantics_matrix_json_status_fields() -> None:
+    result = _run_cli(
+        "experimental",
+        "operator-semantics",
+        "matrix",
+        "--range",
+        "12",
+        "18",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["tooling_status"] == "experimental documented tooling"
+    assert payload["stable_cli_contract"] is False

@@ -469,3 +469,13 @@ def test_operator_semantics_report_matrix_rejects_invalid_group_filters() -> Non
             assert expected in str(exc)
         else:  # pragma: no cover - defensive assertion
             raise AssertionError(f"invalid filter should be rejected: {kwargs}")
+
+
+def test_operator_semantics_report_matrix_declares_experimental_status() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload([12, 18, 60, 72])
+
+    assert payload["tooling_status"] == "experimental documented tooling"
+    assert payload["stable_cli_contract"] is False
+    assert "experimental documented tooling" in payload["boundaries"]

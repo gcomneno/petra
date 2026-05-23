@@ -145,3 +145,13 @@ def test_operator_semantics_report_text_cli_contract() -> None:
     assert "relation=support-created-y-target" in out
     assert "address_stability_samples:" in out
     assert "stability=leaf-blocked" in out
+
+
+def test_operator_semantics_report_declares_experimental_status() -> None:
+    from tools.research.pet_operator_semantics_report import build_payload
+
+    payload = build_payload(60)
+
+    assert payload["tooling_status"] == "experimental documented tooling"
+    assert payload["stable_cli_contract"] is False
+    assert "experimental documented tooling" in payload["boundaries"]

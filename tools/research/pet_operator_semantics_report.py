@@ -51,6 +51,9 @@ CLAIM = (
     "aggregates executable probes without changing stable behavior"
 )
 
+TOOLING_STATUS = "experimental documented tooling"
+STABLE_CLI_CONTRACT = False
+
 BOUNDARIES = [
     "experimental documented tooling",
     "no stable CLI behavior change",
@@ -368,6 +371,8 @@ def build_payload(n: int) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "claim": CLAIM,
+        "tooling_status": TOOLING_STATUS,
+        "stable_cli_contract": STABLE_CLI_CONTRACT,
         "n": n,
         "pet": to_jsonable(tree),
         "top_level_baseline": roots,
@@ -388,6 +393,8 @@ def build_payload(n: int) -> dict[str, Any]:
 def print_text(payload: dict[str, Any]) -> None:
     print(f"schema = {payload['schema']}")
     print(f"claim = {payload['claim']}")
+    print(f"tooling_status = {payload['tooling_status']}")
+    print(f"stable_cli_contract = {payload['stable_cli_contract']}")
     print(f"n = {payload['n']}")
     print(f"top_level_baseline = {payload['top_level_baseline']}")
     print(f"axis_invariant_summary = {payload['axis_invariants']['summary']}")

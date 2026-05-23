@@ -36,6 +36,8 @@ CLAIM = (
     "experimental PET/PEG 2.0 operator semantics report matrix; "
     "aggregates single-N reports without changing stable behavior"
 )
+TOOLING_STATUS = "experimental documented tooling"
+STABLE_CLI_CONTRACT = False
 
 
 def unique_ordered(values: list[str | None]) -> list[str]:
@@ -277,6 +279,8 @@ def build_payload(
     payload = {
         "schema": SCHEMA,
         "claim": CLAIM,
+        "tooling_status": TOOLING_STATUS,
+        "stable_cli_contract": STABLE_CLI_CONTRACT,
         "numbers": numbers,
         "summary": {
             "checked": len(rows),
@@ -315,6 +319,8 @@ def build_payload(
 def print_text(payload: dict[str, Any]) -> None:
     print(f"schema = {payload['schema']}")
     print(f"claim = {payload['claim']}")
+    print(f"tooling_status = {payload['tooling_status']}")
+    print(f"stable_cli_contract = {payload['stable_cli_contract']}")
     print(f"numbers = {payload['numbers']}")
     print(f"summary = {payload['summary']}")
 
