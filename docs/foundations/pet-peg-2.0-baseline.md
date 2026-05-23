@@ -152,6 +152,46 @@ The important distinction is that an address may remain syntactically valid
 while resolving to a changed exponent-object. Current probes classify that case
 as retargeted.
 
+## Operational inspection tools
+
+After the baseline closure, two research-only inspection tools were added to
+make the executable semantics easier to use:
+
+    tools/research/pet_operator_semantics_report.py
+    tools/research/pet_operator_semantics_report_matrix.py
+
+The single-N report aggregates the current PET/PEG 2.0 executable semantics for
+one integer N, including:
+
+    PET object
+    top-level baseline
+    sample recursive addresses
+    axis invariant summary
+    X-axis samples
+    Y-axis samples
+    X/Y composition classifications
+    address stability classifications
+    explicit research-only boundaries
+
+The matrix report runs the same inspection across multiple integers and groups
+numbers by observed operator-semantics pattern signatures.
+
+Example:
+
+    python tools/research/pet_operator_semantics_report.py 60
+    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
+
+The matrix currently derives signatures such as:
+
+    xy_signature
+    address_stability_signature
+    combined_pattern_signature
+
+and groups numbers by shared combined patterns.
+
+These tools are operational research reports. They do not promote PET/PEG 2.0
+semantics into stable CLI behavior or PET core behavior.
+
 ## Current test coverage
 
 The baseline is covered by focused tests for each executable research probe:
@@ -163,6 +203,9 @@ The baseline is covered by focused tests for each executable research probe:
     tests/test_tools_pet_operator_z_route_probe.py
     tests/test_tools_pet_operator_xy_commutativity_probe.py
     tests/test_tools_pet_operator_address_stability_probe.py
+    tests/test_tools_pet_operator_axis_invariant_probe.py
+    tests/test_tools_pet_operator_semantics_report.py
+    tests/test_tools_pet_operator_semantics_report_matrix.py
 
 ## Boundaries
 

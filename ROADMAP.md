@@ -107,12 +107,14 @@ Completed baseline:
 - Z-axis route dynamics use history-prefix references for `REDIRECT(...)` and `SHADOW_SELECT(...)`
 - the foundation snapshot is recorded in `docs/foundations/operator-semantics-snapshot.md`
 - the baseline closure is recorded in `docs/foundations/pet-peg-2.0-baseline.md`
+- operational research reports expose single-N and multi-N PET/PEG operator semantics summaries
+- the report matrix groups numbers by observed operator-semantics pattern signatures
 - full regression after the operator semantics tranche: `620 passed, 1 skipped`
 
 Post-2.0 questions:
 
-- expand X/Y commutativity and non-commutativity observations across families
-- expand address stability observations across longer operator sequences
+- use report-matrix scans to identify larger operator-semantics pattern families
+- expand X/Y commutativity and address-stability observations across longer operator sequences
 - connect operator invocations to path-history identity
 - evolve synthetic Z-axis route labels into structured PEG edge payloads
 - investigate Z-axis route execution only as explicit research-only follow-up
