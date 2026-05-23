@@ -59,7 +59,12 @@ def _repo_tool_path(*relative_parts: str) -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parents[2].joinpath(*relative_parts)
 
 
-def _run_repo_python_tool(tool_path: pathlib.Path, args: list[str]) -> str:
+def _run_repo_python_tool(
+    tool_path: pathlib.Path,
+    args: list[str],
+    *,
+    forward_stderr: bool = False,
+) -> str:
     if not tool_path.exists():
         raise FileNotFoundError(f"missing PET tool: {tool_path}")
 
@@ -73,6 +78,9 @@ def _run_repo_python_tool(tool_path: pathlib.Path, args: list[str]) -> str:
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
         raise RuntimeError(f"{tool_path.name} failed: {detail}")
+
+    if forward_stderr and result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
 
     return result.stdout
 
@@ -108,6 +116,8 @@ def _run_experimental_operator_semantics(args: argparse.Namespace) -> int:
             tool_args.extend(["--pattern", args.pattern])
         if args.no_rows:
             tool_args.append("--no-rows")
+        if args.progress:
+            tool_args.append("--progress")
         if args.json:
             tool_args.append("--json")
 
@@ -118,6 +128,7 @@ def _run_experimental_operator_semantics(args: argparse.Namespace) -> int:
                 "pet_operator_semantics_report_matrix.py",
             ),
             tool_args,
+            forward_stderr=args.progress,
         )
         print(output, end="")
         return 0
@@ -6099,6 +6110,11 @@ def main(argv: list[str] | None = None) -> int:
         "--no-rows",
         action="store_true",
         help="omit per-N rows and emit only summary plus pattern groups",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--progress",
+        action="store_true",
+        help="emit progress checkpoints to stderr every 10%%",
     )
     p_operator_semantics_matrix.add_argument(
         "--json",

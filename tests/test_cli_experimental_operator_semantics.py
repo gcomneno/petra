@@ -127,6 +127,7 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--min-count" in result.stdout
     assert "--pattern" in result.stdout
     assert "--no-rows" in result.stdout
+    assert "--progress" in result.stdout
     assert "--json" in result.stdout
     assert "emit JSON output" in result.stdout
 
@@ -161,3 +162,31 @@ def test_cli_experimental_operator_semantics_matrix_json_status_fields() -> None
 
     assert payload["tooling_status"] == "experimental documented tooling"
     assert payload["stable_cli_contract"] is False
+
+
+def test_cli_experimental_operator_semantics_matrix_progress_stderr_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pet.cli",
+            "experimental",
+            "operator-semantics",
+            "matrix",
+            "--range",
+            "2",
+            "11",
+            "--no-rows",
+            "--progress",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["summary"]["checked"] == 10
+    assert "progress: checked 1/10 (10%)" in result.stderr
+    assert "progress: checked 10/10 (100%)" in result.stderr

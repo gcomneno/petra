@@ -18,7 +18,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -315,6 +315,37 @@ def collect_numbers(
     return deduped
 
 
+def progress_milestones(total: int) -> dict[int, int]:
+    if total <= 0:
+        return {}
+
+    return {
+        max(1, (total * percent + 99) // 100): percent
+        for percent in range(10, 101, 10)
+    }
+
+
+def build_rows(
+    numbers: list[int],
+    *,
+    progress: bool = False,
+    progress_stream: TextIO = sys.stderr,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    milestones = progress_milestones(len(numbers)) if progress else {}
+
+    for index, n in enumerate(numbers, start=1):
+        rows.append(build_row(n))
+
+        if index in milestones:
+            print(
+                f"progress: checked {index}/{len(numbers)} ({milestones[index]}%)",
+                file=progress_stream,
+            )
+
+    return rows
+
+
 def build_payload(
     numbers: list[int],
     *,
@@ -322,10 +353,12 @@ def build_payload(
     min_count: int | None = None,
     pattern: str | None = None,
     include_rows: bool = True,
+    progress: bool = False,
+    progress_stream: TextIO = sys.stderr,
 ) -> dict[str, Any]:
     validate_pattern_group_filters(top_patterns=top_patterns, min_count=min_count)
 
-    rows = [build_row(n) for n in numbers]
+    rows = build_rows(numbers, progress=progress, progress_stream=progress_stream)
     all_pattern_groups = annotate_pattern_groups(group_rows_by_pattern(rows))
     pattern_groups = filter_pattern_groups(
         all_pattern_groups,
@@ -466,6 +499,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="omit per-N rows and emit only summary plus pattern groups",
     )
+    parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="emit progress checkpoints to stderr every 10%",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON output")
     args = parser.parse_args(argv)
 
@@ -481,6 +519,7 @@ def main(argv: list[str] | None = None) -> int:
         min_count=args.min_count,
         pattern=args.pattern,
         include_rows=not args.no_rows,
+        progress=args.progress,
     )
 
     if args.json:

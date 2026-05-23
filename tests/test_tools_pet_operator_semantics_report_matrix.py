@@ -540,3 +540,27 @@ def test_operator_semantics_report_matrix_text_includes_pattern_class() -> None:
     assert "class=single-support-leaf" in out
     assert "class=multi-support-removal" in out
     assert "class=multi-support-recursive-leaf-blocked" in out
+
+
+def test_operator_semantics_report_matrix_progress_goes_to_stderr() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "11",
+            "--no-rows",
+            "--progress",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["summary"]["checked"] == 10
+    assert "progress: checked 1/10 (10%)" in result.stderr
+    assert "progress: checked 10/10 (100%)" in result.stderr
