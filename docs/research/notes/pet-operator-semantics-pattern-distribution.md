@@ -126,6 +126,53 @@ Interpretation:
 These are special only inside the experimental operator-semantics matrix
 classification. This is not a factorization claim.
 
+## Multi-support non-flat rule
+
+A follow-up anatomy check exposed a sharper rule for the multi-support classes.
+
+For a number written as:
+
+    N = p1^e1 * p2^e2 * ...
+
+with primes ordered increasingly, define:
+
+    first_nonflat_exp = first exponent e_i > 1
+
+If all exponents are `1`, then `first_nonflat_exp = none`.
+
+Across the observed range 2..100,000, the multi-support classes follow this
+grid with no observed mismatches:
+
+| Support condition | `first_nonflat_exp` | Pattern class |
+| --- | --- | --- |
+| does not contain `{2, 3}` | `2` | `multi-support-leaf-blocked-removal` |
+| does not contain `{2, 3}` | `none` or `>= 3` | `multi-support-removal` |
+| contains `{2, 3}` | `2` | `multi-support-recursive-leaf-blocked` |
+| contains `{2, 3}` | `none` or `>= 3` | `multi-support-stable-removal` |
+
+This means the observed `leaf-blocked` split is not triggered by the mere
+presence of an exponent `2` somewhere in the factorization.
+
+Instead, it is triggered when the first non-flat branch, in prime-support order,
+is quadratic.
+
+Examples:
+
+| N | Factorization | Support contains `{2, 3}` | `first_nonflat_exp` | Class |
+| ---: | --- | --- | ---: | --- |
+| 20 | `2^2 * 5` | no | 2 | `multi-support-leaf-blocked-removal` |
+| 200 | `2^3 * 5^2` | no | 3 | `multi-support-removal` |
+| 12 | `2^2 * 3` | yes | 2 | `multi-support-recursive-leaf-blocked` |
+| 72 | `2^3 * 3^2` | yes | 3 | `multi-support-stable-removal` |
+| 108 | `2^2 * 3^3` | yes | 2 | `multi-support-recursive-leaf-blocked` |
+
+The experimental matrix report exposes this discriminator through `--anatomy`
+fields:
+
+- `first_nonflat_exp_dist`
+- `has_support_2_3_count`
+- `has_support_2_3_ratio`
+
 ## Working interpretation
 
 The current data suggests that the dominant observed behavior is not the
