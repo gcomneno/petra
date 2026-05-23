@@ -129,6 +129,35 @@ def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return groups
 
 
+def inclusive_range(start: int, end: int) -> list[int]:
+    if start > end:
+        raise ValueError("--range START END requires START <= END")
+    return list(range(start, end + 1))
+
+
+def collect_numbers(
+    positional_numbers: list[int],
+    ranges: list[list[int]] | None,
+) -> list[int]:
+    collected: list[int] = []
+
+    for n in positional_numbers:
+        collected.append(n)
+
+    for start, end in ranges or []:
+        collected.extend(inclusive_range(start, end))
+
+    deduped: list[int] = []
+    for n in collected:
+        if n not in deduped:
+            deduped.append(n)
+
+    if not deduped:
+        raise ValueError("at least one N or --range START END is required")
+
+    return deduped
+
+
 def build_payload(numbers: list[int]) -> dict[str, Any]:
     rows = [build_row(n) for n in numbers]
     pattern_groups = group_rows_by_pattern(rows)
@@ -189,15 +218,26 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Research-only PET/PEG operator semantics report matrix."
     )
-    parser.add_argument("numbers", type=int, nargs="+", metavar="N", help="integer N >= 2")
+    parser.add_argument("numbers", type=int, nargs="*", metavar="N", help="integer N >= 2")
+    parser.add_argument(
+        "--range",
+        dest="ranges",
+        type=int,
+        nargs=2,
+        action="append",
+        metavar=("START", "END"),
+        help="inclusive range of N values",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON output")
     args = parser.parse_args(argv)
 
-    for n in args.numbers:
+    numbers = collect_numbers(args.numbers, args.ranges)
+
+    for n in numbers:
         if n < 2:
             raise ValueError("all N values must be >= 2")
 
-    payload = build_payload(args.numbers)
+    payload = build_payload(numbers)
 
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))

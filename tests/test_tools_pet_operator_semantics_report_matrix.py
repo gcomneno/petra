@@ -169,3 +169,79 @@ def test_operator_semantics_report_matrix_text_cli_contract() -> None:
     assert "numbers=[12, 18, 60]" in out
     assert "numbers=[72]" in out
     assert f"signature={EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED}" in out
+
+
+def test_operator_semantics_report_matrix_collects_ranges_and_dedupes() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import collect_numbers
+
+    assert collect_numbers([60], [[12, 14], [14, 16]]) == [60, 12, 13, 14, 15, 16]
+
+
+def test_operator_semantics_report_matrix_rejects_empty_input() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import collect_numbers
+
+    try:
+        collect_numbers([], None)
+    except ValueError as exc:
+        assert "at least one N" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("empty matrix input should be rejected")
+
+
+def test_operator_semantics_report_matrix_rejects_reversed_range() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import collect_numbers
+
+    try:
+        collect_numbers([], [[18, 12]])
+    except ValueError as exc:
+        assert "START <= END" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("reversed range should be rejected")
+
+
+def test_operator_semantics_report_matrix_range_json_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "12",
+            "18",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["schema"] == "pet.operator_semantics_report_matrix.v0"
+    assert payload["numbers"] == [12, 13, 14, 15, 16, 17, 18]
+    assert payload["summary"]["checked"] == 7
+    assert payload["summary"]["axis_invariant_failures"] == 0
+    assert payload["summary"]["pattern_count"] >= 1
+    assert [row["n"] for row in payload["rows"]] == [12, 13, 14, 15, 16, 17, 18]
+    assert all(row["combined_pattern_signature"] for row in payload["rows"])
+
+
+def test_operator_semantics_report_matrix_mixed_input_text_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "60",
+            "--range",
+            "12",
+            "14",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+
+    assert "schema = pet.operator_semantics_report_matrix.v0" in out
+    assert "numbers = [60, 12, 13, 14]" in out
+    assert "pattern_groups:" in out
