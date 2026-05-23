@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -248,6 +249,71 @@ def count_pattern_classes(pattern_groups: list[dict[str, Any]]) -> dict[str, int
     return counts
 
 
+def dominant_pattern_class(pattern_groups: list[dict[str, Any]]) -> str | None:
+    if not pattern_groups:
+        return None
+
+    counts = count_pattern_classes(pattern_groups)
+    return max(counts.items(), key=lambda item: (item[1], item[0]))[0]
+
+
+def unclassified_pattern_class_count(pattern_groups: list[dict[str, Any]]) -> int:
+    return sum(
+        group["count"]
+        for group in pattern_groups
+        if group["pattern_class"] == "unclassified-operator-pattern"
+    )
+
+
+def factor_exponents(n: int) -> list[int]:
+    exponents: list[int] = []
+    divisor = 2
+
+    while divisor * divisor <= n:
+        if n % divisor == 0:
+            exponent = 0
+            while n % divisor == 0:
+                n //= divisor
+                exponent += 1
+            exponents.append(exponent)
+
+        divisor += 1 if divisor == 2 else 2
+
+    if n > 1:
+        exponents.append(1)
+
+    return exponents
+
+
+def arithmetic_anatomy(numbers: list[int]) -> dict[str, Any]:
+    omega: Counter[int] = Counter()
+    big_omega: Counter[int] = Counter()
+    max_exp: Counter[int] = Counter()
+    squarefree_count = 0
+
+    for n in numbers:
+        exponents = factor_exponents(n)
+        omega[len(exponents)] += 1
+        big_omega[sum(exponents)] += 1
+        max_exp[max(exponents)] += 1
+
+        if all(exponent == 1 for exponent in exponents):
+            squarefree_count += 1
+
+    return {
+        "omega_dist": dict(sorted(omega.items())),
+        "big_omega_dist": dict(sorted(big_omega.items())),
+        "max_exp_dist": dict(sorted(max_exp.items())),
+        "squarefree_count": squarefree_count,
+        "squarefree_ratio": squarefree_count / len(numbers) if numbers else 0.0,
+    }
+
+
+def add_arithmetic_anatomy(pattern_groups: list[dict[str, Any]]) -> None:
+    for group in pattern_groups:
+        group["arithmetic_anatomy"] = arithmetic_anatomy(group["numbers"])
+
+
 def filter_pattern_groups(
     pattern_groups: list[dict[str, Any]],
     *,
@@ -353,6 +419,7 @@ def build_payload(
     min_count: int | None = None,
     pattern: str | None = None,
     include_rows: bool = True,
+    include_anatomy: bool = False,
     progress: bool = False,
     progress_stream: TextIO = sys.stderr,
 ) -> dict[str, Any]:
@@ -360,6 +427,10 @@ def build_payload(
 
     rows = build_rows(numbers, progress=progress, progress_stream=progress_stream)
     all_pattern_groups = annotate_pattern_groups(group_rows_by_pattern(rows))
+
+    if include_anatomy:
+        add_arithmetic_anatomy(all_pattern_groups)
+
     pattern_groups = filter_pattern_groups(
         all_pattern_groups,
         top_patterns=top_patterns,
@@ -391,6 +462,11 @@ def build_payload(
             "emitted_pattern_count": len(pattern_groups),
             "pattern_class_count": count_pattern_classes(all_pattern_groups),
             "emitted_pattern_class_count": count_pattern_classes(pattern_groups),
+            "dominant_pattern_class": dominant_pattern_class(all_pattern_groups),
+            "unclassified_pattern_class_count": unclassified_pattern_class_count(
+                all_pattern_groups
+            ),
+            "anatomy_enabled": include_anatomy,
             "pattern_group_filter_active": filters_active,
             "numbers_by_pattern": {
                 group["combined_pattern_signature"]: group["numbers"]
@@ -448,6 +524,10 @@ def print_text(payload: dict[str, Any]) -> None:
     print()
     print("pattern_groups:")
     for group in payload["pattern_groups"]:
+        anatomy_suffix = ""
+        if "arithmetic_anatomy" in group:
+            anatomy_suffix = f" anatomy={group['arithmetic_anatomy']}"
+
         print(
             f"- class={group['pattern_class']} "
             f"count={group['count']} "
@@ -459,6 +539,7 @@ def print_text(payload: dict[str, Any]) -> None:
             f"leaf_blocked_count={group['leaf_blocked_count']} "
             f"support_removed_count={group['support_removed_count']} "
             f"signature={group['combined_pattern_signature']}"
+            f"{anatomy_suffix}"
         )
 
 
@@ -500,6 +581,11 @@ def main(argv: list[str] | None = None) -> int:
         help="omit per-N rows and emit only summary plus pattern groups",
     )
     parser.add_argument(
+        "--anatomy",
+        action="store_true",
+        help="include arithmetic anatomy summaries for each pattern group",
+    )
+    parser.add_argument(
         "--progress",
         action="store_true",
         help="emit progress checkpoints to stderr every 10%",
@@ -519,6 +605,7 @@ def main(argv: list[str] | None = None) -> int:
         min_count=args.min_count,
         pattern=args.pattern,
         include_rows=not args.no_rows,
+        include_anatomy=args.anatomy,
         progress=args.progress,
     )
 

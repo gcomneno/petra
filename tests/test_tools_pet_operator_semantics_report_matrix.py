@@ -564,3 +564,62 @@ def test_operator_semantics_report_matrix_progress_goes_to_stderr() -> None:
     assert payload["summary"]["checked"] == 10
     assert "progress: checked 1/10 (10%)" in result.stderr
     assert "progress: checked 10/10 (100%)" in result.stderr
+
+
+def test_operator_semantics_report_matrix_can_include_arithmetic_anatomy() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(list(range(2, 21)), include_anatomy=True)
+
+    assert payload["summary"]["anatomy_enabled"] is True
+    assert payload["summary"]["dominant_pattern_class"] == "single-support-leaf"
+    assert payload["summary"]["unclassified_pattern_class_count"] == 0
+
+    groups = {
+        group["pattern_class"]: group
+        for group in payload["pattern_groups"]
+    }
+
+    leaf = groups["single-support-leaf"]["arithmetic_anatomy"]
+    assert leaf["omega_dist"] == {1: 7}
+    assert leaf["big_omega_dist"] == {1: 7}
+    assert leaf["max_exp_dist"] == {1: 7}
+    assert leaf["squarefree_count"] == 7
+    assert leaf["squarefree_ratio"] == 1.0
+
+    multi_removal = groups["multi-support-removal"]["arithmetic_anatomy"]
+    assert multi_removal["omega_dist"] == {2: 3}
+    assert multi_removal["big_omega_dist"] == {2: 3}
+    assert multi_removal["max_exp_dist"] == {1: 3}
+    assert multi_removal["squarefree_count"] == 3
+    assert multi_removal["squarefree_ratio"] == 1.0
+
+    leaf_blocked = groups["single-support-leaf-blocked"]["arithmetic_anatomy"]
+    assert leaf_blocked["omega_dist"] == {1: 1}
+    assert leaf_blocked["big_omega_dist"] == {2: 1}
+    assert leaf_blocked["max_exp_dist"] == {2: 1}
+    assert leaf_blocked["squarefree_count"] == 0
+
+
+def test_operator_semantics_report_matrix_anatomy_json_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "20",
+            "--no-rows",
+            "--anatomy",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["summary"]["anatomy_enabled"] is True
+    assert "rows" not in payload
+    assert all("arithmetic_anatomy" in group for group in payload["pattern_groups"])

@@ -171,6 +171,10 @@ Matrix pattern groups also include experimental `pattern_class` labels, such as
 `multi-support-recursive-leaf-blocked`, to make recurrent operator-semantics
 patterns easier to compare across ranges.
 
+Use `--anatomy` to include arithmetic anatomy summaries for each pattern
+group, including `omega_dist`, `big_omega_dist`, `max_exp_dist`, and
+`squarefree_ratio`.
+
 These probes and experimental reports are not part of stable PET-Base
 behavior. They do not change CLI defaults, core operator semantics, routing,
 anchor selection, or residual descent.

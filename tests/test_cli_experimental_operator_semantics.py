@@ -127,6 +127,7 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--min-count" in result.stdout
     assert "--pattern" in result.stdout
     assert "--no-rows" in result.stdout
+    assert "--anatomy" in result.stdout
     assert "--progress" in result.stdout
     assert "--json" in result.stdout
     assert "emit JSON output" in result.stdout
@@ -190,3 +191,23 @@ def test_cli_experimental_operator_semantics_matrix_progress_stderr_contract() -
     assert payload["summary"]["checked"] == 10
     assert "progress: checked 1/10 (10%)" in result.stderr
     assert "progress: checked 10/10 (100%)" in result.stderr
+
+
+def test_cli_experimental_operator_semantics_matrix_anatomy_json_contract() -> None:
+    result = _run_cli(
+        "experimental",
+        "operator-semantics",
+        "matrix",
+        "--range",
+        "2",
+        "20",
+        "--no-rows",
+        "--anatomy",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["summary"]["anatomy_enabled"] is True
+    assert "rows" not in payload
+    assert all("arithmetic_anatomy" in group for group in payload["pattern_groups"])
