@@ -201,3 +201,30 @@ Large inputs skip recursive chunk diagnosis by default through
 
 Use `--progress` to print per-number progress messages to stderr.
 
+## PET/PEG 2.0 operator semantics research reports
+
+PET/PEG 2.0 operator semantics research tooling lives under `tools/research/`.
+
+These tools are research-only inspection tools. They do not define stable CLI
+behavior and do not change PET core factorization, routing, anchor selection,
+verification, or default operator semantics.
+
+Single-number report:
+
+- `research/pet_operator_semantics_report.py` — aggregates PET/PEG 2.0
+  operator-semantics probes for one integer, including recursive address
+  samples, X/Y samples, X/Y composition classifications, address-stability
+  classifications, and axis-invariant summary.
+
+Multi-number matrix report:
+
+- `research/pet_operator_semantics_report_matrix.py` — runs the single-number
+  report across explicit numbers and/or `--range START END`, derives
+  operator-semantics pattern signatures, groups numbers by shared patterns, and
+  summarizes pattern anatomy.
+
+Examples:
+
+    python tools/research/pet_operator_semantics_report.py 60
+    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
+    python tools/research/pet_operator_semantics_report_matrix.py 60 --range 12 14 --json

@@ -124,3 +124,35 @@ For current project-wide source of truth, see:
 - `../reports/STATUS.md`
 - `notes/PET-METICA.md`
 - `../reference/SPEC.md`
+
+## PET/PEG 2.0 operator semantics reports
+
+The PET/PEG 2.0 foundation layer now has research-only reports that aggregate
+the executable X/Y/Z operator probes.
+
+Single-number report:
+
+- `../../tools/research/pet_operator_semantics_report.py` — aggregates PET/PEG
+  2.0 operator-semantics probe output for one integer.
+
+Multi-number matrix report:
+
+- `../../tools/research/pet_operator_semantics_report_matrix.py` — scans
+  explicit numbers and/or ranges, derives pattern signatures, groups numbers by
+  shared observed patterns, and summarizes pattern anatomy.
+
+Related probes:
+
+- `../../tools/research/pet_operator_xy_commutativity_probe.py`
+- `../../tools/research/pet_operator_address_stability_probe.py`
+- `../../tools/research/pet_operator_axis_invariant_probe.py`
+
+Example research report commands:
+
+    python tools/research/pet_operator_semantics_report.py 60
+    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
+    python tools/research/pet_operator_semantics_report_matrix.py 60 --range 12 14 --json
+
+These probes and reports are not part of stable PET-Base behavior. They do not
+change CLI defaults, core operator semantics, routing, anchor selection, or
+residual descent.
