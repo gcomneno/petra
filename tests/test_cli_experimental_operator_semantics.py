@@ -22,6 +22,10 @@ def _run_tool(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _normalize_help(output: str) -> str:
+    return " ".join(output.split())
+
+
 def test_cli_experimental_operator_semantics_report_json_delegates_to_tool() -> None:
     cli_result = _run_cli(
         "experimental",
@@ -92,37 +96,41 @@ def test_cli_experimental_operator_semantics_matrix_text_contract() -> None:
 
 def test_cli_experimental_help_declares_opt_in_boundary() -> None:
     result = _run_cli("experimental", "--help")
+    help_text = _normalize_help(result.stdout)
 
-    assert "opt-in experimental PET tooling" in result.stdout
-    assert "not part of the stable PET CLI contract" in result.stdout
+    assert "opt-in experimental PET tooling" in help_text
+    assert "not part of the stable PET CLI contract" in help_text
     assert "operator-semantics" in result.stdout
 
 
 def test_cli_experimental_operator_semantics_help_declares_boundary() -> None:
     result = _run_cli("experimental", "operator-semantics", "--help")
+    help_text = _normalize_help(result.stdout)
 
-    assert "opt-in experimental PET/PEG 2.0 operator semantics reports" in result.stdout
-    assert "not part of the stable PET CLI contract" in result.stdout
+    assert "opt-in experimental PET/PEG 2.0 operator semantics reports" in help_text
+    assert "not part of the stable PET CLI contract" in help_text
     assert "report" in result.stdout
     assert "matrix" in result.stdout
 
 
 def test_cli_experimental_operator_semantics_report_help_contract() -> None:
     result = _run_cli("experimental", "operator-semantics", "report", "--help")
+    help_text = _normalize_help(result.stdout)
 
-    assert "single-number operator semantics report" in result.stdout
-    assert "not part of the stable PET CLI contract" in result.stdout
-    assert "integer N >= 2" in result.stdout
+    assert "single-number operator semantics report" in help_text
+    assert "not part of the stable PET CLI contract" in help_text
+    assert "integer N >= 2" in help_text
     assert "--json" in result.stdout
-    assert "emit JSON output" in result.stdout
+    assert "emit JSON output" in help_text
 
 
 def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     result = _run_cli("experimental", "operator-semantics", "matrix", "--help")
+    help_text = _normalize_help(result.stdout)
 
-    assert "multi-number operator semantics matrix report" in result.stdout
-    assert "not part of the stable PET CLI contract" in result.stdout
-    assert "integer N >= 2" in result.stdout
+    assert "multi-number operator semantics matrix report" in help_text
+    assert "not part of the stable PET CLI contract" in help_text
+    assert "integer N >= 2" in help_text
     assert "--top-patterns" in result.stdout
     assert "--min-count" in result.stdout
     assert "--pattern" in result.stdout
@@ -130,7 +138,7 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--anatomy" in result.stdout
     assert "--progress" in result.stdout
     assert "--json" in result.stdout
-    assert "emit JSON output" in result.stdout
+    assert "emit JSON output" in help_text
 
 
 def test_cli_experimental_operator_semantics_report_json_status_fields() -> None:
