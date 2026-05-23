@@ -6006,6 +6006,10 @@ def main(argv: list[str] | None = None) -> int:
     p_experimental = subparsers.add_parser(
         "experimental",
         help="run opt-in experimental PET tooling",
+        description=(
+            "Run opt-in experimental PET tooling. These commands are not part "
+            "of the stable PET CLI contract."
+        ),
     )
     experimental_subparsers = p_experimental.add_subparsers(
         dest="experimental_command",
@@ -6015,7 +6019,12 @@ def main(argv: list[str] | None = None) -> int:
 
     p_operator_semantics = experimental_subparsers.add_parser(
         "operator-semantics",
-        help="run experimental PET/PEG 2.0 operator semantics reports",
+        help="run opt-in experimental PET/PEG 2.0 operator semantics reports",
+        description=(
+            "Run opt-in experimental PET/PEG 2.0 operator semantics reports. "
+            "These commands delegate to documented experimental report tools "
+            "and are not part of the stable PET CLI contract."
+        ),
     )
     operator_semantics_subparsers = p_operator_semantics.add_subparsers(
         dest="operator_semantics_command",
@@ -6026,13 +6035,32 @@ def main(argv: list[str] | None = None) -> int:
     p_operator_semantics_report = operator_semantics_subparsers.add_parser(
         "report",
         help="run the experimental PET/PEG 2.0 single-number report",
+        description=(
+            "Run the opt-in experimental PET/PEG 2.0 single-number operator "
+            "semantics report. This command is not part of the stable PET CLI "
+            "contract."
+        ),
     )
-    p_operator_semantics_report.add_argument("n", type=int, metavar="N")
-    p_operator_semantics_report.add_argument("--json", action="store_true")
+    p_operator_semantics_report.add_argument(
+        "n",
+        type=int,
+        metavar="N",
+        help="integer N >= 2",
+    )
+    p_operator_semantics_report.add_argument(
+        "--json",
+        action="store_true",
+        help="emit JSON output",
+    )
 
     p_operator_semantics_matrix = operator_semantics_subparsers.add_parser(
         "matrix",
         help="run the experimental PET/PEG 2.0 multi-number matrix report",
+        description=(
+            "Run the opt-in experimental PET/PEG 2.0 multi-number operator "
+            "semantics matrix report. This command is not part of the stable "
+            "PET CLI contract."
+        ),
     )
     p_operator_semantics_matrix.add_argument(
         "numbers",
@@ -6072,7 +6100,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="omit per-N rows and emit only summary plus pattern groups",
     )
-    p_operator_semantics_matrix.add_argument("--json", action="store_true")
+    p_operator_semantics_matrix.add_argument(
+        "--json",
+        action="store_true",
+        help="emit JSON output",
+    )
 
     # backbone-cache
     p_backbone_cache = subparsers.add_parser(
