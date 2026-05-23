@@ -265,8 +265,8 @@ def unclassified_pattern_class_count(pattern_groups: list[dict[str, Any]]) -> in
     )
 
 
-def factor_exponents(n: int) -> list[int]:
-    exponents: list[int] = []
+def factor_items(n: int) -> list[tuple[int, int]]:
+    items: list[tuple[int, int]] = []
     divisor = 2
 
     while divisor * divisor <= n:
@@ -275,37 +275,66 @@ def factor_exponents(n: int) -> list[int]:
             while n % divisor == 0:
                 n //= divisor
                 exponent += 1
-            exponents.append(exponent)
+            items.append((divisor, exponent))
 
         divisor += 1 if divisor == 2 else 2
 
     if n > 1:
-        exponents.append(1)
+        items.append((n, 1))
 
-    return exponents
+    return items
+
+
+def first_nonflat_exponent(items: list[tuple[int, int]]) -> int | None:
+    for _, exponent in items:
+        if exponent > 1:
+            return exponent
+    return None
 
 
 def arithmetic_anatomy(numbers: list[int]) -> dict[str, Any]:
     omega: Counter[int] = Counter()
     big_omega: Counter[int] = Counter()
     max_exp: Counter[int] = Counter()
+    first_nonflat_exp: Counter[int | str] = Counter()
     squarefree_count = 0
+    has_support_2_3_count = 0
 
     for n in numbers:
-        exponents = factor_exponents(n)
+        items = factor_items(n)
+        exponents = [exponent for _, exponent in items]
+        primes = {prime for prime, _ in items}
+
         omega[len(exponents)] += 1
         big_omega[sum(exponents)] += 1
         max_exp[max(exponents)] += 1
 
+        nonflat = first_nonflat_exponent(items)
+        first_nonflat_exp[nonflat if nonflat is not None else "none"] += 1
+
         if all(exponent == 1 for exponent in exponents):
             squarefree_count += 1
+
+        if 2 in primes and 3 in primes:
+            has_support_2_3_count += 1
 
     return {
         "omega_dist": dict(sorted(omega.items())),
         "big_omega_dist": dict(sorted(big_omega.items())),
         "max_exp_dist": dict(sorted(max_exp.items())),
+        "first_nonflat_exp_dist": {
+            str(key): value
+            for key, value in sorted(
+                first_nonflat_exp.items(),
+                key=lambda item: str(item[0]),
+            )
+        },
         "squarefree_count": squarefree_count,
         "squarefree_ratio": squarefree_count / len(numbers) if numbers else 0.0,
+        "has_support_2_3_count": has_support_2_3_count,
+        "has_support_2_3_ratio": (
+            has_support_2_3_count / len(numbers) if numbers else 0.0
+        ),
     }
 
 

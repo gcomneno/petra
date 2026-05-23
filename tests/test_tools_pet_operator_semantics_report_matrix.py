@@ -584,21 +584,29 @@ def test_operator_semantics_report_matrix_can_include_arithmetic_anatomy() -> No
     assert leaf["omega_dist"] == {1: 7}
     assert leaf["big_omega_dist"] == {1: 7}
     assert leaf["max_exp_dist"] == {1: 7}
+    assert leaf["first_nonflat_exp_dist"] == {"none": 7}
     assert leaf["squarefree_count"] == 7
     assert leaf["squarefree_ratio"] == 1.0
+    assert leaf["has_support_2_3_count"] == 0
+    assert leaf["has_support_2_3_ratio"] == 0.0
 
     multi_removal = groups["multi-support-removal"]["arithmetic_anatomy"]
     assert multi_removal["omega_dist"] == {2: 3}
     assert multi_removal["big_omega_dist"] == {2: 3}
     assert multi_removal["max_exp_dist"] == {1: 3}
+    assert multi_removal["first_nonflat_exp_dist"] == {"none": 3}
     assert multi_removal["squarefree_count"] == 3
     assert multi_removal["squarefree_ratio"] == 1.0
+    assert multi_removal["has_support_2_3_count"] == 0
+    assert multi_removal["has_support_2_3_ratio"] == 0.0
 
     leaf_blocked = groups["single-support-leaf-blocked"]["arithmetic_anatomy"]
     assert leaf_blocked["omega_dist"] == {1: 1}
     assert leaf_blocked["big_omega_dist"] == {2: 1}
     assert leaf_blocked["max_exp_dist"] == {2: 1}
+    assert leaf_blocked["first_nonflat_exp_dist"] == {"2": 1}
     assert leaf_blocked["squarefree_count"] == 0
+    assert leaf_blocked["has_support_2_3_count"] == 0
 
 
 def test_operator_semantics_report_matrix_anatomy_json_cli_contract() -> None:
@@ -623,3 +631,31 @@ def test_operator_semantics_report_matrix_anatomy_json_cli_contract() -> None:
     assert payload["summary"]["anatomy_enabled"] is True
     assert "rows" not in payload
     assert all("arithmetic_anatomy" in group for group in payload["pattern_groups"])
+
+
+def test_operator_semantics_report_matrix_anatomy_exposes_nonflat_and_support_23() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload([12, 18, 20, 72, 108, 200], include_anatomy=True)
+    groups = {
+        group["pattern_class"]: group["arithmetic_anatomy"]
+        for group in payload["pattern_groups"]
+    }
+
+    recursive = groups["multi-support-recursive-leaf-blocked"]
+    assert recursive["first_nonflat_exp_dist"] == {"2": 3}
+    assert recursive["has_support_2_3_count"] == 3
+    assert recursive["has_support_2_3_ratio"] == 1.0
+
+    stable = groups["multi-support-stable-removal"]
+    assert stable["first_nonflat_exp_dist"] == {"3": 1}
+    assert stable["has_support_2_3_count"] == 1
+    assert stable["has_support_2_3_ratio"] == 1.0
+
+    blocked_removal = groups["multi-support-leaf-blocked-removal"]
+    assert blocked_removal["first_nonflat_exp_dist"] == {"2": 1}
+    assert blocked_removal["has_support_2_3_count"] == 0
+
+    removal = groups["multi-support-removal"]
+    assert removal["first_nonflat_exp_dist"] == {"3": 1}
+    assert removal["has_support_2_3_count"] == 0
