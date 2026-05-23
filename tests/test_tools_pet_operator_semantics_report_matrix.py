@@ -111,6 +111,7 @@ def test_operator_semantics_report_matrix_groups_numbers_by_pattern() -> None:
     assert payload["pattern_groups"] == [
         {
             "combined_pattern_signature": EXPECTED_PATTERN_WITH_LEAF_BLOCKED,
+            "pattern_class": "multi-support-recursive-leaf-blocked",
             "xy_signature": EXPECTED_XY_SIGNATURE,
             "address_stability_signature": EXPECTED_STABILITY_WITH_LEAF_BLOCKED,
             "axis_invariants_failed": 0,
@@ -125,6 +126,7 @@ def test_operator_semantics_report_matrix_groups_numbers_by_pattern() -> None:
         },
         {
             "combined_pattern_signature": EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED,
+            "pattern_class": "multi-support-stable-removal",
             "xy_signature": EXPECTED_XY_SIGNATURE,
             "address_stability_signature": EXPECTED_STABILITY_WITHOUT_LEAF_BLOCKED,
             "axis_invariants_failed": 0,
@@ -479,3 +481,62 @@ def test_operator_semantics_report_matrix_declares_experimental_status() -> None
     assert payload["tooling_status"] == "experimental documented tooling"
     assert payload["stable_cli_contract"] is False
     assert "experimental documented tooling" in payload["boundaries"]
+
+
+def test_operator_semantics_report_matrix_classifies_range_patterns() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(list(range(2, 101)))
+
+    assert payload["summary"]["pattern_count"] == 10
+    assert payload["summary"]["pattern_class_count"] == {
+        "single-support-root-stable": 1,
+        "single-support-leaf": 24,
+        "single-support-leaf-blocked": 1,
+        "multi-support-stable-removal": 10,
+        "single-support-recursive-chain": 4,
+        "single-support-leaf-blocked-retarget": 3,
+        "multi-support-removal": 34,
+        "multi-support-recursive-leaf-blocked": 6,
+        "multi-support-leaf-blocked-removal": 14,
+        "single-support-power-destroyed": 2,
+    }
+
+    groups = {
+        tuple(group["example_numbers"]): group["pattern_class"]
+        for group in payload["pattern_groups"]
+    }
+
+    assert groups[(2,)] == "single-support-root-stable"
+    assert groups[(3, 5, 7, 11, 13)] == "single-support-leaf"
+    assert groups[(4,)] == "single-support-leaf-blocked"
+    assert groups[(6, 24, 30, 42, 48)] == "multi-support-stable-removal"
+    assert groups[(8, 16, 32, 64)] == "single-support-recursive-chain"
+    assert groups[(9, 25, 49)] == "single-support-leaf-blocked-retarget"
+    assert groups[(10, 14, 15, 21, 22)] == "multi-support-removal"
+    assert groups[(12, 18, 36, 60, 84)] == "multi-support-recursive-leaf-blocked"
+    assert groups[(20, 28, 44, 45, 50)] == "multi-support-leaf-blocked-removal"
+    assert groups[(27, 81)] == "single-support-power-destroyed"
+
+
+def test_operator_semantics_report_matrix_text_includes_pattern_class() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "20",
+            "--no-rows",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+
+    assert "pattern_class_count" in out
+    assert "class=single-support-leaf" in out
+    assert "class=multi-support-removal" in out
+    assert "class=multi-support-recursive-leaf-blocked" in out

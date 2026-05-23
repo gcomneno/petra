@@ -184,6 +184,70 @@ def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return groups
 
 
+def _signature_parts(signature: str) -> set[str]:
+    if signature == "none":
+        return set()
+    return set(signature.split("|"))
+
+
+def classify_pattern_group(group: dict[str, Any]) -> str:
+    """Return a descriptive class for an observed matrix pattern group.
+
+    These labels are experimental vocabulary for matrix readability. They do
+    not define stable PET semantics.
+    """
+
+    xy_parts = _signature_parts(group["xy_signature"])
+    address_parts = _signature_parts(group["address_stability_signature"])
+    widths = set(group["width_values"])
+
+    support_removed = "support-removed-y-target" in xy_parts
+    stable = "stable" in address_parts
+    destroyed = "destroyed" in address_parts
+    leaf_blocked = "leaf-blocked" in address_parts
+    single_support = widths == {1}
+
+    if single_support and stable and not destroyed and not leaf_blocked:
+        return "single-support-root-stable"
+    if single_support and not stable and not destroyed and not leaf_blocked:
+        return "single-support-leaf"
+    if single_support and stable and not destroyed and leaf_blocked:
+        return "single-support-leaf-blocked"
+    if single_support and stable and destroyed and not leaf_blocked:
+        return "single-support-recursive-chain"
+    if single_support and not stable and not destroyed and leaf_blocked:
+        return "single-support-leaf-blocked-retarget"
+    if single_support and not stable and destroyed and not leaf_blocked:
+        return "single-support-power-destroyed"
+
+    if support_removed and stable and destroyed and not leaf_blocked:
+        return "multi-support-stable-removal"
+    if support_removed and not stable and destroyed and not leaf_blocked:
+        return "multi-support-removal"
+    if support_removed and stable and destroyed and leaf_blocked:
+        return "multi-support-recursive-leaf-blocked"
+    if support_removed and not stable and destroyed and leaf_blocked:
+        return "multi-support-leaf-blocked-removal"
+
+    return "unclassified-operator-pattern"
+
+
+def annotate_pattern_groups(pattern_groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for group in pattern_groups:
+        group["pattern_class"] = classify_pattern_group(group)
+    return pattern_groups
+
+
+def count_pattern_classes(pattern_groups: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+
+    for group in pattern_groups:
+        pattern_class = group["pattern_class"]
+        counts[pattern_class] = counts.get(pattern_class, 0) + group["count"]
+
+    return counts
+
+
 def filter_pattern_groups(
     pattern_groups: list[dict[str, Any]],
     *,
@@ -262,7 +326,7 @@ def build_payload(
     validate_pattern_group_filters(top_patterns=top_patterns, min_count=min_count)
 
     rows = [build_row(n) for n in numbers]
-    all_pattern_groups = group_rows_by_pattern(rows)
+    all_pattern_groups = annotate_pattern_groups(group_rows_by_pattern(rows))
     pattern_groups = filter_pattern_groups(
         all_pattern_groups,
         top_patterns=top_patterns,
@@ -292,6 +356,8 @@ def build_payload(
             ],
             "pattern_count": len(all_pattern_groups),
             "emitted_pattern_count": len(pattern_groups),
+            "pattern_class_count": count_pattern_classes(all_pattern_groups),
+            "emitted_pattern_class_count": count_pattern_classes(pattern_groups),
             "pattern_group_filter_active": filters_active,
             "numbers_by_pattern": {
                 group["combined_pattern_signature"]: group["numbers"]
@@ -350,7 +416,8 @@ def print_text(payload: dict[str, Any]) -> None:
     print("pattern_groups:")
     for group in payload["pattern_groups"]:
         print(
-            f"- count={group['count']} "
+            f"- class={group['pattern_class']} "
+            f"count={group['count']} "
             f"numbers={group['numbers']} "
             f"examples={group['example_numbers']} "
             f"widths={group['width_values']} "

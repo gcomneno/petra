@@ -240,3 +240,8 @@ per-number rows:
 
     python tools/research/pet_operator_semantics_report_matrix.py --range 2 100 --top-patterns 3 --no-rows
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18 --min-count 2 --pattern leaf-blocked --no-rows --json
+
+Matrix pattern groups also include experimental `pattern_class` labels, such as
+`single-support-leaf`, `multi-support-removal`, and
+`multi-support-recursive-leaf-blocked`, to make recurrent operator-semantics
+patterns easier to compare across ranges.
