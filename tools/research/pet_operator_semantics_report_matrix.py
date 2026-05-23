@@ -4,6 +4,9 @@
 This tool aggregates the single-N operator semantics report across multiple
 integers and emits a compact deterministic matrix.
 
+It also derives pattern signatures and groups numbers that share the same
+observed operator-semantics pattern.
+
 It is research-only. It does not change stable PET core behavior, CLI behavior,
 routing, residual descent, anchor selection, verification, or factorization
 behavior.
@@ -47,6 +50,25 @@ def unique_ordered(values: list[str | None]) -> list[str]:
     return seen
 
 
+def make_signature(values: list[str]) -> str:
+    if not values:
+        return "none"
+    return "|".join(values)
+
+
+def make_combined_pattern_signature(
+    *,
+    xy_signature: str,
+    address_stability_signature: str,
+    axis_invariants_failed: int,
+) -> str:
+    return (
+        f"xy={xy_signature};"
+        f"address={address_stability_signature};"
+        f"axis_failed={axis_invariants_failed}"
+    )
+
+
 def build_row(n: int) -> dict[str, Any]:
     report = build_report_payload(n)
     axis_summary = report["axis_invariants"]["summary"]
@@ -58,6 +80,14 @@ def build_row(n: int) -> dict[str, Any]:
         [row.get("stability") for row in report["address_stability_samples"]]
     )
 
+    xy_signature = make_signature(xy_relations)
+    address_stability_signature = make_signature(address_stability_classes)
+    combined_pattern_signature = make_combined_pattern_signature(
+        xy_signature=xy_signature,
+        address_stability_signature=address_stability_signature,
+        axis_invariants_failed=axis_summary["failed"],
+    )
+
     return {
         "n": n,
         "top_level_baseline": report["top_level_baseline"],
@@ -65,13 +95,43 @@ def build_row(n: int) -> dict[str, Any]:
         "axis_invariants_passed": axis_summary["passed"],
         "axis_invariants_failed": axis_summary["failed"],
         "xy_relations": xy_relations,
+        "xy_signature": xy_signature,
         "address_stability_classes": address_stability_classes,
+        "address_stability_signature": address_stability_signature,
+        "combined_pattern_signature": combined_pattern_signature,
         "boundary": "research-only",
     }
 
 
+def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: list[dict[str, Any]] = []
+    by_signature: dict[str, dict[str, Any]] = {}
+
+    for row in rows:
+        signature = row["combined_pattern_signature"]
+
+        if signature not in by_signature:
+            group = {
+                "combined_pattern_signature": signature,
+                "xy_signature": row["xy_signature"],
+                "address_stability_signature": row["address_stability_signature"],
+                "axis_invariants_failed": row["axis_invariants_failed"],
+                "numbers": [],
+                "count": 0,
+            }
+            by_signature[signature] = group
+            groups.append(group)
+
+        group = by_signature[signature]
+        group["numbers"].append(row["n"])
+        group["count"] += 1
+
+    return groups
+
+
 def build_payload(numbers: list[int]) -> dict[str, Any]:
     rows = [build_row(n) for n in numbers]
+    pattern_groups = group_rows_by_pattern(rows)
 
     return {
         "schema": SCHEMA,
@@ -86,7 +146,13 @@ def build_payload(numbers: list[int]) -> dict[str, Any]:
             "numbers_with_axis_invariant_failures": [
                 row["n"] for row in rows if row["axis_invariants_failed"] > 0
             ],
+            "pattern_count": len(pattern_groups),
+            "numbers_by_pattern": {
+                group["combined_pattern_signature"]: group["numbers"]
+                for group in pattern_groups
+            },
         },
+        "pattern_groups": pattern_groups,
         "boundaries": BOUNDARIES,
     }
 
@@ -105,8 +171,17 @@ def print_text(payload: dict[str, Any]) -> None:
             f"baseline={row['top_level_baseline']} "
             f"sample_addresses={row['sample_address_count']} "
             f"axis_failed={row['axis_invariants_failed']} "
-            f"xy_relations={row['xy_relations']} "
-            f"address_stability={row['address_stability_classes']}"
+            f"xy_signature={row['xy_signature']} "
+            f"address_signature={row['address_stability_signature']}"
+        )
+
+    print()
+    print("pattern_groups:")
+    for group in payload["pattern_groups"]:
+        print(
+            f"- count={group['count']} "
+            f"numbers={group['numbers']} "
+            f"signature={group['combined_pattern_signature']}"
         )
 
 
