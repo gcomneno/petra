@@ -343,6 +343,64 @@ def add_arithmetic_anatomy(pattern_groups: list[dict[str, Any]]) -> None:
         group["arithmetic_anatomy"] = arithmetic_anatomy(group["numbers"])
 
 
+def has_support_2_3(items: list[tuple[int, int]]) -> bool:
+    primes = {prime for prime, _ in items}
+    return 2 in primes and 3 in primes
+
+
+def predicted_multi_support_nonflat_class(n: int) -> str:
+    items = factor_items(n)
+    first_nonflat = first_nonflat_exponent(items)
+    support_2_3 = has_support_2_3(items)
+
+    if first_nonflat == 2:
+        if support_2_3:
+            return "multi-support-recursive-leaf-blocked"
+        return "multi-support-leaf-blocked-removal"
+
+    if support_2_3:
+        return "multi-support-stable-removal"
+    return "multi-support-removal"
+
+
+def check_multi_support_nonflat_rule(
+    pattern_groups: list[dict[str, Any]],
+) -> dict[str, Any]:
+    checked = 0
+    mismatches: list[dict[str, Any]] = []
+
+    for group in pattern_groups:
+        actual_class = group["pattern_class"]
+        if not actual_class.startswith("multi-support"):
+            continue
+
+        for n in group["numbers"]:
+            checked += 1
+            predicted_class = predicted_multi_support_nonflat_class(n)
+
+            if predicted_class == actual_class:
+                continue
+
+            items = factor_items(n)
+            mismatches.append(
+                {
+                    "n": n,
+                    "actual_pattern_class": actual_class,
+                    "predicted_pattern_class": predicted_class,
+                    "factor_items": items,
+                    "first_nonflat_exp": first_nonflat_exponent(items),
+                    "has_support_2_3": has_support_2_3(items),
+                }
+            )
+
+    return {
+        "status": "passed" if not mismatches else "failed",
+        "checked": checked,
+        "mismatch_count": len(mismatches),
+        "sample_mismatches": mismatches[:10],
+    }
+
+
 def filter_pattern_groups(
     pattern_groups: list[dict[str, Any]],
     *,
@@ -449,6 +507,7 @@ def build_payload(
     pattern: str | None = None,
     include_rows: bool = True,
     include_anatomy: bool = False,
+    check_rules: bool = False,
     progress: bool = False,
     progress_stream: TextIO = sys.stderr,
 ) -> dict[str, Any]:
@@ -512,6 +571,13 @@ def build_payload(
         },
         "boundaries": BOUNDARIES,
     }
+
+    if check_rules:
+        payload["rule_checks"] = {
+            "multi_support_nonflat_rule": check_multi_support_nonflat_rule(
+                all_pattern_groups
+            )
+        }
 
     if include_rows:
         payload["rows"] = rows
@@ -615,6 +681,11 @@ def main(argv: list[str] | None = None) -> int:
         help="include arithmetic anatomy summaries for each pattern group",
     )
     parser.add_argument(
+        "--check-rules",
+        action="store_true",
+        help="include experimental rule-check summaries in the payload",
+    )
+    parser.add_argument(
         "--progress",
         action="store_true",
         help="emit progress checkpoints to stderr every 10%",
@@ -635,6 +706,7 @@ def main(argv: list[str] | None = None) -> int:
         pattern=args.pattern,
         include_rows=not args.no_rows,
         include_anatomy=args.anatomy,
+        check_rules=args.check_rules,
         progress=args.progress,
     )
 

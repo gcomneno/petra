@@ -249,3 +249,6 @@ patterns easier to compare across ranges.
 Use `--anatomy` to include arithmetic anatomy summaries for each pattern
 group, including `omega_dist`, `big_omega_dist`, `max_exp_dist`,
 `first_nonflat_exp_dist`, `squarefree_ratio`, and `has_support_2_3_ratio`.
+
+Use `--check-rules` to include experimental rule-check summaries in the
+matrix payload, including the observed multi-support nonflat rule.

@@ -120,6 +120,8 @@ def _run_experimental_operator_semantics(args: argparse.Namespace) -> int:
             tool_args.append("--no-rows")
         if args.anatomy:
             tool_args.append("--anatomy")
+        if args.check_rules:
+            tool_args.append("--check-rules")
         if args.progress:
             tool_args.append("--progress")
         if args.json:
@@ -6119,6 +6121,11 @@ def main(argv: list[str] | None = None) -> int:
         "--anatomy",
         action="store_true",
         help="include arithmetic anatomy summaries for each pattern group",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--check-rules",
+        action="store_true",
+        help="include experimental rule-check summaries in the payload",
     )
     p_operator_semantics_matrix.add_argument(
         "--progress",

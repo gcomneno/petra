@@ -659,3 +659,49 @@ def test_operator_semantics_report_matrix_anatomy_exposes_nonflat_and_support_23
     removal = groups["multi-support-removal"]
     assert removal["first_nonflat_exp_dist"] == {"3": 1}
     assert removal["has_support_2_3_count"] == 0
+
+
+def test_operator_semantics_report_matrix_can_check_nonflat_rule() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(
+        [12, 20, 72, 108, 200],
+        include_anatomy=True,
+        check_rules=True,
+    )
+
+    check = payload["rule_checks"]["multi_support_nonflat_rule"]
+
+    assert check == {
+        "status": "passed",
+        "checked": 5,
+        "mismatch_count": 0,
+        "sample_mismatches": [],
+    }
+
+
+def test_operator_semantics_report_matrix_check_rules_json_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "200",
+            "--no-rows",
+            "--anatomy",
+            "--check-rules",
+            "--json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(result.stdout)
+    check = payload["rule_checks"]["multi_support_nonflat_rule"]
+
+    assert payload["summary"]["checked"] == 199
+    assert check["status"] == "passed"
+    assert check["mismatch_count"] == 0
+    assert check["checked"] > 0

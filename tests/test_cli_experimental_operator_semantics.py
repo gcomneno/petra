@@ -136,6 +136,7 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--pattern" in result.stdout
     assert "--no-rows" in result.stdout
     assert "--anatomy" in result.stdout
+    assert "--check-rules" in result.stdout
     assert "--progress" in result.stdout
     assert "--json" in result.stdout
     assert "emit JSON output" in help_text
@@ -219,3 +220,25 @@ def test_cli_experimental_operator_semantics_matrix_anatomy_json_contract() -> N
     assert payload["summary"]["anatomy_enabled"] is True
     assert "rows" not in payload
     assert all("arithmetic_anatomy" in group for group in payload["pattern_groups"])
+
+
+def test_cli_experimental_operator_semantics_matrix_check_rules_json_contract() -> None:
+    result = _run_cli(
+        "experimental",
+        "operator-semantics",
+        "matrix",
+        "--range",
+        "2",
+        "200",
+        "--no-rows",
+        "--anatomy",
+        "--check-rules",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+    check = payload["rule_checks"]["multi_support_nonflat_rule"]
+
+    assert check["status"] == "passed"
+    assert check["mismatch_count"] == 0
+    assert check["checked"] > 0
