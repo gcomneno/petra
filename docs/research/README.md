@@ -127,8 +127,12 @@ For current project-wide source of truth, see:
 
 ## PET/PEG 2.0 operator semantics reports
 
-The PET/PEG 2.0 foundation layer now has research-only reports that aggregate
-the executable X/Y/Z operator probes.
+Promotion policy:
+
+- `../foundations/pet-peg-2.0-operator-semantics-promotion-policy.md`
+
+The PET/PEG 2.0 foundation layer now has experimental documented reports that
+aggregate the executable X/Y/Z operator probes.
 
 Single-number report:
 
@@ -147,7 +151,7 @@ Related probes:
 - `../../tools/research/pet_operator_address_stability_probe.py`
 - `../../tools/research/pet_operator_axis_invariant_probe.py`
 
-Example research report commands:
+Example experimental report commands:
 
     python tools/research/pet_operator_semantics_report.py 60
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
@@ -159,7 +163,6 @@ per-number rows:
     python tools/research/pet_operator_semantics_report_matrix.py --range 2 100 --top-patterns 3 --no-rows
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18 --min-count 2 --pattern leaf-blocked --no-rows --json
 
-
-These probes and reports are not part of stable PET-Base behavior. They do not
-change CLI defaults, core operator semantics, routing, anchor selection, or
-residual descent.
+These probes and experimental reports are not part of stable PET-Base
+behavior. They do not change CLI defaults, core operator semantics, routing,
+anchor selection, or residual descent.

@@ -205,9 +205,13 @@ Use `--progress` to print per-number progress messages to stderr.
 
 PET/PEG 2.0 operator semantics research tooling lives under `tools/research/`.
 
-These tools are research-only inspection tools. They do not define stable CLI
-behavior and do not change PET core factorization, routing, anchor selection,
-verification, or default operator semantics.
+The aggregated report tools are experimental documented tooling; primitive
+operator probes remain research-only. Promotion policy is documented in
+`../docs/foundations/pet-peg-2.0-operator-semantics-promotion-policy.md`.
+
+These tools do not define stable CLI behavior and do not change PET core
+factorization, routing, anchor selection, verification, or default operator
+semantics.
 
 Single-number report:
 
@@ -223,7 +227,7 @@ Multi-number matrix report:
   operator-semantics pattern signatures, groups numbers by shared patterns, and
   summarizes pattern anatomy.
 
-Examples:
+Example experimental report commands:
 
     python tools/research/pet_operator_semantics_report.py 60
     python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
