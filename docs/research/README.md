@@ -90,6 +90,7 @@ structure, local rewrite laws, or empirical vocabulary:
 - `notes/pet-multiplicative-grammar.md`
 - `notes/pet-problem-statement.md`
 - `notes/pet-completion-aware-residual-descent.md` — structural walls, lateral doors, trap-doors, and completion-aware residual descent observations
+- `notes/pet-operator-semantics-pattern-distribution.md` — experimental PET/PEG operator-semantics matrix pattern distribution through 100,000
 
 ### Experimental / not core
 
