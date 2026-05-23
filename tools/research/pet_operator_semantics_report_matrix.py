@@ -130,6 +130,10 @@ def build_row(n: int) -> dict[str, Any]:
     }
 
 
+def unique_sorted(values: list[int]) -> list[int]:
+    return sorted(set(values))
+
+
 def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     groups: list[dict[str, Any]] = []
     by_signature: dict[str, dict[str, Any]] = {}
@@ -145,6 +149,12 @@ def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "axis_invariants_failed": row["axis_invariants_failed"],
                 "numbers": [],
                 "count": 0,
+                "example_numbers": [],
+                "width_values": [],
+                "has_leaf_address_count": 0,
+                "has_recursive_address_count": 0,
+                "leaf_blocked_count": 0,
+                "support_removed_count": 0,
             }
             by_signature[signature] = group
             groups.append(group)
@@ -152,6 +162,22 @@ def group_rows_by_pattern(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         group = by_signature[signature]
         group["numbers"].append(row["n"])
         group["count"] += 1
+
+        if len(group["example_numbers"]) < 5:
+            group["example_numbers"].append(row["n"])
+
+        group["width_values"] = unique_sorted(
+            [*group["width_values"], row["top_level_width"]]
+        )
+
+        if row["has_leaf_address"]:
+            group["has_leaf_address_count"] += 1
+        if row["has_recursive_address"]:
+            group["has_recursive_address_count"] += 1
+        if row["leaf_blocked_observed"]:
+            group["leaf_blocked_count"] += 1
+        if row["support_removed_observed"]:
+            group["support_removed_count"] += 1
 
     return groups
 
@@ -242,6 +268,12 @@ def print_text(payload: dict[str, Any]) -> None:
         print(
             f"- count={group['count']} "
             f"numbers={group['numbers']} "
+            f"examples={group['example_numbers']} "
+            f"widths={group['width_values']} "
+            f"leaf_count={group['has_leaf_address_count']} "
+            f"recursive_count={group['has_recursive_address_count']} "
+            f"leaf_blocked_count={group['leaf_blocked_count']} "
+            f"support_removed_count={group['support_removed_count']} "
             f"signature={group['combined_pattern_signature']}"
         )
 

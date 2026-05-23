@@ -116,6 +116,12 @@ def test_operator_semantics_report_matrix_groups_numbers_by_pattern() -> None:
             "axis_invariants_failed": 0,
             "numbers": [12, 18, 60],
             "count": 3,
+            "example_numbers": [12, 18, 60],
+            "width_values": [2, 3],
+            "has_leaf_address_count": 3,
+            "has_recursive_address_count": 3,
+            "leaf_blocked_count": 3,
+            "support_removed_count": 3,
         },
         {
             "combined_pattern_signature": EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED,
@@ -124,6 +130,12 @@ def test_operator_semantics_report_matrix_groups_numbers_by_pattern() -> None:
             "axis_invariants_failed": 0,
             "numbers": [72],
             "count": 1,
+            "example_numbers": [72],
+            "width_values": [2],
+            "has_leaf_address_count": 1,
+            "has_recursive_address_count": 1,
+            "leaf_blocked_count": 0,
+            "support_removed_count": 1,
         },
     ]
 
@@ -187,7 +199,11 @@ def test_operator_semantics_report_matrix_text_cli_contract() -> None:
     assert "leaf_blocked=False" in out
     assert "pattern_groups:" in out
     assert "numbers=[12, 18, 60]" in out
+    assert "examples=[12, 18, 60]" in out
+    assert "widths=[2, 3]" in out
+    assert "leaf_blocked_count=3" in out
     assert "numbers=[72]" in out
+    assert "leaf_blocked_count=0" in out
     assert f"signature={EXPECTED_PATTERN_WITHOUT_LEAF_BLOCKED}" in out
 
 
@@ -288,3 +304,39 @@ def test_operator_semantics_report_matrix_anatomy_for_prime_and_prime_power() ->
     assert rows[16]["first_recursive_address"] == [2, 2]
     assert rows[16]["leaf_blocked_observed"] is False
     assert rows[16]["support_removed_observed"] is False
+
+
+def test_operator_semantics_report_matrix_pattern_group_anatomy_for_range() -> None:
+    from tools.research.pet_operator_semantics_report_matrix import build_payload
+
+    payload = build_payload(list(range(12, 19)))
+
+    assert payload["summary"]["pattern_count"] == 4
+
+    groups = {
+        tuple(group["numbers"]): group
+        for group in payload["pattern_groups"]
+    }
+
+    assert groups[(12, 18)]["width_values"] == [2]
+    assert groups[(12, 18)]["has_leaf_address_count"] == 2
+    assert groups[(12, 18)]["has_recursive_address_count"] == 2
+    assert groups[(12, 18)]["leaf_blocked_count"] == 2
+    assert groups[(12, 18)]["support_removed_count"] == 2
+    assert groups[(12, 18)]["example_numbers"] == [12, 18]
+
+    assert groups[(13, 17)]["width_values"] == [1]
+    assert groups[(13, 17)]["has_leaf_address_count"] == 2
+    assert groups[(13, 17)]["has_recursive_address_count"] == 0
+    assert groups[(13, 17)]["leaf_blocked_count"] == 0
+    assert groups[(13, 17)]["support_removed_count"] == 0
+
+    assert groups[(14, 15)]["width_values"] == [2]
+    assert groups[(14, 15)]["leaf_blocked_count"] == 0
+    assert groups[(14, 15)]["support_removed_count"] == 2
+
+    assert groups[(16,)]["width_values"] == [1]
+    assert groups[(16,)]["has_leaf_address_count"] == 0
+    assert groups[(16,)]["has_recursive_address_count"] == 1
+    assert groups[(16,)]["leaf_blocked_count"] == 0
+    assert groups[(16,)]["support_removed_count"] == 0
