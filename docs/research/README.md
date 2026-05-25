@@ -178,6 +178,9 @@ group, including `omega_dist`, `big_omega_dist`, `max_exp_dist`,
 Use `--check-rules` to include experimental rule-check summaries in the
 matrix payload, including the observed multi-support nonflat rule.
 
+Use `--compact-text` to suppress large text-only number lists and print a
+shorter summary, rule-check section, and compact pattern-group lines.
+
 These probes and experimental reports are not part of stable PET-Base
 behavior. They do not change CLI defaults, core operator semantics, routing,
 anchor selection, or residual descent.

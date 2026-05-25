@@ -729,3 +729,32 @@ def test_operator_semantics_report_matrix_check_rules_text_cli_contract() -> Non
     assert "- multi_support_nonflat_rule status=passed" in out
     assert "mismatches=0" in out
     assert "sample_mismatches=" not in out
+
+
+def test_operator_semantics_report_matrix_compact_text_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "200",
+            "--no-rows",
+            "--check-rules",
+            "--compact-text",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+
+    assert "summary = checked=199 pattern_count=10 emitted_pattern_count=10" in out
+    assert "rule_checks:" in out
+    assert "- multi_support_nonflat_rule status=passed checked=139 mismatches=0" in out
+    assert "pattern_groups:" in out
+    assert "- class=multi-support-removal count=79 examples=[10, 14, 15, 21, 22]" in out
+    assert "numbers = [" not in out
+    assert "numbers_by_pattern" not in out
+    assert "signature=" not in out

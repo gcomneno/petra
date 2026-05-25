@@ -124,6 +124,8 @@ def _run_experimental_operator_semantics(args: argparse.Namespace) -> int:
             tool_args.append("--check-rules")
         if args.progress:
             tool_args.append("--progress")
+        if args.compact_text:
+            tool_args.append("--compact-text")
         if args.json:
             tool_args.append("--json")
 
@@ -6131,6 +6133,11 @@ def main(argv: list[str] | None = None) -> int:
         "--progress",
         action="store_true",
         help="emit progress checkpoints to stderr every 10%%",
+    )
+    p_operator_semantics_matrix.add_argument(
+        "--compact-text",
+        action="store_true",
+        help="emit compact text output without large number lists",
     )
     p_operator_semantics_matrix.add_argument(
         "--json",

@@ -586,13 +586,25 @@ def build_payload(
 
 
 
-def print_text(payload: dict[str, Any]) -> None:
+def print_text(payload: dict[str, Any], *, compact: bool = False) -> None:
     print(f"schema = {payload['schema']}")
     print(f"claim = {payload['claim']}")
     print(f"tooling_status = {payload['tooling_status']}")
     print(f"stable_cli_contract = {payload['stable_cli_contract']}")
-    print(f"numbers = {payload['numbers']}")
-    print(f"summary = {payload['summary']}")
+    if compact:
+        summary = payload["summary"]
+        print(
+            "summary = "
+            f"checked={summary['checked']} "
+            f"pattern_count={summary['pattern_count']} "
+            f"emitted_pattern_count={summary['emitted_pattern_count']} "
+            f"dominant_pattern_class={summary.get('dominant_pattern_class')} "
+            f"unclassified_pattern_class_count={summary.get('unclassified_pattern_class_count')} "
+            f"anatomy_enabled={summary.get('anatomy_enabled')}"
+        )
+    else:
+        print(f"numbers = {payload['numbers']}")
+        print(f"summary = {payload['summary']}")
 
     if payload["pattern_group_filters"]["active"]:
         print(f"pattern_group_filters = {payload['pattern_group_filters']}")
@@ -611,7 +623,7 @@ def print_text(payload: dict[str, Any]) -> None:
             if check["sample_mismatches"]:
                 print(f"  sample_mismatches={check['sample_mismatches']}")
 
-    if "rows" in payload:
+    if "rows" in payload and not compact:
         print()
         print("rows:")
 
@@ -633,6 +645,17 @@ def print_text(payload: dict[str, Any]) -> None:
     print()
     print("pattern_groups:")
     for group in payload["pattern_groups"]:
+        if compact:
+            print(
+                f"- class={group['pattern_class']} "
+                f"count={group['count']} "
+                f"examples={group['example_numbers']} "
+                f"widths={group['width_values']} "
+                f"leaf_blocked_count={group['leaf_blocked_count']} "
+                f"support_removed_count={group['support_removed_count']}"
+            )
+            continue
+
         anatomy_suffix = ""
         if "arithmetic_anatomy" in group:
             anatomy_suffix = f" anatomy={group['arithmetic_anatomy']}"
@@ -704,6 +727,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="emit progress checkpoints to stderr every 10%",
     )
+    parser.add_argument(
+        "--compact-text",
+        action="store_true",
+        help="emit compact text output without large number lists",
+    )
     parser.add_argument("--json", action="store_true", help="emit JSON output")
     args = parser.parse_args(argv)
 
@@ -727,7 +755,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
-        print_text(payload)
+        print_text(payload, compact=args.compact_text)
 
     return 0 if payload["summary"]["axis_invariant_failures"] == 0 else 1
 

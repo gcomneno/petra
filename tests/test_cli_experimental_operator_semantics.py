@@ -138,6 +138,7 @@ def test_cli_experimental_operator_semantics_matrix_help_contract() -> None:
     assert "--anatomy" in result.stdout
     assert "--check-rules" in result.stdout
     assert "--progress" in result.stdout
+    assert "--compact-text" in result.stdout
     assert "--json" in result.stdout
     assert "emit JSON output" in help_text
 
@@ -242,3 +243,23 @@ def test_cli_experimental_operator_semantics_matrix_check_rules_json_contract() 
     assert check["status"] == "passed"
     assert check["mismatch_count"] == 0
     assert check["checked"] > 0
+
+
+def test_cli_experimental_operator_semantics_matrix_compact_text_contract() -> None:
+    result = _run_cli(
+        "experimental",
+        "operator-semantics",
+        "matrix",
+        "--range",
+        "2",
+        "200",
+        "--no-rows",
+        "--check-rules",
+        "--compact-text",
+    )
+
+    assert "summary = checked=199 pattern_count=10 emitted_pattern_count=10" in result.stdout
+    assert "rule_checks:" in result.stdout
+    assert "- multi_support_nonflat_rule status=passed checked=139 mismatches=0" in result.stdout
+    assert "numbers = [" not in result.stdout
+    assert "numbers_by_pattern" not in result.stdout
