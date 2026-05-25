@@ -705,3 +705,27 @@ def test_operator_semantics_report_matrix_check_rules_json_cli_contract() -> Non
     assert check["status"] == "passed"
     assert check["mismatch_count"] == 0
     assert check["checked"] > 0
+
+
+def test_operator_semantics_report_matrix_check_rules_text_cli_contract() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/research/pet_operator_semantics_report_matrix.py",
+            "--range",
+            "2",
+            "200",
+            "--no-rows",
+            "--check-rules",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    out = result.stdout
+
+    assert "rule_checks:" in out
+    assert "- multi_support_nonflat_rule status=passed" in out
+    assert "mismatches=0" in out
+    assert "sample_mismatches=" not in out

@@ -597,6 +597,20 @@ def print_text(payload: dict[str, Any]) -> None:
     if payload["pattern_group_filters"]["active"]:
         print(f"pattern_group_filters = {payload['pattern_group_filters']}")
 
+    if "rule_checks" in payload:
+        print()
+        print("rule_checks:")
+        for name, check in payload["rule_checks"].items():
+            print(
+                f"- {name} "
+                f"status={check['status']} "
+                f"checked={check['checked']} "
+                f"mismatches={check['mismatch_count']}"
+            )
+
+            if check["sample_mismatches"]:
+                print(f"  sample_mismatches={check['sample_mismatches']}")
+
     if "rows" in payload:
         print()
         print("rows:")
