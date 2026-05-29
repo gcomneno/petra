@@ -38,3 +38,4 @@ For stable behavior, read `../reference/SPEC.md`.
 For CLI behavior, read `../reference/CLI.md`.
 For live research notes, read `../research/README.md`.
 - `pet-peg-2.0-core-pillars.md` — PET/PEG 2.0 core pillars and boundary
+- `pet-peg-2.0-root-base-recursion.md` — PET/PEG 2.0 exact and partial root-base recursion semantics
