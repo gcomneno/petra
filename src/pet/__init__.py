@@ -27,6 +27,7 @@ from .io import (
     to_jsonable,
 )
 from .object_model import (
+    PETAddressError,
     PETObject,
     pet_object_from_int,
     structurally_equivalent,
@@ -47,6 +48,7 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "PETAddressError",
     "structurally_equivalent",
     "pet_object_from_int",
     "PETObject",

@@ -105,3 +105,36 @@ def test_pet_object_model_structural_equivalence_ignores_values_and_primes() -> 
 def test_pet_object_model_rejects_values_below_two() -> None:
     with pytest.raises(ValueError, match="n must be >= 2"):
         pet_object_from_int(1)
+
+
+def test_pet_object_model_resolves_structural_addresses() -> None:
+    root = pet_object_from_int(60)
+
+    assert root.at(()) is root
+
+    two_power = root.at((2,))
+    assert two_power.value == 4
+    assert two_power.kind == "composite"
+    assert two_power.prime_label == 2
+
+    exponent_leaf = root.at((2, 2))
+    assert exponent_leaf.value == 2
+    assert exponent_leaf.kind == "atomic"
+    assert exponent_leaf.prime_label == 2
+
+    assert root.at((3,)).value == 3
+    assert root.at((5,)).value == 5
+
+
+def test_pet_object_model_rejects_missing_structural_addresses() -> None:
+    from pet import PETAddressError
+
+    root = pet_object_from_int(60)
+
+    import pytest
+
+    with pytest.raises(PETAddressError, match="not found"):
+        root.at((7,))
+
+    with pytest.raises(PETAddressError, match="outside object"):
+        root.at((2, 2)).at((3,))

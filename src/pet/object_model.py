@@ -6,6 +6,10 @@ from typing import Any, Literal
 from .core import prime_factorization
 
 
+class PETAddressError(LookupError):
+    """Raised when a structural PET object address cannot be resolved."""
+
+
 PETObjectRole = Literal["root", "child"]
 PETObjectKind = Literal["atomic", "composite"]
 
@@ -69,6 +73,28 @@ class PETObject:
             "address": list(self.address),
             "children": [child.to_dict() for child in self.children],
         }
+
+
+    def at(self, address: tuple[int, ...]) -> "PETObject":
+        """Return the PET object at a structural address.
+
+        The root object is addressed by ``()``. Child addresses are prime-label
+        paths such as ``(2,)`` or ``(2, 2)``.
+        """
+
+        if address == self.address:
+            return self
+
+        if not address[: len(self.address)] == self.address:
+            raise PETAddressError(
+                f"address {address!r} is outside object rooted at {self.address!r}"
+            )
+
+        for child in self.children:
+            if address[: len(child.address)] == child.address:
+                return child.at(address)
+
+        raise PETAddressError(f"address {address!r} not found")
 
 
 def _make_child_from_factor(
