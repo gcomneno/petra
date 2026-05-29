@@ -138,3 +138,44 @@ def test_pet_object_model_rejects_missing_structural_addresses() -> None:
 
     with pytest.raises(PETAddressError, match="outside object"):
         root.at((2, 2)).at((3,))
+
+
+def test_pet_object_model_walk_enumerates_addressed_objects_in_preorder() -> None:
+    root = pet_object_from_int(60)
+
+    walked = root.walk()
+
+    assert [obj.address for obj in walked] == [(), (2,), (2, 2), (3,), (5,)]
+    assert [obj.value for obj in walked] == [60, 4, 2, 3, 5]
+
+
+def test_pet_object_model_addresses_and_address_map_are_consistent() -> None:
+    root = pet_object_from_int(60)
+
+    address_map = root.address_map()
+
+    assert root.addresses() == tuple(address_map)
+    assert address_map[()] is root
+    assert address_map[(2,)].value == 4
+    assert address_map[(2, 2)].value == 2
+    assert address_map[(3,)].value == 3
+    assert address_map[(5,)].value == 5
+
+
+def test_pet_object_model_has_address_reports_validity() -> None:
+    root = pet_object_from_int(60)
+
+    assert root.has_address(()) is True
+    assert root.has_address((2,)) is True
+    assert root.has_address((2, 2)) is True
+    assert root.has_address((7,)) is False
+    assert root.has_address((2, 3)) is False
+
+
+def test_pet_object_model_structural_identity_key_is_concrete() -> None:
+    left = pet_object_from_int(12)
+    right = pet_object_from_int(18)
+
+    assert structurally_equivalent(left, right)
+    assert left.structural_identity_key() != right.structural_identity_key()
+    assert left.structural_identity_key() == pet_object_from_int(12).structural_identity_key()

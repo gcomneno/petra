@@ -64,6 +64,54 @@ class PETObject:
             )
         )
 
+    def walk(self) -> tuple["PETObject", ...]:
+        """Return this object and all descendants in deterministic preorder."""
+
+        descendants: list[PETObject] = [self]
+
+        for child in self.children:
+            descendants.extend(child.walk())
+
+        return tuple(descendants)
+
+    def addresses(self) -> tuple[tuple[int, ...], ...]:
+        """Return all valid structural addresses in this object."""
+
+        return tuple(obj.address for obj in self.walk())
+
+    def address_map(self) -> dict[tuple[int, ...], "PETObject"]:
+        """Return a mapping from valid structural address to selected object."""
+
+        mapping: dict[tuple[int, ...], PETObject] = {}
+
+        for obj in self.walk():
+            if obj.address in mapping:
+                raise ValueError(f"duplicate PET object address: {obj.address!r}")
+            mapping[obj.address] = obj
+
+        return mapping
+
+    def has_address(self, address: tuple[int, ...]) -> bool:
+        """Return whether an address is valid for this object."""
+
+        return address in self.address_map()
+
+    def structural_identity_key(self) -> tuple[Any, ...]:
+        """Return a concrete recursive identity key for this object.
+
+        Unlike ``structural_signature()``, this key preserves role, kind,
+        address, and prime labels. It identifies this concrete addressed object
+        structure rather than only the prime-independent shape.
+        """
+
+        return (
+            self.role,
+            self.kind,
+            self.prime_label,
+            self.address,
+            tuple(child.structural_identity_key() for child in self.children),
+        )
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "value": self.value,
