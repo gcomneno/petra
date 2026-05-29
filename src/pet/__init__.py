@@ -40,6 +40,14 @@ from .root_base import (
     exact_root_base_from_int,
     partial_root_base_components_from_int,
 )
+from .operators import (
+    PETOperatorTarget,
+    dec_target,
+    drop_target,
+    inc_target,
+    new_target,
+    resolve_operator_target,
+)
 
 
 def main(argv=None):
@@ -56,6 +64,12 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "resolve_operator_target",
+    "new_target",
+    "inc_target",
+    "drop_target",
+    "dec_target",
+    "PETOperatorTarget",
     "compare_address",
     "PETAddressComparison",
     "partial_root_base_components_from_int",
