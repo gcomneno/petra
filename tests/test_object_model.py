@@ -179,3 +179,87 @@ def test_pet_object_model_structural_identity_key_is_concrete() -> None:
     assert structurally_equivalent(left, right)
     assert left.structural_identity_key() != right.structural_identity_key()
     assert left.structural_identity_key() == pet_object_from_int(12).structural_identity_key()
+
+
+def test_pet_object_model_address_resolution_classifies_valid_missing_and_blocked_leaf() -> None:
+    root = pet_object_from_int(60)
+
+    assert root.address_resolution(()) == "valid"
+    assert root.address_resolution((2,)) == "valid"
+    assert root.address_resolution((2, 2)) == "valid"
+    assert root.address_resolution((7,)) == "missing"
+    assert root.address_resolution((3, 2)) == "blocked-at-leaf"
+
+
+def test_pet_object_model_compare_address_classifies_stable_created_destroyed() -> None:
+    from pet import compare_address
+
+    before = pet_object_from_int(60)
+    after_created = pet_object_from_int(420)
+    after_destroyed = pet_object_from_int(15)
+
+    stable = compare_address(before, pet_object_from_int(60), (2,))
+    created = compare_address(before, after_created, (7,))
+    destroyed = compare_address(before, after_destroyed, (2,))
+
+    assert stable.outcome == "stable"
+    assert stable.before_resolution == "valid"
+    assert stable.after_resolution == "valid"
+    assert stable.before_object is not None
+    assert stable.after_object is not None
+
+    assert created.outcome == "created"
+    assert created.before_resolution == "missing"
+    assert created.after_resolution == "valid"
+
+    assert destroyed.outcome == "destroyed"
+    assert destroyed.before_resolution == "valid"
+    assert destroyed.after_resolution == "missing"
+
+
+def test_pet_object_model_compare_address_classifies_retargeted() -> None:
+    from pet import compare_address
+
+    before = pet_object_from_int(60)
+    after = pet_object_from_int(24)
+
+    comparison = compare_address(before, after, (2,))
+
+    assert comparison.outcome == "retargeted"
+    assert comparison.before_resolution == "valid"
+    assert comparison.after_resolution == "valid"
+    assert comparison.before_object is not None
+    assert comparison.after_object is not None
+    assert comparison.before_object.value == 4
+    assert comparison.after_object.value == 8
+    assert comparison.before_object.structural_identity_key() != comparison.after_object.structural_identity_key()
+
+
+def test_pet_object_model_compare_address_classifies_blocked_at_leaf() -> None:
+    from pet import compare_address
+
+    before = pet_object_from_int(60)
+    after = pet_object_from_int(60)
+
+    comparison = compare_address(before, after, (3, 2))
+
+    assert comparison.outcome == "blocked-at-leaf"
+    assert comparison.before_resolution == "blocked-at-leaf"
+    assert comparison.after_resolution == "blocked-at-leaf"
+    assert comparison.before_object is None
+    assert comparison.after_object is None
+
+
+def test_pet_object_model_address_comparison_serializes() -> None:
+    from pet import compare_address
+
+    comparison = compare_address(pet_object_from_int(60), pet_object_from_int(420), (7,))
+
+    payload = comparison.to_dict()
+
+    assert payload["address"] == [7]
+    assert payload["outcome"] == "created"
+    assert payload["before_resolution"] == "missing"
+    assert payload["after_resolution"] == "valid"
+    assert payload["before_object"] is None
+    assert payload["after_object"]["value"] == 7

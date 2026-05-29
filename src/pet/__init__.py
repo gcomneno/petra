@@ -27,6 +27,8 @@ from .io import (
     to_jsonable,
 )
 from .object_model import (
+    compare_address,
+    PETAddressComparison,
     PETAddressError,
     PETObject,
     pet_object_from_int,
@@ -54,6 +56,8 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "compare_address",
+    "PETAddressComparison",
     "partial_root_base_components_from_int",
     "PETRootBaseComponent",
     "exact_root_base_from_int",

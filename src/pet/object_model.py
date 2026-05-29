@@ -12,6 +12,42 @@ class PETAddressError(LookupError):
 
 PETObjectRole = Literal["root", "child"]
 PETObjectKind = Literal["atomic", "composite"]
+PETAddressResolution = Literal["valid", "missing", "blocked-at-leaf"]
+PETAddressOutcome = Literal[
+    "stable",
+    "created",
+    "destroyed",
+    "retargeted",
+    "blocked-at-leaf",
+    "missing",
+]
+
+
+@dataclass(frozen=True)
+class PETAddressComparison:
+    """Comparison of one structural address across two PET objects."""
+
+    address: tuple[int, ...]
+    outcome: PETAddressOutcome
+    before_resolution: PETAddressResolution
+    after_resolution: PETAddressResolution
+    before_object: "PETObject | None"
+    after_object: "PETObject | None"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "address": list(self.address),
+            "outcome": self.outcome,
+            "before_resolution": self.before_resolution,
+            "after_resolution": self.after_resolution,
+            "before_object": (
+                None if self.before_object is None else self.before_object.to_dict()
+            ),
+            "after_object": (
+                None if self.after_object is None else self.after_object.to_dict()
+            ),
+        }
+
 
 
 @dataclass(frozen=True)
@@ -95,6 +131,30 @@ class PETObject:
         """Return whether an address is valid for this object."""
 
         return address in self.address_map()
+
+    def address_resolution(self, address: tuple[int, ...]) -> PETAddressResolution:
+        """Return whether an address is valid, missing, or blocked at a leaf."""
+
+        if address in self.address_map():
+            return "valid"
+
+        current = self
+
+        for index, prime in enumerate(address):
+            matching_child = next(
+                (child for child in current.children if child.prime_label == prime),
+                None,
+            )
+
+            if matching_child is None:
+                return "missing"
+
+            if index < len(address) - 1 and matching_child.is_atomic:
+                return "blocked-at-leaf"
+
+            current = matching_child
+
+        return "missing"
 
     def structural_identity_key(self) -> tuple[Any, ...]:
         """Return a concrete recursive identity key for this object.
@@ -203,3 +263,50 @@ def structurally_equivalent(left: PETObject, right: PETObject) -> bool:
     """Return whether two PET objects have the same recursive structure."""
 
     return left.structural_signature() == right.structural_signature()
+
+
+
+def compare_address(
+    before: PETObject,
+    after: PETObject,
+    address: tuple[int, ...],
+) -> PETAddressComparison:
+    """Classify one structural address across two PET objects."""
+
+    before_resolution = before.address_resolution(address)
+    after_resolution = after.address_resolution(address)
+
+    before_object = before.at(address) if before_resolution == "valid" else None
+    after_object = after.at(address) if after_resolution == "valid" else None
+
+    if before_resolution == "valid" and after_resolution == "valid":
+        if before_object is None or after_object is None:
+            raise AssertionError("valid address resolution must yield objects")
+
+        outcome: PETAddressOutcome = (
+            "stable"
+            if before_object.structural_identity_key()
+            == after_object.structural_identity_key()
+            else "retargeted"
+        )
+    elif before_resolution != "valid" and after_resolution == "valid":
+        outcome = "created"
+    elif before_resolution == "valid" and after_resolution != "valid":
+        outcome = (
+            "blocked-at-leaf"
+            if after_resolution == "blocked-at-leaf"
+            else "destroyed"
+        )
+    elif before_resolution == "blocked-at-leaf" or after_resolution == "blocked-at-leaf":
+        outcome = "blocked-at-leaf"
+    else:
+        outcome = "missing"
+
+    return PETAddressComparison(
+        address=address,
+        outcome=outcome,
+        before_resolution=before_resolution,
+        after_resolution=after_resolution,
+        before_object=before_object,
+        after_object=after_object,
+    )
