@@ -112,3 +112,80 @@ def test_exact_root_base_serializes_base_object() -> None:
 def test_exact_root_base_rejects_values_below_two() -> None:
     with pytest.raises(ValueError, match="n must be >= 2"):
         exact_root_base_from_int(1)
+
+
+def test_partial_root_base_components_find_local_exact_powers() -> None:
+    from pet import PETRootBaseComponent, partial_root_base_components_from_int
+
+    components = partial_root_base_components_from_int(72)
+
+    assert all(isinstance(component, PETRootBaseComponent) for component in components)
+    assert [(c.address, c.value, c.base_value, c.exponent) for c in components] == [
+        ((2,), 8, 2, 3),
+        ((3,), 9, 3, 2),
+    ]
+
+    first = components[0]
+    assert first.base_object.value == 2
+    assert first.exponent_object.value == 3
+
+
+def test_partial_root_base_components_are_empty_for_squarefree_values() -> None:
+    from pet import partial_root_base_components_from_int
+
+    assert partial_root_base_components_from_int(30) == ()
+
+
+def test_partial_root_base_components_serialize_pet_objects() -> None:
+    from pet import partial_root_base_components_from_int
+
+    component = partial_root_base_components_from_int(72)[0]
+
+    assert component.to_dict() == {
+        "value": 8,
+        "address": [2],
+        "prime_label": 2,
+        "exponent": 3,
+        "exponent_object": {
+            "value": 3,
+            "role": "root",
+            "kind": "composite",
+            "prime_label": None,
+            "address": [],
+            "children": [
+                {
+                    "value": 3,
+                    "role": "child",
+                    "kind": "atomic",
+                    "prime_label": 3,
+                    "address": [3],
+                    "children": [],
+                }
+            ],
+        },
+        "base_value": 2,
+        "base_object": {
+            "value": 2,
+            "role": "root",
+            "kind": "composite",
+            "prime_label": None,
+            "address": [],
+            "children": [
+                {
+                    "value": 2,
+                    "role": "child",
+                    "kind": "atomic",
+                    "prime_label": 2,
+                    "address": [2],
+                    "children": [],
+                }
+            ],
+        },
+    }
+
+
+def test_partial_root_base_components_reject_values_below_two() -> None:
+    from pet import partial_root_base_components_from_int
+
+    with pytest.raises(ValueError, match="n must be >= 2"):
+        partial_root_base_components_from_int(1)

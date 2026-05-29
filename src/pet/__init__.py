@@ -33,8 +33,10 @@ from .object_model import (
     structurally_equivalent,
 )
 from .root_base import (
+    PETRootBaseComponent,
     PETRootBase,
     exact_root_base_from_int,
+    partial_root_base_components_from_int,
 )
 
 
@@ -52,6 +54,8 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "partial_root_base_components_from_int",
+    "PETRootBaseComponent",
     "exact_root_base_from_int",
     "PETRootBase",
     "PETAddressError",
