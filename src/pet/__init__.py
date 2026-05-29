@@ -32,6 +32,10 @@ from .object_model import (
     pet_object_from_int,
     structurally_equivalent,
 )
+from .root_base import (
+    PETRootBase,
+    exact_root_base_from_int,
+)
 
 
 def main(argv=None):
@@ -48,6 +52,8 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "exact_root_base_from_int",
+    "PETRootBase",
     "PETAddressError",
     "structurally_equivalent",
     "pet_object_from_int",
