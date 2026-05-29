@@ -26,6 +26,11 @@ from .io import (
     to_json,
     to_jsonable,
 )
+from .object_model import (
+    PETObject,
+    pet_object_from_int,
+    structurally_equivalent,
+)
 
 
 def main(argv=None):
@@ -42,6 +47,9 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "structurally_equivalent",
+    "pet_object_from_int",
+    "PETObject",
     "average_leaf_depth",
     "leaf_depth_variance",
     "branch_profile",
