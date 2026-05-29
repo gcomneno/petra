@@ -165,3 +165,118 @@ def test_operator_target_serializes_selected_object() -> None:
     assert payload["reason"] == "new-target-valid"
     assert payload["address_resolution"] == "valid"
     assert payload["target_object"]["value"] == 60
+
+
+def test_apply_operator_by_value_applies_root_new_and_drop() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(60)
+
+    new_result = apply_operator_by_value(obj, "NEW", (), 7)
+    drop_result = apply_operator_by_value(obj, "DROP", (), 5)
+
+    assert new_result.valid is True
+    assert new_result.reason == "new-applied-by-value"
+    assert new_result.before_value == 60
+    assert new_result.after_value == 420
+    assert new_result.after_object is not None
+    assert new_result.after_object.value == 420
+
+    assert drop_result.valid is True
+    assert drop_result.reason == "drop-applied-by-value"
+    assert drop_result.before_value == 60
+    assert drop_result.after_value == 12
+    assert drop_result.after_object is not None
+    assert drop_result.after_object.value == 12
+
+
+def test_apply_operator_by_value_applies_top_level_inc_and_dec() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(60)
+
+    inc_result = apply_operator_by_value(obj, "INC", (2,))
+    dec_result = apply_operator_by_value(obj, "DEC", (2,))
+
+    assert inc_result.valid is True
+    assert inc_result.reason == "inc-applied-by-value"
+    assert inc_result.after_value == 120
+    assert inc_result.after_object is not None
+    assert inc_result.after_object.value == 120
+
+    assert dec_result.valid is True
+    assert dec_result.reason == "dec-applied-by-value"
+    assert dec_result.after_value == 30
+    assert dec_result.after_object is not None
+    assert dec_result.after_object.value == 30
+
+
+def test_apply_operator_by_value_applies_nested_inc_and_dec() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(60)
+
+    inc_result = apply_operator_by_value(obj, "INC", (2, 2))
+
+    assert inc_result.valid is True
+    assert inc_result.after_value == 240
+    assert inc_result.after_object is not None
+    assert inc_result.after_object.at((2,)).value == 16
+
+    dec_result = apply_operator_by_value(inc_result.after_object, "DEC", (2, 2))
+
+    assert dec_result.valid is True
+    assert dec_result.after_value == 60
+    assert dec_result.after_object is not None
+    assert dec_result.after_object.value == 60
+
+
+def test_apply_operator_by_value_applies_nested_new_and_drop() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(60)
+
+    new_result = apply_operator_by_value(obj, "NEW", (2,), 3)
+
+    assert new_result.valid is True
+    assert new_result.after_value == 960
+    assert new_result.after_object is not None
+    assert new_result.after_object.at((2,)).value == 64
+
+    drop_result = apply_operator_by_value(new_result.after_object, "DROP", (2,), 3)
+
+    assert drop_result.valid is True
+    assert drop_result.after_value == 60
+    assert drop_result.after_object is not None
+    assert drop_result.after_object.value == 60
+
+
+def test_apply_operator_by_value_returns_invalid_result_without_mutation() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(60)
+
+    result = apply_operator_by_value(obj, "DROP", (), 7)
+
+    assert result.valid is False
+    assert result.reason == "p-not-in-target-baseline"
+    assert result.before_value == 60
+    assert result.after_value is None
+    assert result.after_object is None
+
+
+def test_operator_application_serializes() -> None:
+    from pet import apply_operator_by_value
+
+    payload = apply_operator_by_value(pet_object_from_int(60), "NEW", (), 7).to_dict()
+
+    assert payload["op"] == "NEW"
+    assert payload["address"] == []
+    assert payload["argument"] == 7
+    assert payload["valid"] is True
+    assert payload["reason"] == "new-applied-by-value"
+    assert payload["before_value"] == 60
+    assert payload["after_value"] == 420
+    assert payload["target"]["reason"] == "new-target-valid"
+    assert payload["before_object"]["value"] == 60
+    assert payload["after_object"]["value"] == 420

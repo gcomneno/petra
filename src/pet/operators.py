@@ -4,12 +4,48 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from .core import is_prime
-from .object_model import PETObject
+from .object_model import PETObject, pet_object_from_int
 
 
 PETOperatorName = Literal["NEW", "DROP", "INC", "DEC"]
 PETOperatorAxis = Literal["X", "Y"]
 PETOperatorTargetKind = Literal["parent-support", "selected-root"]
+
+
+@dataclass(frozen=True)
+class PETOperatorApplication:
+    """PET/PEG 2.0 operator application result.
+
+    Operator application currently mutates by represented integer value and then
+    rebuilds a PETObject. It does not yet manually rewrite object internals.
+    """
+
+    op: PETOperatorName
+    address: tuple[int, ...]
+    argument: int | None
+    target: "PETOperatorTarget"
+    valid: bool
+    reason: str
+    before_value: int
+    after_value: int | None
+    before_object: PETObject
+    after_object: PETObject | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "op": self.op,
+            "address": list(self.address),
+            "argument": self.argument,
+            "valid": self.valid,
+            "reason": self.reason,
+            "before_value": self.before_value,
+            "after_value": self.after_value,
+            "target": self.target.to_dict(),
+            "before_object": self.before_object.to_dict(),
+            "after_object": (
+                None if self.after_object is None else self.after_object.to_dict()
+            ),
+        }
 
 
 @dataclass(frozen=True)
@@ -259,3 +295,175 @@ def resolve_operator_target(
         return dec_target(obj, address)
 
     raise ValueError(f"unknown PET operator: {op}")
+
+
+
+def _product(values: list[int]) -> int:
+    result = 1
+    for value in values:
+        result *= value
+    return result
+
+
+def _child_values(obj: PETObject) -> list[int]:
+    return [child.value for child in obj.children]
+
+
+def _exponent_value(obj: PETObject) -> int:
+    if obj.is_atomic:
+        return 1
+    return _product(_child_values(obj))
+
+
+def _value_from_child_values(obj: PETObject, child_values: list[int]) -> int:
+    if obj.prime_label is None:
+        return _product(child_values)
+
+    return obj.prime_label ** _product(child_values)
+
+
+def _replace_descendant_value(
+    obj: PETObject,
+    target_address: tuple[int, ...],
+    new_value: int,
+) -> int:
+    if obj.address == target_address:
+        return new_value
+
+    child_values: list[int] = []
+    changed = False
+
+    for child in obj.children:
+        if target_address[: len(child.address)] == child.address:
+            child_values.append(
+                _replace_descendant_value(child, target_address, new_value)
+            )
+            changed = True
+        else:
+            child_values.append(child.value)
+
+    if not changed:
+        raise ValueError(f"target address {target_address!r} is not inside object")
+
+    return _value_from_child_values(obj, child_values)
+
+
+def _apply_x_value(
+    obj: PETObject,
+    *,
+    op: Literal["NEW", "DROP"],
+    parent_address: tuple[int, ...],
+    argument: int,
+) -> int:
+    target = obj.at(parent_address)
+
+    if target.prime_label is None:
+        if op == "NEW":
+            new_target_value = target.value * argument
+        else:
+            child = next(
+                child for child in target.children if child.prime_label == argument
+            )
+            new_target_value = target.value // child.value
+    else:
+        current_exponent = _exponent_value(target)
+
+        if op == "NEW":
+            new_exponent = current_exponent * argument
+        else:
+            child = next(
+                child for child in target.children if child.prime_label == argument
+            )
+            new_exponent = current_exponent // child.value
+
+        new_target_value = target.prime_label**new_exponent
+
+    return _replace_descendant_value(obj, parent_address, new_target_value)
+
+
+def _apply_y_value(
+    obj: PETObject,
+    *,
+    op: Literal["INC", "DEC"],
+    address: tuple[int, ...],
+) -> int:
+    target = obj.at(address)
+
+    if target.prime_label is None:
+        raise ValueError("Y-axis operator target must be a selected child root")
+
+    current_exponent = _exponent_value(target)
+    new_exponent = current_exponent + 1 if op == "INC" else current_exponent - 1
+
+    if new_exponent < 1:
+        raise ValueError("Y-axis operator produced exponent below one")
+
+    new_target_value = target.prime_label**new_exponent
+
+    return _replace_descendant_value(obj, address, new_target_value)
+
+
+def apply_operator_by_value(
+    obj: PETObject,
+    op: PETOperatorName,
+    address: tuple[int, ...],
+    argument: int | None = None,
+) -> PETOperatorApplication:
+    """Apply a PET/PEG 2.0 operator by represented integer value.
+
+    This is value-level application, not manual structural rewriting.
+    """
+
+    target = resolve_operator_target(obj, op, address, argument)
+
+    if not target.valid:
+        return PETOperatorApplication(
+            op=op,
+            address=address,
+            argument=argument,
+            target=target,
+            valid=False,
+            reason=target.reason,
+            before_value=obj.value,
+            after_value=None,
+            before_object=obj,
+            after_object=None,
+        )
+
+    if op == "NEW":
+        if argument is None:
+            raise ValueError("NEW requires argument q")
+        after_value = _apply_x_value(
+            obj,
+            op="NEW",
+            parent_address=address,
+            argument=argument,
+        )
+    elif op == "DROP":
+        if argument is None:
+            raise ValueError("DROP requires argument p")
+        after_value = _apply_x_value(
+            obj,
+            op="DROP",
+            parent_address=address,
+            argument=argument,
+        )
+    elif op == "INC":
+        after_value = _apply_y_value(obj, op="INC", address=address)
+    elif op == "DEC":
+        after_value = _apply_y_value(obj, op="DEC", address=address)
+    else:
+        raise ValueError(f"unknown PET operator: {op}")
+
+    return PETOperatorApplication(
+        op=op,
+        address=address,
+        argument=argument,
+        target=target,
+        valid=True,
+        reason=f"{op.lower()}-applied-by-value",
+        before_value=obj.value,
+        after_value=after_value,
+        before_object=obj,
+        after_object=pet_object_from_int(after_value),
+    )

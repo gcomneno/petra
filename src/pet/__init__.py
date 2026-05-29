@@ -41,6 +41,8 @@ from .root_base import (
     partial_root_base_components_from_int,
 )
 from .operators import (
+    apply_operator_by_value,
+    PETOperatorApplication,
     PETOperatorTarget,
     dec_target,
     drop_target,
@@ -64,6 +66,8 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "apply_operator_by_value",
+    "PETOperatorApplication",
     "resolve_operator_target",
     "new_target",
     "inc_target",
