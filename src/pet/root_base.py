@@ -32,6 +32,7 @@ class PETRootBase:
     value: int
     status: PETRootBaseStatus
     exponent: int | None
+    exponent_object: PETObject | None
     base_value: int | None
     base_object: PETObject | None
 
@@ -48,6 +49,9 @@ class PETRootBase:
             "value": self.value,
             "status": self.status,
             "exponent": self.exponent,
+            "exponent_object": (
+                None if self.exponent_object is None else self.exponent_object.to_dict()
+            ),
             "base_value": self.base_value,
             "base_object": None if self.base_object is None else self.base_object.to_dict(),
         }
@@ -74,6 +78,7 @@ def exact_root_base_from_int(n: int) -> PETRootBase:
             value=n,
             status="non-power",
             exponent=None,
+            exponent_object=None,
             base_value=None,
             base_object=None,
         )
@@ -86,6 +91,7 @@ def exact_root_base_from_int(n: int) -> PETRootBase:
         value=n,
         status="exact",
         exponent=exponent_gcd,
+        exponent_object=pet_object_from_int(exponent_gcd),
         base_value=base_value,
         base_object=pet_object_from_int(base_value),
     )

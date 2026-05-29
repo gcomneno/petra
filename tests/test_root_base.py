@@ -13,6 +13,9 @@ def test_exact_root_base_detects_prime_power_with_maximal_exponent() -> None:
     assert root_base.is_power is True
     assert root_base.base_value == 2
     assert root_base.exponent == 6
+    assert root_base.exponent_object is not None
+    assert root_base.exponent_object.value == 6
+    assert [child.prime_label for child in root_base.exponent_object.children] == [2, 3]
     assert root_base.base_object is not None
     assert root_base.base_object.value == 2
 
@@ -23,6 +26,8 @@ def test_exact_root_base_detects_composite_base_power() -> None:
     assert root_base.status == "exact"
     assert root_base.base_value == 6
     assert root_base.exponent == 3
+    assert root_base.exponent_object is not None
+    assert root_base.exponent_object.value == 3
     assert root_base.base_object is not None
     assert root_base.base_object.value == 6
     assert [child.prime_label for child in root_base.base_object.children] == [2, 3]
@@ -37,6 +42,7 @@ def test_exact_root_base_rejects_non_power() -> None:
     assert root_base.is_power is False
     assert root_base.base_value is None
     assert root_base.exponent is None
+    assert root_base.exponent_object is None
     assert root_base.base_object is None
 
 
@@ -57,6 +63,23 @@ def test_exact_root_base_serializes_base_object() -> None:
         "value": 36,
         "status": "exact",
         "exponent": 2,
+        "exponent_object": {
+            "value": 2,
+            "role": "root",
+            "kind": "composite",
+            "prime_label": None,
+            "address": [],
+            "children": [
+                {
+                    "value": 2,
+                    "role": "child",
+                    "kind": "atomic",
+                    "prime_label": 2,
+                    "address": [2],
+                    "children": [],
+                }
+            ],
+        },
         "base_value": 6,
         "base_object": {
             "value": 6,
