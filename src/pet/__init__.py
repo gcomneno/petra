@@ -36,6 +36,17 @@ from .object_model import (
     pet_object_from_int,
     structurally_equivalent,
 )
+from .object_metrics import (
+    pet_object_average_leaf_depth,
+    pet_object_branch_profile,
+    pet_object_height,
+    pet_object_leaf_count,
+    pet_object_leaf_depth_variance,
+    pet_object_max_branching,
+    pet_object_metrics_dict,
+    pet_object_node_count,
+    pet_object_recursive_mass,
+)
 from .root_base import (
     PETRootBaseComponent,
     PETRootBase,
@@ -121,6 +132,15 @@ __all__ = [
     "PETAddressError",
     "structurally_equivalent",
     "pet_object_from_int",
+    "pet_object_recursive_mass",
+    "pet_object_node_count",
+    "pet_object_metrics_dict",
+    "pet_object_max_branching",
+    "pet_object_leaf_depth_variance",
+    "pet_object_leaf_count",
+    "pet_object_height",
+    "pet_object_branch_profile",
+    "pet_object_average_leaf_depth",
     "PETObject",
     "pet_object_to_legacy_tree",
     "pet_object_from_legacy_tree",
