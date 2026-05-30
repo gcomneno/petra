@@ -171,8 +171,7 @@ def evaluate_guard(probe: dict[str, Any]) -> dict[str, str]:
         return guard
 
     if not (
-        is_positive_int_text(current_anchor)
-        and is_positive_int_text(shadow_anchor)
+        is_positive_int_text(current_anchor) and is_positive_int_text(shadow_anchor)
     ):
         guard["guard_reason"] = "non-positive-integer-anchor"
         return guard
@@ -217,8 +216,7 @@ def combine_chain(anchor: str, residual_chain: str) -> str:
 
 
 FACTOR_CHAIN_CERTIFICATE_CLAIM = (
-    "factor-chain product verification only; "
-    "not a PET operator-path certificate"
+    "factor-chain product verification only; not a PET operator-path certificate"
 )
 
 
@@ -286,18 +284,13 @@ def factor_chain_certificate(
         "factor_count": len(factors),
         "product": product,
         "verified_product": verified_product,
-        "status": (
-            "verified-product" if verified_product else "product-mismatch"
-        ),
+        "status": ("verified-product" if verified_product else "product-mismatch"),
         "claim": FACTOR_CHAIN_CERTIFICATE_CLAIM,
     }
 
 
 def route_completed(route: dict[str, str]) -> bool:
-    return (
-        route.get("status") == "complete"
-        and route.get("terminal_residual") == "1"
-    )
+    return route.get("status") == "complete" and route.get("terminal_residual") == "1"
 
 
 def empty_route() -> dict[str, str]:
@@ -350,6 +343,23 @@ def classify_expanded_execution_delta(
     return "redirect-still-blocked"
 
 
+def classify_current_expanded_execution_delta(
+    *,
+    current_flat_k: dict[str, str],
+    current_shape_family: dict[str, str],
+) -> str:
+    if route_completed(current_flat_k):
+        return "current-completes-with-flat-k"
+
+    if route_completed(current_shape_family):
+        return "current-completes-with-shape-family"
+
+    if current_flat_k["status"] == "-" and current_shape_family["status"] == "-":
+        return "current-not-expanded"
+
+    return "current-remains-blocked"
+
+
 def build_row(
     n: int,
     max_depth: int,
@@ -360,21 +370,54 @@ def build_row(
     ranking = probe["ranking_policy_comparison"]
     guard = evaluate_guard(probe)
 
+    current_anchor = ranking["current_selected_anchor"]
+    current_residual = ranking["current_selected_residual"]
     shadow_anchor = ranking["suggested_anchor"]
     shadow_residual = ranking["suggested_residual"]
 
+    current_flat_k = empty_route()
+    current_shape_family = empty_route()
     redirect = empty_route()
     redirect_flat_k = empty_route()
     redirect_shape_family = empty_route()
 
+    current_flat_k_chain = "-"
+    current_shape_family_chain = "-"
     redirect_chain = "-"
     redirect_flat_k_chain = "-"
     redirect_shape_family_chain = "-"
 
     if (
-        guard["guard_decision"] == "would-redirect-to-shadow-anchor"
-        and is_positive_int_text(shadow_residual)
+        not skip_expanded_execution
+        and is_positive_int_text(current_anchor)
+        and is_positive_int_text(current_residual)
     ):
+        current_residual_int = int(current_residual)
+
+        if current_residual_int > 1:
+            current_flat_k = run_route(
+                current_residual_int,
+                max_depth,
+                auto_flat_k_scan=True,
+            )
+            current_shape_family = run_route(
+                current_residual_int,
+                max_depth,
+                auto_shape_family_scan=True,
+            )
+
+            current_flat_k_chain = combine_chain(
+                current_anchor,
+                current_flat_k["residual_reduction_chain"],
+            )
+            current_shape_family_chain = combine_chain(
+                current_anchor,
+                current_shape_family["residual_reduction_chain"],
+            )
+
+    if guard[
+        "guard_decision"
+    ] == "would-redirect-to-shadow-anchor" and is_positive_int_text(shadow_residual):
         shadow_residual_int = int(shadow_residual)
 
         redirect = run_route(shadow_residual_int, max_depth)
@@ -413,13 +456,16 @@ def build_row(
     )
     if skip_expanded_execution:
         expanded_execution_delta = "skipped"
+        current_expanded_execution_delta = "skipped"
     else:
-        expanded_execution_delta = (
-            classify_expanded_execution_delta(
-                guard_decision=guard["guard_decision"],
-                redirect_flat_k=redirect_flat_k,
-                redirect_shape_family=redirect_shape_family,
-            )
+        expanded_execution_delta = classify_expanded_execution_delta(
+            guard_decision=guard["guard_decision"],
+            redirect_flat_k=redirect_flat_k,
+            redirect_shape_family=redirect_shape_family,
+        )
+        current_expanded_execution_delta = classify_current_expanded_execution_delta(
+            current_flat_k=current_flat_k,
+            current_shape_family=current_shape_family,
         )
 
     factor_chain_certificates = {
@@ -427,6 +473,16 @@ def build_row(
             n=n,
             chain=probe["residual_reduction_chain"],
             source="current",
+        ),
+        "current_flat_k": factor_chain_certificate(
+            n=n,
+            chain=current_flat_k_chain,
+            source="current-flat-k",
+        ),
+        "current_shape_family": factor_chain_certificate(
+            n=n,
+            chain=current_shape_family_chain,
+            source="current-shape-family",
         ),
         "redirect": factor_chain_certificate(
             n=n,
@@ -448,10 +504,22 @@ def build_row(
     return {
         "n": n,
         "current_status": probe["status"],
-        "current_anchor": ranking["current_selected_anchor"],
-        "current_residual": ranking["current_selected_residual"],
+        "current_anchor": current_anchor,
+        "current_residual": current_residual,
         "current_chain": probe["residual_reduction_chain"],
         "current_terminal_residual": probe["terminal_residual"],
+        "current_flat_k_status": current_flat_k["status"],
+        "current_flat_k_residual_chain": current_flat_k["residual_reduction_chain"],
+        "current_flat_k_chain": current_flat_k_chain,
+        "current_flat_k_terminal_residual": current_flat_k["terminal_residual"],
+        "current_shape_family_status": current_shape_family["status"],
+        "current_shape_family_residual_chain": current_shape_family[
+            "residual_reduction_chain"
+        ],
+        "current_shape_family_chain": current_shape_family_chain,
+        "current_shape_family_terminal_residual": current_shape_family[
+            "terminal_residual"
+        ],
         "guard_decision": guard["guard_decision"],
         "guard_reason": guard["guard_reason"],
         "structural_prefix": guard["structural_prefix"],
@@ -464,13 +532,9 @@ def build_row(
         "redirect_chain": redirect_chain,
         "redirect_terminal_residual": redirect["terminal_residual"],
         "redirect_flat_k_status": redirect_flat_k["status"],
-        "redirect_flat_k_residual_chain": redirect_flat_k[
-            "residual_reduction_chain"
-        ],
+        "redirect_flat_k_residual_chain": redirect_flat_k["residual_reduction_chain"],
         "redirect_flat_k_chain": redirect_flat_k_chain,
-        "redirect_flat_k_terminal_residual": redirect_flat_k[
-            "terminal_residual"
-        ],
+        "redirect_flat_k_terminal_residual": redirect_flat_k["terminal_residual"],
         "redirect_shape_family_status": redirect_shape_family["status"],
         "redirect_shape_family_residual_chain": redirect_shape_family[
             "residual_reduction_chain"
@@ -480,6 +544,7 @@ def build_row(
             "terminal_residual"
         ],
         "execution_delta": execution_delta,
+        "current_expanded_execution_delta": current_expanded_execution_delta,
         "expanded_execution_delta": expanded_execution_delta,
         "factor_chain_certificates": factor_chain_certificates,
     }
@@ -524,14 +589,8 @@ def print_text(rows: list[dict[str, Any]]) -> None:
             f"redirect_flat_k_terminal_residual = "
             f"{row['redirect_flat_k_terminal_residual']}"
         )
-        print(
-            f"redirect_shape_family_status = "
-            f"{row['redirect_shape_family_status']}"
-        )
-        print(
-            f"redirect_shape_family_chain = "
-            f"{row['redirect_shape_family_chain']}"
-        )
+        print(f"redirect_shape_family_status = {row['redirect_shape_family_status']}")
+        print(f"redirect_shape_family_chain = {row['redirect_shape_family_chain']}")
         print(
             f"redirect_shape_family_terminal_residual = "
             f"{row['redirect_shape_family_terminal_residual']}"
@@ -547,10 +606,7 @@ def print_text(rows: list[dict[str, Any]]) -> None:
             "redirect_shape_family",
         ]:
             certificate = certificates[name]
-            print(
-                f"{name}_factor_chain_status = "
-                f"{certificate['status']}"
-            )
+            print(f"{name}_factor_chain_status = {certificate['status']}")
             print(
                 f"{name}_factor_chain_verified_product = "
                 f"{str(certificate['verified_product']).lower()}"
@@ -570,10 +626,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-expanded-execution",
         action="store_true",
-        help=(
-            "skip expanded redirect execution scans "
-            "(flat-k and shape-family)"
-        ),
+        help=("skip expanded redirect execution scans (flat-k and shape-family)"),
     )
 
     parser.add_argument("--json", action="store_true")
@@ -587,9 +640,7 @@ def main() -> int:
         build_row(
             n,
             args.max_depth,
-            skip_expanded_execution=(
-                args.skip_expanded_execution
-            ),
+            skip_expanded_execution=(args.skip_expanded_execution),
         )
         for n in args.n
     ]
