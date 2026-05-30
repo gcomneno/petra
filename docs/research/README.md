@@ -185,3 +185,4 @@ These probes and experimental reports are not part of stable PET-Base
 behavior. They do not change CLI defaults, core operator semantics, routing,
 anchor selection, or residual descent.
 - `notes/pet-guarded-redirect-factor-chain-certificates.md` — factor-chain product certificates for guarded redirect structural factorization research.
+- `notes/pet-guarded-redirect-structural-wall-families.md` — structural-prefix wall families observed in guarded redirect factor-chain research.
