@@ -87,3 +87,39 @@ def test_guarded_redirect_execution_probe_reports_expanded_guard_not_triggered()
     assert row["expanded_execution_delta"] == "guard-not-triggered"
     assert row["redirect_flat_k_status"] == "-"
     assert row["redirect_shape_family_status"] == "-"
+
+
+def test_guarded_redirect_execution_probe_reports_factor_chain_certificates() -> None:
+    result = run_probe("357357", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+    certificates = row["factor_chain_certificates"]
+
+    assert certificates["current"]["kind"] == "factor-chain"
+    assert certificates["current"]["verified_product"] is True
+    assert certificates["current"]["product"] == 357357
+
+    assert certificates["redirect"]["verified_product"] is True
+    assert certificates["redirect"]["product"] == 357357
+
+    assert certificates["redirect_flat_k"]["verified_product"] is True
+    assert certificates["redirect_flat_k"]["product"] == 357357
+    assert certificates["redirect_flat_k"]["status"] == "verified-product"
+
+    assert "not a PET operator-path certificate" in certificates[
+        "redirect_flat_k"
+    ]["claim"]
+
+
+def test_guarded_redirect_execution_probe_marks_unavailable_factor_chain() -> None:
+    result = run_probe("30030", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+    certificates = row["factor_chain_certificates"]
+
+    assert certificates["current"]["verified_product"] is True
+    assert certificates["redirect"]["status"] == "unavailable"
+    assert certificates["redirect"]["verified_product"] is False
+    assert certificates["redirect"]["product"] is None

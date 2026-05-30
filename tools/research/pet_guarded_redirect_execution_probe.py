@@ -216,6 +216,83 @@ def combine_chain(anchor: str, residual_chain: str) -> str:
     return f"{anchor} * {residual_chain}"
 
 
+FACTOR_CHAIN_CERTIFICATE_CLAIM = (
+    "factor-chain product verification only; "
+    "not a PET operator-path certificate"
+)
+
+
+def parse_factor_chain(chain: str) -> tuple[int, ...] | None:
+    if chain == "-":
+        return None
+
+    parts = [part.strip() for part in chain.split("*")]
+
+    if not parts:
+        return None
+
+    factors: list[int] = []
+
+    for part in parts:
+        if not is_positive_int_text(part):
+            return None
+
+        factors.append(int(part))
+
+    return tuple(factors)
+
+
+def factor_chain_product(factors: tuple[int, ...]) -> int:
+    product = 1
+
+    for factor in factors:
+        product *= factor
+
+    return product
+
+
+def factor_chain_certificate(
+    *,
+    n: int,
+    chain: str,
+    source: str,
+) -> dict[str, Any]:
+    factors = parse_factor_chain(chain)
+
+    if factors is None:
+        status = "unavailable" if chain == "-" else "invalid-chain"
+        return {
+            "kind": "factor-chain",
+            "source": source,
+            "n": n,
+            "chain": chain,
+            "factors": [],
+            "factor_count": 0,
+            "product": None,
+            "verified_product": False,
+            "status": status,
+            "claim": FACTOR_CHAIN_CERTIFICATE_CLAIM,
+        }
+
+    product = factor_chain_product(factors)
+    verified_product = product == n
+
+    return {
+        "kind": "factor-chain",
+        "source": source,
+        "n": n,
+        "chain": chain,
+        "factors": list(factors),
+        "factor_count": len(factors),
+        "product": product,
+        "verified_product": verified_product,
+        "status": (
+            "verified-product" if verified_product else "product-mismatch"
+        ),
+        "claim": FACTOR_CHAIN_CERTIFICATE_CLAIM,
+    }
+
+
 def route_completed(route: dict[str, str]) -> bool:
     return (
         route.get("status") == "complete"
@@ -345,6 +422,29 @@ def build_row(
             )
         )
 
+    factor_chain_certificates = {
+        "current": factor_chain_certificate(
+            n=n,
+            chain=probe["residual_reduction_chain"],
+            source="current",
+        ),
+        "redirect": factor_chain_certificate(
+            n=n,
+            chain=redirect_chain,
+            source="guarded-redirect-conservative",
+        ),
+        "redirect_flat_k": factor_chain_certificate(
+            n=n,
+            chain=redirect_flat_k_chain,
+            source="guarded-redirect-flat-k",
+        ),
+        "redirect_shape_family": factor_chain_certificate(
+            n=n,
+            chain=redirect_shape_family_chain,
+            source="guarded-redirect-shape-family",
+        ),
+    }
+
     return {
         "n": n,
         "current_status": probe["status"],
@@ -381,6 +481,7 @@ def build_row(
         ],
         "execution_delta": execution_delta,
         "expanded_execution_delta": expanded_execution_delta,
+        "factor_chain_certificates": factor_chain_certificates,
     }
 
 
@@ -436,6 +537,24 @@ def print_text(rows: list[dict[str, Any]]) -> None:
             f"{row['redirect_shape_family_terminal_residual']}"
         )
         print(f"expanded_execution_delta = {row['expanded_execution_delta']}")
+        print()
+        print("factor_chain_certificates:")
+        certificates = row["factor_chain_certificates"]
+        for name in [
+            "current",
+            "redirect",
+            "redirect_flat_k",
+            "redirect_shape_family",
+        ]:
+            certificate = certificates[name]
+            print(
+                f"{name}_factor_chain_status = "
+                f"{certificate['status']}"
+            )
+            print(
+                f"{name}_factor_chain_verified_product = "
+                f"{str(certificate['verified_product']).lower()}"
+            )
 
 
 def main() -> int:
