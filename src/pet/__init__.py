@@ -50,6 +50,13 @@ from .operators import (
     new_target,
     resolve_operator_target,
 )
+from .graph import (
+    PETGraphEdge,
+    PETGraphNode,
+    operator_applications_by_value,
+    operator_label,
+    operator_neighbors_by_value,
+)
 
 
 def main(argv=None):
@@ -66,6 +73,11 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "operator_neighbors_by_value",
+    "operator_label",
+    "operator_applications_by_value",
+    "PETGraphNode",
+    "PETGraphEdge",
     "apply_operator_by_value",
     "PETOperatorApplication",
     "resolve_operator_target",
