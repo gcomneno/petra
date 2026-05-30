@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from .core import prime_factorization
+from .core import PET, PETExp, decode, prime_factorization, validate
 
 
 class PETAddressError(LookupError):
@@ -257,6 +257,50 @@ def pet_object_from_int(n: int) -> PETObject:
         address=(),
         children=_children_from_int(n, ()),
     )
+
+
+def _legacy_tree_from_children(children: tuple[PETObject, ...]) -> PET:
+    tree: PET = []
+
+    for child in children:
+        if child.prime_label is None:
+            raise ValueError("child PET objects must have a prime label")
+
+        exp_repr: PETExp
+        if child.is_atomic:
+            exp_repr = None
+        else:
+            exp_repr = _legacy_tree_from_children(child.children)
+
+        tree.append((child.prime_label, exp_repr))
+
+    return tree
+
+
+def pet_object_to_legacy_tree(obj: PETObject) -> PET:
+    """Convert a PET/PEG 2.0 object into the legacy PET tree representation.
+
+    This is a migration bridge, not the PET/PEG 2.0 conceptual core.
+    """
+
+    if obj.prime_label is None:
+        tree = _legacy_tree_from_children(obj.children)
+    else:
+        exp_repr: PETExp = None if obj.is_atomic else _legacy_tree_from_children(obj.children)
+        tree = [(obj.prime_label, exp_repr)]
+
+    validate(tree)
+    return tree
+
+
+def pet_object_from_legacy_tree(tree: PET) -> PETObject:
+    """Convert a legacy PET tree into a PET/PEG 2.0 object.
+
+    This rebuilds through the represented integer value.
+    """
+
+    validate(tree)
+    return pet_object_from_int(decode(tree))
 
 
 def structurally_equivalent(left: PETObject, right: PETObject) -> bool:

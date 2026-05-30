@@ -27,6 +27,8 @@ from .io import (
     to_jsonable,
 )
 from .object_model import (
+    pet_object_to_legacy_tree,
+    pet_object_from_legacy_tree,
     compare_address,
     PETAddressComparison,
     PETAddressError,
@@ -120,6 +122,8 @@ __all__ = [
     "structurally_equivalent",
     "pet_object_from_int",
     "PETObject",
+    "pet_object_to_legacy_tree",
+    "pet_object_from_legacy_tree",
     "average_leaf_depth",
     "leaf_depth_variance",
     "branch_profile",
