@@ -184,3 +184,4 @@ shorter summary, rule-check section, and compact pattern-group lines.
 These probes and experimental reports are not part of stable PET-Base
 behavior. They do not change CLI defaults, core operator semantics, routing,
 anchor selection, or residual descent.
+- `notes/pet-guarded-redirect-factor-chain-certificates.md` — factor-chain product certificates for guarded redirect structural factorization research.
