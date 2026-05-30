@@ -86,3 +86,51 @@ that can complete under flat-k or shape-family expansion.
 This is a structural route observation only.
 
 It does not promote default routing, anchor selection, or factorization behavior.
+
+## Larger structural wall seed
+
+A larger 10-digit seed confirms the next observed structural wall:
+
+```text
+3019190174 = 2 * 323323 * 4669
+323323 = 7 * 11 * 13 * 17 * 19
+4669 = 7 * 23 * 29
+```
+
+Observed guarded redirect result:
+
+current_anchor = 646646
+shadow_anchor = 2
+structural_prefix = 323323
+
+646646 = 2 * 323323
+
+Current chain:
+
+646646 * 4669
+
+Conservative guarded redirect chain:
+
+2 * 17017 * 7 * 12673
+
+Expanded flat-k chain:
+
+2 * 17017 * 7 * 29 * 19 * 23
+
+The expanded result completes with flat-k:
+
+expanded_execution_delta = redirect-completes-with-flat-k
+
+Shape-family does not complete this seed and leaves terminal residual:
+
+12673 = 19 * 23 * 29
+
+This extends the observed structural wall sequence:
+
+77     = 7 * 11
+1001   = 7 * 11 * 13
+17017  = 7 * 11 * 13 * 17
+323323 = 7 * 11 * 13 * 17 * 19
+
+Boundary remains unchanged: this is a structural route observation, not a
+default routing change or a factorization-performance claim.
