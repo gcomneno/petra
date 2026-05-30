@@ -185,3 +185,158 @@ def operator_neighbors_by_value(obj: PETObject) -> tuple[PETGraphEdge, ...]:
         )
 
     return tuple(edges)
+
+
+@dataclass(frozen=True)
+class PETGraphPath:
+    """PET/PEG 2.0 graph path.
+
+    A path records one concrete operator history through PET object states.
+    """
+
+    nodes: tuple[PETGraphNode, ...]
+    edges: tuple[PETGraphEdge, ...]
+
+    @classmethod
+    def root(cls, obj: PETObject) -> "PETGraphPath":
+        return cls(nodes=(PETGraphNode.from_object(obj),), edges=())
+
+    @property
+    def source(self) -> PETGraphNode:
+        return self.nodes[0]
+
+    @property
+    def target(self) -> PETGraphNode:
+        return self.nodes[-1]
+
+    @property
+    def depth(self) -> int:
+        return len(self.edges)
+
+    @property
+    def labels(self) -> tuple[str, ...]:
+        return tuple(edge.label for edge in self.edges)
+
+    @property
+    def values(self) -> tuple[int, ...]:
+        return tuple(node.value for node in self.nodes)
+
+    def identity_key(self) -> tuple[tuple[int, str, int], ...]:
+        """Return a deterministic concrete path identity key."""
+
+        return tuple(
+            (edge.source.value, edge.label, edge.target.value)
+            for edge in self.edges
+        )
+
+    def extend(self, edge: PETGraphEdge) -> "PETGraphPath":
+        if edge.source.value != self.target.value:
+            raise ValueError(
+                "edge source does not match current path target: "
+                f"{edge.source.value} != {self.target.value}"
+            )
+
+        return PETGraphPath(
+            nodes=(*self.nodes, edge.target),
+            edges=(*self.edges, edge),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "depth": self.depth,
+            "values": list(self.values),
+            "labels": list(self.labels),
+            "source_value": self.source.value,
+            "target_value": self.target.value,
+            "edges": [edge.to_dict() for edge in self.edges],
+        }
+
+
+@dataclass(frozen=True)
+class PETGraphTraversal:
+    """Bounded deterministic PET/PEG 2.0 graph traversal result."""
+
+    root: PETGraphNode
+    max_depth: int
+    max_paths: int | None
+    paths: tuple[PETGraphPath, ...]
+    truncated: bool
+
+    @property
+    def path_count(self) -> int:
+        return len(self.paths)
+
+    def paths_at_depth(self, depth: int) -> tuple[PETGraphPath, ...]:
+        return tuple(path for path in self.paths if path.depth == depth)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "root_value": self.root.value,
+            "max_depth": self.max_depth,
+            "max_paths": self.max_paths,
+            "path_count": self.path_count,
+            "truncated": self.truncated,
+            "paths": [path.to_dict() for path in self.paths],
+        }
+
+
+def path_equivalent(left: PETGraphPath, right: PETGraphPath) -> bool:
+    """Return whether two graph paths have the same concrete path identity."""
+
+    return left.identity_key() == right.identity_key()
+
+
+def traverse_operator_graph_by_value(
+    obj: PETObject,
+    *,
+    max_depth: int,
+    max_paths: int | None = None,
+) -> PETGraphTraversal:
+    """Traverse the PET operator graph with deterministic bounded breadth-first order.
+
+    This is traversal machinery, not routing policy. It records alternatives and
+    stops at explicit bounds.
+    """
+
+    if max_depth < 0:
+        raise ValueError("max_depth must be >= 0")
+
+    if max_paths is not None and max_paths < 1:
+        raise ValueError("max_paths must be >= 1")
+
+    root = PETGraphNode.from_object(obj)
+    root_path = PETGraphPath.root(obj)
+
+    paths: list[PETGraphPath] = [root_path]
+    frontier: tuple[PETGraphPath, ...] = (root_path,)
+
+    for _ in range(max_depth):
+        next_frontier: list[PETGraphPath] = []
+
+        for path in frontier:
+            for edge in operator_neighbors_by_value(path.target.pet_object):
+                if max_paths is not None and len(paths) >= max_paths:
+                    return PETGraphTraversal(
+                        root=root,
+                        max_depth=max_depth,
+                        max_paths=max_paths,
+                        paths=tuple(paths),
+                        truncated=True,
+                    )
+
+                next_path = path.extend(edge)
+                paths.append(next_path)
+                next_frontier.append(next_path)
+
+        frontier = tuple(next_frontier)
+
+        if not frontier:
+            break
+
+    return PETGraphTraversal(
+        root=root,
+        max_depth=max_depth,
+        max_paths=max_paths,
+        paths=tuple(paths),
+        truncated=False,
+    )

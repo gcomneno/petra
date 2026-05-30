@@ -84,3 +84,142 @@ def test_graph_edge_serializes_operator_application() -> None:
     assert payload["argument"] == 7
     assert payload["label"] == "NEW(parent_address=[],q=7)"
     assert payload["application"]["reason"] == "new-applied-by-value"
+
+
+def test_graph_path_records_values_labels_and_depth() -> None:
+    from pet import PETGraphPath
+
+    obj = pet_object_from_int(60)
+    root_path = PETGraphPath.root(obj)
+    edge = next(
+        edge
+        for edge in operator_neighbors_by_value(obj)
+        if edge.label == "NEW(parent_address=[],q=7)"
+    )
+
+    path = root_path.extend(edge)
+
+    assert root_path.depth == 0
+    assert root_path.values == (60,)
+    assert root_path.labels == ()
+
+    assert path.depth == 1
+    assert path.values == (60, 420)
+    assert path.labels == ("NEW(parent_address=[],q=7)",)
+    assert path.source.value == 60
+    assert path.target.value == 420
+
+
+def test_graph_path_rejects_non_contiguous_edge_extension() -> None:
+    from pet import PETGraphPath
+
+    root_60 = PETGraphPath.root(pet_object_from_int(60))
+    edge_from_12 = operator_neighbors_by_value(pet_object_from_int(12))[0]
+
+    import pytest
+
+    with pytest.raises(ValueError, match="edge source does not match"):
+        root_60.extend(edge_from_12)
+
+
+def test_path_equivalence_uses_concrete_edge_identity() -> None:
+    from pet import PETGraphPath, path_equivalent
+
+    obj = pet_object_from_int(60)
+    edge_new = next(
+        edge
+        for edge in operator_neighbors_by_value(obj)
+        if edge.label == "NEW(parent_address=[],q=7)"
+    )
+    edge_drop = next(
+        edge
+        for edge in operator_neighbors_by_value(obj)
+        if edge.label == "DROP(parent_address=[],p=5)"
+    )
+
+    left = PETGraphPath.root(obj).extend(edge_new)
+    same = PETGraphPath.root(obj).extend(edge_new)
+    different = PETGraphPath.root(obj).extend(edge_drop)
+
+    assert path_equivalent(left, same)
+    assert not path_equivalent(left, different)
+
+
+def test_traverse_operator_graph_depth_zero_returns_root_path_only() -> None:
+    from pet import traverse_operator_graph_by_value
+
+    traversal = traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=0)
+
+    assert traversal.root.value == 60
+    assert traversal.max_depth == 0
+    assert traversal.max_paths is None
+    assert traversal.truncated is False
+    assert traversal.path_count == 1
+    assert traversal.paths[0].values == (60,)
+    assert traversal.paths_at_depth(0) == traversal.paths
+    assert traversal.paths_at_depth(1) == ()
+
+
+def test_traverse_operator_graph_depth_one_records_neighbor_paths() -> None:
+    from pet import traverse_operator_graph_by_value
+
+    traversal = traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=1)
+    by_label = {
+        path.labels[0]: path.target.value
+        for path in traversal.paths_at_depth(1)
+    }
+
+    assert traversal.truncated is False
+    assert by_label["NEW(parent_address=[],q=7)"] == 420
+    assert by_label["DROP(parent_address=[],p=5)"] == 12
+    assert by_label["NEW(parent_address=[2],q=3)"] == 960
+    assert by_label["INC(address=[2])"] == 120
+    assert by_label["INC(address=[2, 2])"] == 240
+
+
+def test_traverse_operator_graph_truncates_by_max_paths() -> None:
+    from pet import traverse_operator_graph_by_value
+
+    traversal = traverse_operator_graph_by_value(
+        pet_object_from_int(60),
+        max_depth=2,
+        max_paths=5,
+    )
+
+    assert traversal.truncated is True
+    assert traversal.path_count == 5
+    assert traversal.paths[0].values == (60,)
+    assert all(path.depth <= 2 for path in traversal.paths)
+
+
+def test_traverse_operator_graph_is_deterministic_under_truncation() -> None:
+    from pet import traverse_operator_graph_by_value
+
+    first = traverse_operator_graph_by_value(
+        pet_object_from_int(60),
+        max_depth=2,
+        max_paths=8,
+    ).to_dict()
+    second = traverse_operator_graph_by_value(
+        pet_object_from_int(60),
+        max_depth=2,
+        max_paths=8,
+    ).to_dict()
+
+    assert first == second
+
+
+def test_traverse_operator_graph_rejects_invalid_bounds() -> None:
+    from pet import traverse_operator_graph_by_value
+
+    import pytest
+
+    with pytest.raises(ValueError, match="max_depth must be >= 0"):
+        traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=-1)
+
+    with pytest.raises(ValueError, match="max_paths must be >= 1"):
+        traverse_operator_graph_by_value(
+            pet_object_from_int(60),
+            max_depth=1,
+            max_paths=0,
+        )

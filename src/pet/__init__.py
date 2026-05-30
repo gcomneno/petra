@@ -51,6 +51,10 @@ from .operators import (
     resolve_operator_target,
 )
 from .graph import (
+    traverse_operator_graph_by_value,
+    path_equivalent,
+    PETGraphTraversal,
+    PETGraphPath,
     PETGraphEdge,
     PETGraphNode,
     operator_applications_by_value,
@@ -73,6 +77,10 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "traverse_operator_graph_by_value",
+    "path_equivalent",
+    "PETGraphTraversal",
+    "PETGraphPath",
     "operator_neighbors_by_value",
     "operator_label",
     "operator_applications_by_value",
