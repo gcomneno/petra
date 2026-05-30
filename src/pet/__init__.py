@@ -61,6 +61,11 @@ from .graph import (
     operator_label,
     operator_neighbors_by_value,
 )
+from .traces import (
+    PETTrace,
+    PETTraceStep,
+    trace_from_path,
+)
 
 
 def main(argv=None):
@@ -77,6 +82,9 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "trace_from_path",
+    "PETTraceStep",
+    "PETTrace",
     "traverse_operator_graph_by_value",
     "path_equivalent",
     "PETGraphTraversal",
