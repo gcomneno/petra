@@ -62,6 +62,10 @@ from .graph import (
     operator_neighbors_by_value,
 )
 from .traces import (
+    check_trace,
+    certificate_from_path,
+    PETTraceCheckStep,
+    PETTraceCertificate,
     PETTrace,
     PETTraceStep,
     trace_from_path,
@@ -82,6 +86,10 @@ __all__ = [
     "PET",
     "PETExp",
     "PETNode",
+    "check_trace",
+    "certificate_from_path",
+    "PETTraceCheckStep",
+    "PETTraceCertificate",
     "trace_from_path",
     "PETTraceStep",
     "PETTrace",

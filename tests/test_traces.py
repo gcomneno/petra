@@ -118,3 +118,159 @@ def test_trace_from_manually_extended_neighbor_path_matches_edge() -> None:
     assert trace.values == (60, 120)
     assert trace.steps[0].label == edge.label
     assert trace.steps[0].application_reason == edge.application.reason
+
+
+def test_certificate_from_path_replays_valid_depth_one_path() -> None:
+    from pet import PETTraceCertificate, certificate_from_path
+
+    traversal = traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=1)
+    path = next(
+        path
+        for path in traversal.paths_at_depth(1)
+        if path.labels == ("NEW(parent_address=[],q=7)",)
+    )
+
+    certificate = certificate_from_path(path)
+
+    assert isinstance(certificate, PETTraceCertificate)
+    assert certificate.valid is True
+    assert certificate.reason == "trace-replayed"
+    assert certificate.checked_steps == 1
+
+    check = certificate.step_checks[0]
+    assert check.valid is True
+    assert check.reason == "step-replayed"
+    assert check.source_value == 60
+    assert check.expected_target_value == 420
+    assert check.actual_target_value == 420
+    assert check.label == "NEW(parent_address=[],q=7)"
+
+
+def test_certificate_from_path_replays_valid_depth_two_path() -> None:
+    from pet import certificate_from_path
+
+    traversal = traverse_operator_graph_by_value(
+        pet_object_from_int(60),
+        max_depth=2,
+        max_paths=30,
+    )
+    path = next(path for path in traversal.paths if path.depth == 2)
+
+    certificate = certificate_from_path(path)
+
+    assert certificate.valid is True
+    assert certificate.reason == "trace-replayed"
+    assert certificate.checked_steps == 2
+    assert all(step.valid for step in certificate.step_checks)
+    assert certificate.trace.values == path.values
+    assert certificate.trace.labels == path.labels
+
+
+def test_check_trace_rejects_target_value_mismatch() -> None:
+    from pet import PETTrace, PETTraceStep, check_trace
+
+    trace = PETTrace(
+        root_value=60,
+        target_value=999,
+        depth=1,
+        path_identity=((60, "NEW(parent_address=[],q=7)", 999),),
+        steps=(
+            PETTraceStep(
+                index=1,
+                source_value=60,
+                target_value=999,
+                op="NEW",
+                address=(),
+                argument=7,
+                label="NEW(parent_address=[],q=7)",
+                application_reason="new-applied-by-value",
+            ),
+        ),
+    )
+
+    certificate = check_trace(trace)
+
+    assert certificate.valid is False
+    assert certificate.reason == "target-value-mismatch"
+    assert certificate.checked_steps == 1
+    assert certificate.step_checks[0].actual_target_value == 420
+
+
+def test_check_trace_rejects_source_value_mismatch() -> None:
+    from pet import PETTrace, PETTraceStep, check_trace
+
+    trace = PETTrace(
+        root_value=60,
+        target_value=420,
+        depth=1,
+        path_identity=((60, "NEW(parent_address=[],q=7)", 420),),
+        steps=(
+            PETTraceStep(
+                index=1,
+                source_value=61,
+                target_value=420,
+                op="NEW",
+                address=(),
+                argument=7,
+                label="NEW(parent_address=[],q=7)",
+                application_reason="new-applied-by-value",
+            ),
+        ),
+    )
+
+    certificate = check_trace(trace)
+
+    assert certificate.valid is False
+    assert certificate.reason == "source-value-mismatch"
+    assert certificate.checked_steps == 1
+
+
+def test_check_trace_rejects_label_mismatch() -> None:
+    from pet import PETTrace, PETTraceStep, check_trace
+
+    trace = PETTrace(
+        root_value=60,
+        target_value=420,
+        depth=1,
+        path_identity=((60, "NEW(parent_address=[],q=7)", 420),),
+        steps=(
+            PETTraceStep(
+                index=1,
+                source_value=60,
+                target_value=420,
+                op="NEW",
+                address=(),
+                argument=7,
+                label="NEW(parent_address=[],q=11)",
+                application_reason="new-applied-by-value",
+            ),
+        ),
+    )
+
+    certificate = check_trace(trace)
+
+    assert certificate.valid is False
+    assert certificate.reason == "label-mismatch"
+    assert certificate.checked_steps == 1
+
+
+def test_trace_certificate_serializes_boundary_data() -> None:
+    from pet import certificate_from_path
+
+    traversal = traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=1)
+    path = next(
+        path
+        for path in traversal.paths_at_depth(1)
+        if path.labels == ("DROP(parent_address=[],p=5)",)
+    )
+
+    payload = certificate_from_path(path).to_dict()
+
+    assert payload["valid"] is True
+    assert payload["reason"] == "trace-replayed"
+    assert payload["checked_steps"] == 1
+    assert payload["root_value"] == 60
+    assert payload["target_value"] == 12
+    assert payload["trace"]["labels"] == ["DROP(parent_address=[],p=5)"]
+    assert payload["step_checks"][0]["reason"] == "step-replayed"
+    assert payload["step_checks"][0]["actual_target_value"] == 12
