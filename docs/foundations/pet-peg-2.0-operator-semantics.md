@@ -123,14 +123,14 @@ For:
 
     60 = 2^2 * 3 * 5
 
-the exponent object of `2` is `2`. Incrementing that inner `2` changes the
-outer exponent:
+the exponent object of `2` is itself the PET object for `2`. Incrementing that
+inner root changes the exponent object:
 
-    2 -> 3
+    2 -> 2^2 = 4
 
-so:
+so the outer exponent changes from `2` to `4`:
 
-    2^2 * 3 * 5 -> 2^3 * 3 * 5 = 120
+    2^2 * 3 * 5 -> 2^4 * 3 * 5 = 240
 
 When applied through the current value-level implementation, recursive exponent
 rewriting is rebuilt through represented integer value.
