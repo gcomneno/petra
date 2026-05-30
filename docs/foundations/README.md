@@ -42,3 +42,4 @@ For live research notes, read `../research/README.md`.
 - `pet-peg-2.0-structural-addresses.md` — PET/PEG 2.0 structural address, identity, and address-outcome semantics
 - `pet-peg-2.0-operator-semantics.md` — PET/PEG 2.0 NEW/DROP/INC/DEC target and value-level application semantics
 - `pet-peg-2.0-graph-path-traversal.md` — PET/PEG 2.0 graph nodes, edges, paths, bounded traversal, and truncation semantics
+- `pet-peg-2.0-traces-certificates.md` — PET/PEG 2.0 trace format, replay certificates, and exploration-policy boundary
