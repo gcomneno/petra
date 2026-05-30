@@ -44,3 +44,4 @@ For live research notes, read `../research/README.md`.
 - `pet-peg-2.0-graph-path-traversal.md` — PET/PEG 2.0 graph nodes, edges, paths, bounded traversal, and truncation semantics
 - `pet-peg-2.0-traces-certificates.md` — PET/PEG 2.0 trace format, replay certificates, and exploration-policy boundary
 - `pet-peg-2.0-object-legacy-bridge.md` — PET/PEG 2.0 migration bridge between recursive objects and legacy PET trees
+- `pet-peg-2.0-object-native-metrics.md` — PET/PEG 2.0 metrics computed directly from recursive PET objects
