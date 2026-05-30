@@ -123,3 +123,28 @@ def test_guarded_redirect_execution_probe_marks_unavailable_factor_chain() -> No
     assert certificates["redirect"]["status"] == "unavailable"
     assert certificates["redirect"]["verified_product"] is False
     assert certificates["redirect"]["product"] is None
+
+
+def test_guarded_redirect_execution_probe_certifies_shape_family_completion() -> None:
+    result = run_probe("374374", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+    certificates = row["factor_chain_certificates"]
+
+    assert row["guard_decision"] == "would-redirect-to-shadow-anchor"
+    assert row["execution_delta"] == "redirect-expands-route"
+    assert row["expanded_execution_delta"] == "redirect-completes-with-shape-family"
+
+    assert row["redirect_shape_family_status"] == "complete"
+    assert row["redirect_shape_family_terminal_residual"] == "1"
+    assert row["redirect_shape_family_chain"] == "2 * 7 * 187 * 11 * 13"
+
+    certificate = certificates["redirect_shape_family"]
+    assert certificate["status"] == "verified-product"
+    assert certificate["verified_product"] is True
+    assert certificate["product"] == 374374
+    assert certificate["factors"] == [2, 7, 187, 11, 13]
+
+    assert certificates["redirect_flat_k"]["verified_product"] is True
+    assert certificates["redirect_flat_k"]["chain"] == "2 * 7 * 26741"
