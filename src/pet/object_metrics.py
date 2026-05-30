@@ -129,10 +129,22 @@ def pet_object_branch_profile(obj: PETObject) -> list[int]:
     return _branch_profile(_metric_roots(obj))
 
 
-def pet_object_recursive_mass(obj: PETObject) -> int:
-    """Return the legacy-compatible recursive mass for a PETObject."""
+def _recursive_mass(nodes: tuple[PETObject, ...]) -> int:
+    total = 0
 
-    return pet_object_node_count(obj) - pet_object_leaf_count(obj)
+    for node in nodes:
+        total += _node_count(node.children)
+
+    return total
+
+
+def pet_object_recursive_mass(obj: PETObject) -> int:
+    """Return the legacy-compatible recursive mass for a PETObject.
+
+    Recursive mass counts nodes that live inside exponent objects.
+    """
+
+    return _recursive_mass(_metric_roots(obj))
 
 
 def pet_object_metrics_dict(obj: PETObject) -> dict[str, Any]:

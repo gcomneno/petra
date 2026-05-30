@@ -56,3 +56,12 @@ def test_pet_object_metrics_deep_power_matches_legacy() -> None:
 
     assert pet_object_metrics_dict(obj) == metrics_dict(encode(65536))
     assert pet_object_branch_profile(obj) == metrics_dict(encode(65536))["branch_profile"]
+
+
+def test_pet_object_recursive_mass_counts_all_exponent_object_nodes() -> None:
+    obj = pet_object_from_int(960)
+
+    assert pet_object_recursive_mass(obj) == 2
+    assert pet_object_metrics_dict(obj)["recursive_mass"] == metrics_dict(encode(960))[
+        "recursive_mass"
+    ]
