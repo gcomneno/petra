@@ -188,3 +188,40 @@ partial-wall peel with shape-family residual completion
 
 Boundary remains unchanged: this is a research-only structural route observation,
 not a routing-policy promotion or factorization-performance claim.
+
+### Second recursive wall peel seed
+
+The same partial-wall peel pattern also appears with `shadow_anchor = 3`.
+
+Seed:
+
+```text
+104162061003 = 3 * 7436429 * 4669
+7436429 = 7 * 11 * 13 * 17 * 19 * 23
+4669 = 7 * 23 * 29
+```
+
+The route does not select the full wall. It selects the previous-wall peel:
+
+current_anchor = 969969
+969969 = 3 * 323323
+323323 = 7 * 11 * 13 * 17 * 19
+
+Plain and flat-k execution remain blocked:
+
+residual_reduction_chain = 969969 * 107387
+terminal_residual = 107387
+
+Shape-family execution completes:
+
+residual_reduction_chain = 969969 * 667 * 7 * 23
+terminal_residual = 1
+
+This mirrors the shadow_anchor = 2 seed:
+
+69441374002 = 646646 * 667 * 7 * 23
+104162061003 = 969969 * 667 * 7 * 23
+
+The repeated structure supports the observed category:
+
+partial-wall peel with shape-family residual completion
