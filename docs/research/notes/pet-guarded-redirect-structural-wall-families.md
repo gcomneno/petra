@@ -134,3 +134,57 @@ This extends the observed structural wall sequence:
 
 Boundary remains unchanged: this is a structural route observation, not a
 default routing change or a factorization-performance claim.
+
+## Recursive wall peel observation
+
+A larger 11-digit seed shows that full-wall redirect is not always the right
+structural move.
+
+Seed:
+
+```text
+69441374002 = 2 * 7436429 * 4669
+7436429 = 7 * 11 * 13 * 17 * 19 * 23
+4669 = 7 * 23 * 29
+```
+
+The guarded redirect probe does not trigger full-wall redirect:
+
+guard_decision = keep-current
+guard_reason = shadow-ranking-does-not-change-selection
+
+The current route selects:
+
+current_anchor = 646646
+646646 = 2 * 323323
+323323 = 7 * 11 * 13 * 17 * 19
+
+So the route does not consume the full wall 7436429; it peels it back to the
+previous wall 323323.
+
+Plain and flat-k execution remain blocked:
+
+646646 * 107387
+terminal_residual = 107387
+
+But shape-family execution completes:
+
+residual_reduction_chain = 646646 * 667 * 7 * 23
+terminal_residual = 1
+
+with:
+
+107387 = 667 * 7 * 23
+667 = 23 * 29
+
+Interpretation:
+
+full redirect to shadow_anchor = 2 is too aggressive for this seed.
+partial-wall peel to 2 * 323323 leaves a shape-family-completable residual.
+
+This introduces a distinct observed category:
+
+partial-wall peel with shape-family residual completion
+
+Boundary remains unchanged: this is a research-only structural route observation,
+not a routing-policy promotion or factorization-performance claim.
