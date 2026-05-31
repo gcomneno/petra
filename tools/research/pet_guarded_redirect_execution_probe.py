@@ -219,6 +219,30 @@ FACTOR_CHAIN_CERTIFICATE_CLAIM = (
     "factor-chain product verification only; not a PET operator-path certificate"
 )
 
+OPERATOR_PATH_CERTIFICATE_CLAIM = (
+    "PET operator-path certificate unavailable; factor-chain routes are not "
+    "represented as PETGraphPath"
+)
+OPERATOR_PATH_CERTIFICATE_REASON = (
+    "factor-chain-route-not-represented-as-pet-graph-path"
+)
+
+
+def operator_path_certificate_boundary(
+    *,
+    chain: str,
+    source: str,
+) -> dict[str, Any]:
+    return {
+        "kind": "pet-operator-path",
+        "source": source,
+        "chain": chain,
+        "valid": False,
+        "status": "unavailable",
+        "reason": OPERATOR_PATH_CERTIFICATE_REASON,
+        "claim": OPERATOR_PATH_CERTIFICATE_CLAIM,
+    }
+
 
 def parse_factor_chain(chain: str) -> tuple[int, ...] | None:
     if chain == "-":
@@ -468,37 +492,31 @@ def build_row(
             current_shape_family=current_shape_family,
         )
 
+    chain_sources = {
+        "current": (probe["residual_reduction_chain"], "current"),
+        "current_flat_k": (current_flat_k_chain, "current-flat-k"),
+        "current_shape_family": (
+            current_shape_family_chain,
+            "current-shape-family",
+        ),
+        "redirect": (redirect_chain, "guarded-redirect-conservative"),
+        "redirect_flat_k": (
+            redirect_flat_k_chain,
+            "guarded-redirect-flat-k",
+        ),
+        "redirect_shape_family": (
+            redirect_shape_family_chain,
+            "guarded-redirect-shape-family",
+        ),
+    }
+
     factor_chain_certificates = {
-        "current": factor_chain_certificate(
-            n=n,
-            chain=probe["residual_reduction_chain"],
-            source="current",
-        ),
-        "current_flat_k": factor_chain_certificate(
-            n=n,
-            chain=current_flat_k_chain,
-            source="current-flat-k",
-        ),
-        "current_shape_family": factor_chain_certificate(
-            n=n,
-            chain=current_shape_family_chain,
-            source="current-shape-family",
-        ),
-        "redirect": factor_chain_certificate(
-            n=n,
-            chain=redirect_chain,
-            source="guarded-redirect-conservative",
-        ),
-        "redirect_flat_k": factor_chain_certificate(
-            n=n,
-            chain=redirect_flat_k_chain,
-            source="guarded-redirect-flat-k",
-        ),
-        "redirect_shape_family": factor_chain_certificate(
-            n=n,
-            chain=redirect_shape_family_chain,
-            source="guarded-redirect-shape-family",
-        ),
+        name: factor_chain_certificate(n=n, chain=chain, source=source)
+        for name, (chain, source) in chain_sources.items()
+    }
+    operator_path_certificates = {
+        name: operator_path_certificate_boundary(chain=chain, source=source)
+        for name, (chain, source) in chain_sources.items()
     }
 
     return {
@@ -547,6 +565,7 @@ def build_row(
         "current_expanded_execution_delta": current_expanded_execution_delta,
         "expanded_execution_delta": expanded_execution_delta,
         "factor_chain_certificates": factor_chain_certificates,
+        "operator_path_certificates": operator_path_certificates,
     }
 
 
@@ -597,20 +616,32 @@ def print_text(rows: list[dict[str, Any]]) -> None:
         )
         print(f"expanded_execution_delta = {row['expanded_execution_delta']}")
         print()
-        print("factor_chain_certificates:")
-        certificates = row["factor_chain_certificates"]
-        for name in [
+        certificate_names = [
             "current",
+            "current_flat_k",
+            "current_shape_family",
             "redirect",
             "redirect_flat_k",
             "redirect_shape_family",
-        ]:
+        ]
+
+        print("factor_chain_certificates:")
+        certificates = row["factor_chain_certificates"]
+        for name in certificate_names:
             certificate = certificates[name]
             print(f"{name}_factor_chain_status = {certificate['status']}")
             print(
                 f"{name}_factor_chain_verified_product = "
                 f"{str(certificate['verified_product']).lower()}"
             )
+
+        print()
+        print("operator_path_certificates:")
+        operator_certificates = row["operator_path_certificates"]
+        for name in certificate_names:
+            certificate = operator_certificates[name]
+            print(f"{name}_operator_path_status = {certificate['status']}")
+            print(f"{name}_operator_path_reason = {certificate['reason']}")
 
 
 def main() -> int:

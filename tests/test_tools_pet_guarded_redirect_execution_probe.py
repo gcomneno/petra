@@ -148,6 +148,35 @@ def test_guarded_redirect_execution_probe_reports_current_completion_for_control
     assert certificate["product"] == 30030
 
 
+def test_guarded_redirect_execution_probe_reports_operator_path_boundary() -> None:
+    result = run_probe("104162061003", "--json")
+
+    payload = json.loads(result.stdout)
+    row = payload["rows"][0]
+    certificates = row["operator_path_certificates"]
+
+    assert row["current_expanded_execution_delta"] == (
+        "current-completes-with-shape-family"
+    )
+
+    current_shape_family = certificates["current_shape_family"]
+    assert current_shape_family["kind"] == "pet-operator-path"
+    assert current_shape_family["source"] == "current-shape-family"
+    assert current_shape_family["chain"] == "969969 * 667 * 7 * 23"
+    assert current_shape_family["valid"] is False
+    assert current_shape_family["status"] == "unavailable"
+    assert (
+        current_shape_family["reason"]
+        == "factor-chain-route-not-represented-as-pet-graph-path"
+    )
+    assert "PET operator-path certificate unavailable" in current_shape_family["claim"]
+
+    assert (
+        row["factor_chain_certificates"]["current_shape_family"]["status"]
+        == "verified-product"
+    )
+
+
 def test_guarded_redirect_execution_probe_reports_factor_chain_certificates() -> None:
     result = run_probe("357357", "--json")
 
