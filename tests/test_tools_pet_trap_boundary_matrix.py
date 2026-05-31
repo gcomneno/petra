@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import pytest
 import json
 import subprocess
 import sys
+
+
+pytestmark = pytest.mark.slow
 
 
 def run_matrix(*args: str) -> subprocess.CompletedProcess[str]:
@@ -23,9 +27,7 @@ def test_trap_boundary_matrix_reports_recoverable_transition() -> None:
 
     lines = result.stdout.strip().splitlines()
 
-    assert lines[0].startswith(
-        "n\tcurrent_status\tcurrent_anchor"
-    )
+    assert lines[0].startswith("n\tcurrent_status\tcurrent_anchor")
 
     assert len(lines) == 2
 
@@ -64,15 +66,9 @@ def test_trap_boundary_matrix_can_emit_json() -> None:
     assert row["current_anchor"] == "231"
     assert row["shadow_anchor"] == "3"
 
-    assert (
-        row["activity_transition"]
-        == "inactive-to-active"
-    )
+    assert row["activity_transition"] == "inactive-to-active"
 
-    assert (
-        row["classification"]
-        == "redirect-recoverable-flat-k"
-    )
+    assert row["classification"] == "redirect-recoverable-flat-k"
 
 
 def test_trap_boundary_matrix_can_filter_classification() -> None:
@@ -129,7 +125,4 @@ def test_full_scan_preserves_recoverable_classification() -> None:
 
     assert len(lines) == 2
 
-    assert (
-        "redirect-recoverable-flat-k"
-        in lines[1]
-    )
+    assert "redirect-recoverable-flat-k" in lines[1]

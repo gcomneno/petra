@@ -1,4 +1,8 @@
+import pytest
 import subprocess
+
+
+pytestmark = pytest.mark.slow
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:

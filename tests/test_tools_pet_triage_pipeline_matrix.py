@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
 import subprocess
+
+
+pytestmark = pytest.mark.slow
 
 
 def run_pipeline(n: int) -> str:
@@ -118,6 +122,7 @@ def test_pet_triage_pipeline_passes_active_blade_window_options() -> None:
         "387456687301039324825975283416 --trial-limit 20"
     ) in output
 
+
 def test_pet_triage_pipeline_route_only_skips_classic_and_legacy_sections() -> None:
     output = run_pipeline_with_args(
         "10000030000091",
@@ -183,6 +188,7 @@ def test_pet_triage_pipeline_legacy_diagnostics_are_opt_in() -> None:
     assert "7. Legacy mass response" in output
     assert "8. Legacy focused peel classic handoff diagnostic" in output
 
+
 def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
     output = run_pipeline_with_args(
         "9999999999000000000119",
@@ -199,7 +205,9 @@ def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
     assert "decimal_rigid_border_hint" in output
     assert "preflight_guard_status = stopped" in output
     assert "preflight_guard_kind = decimal-rigid-border" in output
-    assert "reason = decimal rigid border detected; skipping PET race diagnostic" in output
+    assert (
+        "reason = decimal rigid border detected; skipping PET race diagnostic" in output
+    )
     assert (
         "preflight_guard_suggested_next = use shallow decimal-rigid route or rerun "
         "without --rigid-border-guard to force PET race"
@@ -207,6 +215,7 @@ def test_pet_triage_pipeline_rigid_border_guard_stops_before_race() -> None:
 
     assert "0. PET race diagnostic" not in output
     assert "1. PET classic handoff policy" not in output
+
 
 def test_pet_triage_pipeline_decimal_rigid_shallow_route_skips_race() -> None:
     output = run_pipeline_with_args(
@@ -235,4 +244,3 @@ def test_pet_triage_pipeline_decimal_rigid_shallow_route_skips_race() -> None:
 
     assert "0. PET race diagnostic" not in output
     assert "1. PET classic handoff policy" not in output
-

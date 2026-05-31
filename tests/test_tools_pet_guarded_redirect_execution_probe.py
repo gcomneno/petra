@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import pytest
 import json
 import subprocess
 import sys
+
+
+pytestmark = pytest.mark.slow
 
 
 def run_probe(*args: str) -> subprocess.CompletedProcess[str]:

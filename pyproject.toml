@@ -27,3 +27,7 @@ pet = "pet.cli:main"
 
 [tool.pytest]
 pythonpath = ["src"]
+
+markers = [
+    "slow: slow research/integration tests excluded from default CI",
+]

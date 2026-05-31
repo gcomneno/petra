@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import pytest
 import json
 import subprocess
 import sys
 from typing import Any
+
+
+pytestmark = pytest.mark.slow
 
 
 def run_probe(n: int, *args: str) -> dict[str, Any]:
@@ -34,9 +38,7 @@ def test_completion_aware_probe_marks_selected_trap_door_candidate() -> None:
     assert probe["terminal_residual"] == "1001"
 
     selected = next(
-        row
-        for row in probe["candidates"]
-        if row["anchor"] == probe["selected_anchor"]
+        row for row in probe["candidates"] if row["anchor"] == probe["selected_anchor"]
     )
 
     assert selected["residual"] == "1001"
@@ -53,9 +55,7 @@ def test_completion_aware_probe_marks_lateral_door_candidate() -> None:
     assert probe["terminal_residual"] == "1"
 
     selected = next(
-        row
-        for row in probe["candidates"]
-        if row["anchor"] == probe["selected_anchor"]
+        row for row in probe["candidates"] if row["anchor"] == probe["selected_anchor"]
     )
 
     assert selected["residual"] == "6"
@@ -73,9 +73,7 @@ def test_completion_aware_probe_reflects_flat_k_profile() -> None:
     assert probe["terminal_residual"] == "1"
 
     selected = next(
-        row
-        for row in probe["candidates"]
-        if row["anchor"] == probe["selected_anchor"]
+        row for row in probe["candidates"] if row["anchor"] == probe["selected_anchor"]
     )
 
     assert selected["residual_final_status"] == "partial-factorization-by-flat-k-scan"
@@ -88,9 +86,7 @@ def test_completion_aware_probe_compares_expanded_profiles() -> None:
     assert probe["profile"]["compare_expanded_profile"] is True
 
     selected = next(
-        row
-        for row in probe["candidates"]
-        if row["anchor"] == probe["selected_anchor"]
+        row for row in probe["candidates"] if row["anchor"] == probe["selected_anchor"]
     )
 
     comparison = selected["expanded_profile_comparison"]
@@ -98,6 +94,7 @@ def test_completion_aware_probe_compares_expanded_profiles() -> None:
     assert comparison["flat_k"]["status"] == "complete"
     assert comparison["flat_k"]["terminal_residual"] == "1"
     assert comparison["completion_delta"] == "opens-with-flat-k"
+
 
 def test_completion_aware_probe_exposes_357357_selected_trap_door() -> None:
     probe = run_probe(357357, "--compare-expanded-profile")
@@ -119,6 +116,7 @@ def test_completion_aware_probe_exposes_357357_selected_trap_door() -> None:
         "opens-with-flat-k"
     )
 
+
 def test_completion_aware_probe_reports_active_completion_signal() -> None:
     probe = run_probe(21021)
 
@@ -127,9 +125,7 @@ def test_completion_aware_probe_reports_active_completion_signal() -> None:
     assert by_anchor["3"]["active_completion_signal"] == (
         "inactive-shape-family-required"
     )
-    assert by_anchor["21"]["active_completion_signal"] == (
-        "inactive-flat-k-required"
-    )
+    assert by_anchor["21"]["active_completion_signal"] == ("inactive-flat-k-required")
 
 
 def test_completion_aware_probe_distinguishes_357357_active_signal() -> None:
@@ -138,20 +134,17 @@ def test_completion_aware_probe_distinguishes_357357_active_signal() -> None:
     by_anchor = {row["anchor"]: row for row in probe["candidates"]}
 
     assert by_anchor["3"]["classification"] == "expandable-with-active-mode"
-    assert by_anchor["3"]["active_completion_signal"] == (
-        "active-partial-expandable"
-    )
+    assert by_anchor["3"]["active_completion_signal"] == ("active-partial-expandable")
     assert by_anchor["3"]["expanded_profile_comparison"]["completion_delta"] == (
         "opens-with-flat-k"
     )
 
     assert by_anchor["231"]["classification"] == "selected-trap-door-candidate"
-    assert by_anchor["231"]["active_completion_signal"] == (
-        "inactive-flat-k-required"
-    )
+    assert by_anchor["231"]["active_completion_signal"] == ("inactive-flat-k-required")
     assert by_anchor["231"]["expanded_profile_comparison"]["completion_delta"] == (
         "opens-with-flat-k"
     )
+
 
 def test_completion_aware_probe_shadow_ranking_suggests_357357_alternative() -> None:
     probe = run_probe(357357, "--compare-ranking-policy")

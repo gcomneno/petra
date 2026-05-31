@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import pytest
 import json
 import subprocess
 import sys
+
+
+pytestmark = pytest.mark.slow
 
 
 def run_experiment(*args: str) -> subprocess.CompletedProcess[str]:
@@ -77,6 +81,4 @@ def test_guarded_prefix_trap_experiment_can_emit_json() -> None:
     assert payload["rows"][0]["current_anchor"] == "231"
     assert payload["rows"][0]["shadow_anchor"] == "3"
     assert payload["rows"][0]["structural_prefix"] == "77"
-    assert payload["rows"][0]["guard_decision"] == (
-        "would-redirect-to-shadow-anchor"
-    )
+    assert payload["rows"][0]["guard_decision"] == ("would-redirect-to-shadow-anchor")
