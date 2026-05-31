@@ -37,6 +37,15 @@ def test_operator_applications_by_value_only_returns_valid_applications() -> Non
     assert all(application.after_object is not None for application in applications)
 
 
+def test_operator_neighbors_from_unit_root_can_start_generation() -> None:
+    obj = pet_object_from_int(1)
+
+    edges = operator_neighbors_by_value(obj)
+    by_label = {edge.label: edge.target.value for edge in edges}
+
+    assert by_label == {"NEW(parent_address=[],q=2)": 2}
+
+
 def test_operator_neighbors_by_value_for_60_contains_expected_edges() -> None:
     obj = pet_object_from_int(60)
 
@@ -165,8 +174,7 @@ def test_traverse_operator_graph_depth_one_records_neighbor_paths() -> None:
 
     traversal = traverse_operator_graph_by_value(pet_object_from_int(60), max_depth=1)
     by_label = {
-        path.labels[0]: path.target.value
-        for path in traversal.paths_at_depth(1)
+        path.labels[0]: path.target.value for path in traversal.paths_at_depth(1)
     }
 
     assert traversal.truncated is False

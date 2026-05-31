@@ -82,3 +82,23 @@ def test_structural_route_probe_reports_no_path_within_bound() -> None:
     assert payload["reason"] == "no-path-within-bound"
     assert payload["selected_path"] is None
     assert payload["trace_certificate"] is None
+
+
+def test_structural_route_probe_starts_from_unit_seed() -> None:
+    result = run_probe(
+        "1",
+        "--target-value",
+        "2",
+        "--max-depth",
+        "1",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+
+    assert payload["found"] is True
+    assert payload["source_n"] == 1
+    assert payload["selected_path"]["values"] == [1, 2]
+    assert payload["selected_path"]["labels"] == ["NEW(parent_address=[],q=2)"]
+    assert payload["trace_certificate"]["valid"] is True
+    assert payload["trace_certificate"]["reason"] == "trace-replayed"

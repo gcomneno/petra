@@ -11,6 +11,36 @@ from pet import (
 )
 
 
+def test_pet_one_is_generative_empty_root() -> None:
+    obj = pet_object_from_int(1)
+
+    assert obj.value == 1
+    assert obj.is_root is True
+    assert obj.is_composite is True
+    assert obj.children == ()
+    assert obj.structural_signature() == ()
+
+
+def test_new_target_accepts_fresh_prime_at_empty_unit_root() -> None:
+    from pet import apply_operator_by_value
+
+    obj = pet_object_from_int(1)
+
+    target = new_target(obj, (), 2)
+    result = apply_operator_by_value(obj, "NEW", (), 2)
+
+    assert target.valid is True
+    assert target.reason == "new-target-valid"
+    assert target.target_object is obj
+
+    assert result.valid is True
+    assert result.reason == "new-applied-by-value"
+    assert result.before_value == 1
+    assert result.after_value == 2
+    assert result.after_object is not None
+    assert result.after_object.value == 2
+
+
 def test_new_target_accepts_fresh_prime_at_root_parent() -> None:
     obj = pet_object_from_int(60)
 

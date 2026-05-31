@@ -20,11 +20,11 @@ CLAIM = (
 )
 
 
-def positive_int(raw: str) -> int:
+def pet_seed_int(raw: str) -> int:
     value = int(raw)
 
-    if value < 2:
-        raise argparse.ArgumentTypeError("value must be >= 2")
+    if value < 1:
+        raise argparse.ArgumentTypeError("value must be >= 1")
 
     return value
 
@@ -135,9 +135,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Research-only bounded PET/PEG structural route probe."
     )
-    parser.add_argument("source_n", type=positive_int)
-    parser.add_argument("--target-value", type=positive_int)
-    parser.add_argument("--target-shape-of", type=positive_int)
+    parser.add_argument("source_n", type=pet_seed_int)
+    parser.add_argument("--target-value", type=pet_seed_int)
+    parser.add_argument("--target-shape-of", type=pet_seed_int)
     parser.add_argument("--max-depth", type=int, default=2)
     parser.add_argument("--max-paths", type=int, default=200)
     parser.add_argument("--json", action="store_true")

@@ -49,7 +49,6 @@ class PETAddressComparison:
         }
 
 
-
 @dataclass(frozen=True)
 class PETObject:
     """PET/PEG 2.0 recursive object core.
@@ -182,7 +181,6 @@ class PETObject:
             "children": [child.to_dict() for child in self.children],
         }
 
-
     def at(self, address: tuple[int, ...]) -> "PETObject":
         """Return the PET object at a structural address.
 
@@ -232,7 +230,9 @@ def _make_child_from_factor(
     )
 
 
-def _children_from_int(n: int, parent_address: tuple[int, ...]) -> tuple[PETObject, ...]:
+def _children_from_int(
+    n: int, parent_address: tuple[int, ...]
+) -> tuple[PETObject, ...]:
     return tuple(
         _make_child_from_factor(
             prime=prime,
@@ -244,10 +244,15 @@ def _children_from_int(n: int, parent_address: tuple[int, ...]) -> tuple[PETObje
 
 
 def pet_object_from_int(n: int) -> PETObject:
-    """Build a PET/PEG 2.0 recursive object from an integer."""
+    """Build a PET/PEG 2.0 recursive object from an integer.
 
-    if n < 2:
-        raise ValueError("n must be >= 2")
+    ``1`` is the canonical generative seed object: a composite root with no
+    children. It is not a factored value target; it is the empty PET root from
+    which structural routes may be composed.
+    """
+
+    if n < 1:
+        raise ValueError("n must be >= 1")
 
     return PETObject(
         value=n,
@@ -255,7 +260,7 @@ def pet_object_from_int(n: int) -> PETObject:
         kind="composite",
         prime_label=None,
         address=(),
-        children=_children_from_int(n, ()),
+        children=() if n == 1 else _children_from_int(n, ()),
     )
 
 
@@ -286,7 +291,9 @@ def pet_object_to_legacy_tree(obj: PETObject) -> PET:
     if obj.prime_label is None:
         tree = _legacy_tree_from_children(obj.children)
     else:
-        exp_repr: PETExp = None if obj.is_atomic else _legacy_tree_from_children(obj.children)
+        exp_repr: PETExp = (
+            None if obj.is_atomic else _legacy_tree_from_children(obj.children)
+        )
         tree = [(obj.prime_label, exp_repr)]
 
     validate(tree)
@@ -307,7 +314,6 @@ def structurally_equivalent(left: PETObject, right: PETObject) -> bool:
     """Return whether two PET objects have the same recursive structure."""
 
     return left.structural_signature() == right.structural_signature()
-
 
 
 def compare_address(
@@ -337,11 +343,11 @@ def compare_address(
         outcome = "created"
     elif before_resolution == "valid" and after_resolution != "valid":
         outcome = (
-            "blocked-at-leaf"
-            if after_resolution == "blocked-at-leaf"
-            else "destroyed"
+            "blocked-at-leaf" if after_resolution == "blocked-at-leaf" else "destroyed"
         )
-    elif before_resolution == "blocked-at-leaf" or after_resolution == "blocked-at-leaf":
+    elif (
+        before_resolution == "blocked-at-leaf" or after_resolution == "blocked-at-leaf"
+    ):
         outcome = "blocked-at-leaf"
     else:
         outcome = "missing"

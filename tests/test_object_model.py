@@ -102,9 +102,23 @@ def test_pet_object_model_structural_equivalence_ignores_values_and_primes() -> 
     )
 
 
-def test_pet_object_model_rejects_values_below_two() -> None:
-    with pytest.raises(ValueError, match="n must be >= 2"):
-        pet_object_from_int(1)
+def test_pet_object_model_builds_unit_root_seed() -> None:
+    root = pet_object_from_int(1)
+
+    assert root.value == 1
+    assert root.role == "root"
+    assert root.kind == "composite"
+    assert root.address == ()
+    assert root.prime_label is None
+    assert root.children == ()
+    assert root.is_root is True
+    assert root.is_composite is True
+
+
+@pytest.mark.parametrize("n", [0, -1])
+def test_pet_object_model_rejects_values_below_one(n: int) -> None:
+    with pytest.raises(ValueError, match="n must be >= 1"):
+        pet_object_from_int(n)
 
 
 def test_pet_object_model_resolves_structural_addresses() -> None:
