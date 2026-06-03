@@ -5,19 +5,7 @@ import argparse
 import json
 from typing import Any
 
-from pet import (
-    certificate_from_path,
-    pet_object_from_int,
-    traverse_operator_graph_by_value,
-)
-
-
-SCHEMA = "pet.structural_route_probe.v0"
-CLAIM = (
-    "bounded PET/PEG operator graph route probe only; "
-    "selected path is first match in deterministic bounded traversal, "
-    "not a global optimality claim"
-)
+from pet.structural_route import build_structural_route_result
 
 
 def pet_seed_int(raw: str) -> int:
@@ -37,65 +25,13 @@ def build_result(
     max_depth: int,
     max_paths: int | None,
 ) -> dict[str, Any]:
-    source_obj = pet_object_from_int(source_n)
-    target_signature = None
-
-    if target_shape_of is not None:
-        target_signature = pet_object_from_int(target_shape_of).structural_signature()
-
-    traversal = traverse_operator_graph_by_value(
-        source_obj,
+    return build_structural_route_result(
+        source_n=source_n,
+        target_value=target_value,
+        target_shape_of=target_shape_of,
         max_depth=max_depth,
         max_paths=max_paths,
     )
-
-    selected_path = None
-
-    for path in traversal.paths:
-        if target_value is not None and path.target.value != target_value:
-            continue
-
-        if (
-            target_signature is not None
-            and path.target.pet_object.structural_signature() != target_signature
-        ):
-            continue
-
-        selected_path = path
-        break
-
-    result: dict[str, Any] = {
-        "schema": SCHEMA,
-        "claim": CLAIM,
-        "source_n": source_n,
-        "target_value": target_value,
-        "target_shape_of": target_shape_of,
-        "max_depth": max_depth,
-        "max_paths": max_paths,
-        "traversal": {
-            "path_count": traversal.path_count,
-            "truncated": traversal.truncated,
-        },
-        "found": selected_path is not None,
-        "reason": "path-found" if selected_path is not None else "no-path-within-bound",
-        "selection_policy": "first-match-in-deterministic-bounded-bfs",
-    }
-
-    if selected_path is None:
-        result["selected_path"] = None
-        result["trace_certificate"] = None
-        return result
-
-    certificate = certificate_from_path(selected_path)
-
-    result["selected_path"] = selected_path.to_dict()
-    result["selected_cost"] = {
-        "depth": selected_path.depth,
-        "cost_model": "shortest-found-within-current-bounded-bfs-order",
-    }
-    result["trace_certificate"] = certificate.to_dict()
-
-    return result
 
 
 def print_text(result: dict[str, Any]) -> None:

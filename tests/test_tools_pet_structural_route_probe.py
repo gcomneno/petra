@@ -30,7 +30,7 @@ def test_structural_route_probe_finds_target_value_path() -> None:
 
     payload = json.loads(result.stdout)
 
-    assert payload["schema"] == "pet.structural_route_probe.v0"
+    assert payload["schema"] == "pet.structural_route.v0"
     assert payload["found"] is True
     assert payload["reason"] == "path-found"
     assert payload["selection_policy"] == "first-match-in-deterministic-bounded-bfs"

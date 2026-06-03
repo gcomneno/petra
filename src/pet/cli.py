@@ -27,6 +27,7 @@ from .core import (
     validate,
 )
 from .io import load_json_file, render, to_json
+from .structural_route import build_structural_route_result
 from .metrics import extended_metrics
 from .families import register_subparser as register_families_subparser, run_args as run_families
 from .query import register_subparser as register_query_subparser, run_args as run_query
@@ -281,6 +282,62 @@ def _run_structural_factorization(args: argparse.Namespace) -> int:
     print(f"claim = {STRUCTURAL_FACTORIZATION_CLAIM}")
 
     return 0
+
+
+def _run_structural_route(args: argparse.Namespace) -> int:
+    if args.target < 1:
+        raise ValueError("structural-route expects TARGET >= 1")
+
+    if args.source < 1:
+        raise ValueError("--source must be >= 1")
+
+    if args.max_depth < 0:
+        raise ValueError("--max-depth must be >= 0")
+
+    if args.max_paths < 1:
+        raise ValueError("--max-paths must be >= 1")
+
+    result = build_structural_route_result(
+        source_n=args.source,
+        target_value=args.target,
+        target_shape_of=None,
+        max_depth=args.max_depth,
+        max_paths=args.max_paths,
+    )
+
+    if args.json:
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+
+    print("PET STRUCTURAL ROUTE")
+    print()
+    print(f"source_n = {result['source_n']}")
+    print(f"target_value = {result['target_value']}")
+    print(f"max_depth = {result['max_depth']}")
+    print(f"max_paths = {result['max_paths']}")
+    print(f"found = {str(result['found']).lower()}")
+    print(f"reason = {result['reason']}")
+
+    if result["found"]:
+        path = result["selected_path"]
+        certificate = result["trace_certificate"]
+
+        print()
+        print("selected_path:")
+        print(f"depth = {path['depth']}")
+        print(f"values = {path['values']}")
+        print(f"labels = {path['labels']}")
+        print()
+        print("trace_certificate:")
+        print(f"valid = {str(certificate['valid']).lower()}")
+        print(f"reason = {certificate['reason']}")
+        print(f"checked_steps = {certificate['checked_steps']}")
+
+    print()
+    print(f"claim = {result['claim']}")
+
+    return 0
+
 
 
 def _shape_to_jsonable(shape):
@@ -6021,6 +6078,17 @@ def main(argv: list[str] | None = None) -> int:
         help="enable experimental guarded structural-prefix redirect mode",
     )
 
+    # structural-route
+    p_structural_route = subparsers.add_parser(
+        "structural-route",
+        help="run bounded PET/PEG structural route planning from the unit root",
+    )
+    p_structural_route.add_argument("target", type=int, metavar="TARGET")
+    p_structural_route.add_argument("--source", type=int, default=1)
+    p_structural_route.add_argument("--max-depth", type=int, default=2)
+    p_structural_route.add_argument("--max-paths", type=int, default=200)
+    p_structural_route.add_argument("--json", action="store_true")
+
     # experimental
     p_experimental = subparsers.add_parser(
         "experimental",
@@ -7083,6 +7151,9 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "structural-factorization":
             return _run_structural_factorization(args)
+
+        elif args.command == "structural-route":
+            return _run_structural_route(args)
 
         elif args.command == "experimental":
             if args.experimental_command == "operator-semantics":
