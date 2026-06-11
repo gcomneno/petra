@@ -5,12 +5,10 @@ from functools import lru_cache
 import ast
 import json
 import math
-import heapq
 import pathlib
 import subprocess
 import sys
 import time
-from collections import Counter, deque
 
 from .atlas import atlas, draw_shape, extract_shape, print_atlas
 from .algebra import distance, structural_distance
@@ -19,14 +17,12 @@ from .core import (
     encode,
     is_prime,
     metrics_dict,
-    minimal_shape_representative,
     prime_factorization,
     shape_generator,
-    shape_generator_from_factorization,
     shape_signature_dict,
     validate,
 )
-from .io import load_json_file, render, to_json
+from .io import load_json_file, render, to_json, to_jsonable
 from .guarded_redirect import build_row as build_guarded_redirect_row
 from .structural_route import build_structural_route_result
 from .metrics import extended_metrics
