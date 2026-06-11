@@ -27,6 +27,7 @@ from .core import (
     validate,
 )
 from .io import load_json_file, render, to_json
+from .guarded_redirect import build_row as build_guarded_redirect_row
 from .structural_route import build_structural_route_result
 from .metrics import extended_metrics
 from .families import register_subparser as register_families_subparser, run_args as run_families
@@ -187,22 +188,7 @@ def _run_structural_factorization(args: argparse.Namespace) -> int:
     guarded_redirect_summary = {}
 
     if args.guarded_redirect:
-        probe_output = _run_repo_python_tool(
-            _repo_tool_path(
-                "tools",
-                "research",
-                "pet_guarded_redirect_execution_probe.py",
-            ),
-            [
-                str(args.n),
-                "--max-depth",
-                str(args.max_depth),
-                "--json",
-            ],
-        )
-
-        probe_data = json.loads(probe_output)
-        row = probe_data["rows"][0]
+        row = build_guarded_redirect_row(args.n, args.max_depth)
 
         execution_delta = row.get("expanded_execution_delta")
         guard_reason = row.get("guard_reason")
