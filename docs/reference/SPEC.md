@@ -2,7 +2,22 @@
 
 ## Dominio
 
-PET è definito sugli interi `N >= 2`.
+Questa specifica descrive la rappresentazione macchina PET-Base stabile per gli
+interi `N >= 2`.
+
+Nel modello first-principles più generale, `PET(1)` è la foglia concettuale
+della ricorsione. In questa specifica della rappresentazione stabile corrente, quella foglia
+non è serializzata come documento PET autonomo: è rappresentata negli esponenti tramite
+`•` e, nella forma JSON canonica, tramite `null`.
+
+Quindi questa specifica copre:
+
+- i documenti PET-Base canonici per `N >= 2`
+- la foglia esponente `1` come parte interna della rappresentazione
+- la compatibilità corrente di `pet encode`, `pet decode`, `pet validate`,
+  `pet render` e `pet scan`
+
+Non decide di rendere `encode(1)` valido.
 
 ## Definizione informale
 
@@ -76,10 +91,31 @@ Il valore di un PET:
 
 `value([(p1, E1), ..., (pk, Ek)]) = prod(p_i ^ value(E_i))`
 
+## Relazione con il modello first-principles
+
+I documenti first-principles usano la notazione:
+
+`PET(1) = 1`
+
+come foglia concettuale della ricorsione.
+
+Questa specifica mantiene invece il contratto macchina PET-Base corrente:
+
+- un documento PET-Base canonico rappresenta un intero `N >= 2`
+- la foglia concettuale `PET(1)` appare internamente come esponente `•`
+- nella rappresentazione JSON canonica, la stessa foglia appare come `null`
+- `PET(1)` non è attualmente un documento JSON PET-Base autonomo
+
+Questa distinzione evita di confondere il modello concettuale con la
+serializzazione stabile già usata dalla CLI e dai record JSONL.
+
 ## Proprietà richieste
 
 ### Completezza
-Ogni intero `N >= 2` deve avere una rappresentazione PET.
+Ogni intero `N >= 2` deve avere una rappresentazione PET-Base canonica.
+
+Il valore `1` è coperto come foglia concettuale first-principles e come esponente
+interno, non come documento PET-Base autonomo in questa specifica.
 
 ### Esattezza
 Se `T = PET(N)`, allora `value(T) = N`.

@@ -17,17 +17,24 @@ This document separates:
 **Stable core**
 
 ### Scope
-PET-Base is the canonical recursive representation of integers `N >= 2` via prime factorization and recursive exponent encoding.
+PET-Base is the current stable machine-facing recursive representation of
+integers `N >= 2` via prime factorization and recursive exponent encoding.
+
+In the broader first-principles model, `PET(1)` is the conceptual leaf object.
+In the stable PET-Base tree/JSON representation, that leaf appears internally as
+`•` / JSON `null`, not as a standalone PET-Base document.
 
 ### Claims currently treated as established
 
-- PET represents every integer `N >= 2`
-- PET is canonical by construction
-- PET is invertible
-- PET is lossless
-- PET has a canonical machine-facing JSON representation
+- PET-Base represents every integer `N >= 2` in the current stable tree/JSON representation
+- first-principles PET defines `PET(1)` as the conceptual leaf object
+- the current PET-Base representation uses `•` / JSON `null` for leaf exponent `1`
+- PET-Base is canonical by construction for its current machine-facing domain
+- PET-Base is invertible
+- PET-Base is lossless
+- PET-Base has a canonical machine-facing JSON representation
 - malformed or non-canonical PET documents can be rejected explicitly
-- PET-Base is the stable foundational layer of the project
+- PET-Base remains the stable machine representation layer of the project
 
 ### Evidence
 - formal project definition
@@ -35,6 +42,8 @@ PET-Base is the canonical recursive representation of integers `N >= 2` via prim
 - validation rules
 - tests and implementation constraints
 - `SPEC.md`
+- first-principles foundation docs
+- implementation audit against first-principles PET
 
 ### Confidence
 **High**
