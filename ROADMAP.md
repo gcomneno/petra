@@ -14,6 +14,8 @@ PET currently works best as:
 - a policy-first bridge from PET diagnostics to bounded classic verification
 - a project for exploring recursive prime-exponent-tree representations of integers
 - an emerging rewrite-geometric framework through PET-METICA
+- a first-principles documentation effort with explicit stability, metrics, and API-boundary audits
+- a lightweight documentation consistency workflow for local links and source-reference drift
 
 It is not yet a polished end-user product.
 
@@ -29,6 +31,7 @@ Focus areas:
 - keep `docs/` navigable and role-based
 - preserve a clear distinction between source-of-truth docs, research notes, reports, and paper material
 - keep document paths and cross-links aligned with the actual repository structure
+- run `make docs-check` before documentation-heavy changes
 
 ### 2. Keep PET-Base stable and legible
 
@@ -39,6 +42,7 @@ Focus areas:
 - keep the formal PET-Base contract stable
 - avoid accidental drift between implementation and `docs/reference/SPEC.md`
 - keep validation, serialization, and roundtrip behavior easy to inspect
+- keep first-principles terminology separate from public API behavior until compatibility is explicit
 - document user-facing behavior changes precisely
 
 ### 3. Improve CLI usability and consistency
@@ -124,6 +128,8 @@ Post-2.0 questions:
 Continue making it obvious which parts are:
 
 - stable definitions and contracts
+- first-principles concepts
+- public API behavior
 - empirical observations
 - exploratory hypotheses
 - open questions

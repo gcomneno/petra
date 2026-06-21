@@ -197,7 +197,11 @@ Start here depending on what you need:
 
 - [docs/README.md](docs/README.md) — documentation entry point
 - [docs/foundations/README.md](docs/foundations/README.md) — PET/PEG 2.0 conceptual foundations and roadmap
+- [docs/foundations/pet-notation-collapse.md](docs/foundations/pet-notation-collapse.md) — first-principles PET notation, collapse, support, and height semantics
 - [docs/foundations/pet-first-principles-implementation-audit.md](docs/foundations/pet-first-principles-implementation-audit.md) — implementation audit against first-principles PET
+- [docs/foundations/pet-module-stability-classification.md](docs/foundations/pet-module-stability-classification.md) — stability classification for tracked `src/pet` modules
+- [docs/foundations/pet-metrics-first-principles-audit.md](docs/foundations/pet-metrics-first-principles-audit.md) — audit of extended metrics against first-principles semantics
+- [docs/foundations/pet-first-principles-api-aliases.md](docs/foundations/pet-first-principles-api-aliases.md) — design boundary for first-principles API aliases
 - [docs/VISION.md](docs/VISION.md) — project vision and layer structure
 - [docs/reports/STATUS.md](docs/reports/STATUS.md) — what is stable, empirical, or exploratory
 - [docs/ROADMAP.md](docs/ROADMAP.md) — post-release development roadmap
@@ -265,6 +269,15 @@ Run tests:
 ```bash
 pytest -q
 ```
+
+Run lightweight documentation consistency checks:
+
+```bash
+make docs-check
+```
+
+The documentation check verifies local Markdown links and stale Python source
+references in the top-level README and `docs/**/*.md`.
 
 ## License
 
