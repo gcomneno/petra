@@ -12,14 +12,15 @@ residual-descent semantics.
 2. `pet-first-principles-examples.md` — worked examples for the PET seed idea
 3. `pet-notation-collapse.md` — canonical PET notation and numeric collapse semantics
 4. `pet-first-principles-implementation-audit.md` — current implementation audit against the first-principles model
-5. `pet-core-v0.md` — preliminary PET/PEG core ontology
-6. `operator-algebra.md` — support-preserving and support-expanding operators
-7. `projection-semantics.md` — projection and interpretation semantics
-8. `path-history.md` — transformational memory and path-dependent identity
-9. `operator-addresses.md` — recursive operator selectors and their PEG role
-10. `operator-semantics-snapshot.md` — current research-only executable X/Y/Z operator semantics
-11. `pet-peg-2.0-baseline.md` — closed executable PET/PEG 2.0 operator semantics baseline
-12. `pet-2-roadmap.md` — PET 2.0 research roadmap
+5. `pet-module-stability-classification.md` — stability classification for tracked `src/pet` modules
+6. `pet-core-v0.md` — preliminary PET/PEG core ontology
+7. `operator-algebra.md` — support-preserving and support-expanding operators
+8. `projection-semantics.md` — projection and interpretation semantics
+9. `path-history.md` — transformational memory and path-dependent identity
+10. `operator-addresses.md` — recursive operator selectors and their PEG role
+11. `operator-semantics-snapshot.md` — current research-only executable X/Y/Z operator semantics
+12. `pet-peg-2.0-baseline.md` — closed executable PET/PEG 2.0 operator semantics baseline
+13. `pet-2-roadmap.md` — PET 2.0 research roadmap
 
 ## Scope
 
