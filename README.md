@@ -5,30 +5,38 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-PET is a Python CLI and operator-side toolkit for encoding, validating, rendering, measuring, explaining, running structural factorization, and triaging Prime Exponent Tree artifacts.
+PET is a Python CLI and research toolkit for working with Prime Exponent Tree artifacts.
 
-It treats an integer not only as a value, but also as a structured multiplicative object.
-The project studies that structure at three levels:
+It studies integers not only as numeric values, but also as structured
+multiplicative objects. The project now separates its layers explicitly:
 
-- **PET-Base** — canonical recursive representation
-- **PET-Metrics** — structural observation and comparison
-- **PET-METICA** — rewrite geometry on canonical PET shapes
+- **PET-Base**: current stable tree/JSON representation for integers `N >= 2`
+- **First-principles PET**: conceptual model with `PET(1)` as the recursive leaf object
+- **PET-Metrics**: structural observation and comparison on canonical PETs
+- **PET/PEG 2.0**: object-native model, addresses, traces, paths, and operator experiments
+- **PET-METICA**: rewrite-geometry research on canonical PET shapes
 
-PET is not presented as a replacement for classical arithmetic and not as a claimed solution to a major open problem.
-It is best understood as an artifact, validation, measurement, and explanation layer for known PET structures.
+PET is not presented as a replacement for classical arithmetic, not as a faster
+factorization method, and not as a claimed solution to a major open problem.
+
+It is best understood as a reproducible artifact, validation, measurement,
+explanation, and research lab for known PET structures.
 
 ## Why this is interesting
 
-PET gives you a way to explore integers through their recursive prime-factorization structure.
+PET gives you a way to inspect integers through recursive prime-exponent
+structure.
 
 It is useful as:
 
-- a canonical representation of integers based on prime factorization
-- a CLI for inspecting structural properties and metrics
+- a canonical machine-facing representation for integers `N >= 2`
+- a first-principles notation for reasoning about recursive exponent objects
+- a CLI for encoding, validating, rendering, and measuring PET artifacts
 - a reproducible lab for scans, queries, summaries, and empirical reports
-- a first-class structural factorization CLI for single-number PET routes
-- operator-side triage tooling for bounded classic handoff and diagnostics
-- a rewrite-geometric playground for studying paths, asymmetries, and families of PET shapes
+- a research playground for PET/PEG object structure, traces, paths, and rewrite geometry
+
+The stable parts are intentionally separated from research-facing tooling. This
+keeps the project useful without pretending that every experiment is a theorem.
 
 ## Try it in 30 seconds
 
@@ -105,29 +113,66 @@ pet query filter docs/reports/data/scan-2-1000.jsonl --where "height=2" --limit 
 
 ## What is stable today
 
-### Stable / core
+### Stable machine representation
+
+PET-Base is the current stable tree/JSON representation for integers `N >= 2`.
+
+This includes:
+
 - recursive encoding based on prime factorization
-- canonical representation
-- invertibility / roundtrip behavior
-- machine-facing JSON representation
+- canonical tree/JSON representation
+- validation of malformed or non-canonical documents
+- invertibility / roundtrip behavior through encode/decode
 - CLI-based inspection and dataset generation
 
+In the broader first-principles model, `PET(1)` is the conceptual leaf object.
+In the stable PET-Base tree/JSON representation, that leaf appears internally as
+`•` / JSON `null`, not as a standalone PET-Base document.
+
+### First-principles foundation
+
+The foundation docs define the conceptual model used to reason about PET
+objects:
+
+- `PET(1)` as the recursive leaf object
+- canonical `PET(n)` once prime-exponent structure is known
+- numeric collapse
+- current-level support
+- height
+- numeric equality vs structural equality
+- the construction boundary: PET notation does not hide factorization cost
+
 ### Active observational layer
-- PET-derived structural metrics
-- structural comparison across families
+
+PET-Metrics studies structural properties of canonical PETs.
+
+This includes:
+
+- canonical structural metrics exposed by `pet metrics`
 - scan / query / atlas-style workflows
+- bounded reports and family comparisons
+- extended metrics that remain research-facing unless explicitly promoted
 
-### Structural factorization and operator-side triage
-- first-class structural factorization via `pet structural-factorization N`
-- PET race diagnostics via `tools/pet_triage_pipeline.sh`
-- PET shape diagnostics mapped to bounded classic handoff policy
-- classic divisors accepted only when explicitly verified
+### PET/PEG 2.0 object layer
 
-### Live research line
-- PET-METICA as rewrite geometry on canonical PET shapes
-- PET/PEG 2.0 foundations as conceptual research material for object structure, connectivity dynamics, path-history, and projection semantics
+The object-native model is richer than the stable PET-Base tree representation.
 
-Operational PET-METICA CLI core:
+It includes:
+
+- recursive PET objects
+- object roles and addresses
+- graph/path traversal concepts
+- traces and replay certificates
+- operator experiments
+
+This layer is useful, but it should not be confused with the minimal
+first-principles notation or the stable PET-Base JSON contract.
+
+### Research-facing tooling
+
+PET-METICA and related tooling explore rewrite geometry on canonical PET shapes.
+
+Research-facing commands include:
 
     pet branch-neighbors 12
     pet rewrite pair 12 9 --overscan 120
@@ -136,14 +181,15 @@ Operational PET-METICA CLI core:
     pet rewrite scan --n-max 20 --overscan 60
     pet rewrite matrix --n-max 10 --overscan 60 --json
 
-PET-METICA is operational but still research-facing: rewrite scans and hub/friction observations are bounded empirical results, not general theorems.
-- local rewrite moves such as `NEW`, `DROP`, `INC`, `DEC`
-- shortest paths, canonical paths, asymmetries, and rewrite friction
-- empirical family behavior in explored ranges
+These commands are operational, but their findings are bounded empirical results,
+not general mathematical theorems.
 
 ### Still exploratory
+
 - broad mathematical generalization beyond explored ranges
 - shape algebra and related experimental operations
+- routing / guarded redirect experiments
+- historical or research-only CLI paths
 
 ## Project map
 
@@ -151,6 +197,7 @@ Start here depending on what you need:
 
 - [docs/README.md](docs/README.md) — documentation entry point
 - [docs/foundations/README.md](docs/foundations/README.md) — PET/PEG 2.0 conceptual foundations and roadmap
+- [docs/foundations/pet-first-principles-implementation-audit.md](docs/foundations/pet-first-principles-implementation-audit.md) — implementation audit against first-principles PET
 - [docs/VISION.md](docs/VISION.md) — project vision and layer structure
 - [docs/reports/STATUS.md](docs/reports/STATUS.md) — what is stable, empirical, or exploratory
 - [docs/ROADMAP.md](docs/ROADMAP.md) — post-release development roadmap
@@ -165,16 +212,20 @@ Start here depending on what you need:
 
 ## Typical workflow
 
-A small practical PET workflow looks like this:
+A small practical PET workflow starts with the stable layer:
 
 1. encode or inspect specific integers
-2. compute structural metrics
-3. run `pet structural-factorization N` for stable structural routes
-4. run PET triage for deeper operator-side diagnostics where useful
-5. generate a bounded JSONL scan
-6. query or group the scan
-7. summarize the dataset with report tooling
-8. explore rewrite neighborhoods and paths where relevant
+2. validate or render PET artifacts
+3. compute canonical structural metrics
+4. generate a bounded JSONL scan
+5. query or group the scan
+6. summarize the dataset with report tooling
+
+Research-facing workflows can then explore:
+
+7. PET/PEG object structure, addresses, traces, and paths
+8. PET-METICA rewrite neighborhoods and bounded path behavior
+9. structural factorization and triage tooling where explicitly useful
 
 A current structural factorization CLI smoke run is:
 
@@ -189,11 +240,15 @@ A current operator-side triage smoke run is:
 PET is currently best understood as:
 
 - a small Python CLI
-- a reproducible PET artifact and report tooling project
-- a project for studying structural properties of integers through PET representations
-- an emerging rewrite-geometric framework through PET-METICA
+- a stable PET-Base artifact and JSON representation project
+- a first-principles notation and documentation effort
+- a reproducible metrics, scan, query, and report tooling project
+- an active research lab for PET/PEG object structure and PET-METICA rewrite geometry
 
 It is not yet a polished end-user product.
+
+It is also not a claim that PET avoids factorization cost or proves broad
+mathematical generalizations from bounded experiments.
 
 ## Development
 
