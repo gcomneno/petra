@@ -397,7 +397,7 @@ Il valore di PET resta negli invarianti strutturali scoperti e nella rappresenta
 
 PET-Algebra studia le operazioni strutturali sui PET canonici.
 Tutte le operazioni producono PET canonici che rappresentano interi.
-Il codice vive in `src/pet_algebra.py`.
+Il codice vive in `src/pet/algebra.py`.
 
 ### Operatori compositi: PET-MERGE `⊕` e PET-UNMERGE `⊖`
 
