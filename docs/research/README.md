@@ -22,6 +22,10 @@ Start in:
 
 - `experiments/`
 
+Recent closure record:
+
+- `experiments/pet-metica-seven-family-ladder-pass.md` — seven-family tier ladder (300–1200), tier-drift correction, closed in commit f95a437
+
 ### If you want partial shape material
 Start in:
 

@@ -8,6 +8,8 @@ Versioning corrente: `0.y.z`.
 ## [Unreleased]
 
 ### Added
+- Aggiunti tool research PET-METICA: `pet_metica_range_sweep.py` (scan multi-tier) e `pet_metica_seven_family_probe.py` (probe mirato su `7×{2^k,3^k}`), con test e report generated associati.
+- Aggiunta research note `docs/research/notes/pet_metica_seven_family_tier_drift.md` e scorecard di chiusura pass in `docs/research/experiments/pet-metica-seven-family-ladder-pass.md`.
 - Aggiunto il passaggio di fondazione first-principles: esempi, semantica `collapse(P)`, audit implementativo, classificazione moduli, audit metriche e boundary per API aliases.
 - Aggiunto `scripts/check_docs_consistency.py` per controllare link Markdown locali e riferimenti Python sorgente non più esistenti.
 - Aggiunto il target `make docs-check` per eseguire il controllo documentale leggero.
