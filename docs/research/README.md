@@ -87,6 +87,7 @@ structure, local rewrite laws, or empirical vocabulary:
 - `notes/pet-generator-structural-encoding-note.md`
 - `notes/pet-exponent-shape-trace-observed-patterns.md`
 - `notes/pet-shape-families-note.md`
+- `notes/pet_metica_seven_family_tier_drift.md` — bounded ladder on `7×{2^k,3^k}` seed asymmetry and explicit tier-drift correction
 - `notes/pet-multiplicative-grammar.md`
 - `notes/pet-problem-statement.md`
 - `notes/pet-completion-aware-residual-descent.md` — structural walls, lateral doors, trap-doors, and completion-aware residual descent observations

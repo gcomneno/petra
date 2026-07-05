@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -39,6 +40,8 @@ DEFAULT_SCAN_TIERS: tuple[tuple[int, int], ...] = (
     (50, 150),
     (75, 225),
     (100, 300),
+    (150, 450),
+    (200, 600),
 )
 
 DEFAULT_FRICTION_TIER: tuple[int, int] = (50, 50_000)
@@ -123,11 +126,33 @@ def _family_tail_scores(
     return tier["family_report"].get(key, [])
 
 
+def _asymmetry_node_frequency(tier: dict[str, Any], *, limit: int) -> list[tuple[int, int]]:
+    counts: Counter[int] = Counter()
+    for row in tier["top_asymmetries"][:limit]:
+        counts[row["a"]] += 1
+        counts[row["b"]] += 1
+    return counts.most_common(3)
+
+
+def _strong_asymmetry_pairs(
+    tier: dict[str, Any],
+    *,
+    threshold: int,
+    limit: int,
+) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in tier["top_asymmetries"][:limit]
+        if row["abs_asymmetry"] >= threshold
+    ]
+
+
 def compare_tiers(
     tiers: list[dict[str, Any]],
     *,
     baseline_index: int = 0,
     hub_top: int = 5,
+    asym_limit: int = 10,
 ) -> dict[str, Any]:
     if not tiers:
         return {}
@@ -138,6 +163,7 @@ def compare_tiers(
     hub_persistence: list[dict[str, Any]] = []
     friction_checks: list[dict[str, Any]] = []
     dyadic_trends: list[dict[str, Any]] = []
+    asymmetry_evolution: list[dict[str, Any]] = []
 
     for tier in tiers:
         label = _tier_label(tier["n_max"], tier["overscan"])
@@ -148,6 +174,26 @@ def compare_tiers(
                 "tier": label,
                 "baseline_top5_in_tier_top10": overlap,
                 "overlap_count": len(overlap),
+            }
+        )
+
+        strong = _strong_asymmetry_pairs(tier, threshold=6, limit=asym_limit)
+        poles = _asymmetry_node_frequency(tier, limit=asym_limit)
+        asymmetry_evolution.append(
+            {
+                "tier": label,
+                "dominant_asymmetry_poles": [
+                    {"node": node, "appearances": count} for node, count in poles
+                ],
+                "strong_asymmetry_count_ge_6": len(strong),
+                "strong_asymmetry_pairs": [
+                    {
+                        "a": row["a"],
+                        "b": row["b"],
+                        "asymmetry": row["asymmetry"],
+                    }
+                    for row in strong
+                ],
             }
         )
 
@@ -176,6 +222,7 @@ def compare_tiers(
         "hub_persistence_vs_baseline_top5": hub_persistence,
         "friction_by_tier": friction_checks,
         "dyadic_tail_attractor_scores": dyadic_trends,
+        "asymmetry_evolution": asymmetry_evolution,
     }
 
 
@@ -202,7 +249,7 @@ def build_payload(
         "limit": limit,
         "tiers": tiers,
         "friction_extended": friction,
-        "comparison": compare_tiers(tiers),
+        "comparison": compare_tiers(tiers, asym_limit=limit),
     }
 
 
@@ -338,6 +385,42 @@ def render_markdown(payload: dict[str, Any]) -> str:
         ]
     )
 
+    if comparison.get("asymmetry_evolution"):
+        lines.extend(
+            [
+                "Asymmetry pole evolution (nodes most often in top asymmetric pairs):",
+                "",
+                _md_table(
+                    ["tier", "dominant_pole", "pole_appearances", "strong_pairs_ge_6"],
+                    [
+                        [
+                            row["tier"],
+                            row["dominant_asymmetry_poles"][0]["node"]
+                            if row["dominant_asymmetry_poles"]
+                            else "—",
+                            row["dominant_asymmetry_poles"][0]["appearances"]
+                            if row["dominant_asymmetry_poles"]
+                            else "—",
+                            row["strong_asymmetry_count_ge_6"],
+                        ]
+                        for row in comparison["asymmetry_evolution"]
+                    ],
+                ),
+                "",
+                "Strong asymmetric pairs (`|asymmetry| >= 6`) by tier:",
+                "",
+            ]
+        )
+        for row in comparison["asymmetry_evolution"]:
+            if not row["strong_asymmetry_pairs"]:
+                continue
+            pairs = ", ".join(
+                f"{p['a']}↔{p['b']}({p['asymmetry']:+d})"
+                for p in row["strong_asymmetry_pairs"]
+            )
+            lines.append(f"- `{row['tier']}`: {pairs}")
+        lines.append("")
+
     if payload["friction_extended"]:
         ext = payload["friction_extended"]
         label = _tier_label(ext["n_max"], ext["overscan"])
@@ -376,6 +459,8 @@ def render_markdown(payload: dict[str, Any]) -> str:
             "   it is not a theorem about asymptotic rewrite geometry.",
             "4. Extended friction tiers use large overscan to approximate return paths;",
             "   they are computationally heavier and still bounded.",
+            "5. Asymmetry poles can shift with range (e.g. `56` at medium tiers,",
+            "   `112` at larger tiers); this is a bounded empirical observation only.",
             "",
             "## Non-claims",
             "",

@@ -42,8 +42,8 @@ def test_metica_range_sweep_small_tiers_contract():
         assert len(tier["top_hubs"]) <= 3
 
     comparison = data["comparison"]
-    assert "hub_persistence_vs_baseline_top5" in comparison
-    assert len(comparison["hub_persistence_vs_baseline_top5"]) == 2
+    assert "asymmetry_evolution" in comparison
+    assert len(comparison["asymmetry_evolution"]) == 2
 
 
 def test_metica_range_sweep_writes_report_files(tmp_path):
