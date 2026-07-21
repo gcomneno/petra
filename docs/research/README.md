@@ -26,6 +26,10 @@ Recent closure record:
 
 - `experiments/pet-metica-seven-family-ladder-pass.md` — seven-family tier ladder (300–1200), tier-drift correction, closed in commit f95a437
 
+Recent archive record:
+
+- `archive/pet-activation-trace-prototype.md` — historical structural-frontier traversal and activation-profile experiment, not promoted
+
 ### If you want partial shape material
 Start in:
 
