@@ -270,6 +270,17 @@ Run tests:
 pytest -q
 ```
 
+Run the reproducible PET-Base demo:
+
+```bash
+make demo
+```
+
+The demo uses the installed `pet` console entry point from the active Python
+environment to encode `72`, show its canonical metrics, validate and decode the
+temporary JSON artifact, and assert the exact roundtrip. The temporary file is
+removed whether the workflow succeeds or fails.
+
 Run lightweight documentation consistency checks:
 
 ```bash
