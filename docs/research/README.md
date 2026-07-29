@@ -7,7 +7,7 @@ This directory contains active research material that is **not** part of the sta
 - `notes/` — conceptual notes, theory fragments, and structural observations
 - `experiments/` — experiment writeups and scorecards
 - `partial/` — partial shape material
-- `datasets/` — raw datasets, streams, indexes, and large research artifacts
+- `datasets/` — conventional location for raw datasets generated locally; these artifacts are not maintained in the repository
 - `archive/` — historical or superseded research documents kept for reference
 
 ## How to read this area
@@ -36,9 +36,11 @@ Start in:
 - `partial/`
 
 ### If you want raw data
-Look in:
 
-- `datasets/`
+Raw datasets are generated locally and are not maintained in the repository.
+
+The historical million-entry datasets removed from the maintained tree remain
+recoverable from Git commit `71b1eab`.
 
 ### If you want older material that is no longer the main line
 Look in:
