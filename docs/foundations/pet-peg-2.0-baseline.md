@@ -1,5 +1,11 @@
 # PET/PEG 2.0 Executable Operator Semantics Baseline
 
+> **Legacy/research executable baseline.** Its prime-label and value-level
+> `NEW`, `DROP`, `INC`, and `DEC` behavior is not the canonical object-native
+> operator contract. See
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md)
+> for the future normative `SPROUT`, `SHED`, `GRAFT`, and `PRUNE` contract.
+
 ## Purpose
 
 This document closes the PET/PEG 2.0 research-only executable operator

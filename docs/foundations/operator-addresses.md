@@ -1,5 +1,10 @@
 # PET/PEG Recursive Operator Addresses v0
 
+> **Legacy/research address note.** Its prime-label selectors support the
+> historical `NEW`, `DROP`, `INC`, and `DEC` experiments. The normative
+> positional `@/…` and `^` contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Purpose
 
 PET/PEG operators need explicit recursive addresses.
