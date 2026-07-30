@@ -88,14 +88,15 @@ for the existence of the layer, **lower** for any specific broad mathematical cl
 **Live research line**
 
 ### Scope
-PET-METICA studies canonical PET shapes as states in a rewrite space, with local moves such as:
+PET-METICA studies canonical PET shapes as states in a rewrite space, with
+paths, shortest paths, canonical paths, asymmetries, and rewrite friction as
+the main objects of interest.
 
-- `NEW`
-- `DROP`
-- `INC`
-- `DEC`
-
-and with paths, shortest paths, canonical paths, asymmetries, and rewrite friction as the main objects of interest.
+The sole normative future PET/PEG 2.0 operator semantics is the structural,
+object-native contract in
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+Current value-level rewrite tooling and its reports are legacy implementation
+evidence; they do not define the canonical contract.
 
 ### Claims currently treated as established at the experimental level
 
@@ -128,7 +129,7 @@ These are **empirical computational findings**, not proved theorems.
 The target-aware mode is explicit and non-default. It uses the target structure
 and reports that fact; it does not replace canonical PET-METICA rewrite distance.
 
-PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer. Current core notes, supporting notes, and non-core compositional experiments are separated explicitly in the research reading map.
+PET-METICA is the most promising current research direction beyond PET-Base, but it remains an experimental layer. Current executable legacy PET-METICA notes, supporting notes, and non-core compositional experiments are separated explicitly in the research reading map.
 
 ### Evidence
 - `../research/README.md` — PET-METICA reading map

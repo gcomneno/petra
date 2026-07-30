@@ -95,33 +95,24 @@ Focus areas:
 - identify robust hubs and family-level behavior
 - avoid overstating computational observations as proved mathematics
 
-### 7. PET/PEG 2.0 executable operator semantics baseline — completed
+### 7. PET/PEG 2.0 object-native operator contract — documented
 
-PET/PEG 2.0 now has a closed research-only executable operator semantics
-baseline for recursive addresses and X/Y/Z operator roles.
+The sole normative PET/PEG 2.0 operator contract is
+[`docs/foundations/pet-peg-2.0-object-native-operators.md`](docs/foundations/pet-peg-2.0-object-native-operators.md).
+It defines the future object-native `SPROUT`, `SHED`, `GRAFT`, and `PRUNE`
+structural operators, positional addresses, serialization, and migration
+boundary. It does not change the stable CLI or current executable tooling.
 
-Completed baseline:
+The earlier value-level operator baseline, probes, and reports remain retained
+as explicitly marked legacy/research evidence. They do not define current or
+future canonical PET semantics.
 
-- recursive operator addresses are documented and probeable
-- X-axis support topology uses `NEW(parent_address, q)` and `DROP(parent_address, p)`
-- Y-axis recursive refinement uses `INC(address)` and `DEC(address)`
-- Y-axis hypothetical mutation probes model value-level exponent changes as `k -> k + 1` and `k -> k - 1`
-- X/Y commutativity probing compares `X then Y` vs `Y then X` orderings
-- address stability probing tracks recursive address resolution across one operator
-- Z-axis route dynamics use history-prefix references for `REDIRECT(...)` and `SHADOW_SELECT(...)`
-- the foundation snapshot is recorded in `docs/foundations/operator-semantics-snapshot.md`
-- the baseline closure is recorded in `docs/foundations/pet-peg-2.0-baseline.md`
-- operational research reports expose single-N and multi-N PET/PEG operator semantics summaries
-- the report matrix groups numbers by observed operator-semantics pattern signatures
-- full regression after the operator semantics tranche: `620 passed, 1 skipped`
+Post-contract work:
 
-Post-2.0 questions:
-
-- use report-matrix scans to identify larger operator-semantics pattern families
-- expand X/Y commutativity and address-stability observations across longer operator sequences
-- connect operator invocations to path-history identity
-- evolve synthetic Z-axis route labels into structured PEG edge payloads
-- investigate Z-axis route execution only as explicit research-only follow-up
+- introduce the object-native shape representation and positional resolver
+- implement the structural rewrite engine before exposing an opt-in CLI
+- version shape-native graph labels, traces, certificates, probes, and tests
+- preserve legacy reports and readers as compatibility evidence during migration
 
 ### 8. Keep stable vs exploratory boundaries sharp
 

@@ -9,6 +9,11 @@ states:
 
 This layer records alternatives. It does not select a preferred route.
 
+> **Implementation-compatibility boundary.** The prime-label `NEW`, `DROP`,
+> `INC`, and `DEC` graph edges below document current retained executable
+> behavior. The sole normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Graph nodes
 
 A PET/PEG 2.0 graph node wraps one recursive PET object state.

@@ -1,5 +1,10 @@
 # PET-METICA minimal definitions
 
+> **Legacy implementation-compatibility definitions.** `NEW`, `DROP`, `INC`,
+> and `DEC` describe current executable PET-METICA behavior, not canonical or
+> future PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scopo
 Questa nota fissa il vocabolario minimo operativo di PET-METICA.
 Non introduce ancora una teoria completa di operatori compositivi non-core.

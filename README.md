@@ -13,7 +13,8 @@ multiplicative objects. The project now separates its layers explicitly:
 - **PET-Base**: current stable tree/JSON representation for integers `N >= 2`
 - **First-principles PET**: conceptual model with `PET(1)` as the recursive leaf object
 - **PET-Metrics**: structural observation and comparison on canonical PETs
-- **PET/PEG 2.0**: object-native model, addresses, traces, paths, and operator experiments
+- **PET/PEG 2.0**: future object-native operator contract, addresses, traces,
+  paths, and explicitly separated legacy operator experiments
 - **PET-METICA**: rewrite-geometry research on canonical PET shapes
 
 PET is not presented as a replacement for classical arithmetic, not as a faster
@@ -156,6 +157,11 @@ This includes:
 ### PET/PEG 2.0 object layer
 
 The object-native model is richer than the stable PET-Base tree representation.
+
+Its sole normative operator reference is
+[`docs/foundations/pet-peg-2.0-object-native-operators.md`](docs/foundations/pet-peg-2.0-object-native-operators.md).
+It defines future structural semantics and does not change stable PET-Base or
+CLI behavior.
 
 It includes:
 

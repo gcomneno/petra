@@ -1,5 +1,10 @@
 # PET grammar note (bounded empirical)
 
+> **Legacy implementation-evidence grammar.** `NEW`, `DROP`, `INC`, and
+> `DEC` below describe bounded current PET-METICA behavior, not canonical or
+> future PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scope
 
 This note records a bounded empirical PET rewriting grammar observed from

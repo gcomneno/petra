@@ -7,6 +7,10 @@ This is a research/design document only.
 
 It does not define new core runtime behavior.
 
+`NEW`, `DROP`, `INC`, and `DEC` below are legacy research vocabulary, not
+canonical PET semantics. The sole normative future operator contract is
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Goal
 
 Explore a minimal "PET Syntax Tree" model.

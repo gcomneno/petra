@@ -11,6 +11,11 @@ The goal is classification, not refactoring.
 
 This audit does not change implementation behavior.
 
+> **Implementation-compatibility boundary.** References below to `NEW`,
+> `DROP`, `INC`, and `DEC` describe the current retained value-level
+> implementation only. The sole normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Audit basis
 
 This audit is based on:

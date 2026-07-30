@@ -1,5 +1,10 @@
 # PET Path-History v0
 
+> **Legacy/research path notation.** Any `NEW`, `DROP`, `INC`, or `DEC`
+> sequence below is evidence from the retained value-level model. The sole
+> normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 # Introduzione
 
 Questo documento introduce il concetto di memoria trasformazionale nel framework PET/PEG.

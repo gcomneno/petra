@@ -11,6 +11,11 @@ That separation is intentional:
 - trace/certificate layer: what happened
 - exploration-policy layer: why this path was tried first
 
+> **Implementation-compatibility boundary.** The `NEW`, `DROP`, `INC`, and
+> `DEC` trace examples below record current retained value-level behavior. The
+> sole normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Trace semantics
 
 A PET/PEG 2.0 trace records one concrete graph path.

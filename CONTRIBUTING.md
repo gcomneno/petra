@@ -118,6 +118,14 @@ Please preserve the current documentation hierarchy:
 
 If you move or rename docs, update cross-links in the affected README files.
 
+`NEW`, `DROP`, `INC`, and `DEC` are legacy value-level semantics. Do not
+introduce or reintroduce them as active PET semantics in specifications,
+documentation, public command descriptions, or new semantic APIs. The sole
+normative future PET/PEG 2.0 operator contract is
+[`docs/foundations/pet-peg-2.0-object-native-operators.md`](docs/foundations/pet-peg-2.0-object-native-operators.md).
+Any indispensable legacy reference must be explicitly marked as legacy/archive
+or as an implementation-compatibility reference.
+
 ### Scope discipline
 
 Prefer one kind of change per PR when possible:

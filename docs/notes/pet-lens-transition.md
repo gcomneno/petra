@@ -2,7 +2,9 @@
 > This note describes the legacy lens transition workflow. Current PET operator
 > workflow is triage-first via `tools/core/pet_triage_pipeline.sh`; lens tools
 > live under `tools/legacy/` and root-level wrappers remain available for
-> compatibility.
+> compatibility. Its `NEW`, `DROP`, `INC`, and `DEC` labels are not canonical
+> PET semantics; the sole normative future operator contract is
+> [`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
 
 # PET lens transition notes
 

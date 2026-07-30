@@ -1,9 +1,13 @@
 # PET-aritmetica
 
 > Note: this document contains historical and exploratory PET-METICA material.
-> The current operational core is defined by `pet_metica_minimal_definitions.md`,
-> `pet_metica_operational_semantics.md`, the CLI reference, and bounded reports.
-> Compositional/operator material is non-core unless explicitly promoted later.
+> Its `NEW`, `DROP`, `INC`, and `DEC` material describes current executable
+> legacy PET-METICA behavior and research evidence, not canonical or future
+> PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+> The companion operational notes, CLI reference, and bounded reports are
+> compatibility references for that legacy behavior; compositional/operator
+> material is non-core unless explicitly promoted later.
 
 ## Storia completa dell'idea, della formalizzazione e dei primi risultati empirici
 

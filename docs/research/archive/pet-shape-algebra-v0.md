@@ -1,5 +1,10 @@
 # PET Shape Algebra v0
 
+> **Archived research model.** The `NEW`, `DROP`, `INC`, and `DEC` primitives
+> below are superseded as canonical PET semantics. The sole normative future
+> operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scopo
 
 Questo modulo introduce un layer **shape-first** per PET.

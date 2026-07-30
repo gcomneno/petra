@@ -1,5 +1,10 @@
 # PET-METICA operational semantics
 
+> **Legacy implementation-compatibility semantics.** `NEW`, `DROP`, `INC`,
+> and `DEC` describe current executable PET-METICA behavior, not canonical or
+> future PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scopo
 Questa nota fissa una semantica operativa minima per PET-METICA.
 Integra le definizioni minime con convenzioni utili per strumenti e API sperimentali.

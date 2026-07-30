@@ -1,5 +1,10 @@
 # PET-METICA `⊕` definition examples
 
+> **Legacy research examples.** Any `NEW`, `DROP`, `INC`, or `DEC` path below
+> is retained PET-METICA evidence, not canonical or future PET semantics. The
+> sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scopo
 Questa nota confronta definizioni preliminari di `⊕` su pochi casi-manifesto.
 Non promuove ancora nessuna definizione. Serve a scartare presto le definizioni deboli o artificiali.
