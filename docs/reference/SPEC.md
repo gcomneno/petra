@@ -401,8 +401,12 @@ Il codice vive in `src/pet/algebra.py`.
 
 ### Operatori compositi: PET-MERGE `⊕` e PET-UNMERGE `⊖`
 
-Oltre agli operatori locali (`NEW`, `DROP`, `INC`, `DEC`), PET può descrivere
-operatori compositi tra due strutture.
+Lo strumento di riscrittura value-level storico non fa parte di questa
+specifica PET-Base né definisce semantica PET canonica. Il solo contratto
+normativo PET/PEG 2.0 per i futuri operatori strutturali è
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+
+PET può inoltre descrivere operatori compositi tra due strutture.
 
 `PET-MERGE` (`⊕`), leggibile in italiano come **somma PET**, sovrappone due
 strutture PET sommando le molteplicità dei componenti comuni.

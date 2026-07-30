@@ -57,7 +57,11 @@ It describes the completed text-output pipeline: structural diagnosis, grip diag
 
 ## PET/PEG 2.0 operator probes
 
-The PET/PEG 2.0 foundation layer introduces X/Y/Z operator axes:
+The probes below describe current executable legacy PET/PEG 2.0 behavior, not
+canonical or future PET semantics. The sole normative future operator contract
+is [`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+
+The retained foundation probes use X/Y/Z operator axes:
 
 - X — support topology
 - Y — recursive refinement
@@ -76,11 +80,16 @@ These probes are not part of stable PET-Base behavior. They do not change CLI de
 
 ## PET-METICA reading map
 
-PET-METICA material is intentionally split by stability level.
+PET-METICA material is intentionally split by role. Its `NEW`, `DROP`, `INC`,
+and `DEC` references describe current executable legacy behavior or retained
+research evidence, never canonical or future PET semantics. The sole normative
+future operator contract is
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
 
-### Current PET-METICA core
+### Current executable legacy PET-METICA behavior
 
-These files describe the current rewrite-geometric line:
+These compatibility references describe the current rewrite-geometric CLI and
+research line:
 
 - `notes/PET-METICA.md`
 - `notes/pet_metica_minimal_definitions.md`
@@ -134,8 +143,10 @@ For current project-wide source of truth, see:
 
 - `../VISION.md`
 - `../reports/STATUS.md`
-- `notes/PET-METICA.md`
 - `../reference/SPEC.md`
+- `../foundations/pet-peg-2.0-object-native-operators.md` for future PET/PEG
+  2.0 operator semantics; PET-METICA notes remain legacy compatibility and
+  research evidence
 
 ## PET/PEG 2.0 operator semantics reports
 

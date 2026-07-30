@@ -301,7 +301,8 @@ PET espone tre concetti distinti:
 
 - `distance`: distanza PET completa tra due alberi, sensibile anche ai valori dei primi.
 - `structural_distance`: distanza morfologica tra due alberi, ignorando i valori dei primi.
-- `rewrite cost`: costo minimo per trasformare un intero in un altro tramite mosse PET-METICA (`NEW`, `DROP`, `INC`, `DEC`).
+- `rewrite cost`: costo minimo nel grafo di riscrittura value-level usato
+  dall'attuale tooling PET-METICA.
 
 In pratica:
 
@@ -309,7 +310,11 @@ In pratica:
 - usa `pet rewrite pair A B` per studiare il trasporto dinamico da `A` a `B`;
 - usa `pet rewrite explain A B` quando vuoi anche una spiegazione delle mosse.
 
-Nota: `distance` e `structural_distance` sono confronti tra strutture. Il rewrite cost è invece una distanza di cammino in un grafo orientato di trasformazioni.
+Nota: `distance` e `structural_distance` sono confronti tra strutture. Il
+rewrite cost è invece una distanza di cammino nel grafo orientato esposto
+dall'attuale CLI. Le sue etichette legacy non sono semantica PET canonica: il
+solo contratto normativo PET/PEG 2.0 per operatori futuri è
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
 
 ### 7. Validare e renderizzare un PET JSON
 

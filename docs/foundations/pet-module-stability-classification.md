@@ -10,6 +10,11 @@ This is a classification document, not a refactoring plan.
 
 It does not change implementation behavior.
 
+> **Implementation-compatibility boundary.** `NEW`, `DROP`, `INC`, and `DEC`
+> in this classification name current retained value-level implementation
+> behavior, not canonical PET semantics. The sole normative future contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Basis
 
 This classification is based on:

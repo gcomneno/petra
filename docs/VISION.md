@@ -124,12 +124,12 @@ PET-METICA treats:
 - sequences of rewrites as paths
 - minimal rewrite cost as distance
 
-Typical local moves include:
-
-- `NEW`
-- `DROP`
-- `INC`
-- `DEC`
+The normative future operator vocabulary for this layer is the object-native
+`SPROUT`, `SHED`, `GRAFT`, and `PRUNE` contract in
+[`foundations/pet-peg-2.0-object-native-operators.md`](foundations/pet-peg-2.0-object-native-operators.md).
+It is structural and positional; it does not change the current PET-Base CLI.
+Earlier value-level rewrite labels remain legacy research and report evidence,
+not current PET semantics.
 
 ### Objective
 

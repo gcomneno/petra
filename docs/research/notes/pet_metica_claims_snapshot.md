@@ -1,5 +1,10 @@
 # PET-METICA claims snapshot
 
+> **Legacy implementation-evidence snapshot.** `NEW`, `DROP`, `INC`, and
+> `DEC` below are current executable PET-METICA evidence, not canonical or
+> future PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Scopo
 Questa nota fissa lo stato attuale dei claim PET-METICA dopo una robustness pass empirica su range piccoli/medi.
 Non contiene teoremi. Distingue esplicitamente tra pattern robusti, pattern empirici ancora aperti e metriche considerate sporche.

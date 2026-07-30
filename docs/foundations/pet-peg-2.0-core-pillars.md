@@ -5,6 +5,11 @@ next implementation layer.
 
 This document separates core concepts from research-only diagnostics.
 
+> **Legacy implementation boundary.** The `NEW`, `DROP`, `INC`, and `DEC`
+> examples below identify retained executable research behavior. The sole
+> normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Boundary
 
 This document does not claim:

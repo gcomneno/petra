@@ -1,5 +1,10 @@
 # PET Operator Algebra v0
 
+> **Legacy/research operator algebra.** The `NEW`, `DROP`, `INC`, and `DEC`
+> rules below describe the retained prime-label/value-level model, not canonical
+> PET semantics. The sole normative future contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 # Introduzione
 
 Questo documento formalizza gli operatori fondamentali del framework PET/PEG e la loro classificazione assiale.

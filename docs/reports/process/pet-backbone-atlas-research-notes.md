@@ -5,6 +5,11 @@ Scope: PET-METICA / ATLAS / routing overhead
 Mode: docs-only, claim-safe  
 Baseline: PET v0.1.5
 
+> **Legacy implementation-compatibility note.** `NEW`, `DROP`, `INC`, and
+> `DEC` below describe retained current PET-METICA tooling behavior, not
+> canonical PET semantics. The sole normative future operator contract is
+> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+
 ---
 
 ## 1. Executive summary

@@ -57,3 +57,7 @@ For project-wide source of truth, see:
 - `STATUS.md`
 - `../research/notes/PET-METICA.md`
 - `../reference/SPEC.md`
+- `../foundations/pet-peg-2.0-object-native-operators.md` for the sole
+  normative future PET/PEG 2.0 operator semantics
+- `legacy-operator-occurrence-inventory.md` for the Phase 1 legacy-operator
+  occurrence audit record

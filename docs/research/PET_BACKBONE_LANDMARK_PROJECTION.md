@@ -1,5 +1,10 @@
 # PET Backbone Landmark Projection
 
+> **Research vocabulary boundary.** `NEW`, `DROP`, `INC`, and `DEC` below
+> name legacy research moves, not canonical PET semantics. The sole normative
+> future operator contract is
+> [`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+
 ## Motivation
 
 The current PET-shadow line has produced useful diagnostic tools, but it has
@@ -664,4 +669,3 @@ Interpretation:
 
 `Σ_backbone` remains a global shadow/support sensor. `Λ_chunk` acts as a local
 PET-shape microscope for digit-mixed fields.
-

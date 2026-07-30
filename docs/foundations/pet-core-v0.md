@@ -1,5 +1,10 @@
 # PET Core v0 — Ontologia Strutturale e Dinamica
 
+> **Legacy/research core model.** The prime-label `NEW`, `DROP`, `INC`, and
+> `DEC` rules below are superseded as canonical PET semantics. The sole
+> normative future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Introduzione
 
 PET (Prime Exponent Tree) esplora rappresentazioni strutturali ricorsive degli interi, preservando informazioni non esplicitamente visibili nella sola proiezione numerica finale.

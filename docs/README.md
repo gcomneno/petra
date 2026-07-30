@@ -61,3 +61,6 @@ Start from:
 - `foundations/` contains PET/PEG 2.0 conceptual foundations and roadmap material.
 - `reference/SPEC.md` is the source of truth for PET-Base behavior.
 - `reports/STATUS.md` is the source of truth for what is stable, empirical, or exploratory.
+- `foundations/pet-peg-2.0-object-native-operators.md` is the sole normative
+  semantic reference for future PET/PEG 2.0 operators; it does not change
+  stable PET-Base or CLI behavior.

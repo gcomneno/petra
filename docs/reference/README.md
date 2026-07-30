@@ -33,6 +33,11 @@ Read:
 
 This directory is reference material, not the full project vision.
 
+`SPEC.md` defines PET-Base behavior only. The sole normative semantic
+reference for future PET/PEG 2.0 operators is
+[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md),
+which does not change the stable CLI.
+
 For broader project context, see:
 
 - `../VISION.md`
