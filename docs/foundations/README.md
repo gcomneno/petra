@@ -1,28 +1,35 @@
 # PET/PEG Foundations
 
-This directory contains foundational PET/PEG 2.0 research notes.
+This directory contains foundational PET/PEG 2.0 research notes and one
+normative future operator contract.
 
 These documents are conceptual and research-oriented. They do not define stable
 PET-Base behavior and do not change CLI defaults, routing, anchor selection, or
 residual-descent semantics.
 
+`pet-peg-2.0-object-native-operators.md` is the exception in scope: it is the
+normative contract for future object-native `SPROUT`, `SHED`, `GRAFT`, and
+`PRUNE` implementation. It still does not change current stable CLI behavior.
+
 ## Reading order
 
-1. `pet-first-principles.md` — original PET seed idea and research boundary
-2. `pet-first-principles-examples.md` — worked examples for the PET seed idea
-3. `pet-notation-collapse.md` — canonical PET notation and numeric collapse semantics
-4. `pet-first-principles-implementation-audit.md` — current implementation audit against the first-principles model
-5. `pet-module-stability-classification.md` — stability classification for tracked `src/pet` modules
-6. `pet-metrics-first-principles-audit.md` — audit of extended metrics against first-principles height/support semantics
-7. `pet-first-principles-api-aliases.md` — design boundary for explicit first-principles API aliases
-8. `pet-core-v0.md` — preliminary PET/PEG core ontology
-9. `operator-algebra.md` — support-preserving and support-expanding operators
-10. `projection-semantics.md` — projection and interpretation semantics
-11. `path-history.md` — transformational memory and path-dependent identity
-12. `operator-addresses.md` — recursive operator selectors and their PEG role
-13. `operator-semantics-snapshot.md` — current research-only executable X/Y/Z operator semantics
-14. `pet-peg-2.0-baseline.md` — closed executable PET/PEG 2.0 operator semantics baseline
-15. `pet-2-roadmap.md` — PET 2.0 research roadmap
+1. `pet-peg-2.0-object-native-operators.md` — normative object-native
+    operator, positional-address, serialization, and migration contract
+2. `pet-first-principles.md` — original PET seed idea and research boundary
+3. `pet-first-principles-examples.md` — worked examples for the PET seed idea
+4. `pet-notation-collapse.md` — canonical PET notation and numeric collapse semantics
+5. `pet-first-principles-implementation-audit.md` — current implementation audit against the first-principles model
+6. `pet-module-stability-classification.md` — stability classification for tracked `src/pet` modules
+7. `pet-metrics-first-principles-audit.md` — audit of extended metrics against first-principles height/support semantics
+8. `pet-first-principles-api-aliases.md` — design boundary for explicit first-principles API aliases
+9. `pet-core-v0.md` — preliminary PET/PEG core ontology
+10. `operator-algebra.md` — support-preserving and support-expanding operators
+11. `projection-semantics.md` — projection and interpretation semantics
+12. `path-history.md` — transformational memory and path-dependent identity
+13. `operator-addresses.md` — recursive operator selectors and their PEG role
+14. `operator-semantics-snapshot.md` — current research-only executable X/Y/Z operator semantics
+15. `pet-peg-2.0-baseline.md` — closed executable PET/PEG 2.0 operator semantics baseline
+16. `pet-2-roadmap.md` — PET 2.0 research roadmap
 
 ## Scope
 

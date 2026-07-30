@@ -1,5 +1,12 @@
 # PET/PEG 2.0 Operator Semantics
 
+> **Superseded as canonical PET operator semantics.** This document records
+> the value-level `NEW`, `DROP`, `INC`, and `DEC` implementation snapshot.
+> The normative object-native contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> Keep this note for legacy/research behavior; do not use it to implement
+> canonical `SPROUT`, `SHED`, `GRAFT`, or `PRUNE`.
+
 This note defines the first PET/PEG 2.0 operator semantics over recursive
 `PETObject` values.
 

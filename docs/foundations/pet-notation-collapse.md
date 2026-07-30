@@ -2,6 +2,12 @@
 
 This document defines compact first-principles notation for PET objects.
 
+> **Projection boundary.** Its prime-root notation and numeric collapse remain
+> useful for canonical numeric display. They are not the normative structural
+> identity, address, or operator contract for object-native PET/PEG 2.0
+> rewrites; see
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 It bridges the seed idea in `pet-first-principles.md` and the concrete examples
 in `pet-first-principles-examples.md`.
 

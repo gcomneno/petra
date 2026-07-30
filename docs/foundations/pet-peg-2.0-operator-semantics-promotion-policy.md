@@ -1,5 +1,11 @@
 # PET/PEG 2.0 Operator Semantics Promotion Policy
 
+> **Historical promotion policy.** Its `NEW`/`DROP`/`INC`/`DEC` reports and
+> experimental CLI boundary remain legacy research material. The canonical
+> future operator contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md);
+> this policy does not promote or define `SPROUT`, `SHED`, `GRAFT`, or `PRUNE`.
+
 This document defines the current promotion boundary for PET/PEG 2.0 operator
 semantics tooling.
 

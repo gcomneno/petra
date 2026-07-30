@@ -1,5 +1,12 @@
 # PET/PEG 2.0 Structural Addresses and Identity
 
+> **Superseded as the canonical address contract.** This note documents the
+> current prime-label address implementation. Positional `@/…` paths and `^`
+> slots are normatively defined in
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> Retain this document for legacy `PETObject` compatibility and research
+> observations.
+
 This note defines the PET/PEG 2.0 structural address and identity semantics.
 
 A structural address identifies a location inside a recursive PET object.

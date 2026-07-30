@@ -1,5 +1,10 @@
 # PET/PEG Executable Operator Semantics Snapshot v0
 
+> **Legacy/research snapshot.** The executable value-level `NEW`, `DROP`,
+> `INC`, and `DEC` semantics below are not canonical PET operator semantics.
+> The future normative object-native contract is
+> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+
 ## Purpose
 
 This document records the current research-only executable PET/PEG 2.0
