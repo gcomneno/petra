@@ -1,45 +1,23 @@
-# PET Reference
+# PETRA Reference
 
-This directory contains the stable reference material for PET.
+## Canonical specification
 
-## Contents
+[`SPEC.md`](SPEC.md) is the sole normative PETRA reference.
 
-- `SPEC.md` — formal PET-Base specification
-- `CLI.md` — command-line usage guide
+It defines:
 
-## Role
+- the recursive shape grammar;
+- canonical validation, normalization, and equality;
+- positional addresses;
+- invocation and result semantics;
+- `SPROUT`, `SHED`, `GRAFT`, and `PRUNE`;
+- witnesses and partial inverse laws;
+- architectural boundaries and conformance.
 
-`reference/` is the place for documents that describe:
+## Historical runtime references
 
-- stable behavior
-- formal rules
-- operational interfaces
+Other files in this directory describe the former PET runtime, CLI, schemas, or
+operational behavior.
 
-This directory should stay narrower and more stable than `research/`.
-
-## Reading order
-
-### If you want the formal core
-Read:
-
-1. `SPEC.md`
-
-### If you want to use the command-line interface
-Read:
-
-1. `CLI.md`
-
-## Important note
-
-This directory is reference material, not the full project vision.
-
-`SPEC.md` defines PET-Base behavior only. The sole normative semantic
-reference for future PET/PEG 2.0 operators is
-[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md),
-which does not change the stable CLI.
-
-For broader project context, see:
-
-- `../VISION.md`
-- `../reports/STATUS.md`
-- `../research/notes/PET-METICA.md`
+They are historical and non-normative for PETRA. Git tags and releases remain
+the authoritative way to reproduce that runtime.

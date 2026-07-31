@@ -1,5 +1,10 @@
 # PET Projection Semantics v0
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 # Introduzione
 
 Questo documento esplora la relazione tra oggetti PET e proiezione numerica classica.

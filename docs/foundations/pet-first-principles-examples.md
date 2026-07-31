@@ -1,5 +1,10 @@
 # PET first-principles worked examples
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This document gives small worked examples for the PET seed idea.
 
 PET observes positive integers as recursive prime-exponent structures.

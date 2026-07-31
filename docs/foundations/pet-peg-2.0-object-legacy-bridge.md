@@ -1,5 +1,10 @@
 # PET/PEG 2.0 Object Legacy Bridge
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This note defines the bridge between the PET/PEG 2.0 recursive object model and
 the legacy PET tree representation.
 

@@ -1,155 +1,137 @@
-# Roadmap
+# PETRA Implementation Roadmap
 
-This roadmap keeps PET focused on becoming a clearer, more usable, and more credible project.
+## Authority
 
-It is intentionally short.
+This roadmap orders implementation work after the canonical
+[PETRA specification](docs/reference/SPEC.md).
 
-## Current position
+It does not preserve the former PET architecture as a permanent lower layer.
 
-PET currently works best as:
+## Current phase — canonical specification
 
-- a small Python CLI
-- a reproducible PET artifact and report tooling project
-- a PET triage workflow for single-number structural diagnostics
-- a policy-first bridge from PET diagnostics to bounded classic verification
-- a project for exploring recursive prime-exponent-tree representations of integers
-- an emerging rewrite-geometric framework through PET-METICA
-- a first-principles documentation effort with explicit stability, metrics, and API-boundary audits
-- a lightweight documentation consistency workflow for local links and source-reference drift
+Complete the documentation-only architecture transition:
 
-It is not yet a polished end-user product.
+- establish PETRA as the sole current architecture;
+- define the shape-first grammar and conformance rules;
+- classify former PET material as historical or research-only;
+- remove compatibility-first requirements from the active roadmap;
+- keep production code unchanged until the specification is accepted.
 
-## Near-term priorities
+## Phase 1 — immutable shape model
 
-### 1. Keep the project map clear
+Implement:
 
-Improve first-contact clarity for new visitors and contributors.
+- `Leaf`;
+- `Container`;
+- `Term`;
+- exponent relations;
+- canonical local root ranks;
+- grammar invariants;
+- immutable structural equality.
 
-Focus areas:
+No addresses, operators, projections, CLI, or legacy bridges.
 
-- keep `README.md` as a clean landing page
-- keep `docs/` navigable and role-based
-- preserve a clear distinction between source-of-truth docs, research notes, reports, and paper material
-- keep document paths and cross-links aligned with the actual repository structure
-- run `make docs-check` before documentation-heavy changes
+## Phase 2 — normalization and equality
 
-### 2. Keep PET-Base stable and legible
+Implement:
 
-Preserve the credibility of the core representation.
+- recursive canonical validation;
+- rank assignment from visible order;
+- canonical normalization;
+- explicit rejection of malformed or non-canonical input;
+- fixture-oriented shape rendering needed by tests.
 
-Focus areas:
+No numeric interpretation.
 
-- keep the formal PET-Base contract stable
-- avoid accidental drift between implementation and `docs/reference/SPEC.md`
-- keep validation, serialization, and roundtrip behavior easy to inspect
-- keep first-principles terminology separate from public API behavior until compatibility is explicit
-- document user-facing behavior changes precisely
+## Phase 3 — positional addresses
 
-### 3. Improve CLI usability and consistency
+Implement:
 
-Make the command-line experience easier to understand and more stable.
+- root anchor `@/`;
+- positional term traversal;
+- typed projections;
+- exponent-relation slot `^`;
+- deterministic generic failures;
+- address-effect comparison helpers.
 
-Focus areas:
+## Phase 4 — atomic rewrite model
 
-- keep command behavior predictable
-- reduce ambiguity in output and docs
-- strengthen help text and examples
-- preserve consistency across commands and report tooling
+Implement:
 
-### 4. Keep PET triage and empirical workflows reproducible
+- immutable invocation values;
+- success and failure result types;
+- exact before-shape preservation;
+- after-shape validation;
+- resolved targets;
+- exactly one success witness;
+- deterministic reason precedence;
+- no-op prevention.
 
-Single-number triage, classic handoff policy, scans, summaries, reports, and
-datasets should remain easy to regenerate.
+## Phase 5 — width operators
 
-Focus areas:
+Implement:
 
-- preserve reproducible commands
-- keep PET triage entry points easy to find
-- keep report entry points easy to find
-- improve the path from raw scan to summary/report
-- keep the PET diagnostic vs verified classic divisor boundary explicit
-- avoid stale claims in top-level documentation
+- `SPROUT`;
+- `SHED`;
+- default and explicit targeting;
+- canonical leaf restoration;
+- rank retargeting;
+- witness-based partial inverse behavior.
 
-## Mid-term priorities
+## Phase 6 — depth operators
 
-### 5. Sharpen the PET-Metrics layer
+Implement:
 
-Continue clarifying which structural observations are merely available and which ones are actually informative.
+- `GRAFT`;
+- `PRUNE`;
+- latent relation slots;
+- singleton terminality;
+- deterministic depth and tie rules;
+- witness-based partial inverse behavior.
 
-Focus areas:
+## Phase 7 — serialization
 
-- stabilize the most useful metrics
-- compare families more systematically
-- separate robust recurring patterns from suggestive one-off observations
-- keep empirical claims clearly labeled as empirical
+Define and implement canonical PETRA serialization for:
 
-### 6. Develop PET-METICA carefully
+- shapes;
+- addresses;
+- invocations;
+- results;
+- witnesses;
+- stable failure identifiers.
 
-PET-METICA is now the most promising live research direction beyond PET-Base.
+Historical PET JSON compatibility is not a requirement.
 
-Focus areas:
+## Phase 8 — minimal CLI
 
-- keep local rewrite moves well defined
-- improve shortest-path / canonical-path tooling
-- study asymmetry and rewrite friction more systematically
-- identify robust hubs and family-level behavior
-- avoid overstating computational observations as proved mathematics
+Build a new `petra` command exposing only stable PETRA operations.
 
-### 7. PET/PEG 2.0 object-native operator contract — documented
+Do not mechanically rename the historical `pet` CLI.
 
-The sole normative PET/PEG 2.0 operator contract is
-[`docs/foundations/pet-peg-2.0-object-native-operators.md`](docs/foundations/pet-peg-2.0-object-native-operators.md).
-It defines the future object-native `SPROUT`, `SHED`, `GRAFT`, and `PRUNE`
-structural operators, positional addresses, serialization, and migration
-boundary. It does not change the stable CLI or current executable tooling.
+## Phase 9 — optional derived layers
 
-The earlier value-level operator baseline, probes, and reports remain retained
-as explicitly marked legacy/research evidence. They do not define current or
-future canonical PET semantics.
+Open separate work only when concrete requirements justify:
 
-Post-contract work:
+- graphs and neighborhood traversal;
+- paths;
+- traces and certificates;
+- PETRA-native metrics;
+- prime-tower projection;
+- research probes.
 
-- introduce the object-native shape representation and positional resolver
-- implement the structural rewrite engine before exposing an opt-in CLI
-- version shape-native graph labels, traces, certificates, probes, and tests
-- preserve legacy reports and readers as compatibility evidence during migration
+No historical layer is promoted automatically.
 
-### 8. Keep stable vs exploratory boundaries sharp
+## Phase 10 — complete replacement
 
-Continue making it obvious which parts are:
+- remove `src/pet/`;
+- remove obsolete runtime tests and tools;
+- remove old package exports and commands;
+- rename the distribution and CLI to `petra`;
+- update CI and documentation checks;
+- rename the repository when the new runtime is ready;
+- publish a distinct PETRA release line.
 
-- stable definitions and contracts
-- first-principles concepts
-- public API behavior
-- empirical observations
-- exploratory hypotheses
-- open questions
+## Guiding rule
 
-This helps the project stay credible as it grows.
-
-## Later possibilities
-
-These are possible future directions, not commitments:
-
-- broader PET-METICA experiments at larger ranges
-- richer structural visualization
-- clearer family atlases and catalogs
-- shape algebra and partial-shape extensions
-- packaging improvements for easier external use
-
-## What this roadmap is not
-
-This roadmap is not a promise of rapid feature expansion.
-
-The current priority is to improve:
-
-- clarity
-- consistency
-- reproducibility
-- epistemic discipline
-
-before broadening scope.
-
-## Guiding principle
-
-PET should grow by becoming easier to understand, easier to validate, harder to misread, and more explicit about which claims belong to PET-Base, PET-Metrics, PET-METICA, or the broader experimental frontier.
+Build from the PETRA specification. Reuse previous artifacts only after a
+current requirement proves they belong.

@@ -1,9 +1,10 @@
+<!-- PETRA-HISTORICAL-NOTE -->
 # PET local probe proposal
 
 > **Legacy implementation-compatibility note.** `NEW`, `DROP`, `INC`, and
 > `DEC` below describe retained current probe labels, not canonical PET
 > semantics. The sole normative future operator contract is
-> [`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 The PET local probe proposal is an experimental diagnostic step that connects a PET lens transition to a local inspection window.
 

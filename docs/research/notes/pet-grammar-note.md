@@ -3,7 +3,7 @@
 > **Legacy implementation-evidence grammar.** `NEW`, `DROP`, `INC`, and
 > `DEC` below describe bounded current PET-METICA behavior, not canonical or
 > future PET semantics. The sole normative future operator contract is
-> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+> [`../../reference/SPEC.md`](../../reference/SPEC.md).
 
 ## Scope
 

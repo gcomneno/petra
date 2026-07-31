@@ -1,5 +1,10 @@
 # PET module stability classification
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This document classifies the tracked Python modules under `src/pet` by stability
 level and architectural role.
 
@@ -13,7 +18,7 @@ It does not change implementation behavior.
 > **Implementation-compatibility boundary.** `NEW`, `DROP`, `INC`, and `DEC`
 > in this classification name current retained value-level implementation
 > behavior, not canonical PET semantics. The sole normative future contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Basis
 

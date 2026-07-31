@@ -1,1163 +1,727 @@
-# SPEC — Prime Exponent Tree (PET)
+# PETRA Specification
 
-## Dominio
+## Status and authority
 
-Questa specifica descrive la rappresentazione macchina PET-Base stabile per gli
-interi `N >= 2`.
+This document is the **single canonical specification** for:
 
-Nel modello first-principles più generale, `PET(1)` è la foglia concettuale
-della ricorsione. In questa specifica della rappresentazione stabile corrente, quella foglia
-non è serializzata come documento PET autonomo: è rappresentata negli esponenti tramite
-`•` e, nella forma JSON canonica, tramite `null`.
+**PETRA — Prime Exponent Tower Recursive Algebra**
 
-Quindi questa specifica copre:
+It supersedes the active PET-Base, PET/PEG 2.0, PET-Metrics, and executable
+PET-METICA product architecture. Earlier documents remain historical,
+research, or design evidence only. They do not define current PETRA behavior.
 
-- i documenti PET-Base canonici per `N >= 2`
-- la foglia esponente `1` come parte interna della rappresentazione
-- la compatibilità corrente di `pet encode`, `pet decode`, `pet validate`,
-  `pet render` e `pet scan`
+PETRA is shape-first. Its primary objects are recursive canonical structures,
+not integers reconstructed through factorization.
 
-Non decide di rendere `encode(1)` valido.
+The initial runtime does not require:
 
-## Definizione informale
+- concrete prime labels;
+- primality testing;
+- prime generation;
+- integer factorization;
+- numeric `encode` or `decode`;
+- preservation of historical PET APIs, formats, commands, traces, or readers.
 
-Ogni intero `N >= 2` viene rappresentato tramite la sua
-fattorizzazione prima ordinata. Ogni esponente viene poi
-rappresentato ricorsivamente con lo stesso schema.
+The word **Prime** names the intended mathematical interpretation of recursive
+exponent towers. Any numeric projection is optional, derived after a complete
+shape exists, and governed by a separate future contract.
 
-## Sintassi
+The canonical structural operators are:
 
-Usiamo:
+- `SPROUT`;
+- `SHED`;
+- `GRAFT`;
+- `PRUNE`.
 
-- `•` per rappresentare l'esponente `1`
-- una lista di coppie `(p, E)` per rappresentare un albero PET
-- `p` è sempre un numero primo
-- `E` è o `•` oppure un altro PET
+No value-first or prime-selection operation is part of canonical PETRA
+semantics.
 
-## Rappresentazione JSON canonica
+## Design principles
 
-La rappresentazione macchina canonica di un PET è un valore JSON composto da:
+PETRA follows these rules:
 
-- una lista non vuota di nodi
-- ogni nodo è un oggetto con esattamente le chiavi `p` ed `e`
-- `p` è un intero primo
-- `e` è `null` quando l'esponente è `1`
-- `e` è un altro PET JSON canonico quando l'esponente è `>= 2`
-- i nodi di ogni lista sono ordinati per `p` crescente
-- ogni primo `p` compare al massimo una volta per livello
+1. one specification and one executable model;
+2. recursive shape before numeric interpretation;
+3. canonical positional identity rather than persistent labels;
+4. direct structural rewrites rather than arithmetic mutation and refactoring;
+5. deterministic validation, resolution, outcomes, and witnesses;
+6. reuse of previous artifacts only when a concrete PETRA requirement needs
+   them;
+7. Git history, tags, and releases preserve PET history instead of active
+   compatibility code.
 
-Esempi JSON canonici:
+## 1. Object model
 
-PET(2):
+### 1.1 Grammar and roles
 
-    [{"p": 2, "e": null}]
-
-PET(12):
-
-    [
-      {"p": 2, "e": [{"p": 2, "e": null}]},
-      {"p": 3, "e": null}
-    ]
-
-PET(72):
-
-    [
-      {"p": 2, "e": [{"p": 3, "e": null}]},
-      {"p": 3, "e": [{"p": 2, "e": null}]}
-    ]
-
-Questa è la forma serializzata normativa usata da `pet encode --json`,
-`pet decode`, `pet validate`, `pet render` e dai record JSONL prodotti da
-`pet scan`.
-
-## Forma canonica
-
-Un PET è canonico se e solo se:
-
-1. tutti i fattori al primo livello sono numeri primi
-2. i primi sono ordinati strettamente in senso crescente
-3. ogni primo compare una sola volta per livello
-4. l'esponente `1` è rappresentato solo da `•`
-5. ogni esponente `e >= 2` è rappresentato come `PET(e)`
-6. non sono ammesse forme alternative equivalenti
-
-## Semantica
-
-Il valore di `•` è:
-
-`value(•) = 1`
-
-Il valore di un PET:
-
-`value([(p1, E1), ..., (pk, Ek)]) = prod(p_i ^ value(E_i))`
-
-## Relazione con il modello first-principles
-
-I documenti first-principles usano la notazione:
-
-`PET(1) = 1`
-
-come foglia concettuale della ricorsione.
-
-Questa specifica mantiene invece il contratto macchina PET-Base corrente:
-
-- un documento PET-Base canonico rappresenta un intero `N >= 2`
-- la foglia concettuale `PET(1)` appare internamente come esponente `•`
-- nella rappresentazione JSON canonica, la stessa foglia appare come `null`
-- `PET(1)` non è attualmente un documento JSON PET-Base autonomo
-
-Questa distinzione evita di confondere il modello concettuale con la
-serializzazione stabile già usata dalla CLI e dai record JSONL.
-
-## Proprietà richieste
-
-### Completezza
-Ogni intero `N >= 2` deve avere una rappresentazione PET-Base canonica.
-
-Il valore `1` è coperto come foglia concettuale first-principles e come esponente
-interno, non come documento PET-Base autonomo in questa specifica.
-
-### Esattezza
-Se `T = PET(N)`, allora `value(T) = N`.
-
-### Canonicità
-Se `PET(N1) = PET(N2)`, allora `N1 = N2`.
-
-### Unicità della forma normale
-Se `N1 = N2`, allora `PET(N1) = PET(N2)`.
-
-## Costruzione canonica
-
-Dato `N >= 2`:
-
-1. fattorizza `N` in primi:
-   `N = prod(p_i ^ e_i)`
-2. ordina i primi in senso crescente
-3. per ogni esponente:
-   - se `e_i = 1`, usa `•`
-   - se `e_i >= 2`, usa `PET(e_i)`
-
-## Esempi
-
-### PET(2)
-
-[(2, •)]
-
-### PET(12)
-
-[
-  (2, [(2, •)]),
-  (3, •)
-]
-
-### PET(72)
-
-[
-  (2, [(3, •)]),
-  (3, [(2, •)])
-]
-
-## Invarianti strutturali
-
-Gli invarianti seguenti sono proprietà della **forma dell'albero PET**, non del valore numerico.
-Sono stati verificati empiricamente fino a N = 10000.
-
-### Invariante 1 — Linearità
-
-Le seguenti condizioni sono equivalenti:
-
-- `is_linear(tree)` è vero
-- `max_branching(tree) == 1`
-- `leaf_count(tree) == 1`
-
-Un PET lineare è una catena pura: ogni livello ha esattamente un nodo.
-
-Esempi: `2, 3, 4, 8, 16, 32, 81, 256` — ma non `64 = 2^(2·3)`.
-
-### Invariante 2 — Uniformità per livello
-
-Le seguenti condizioni sono equivalenti:
-
-- `is_level_uniform(tree)` è vero
-- `structural_asymmetry(tree) == 0.0`
-- tutti i valori di `branch_profile(tree)` sono uguali
-
-Un PET uniforme ha lo stesso numero di nodi a ogni livello.
-`is_linear` è il caso speciale con `max_branching == 1`.
-
-Esempi uniformi non lineari: `36 = 2^2·3^2` con profilo `[2,2]`, `72 = 2^3·3^2` con profilo `[2,2]`.
-
-### Invariante 3 — Squarefreeness
-
-Le seguenti condizioni sono equivalenti:
-
-- `is_squarefree(tree)` è vero
-- `recursive_mass(tree) == 0`
-- tutti i nodi sono al livello radice (nessun sottoalbero esponenziale)
-
-Un PET squarefree è un albero piatto: tutti gli esponenti della fattorizzazione sono `1`.
-
-Esempi: `2, 3, 6, 30, 42` — ma non `4 = 2^2`, `12 = 2^2·3`.
-
-### Invariante 4 — Espansione
-
-Le seguenti condizioni sono equivalenti:
-
-- `is_expanding(tree)` è vero
-- `branch_profile(tree)[-1] > branch_profile(tree)[0]`
-- almeno un esponente nella fattorizzazione è composto con due o più fattori primi distinti
-
-Un PET espandente si allarga scendendo — proprietà rara (12 casi su 10000).
-
-Esempi: `64 = 2^6` (esponente `6=2·3`), `576 = 2^6·3^2`, `729 = 3^6`.
-
-### Relazioni tra invarianti
-
-- `is_linear` implica `is_level_uniform` (ma non viceversa)
-- `is_squarefree` e `is_linear` sono indipendenti (es. `6` è squarefree ma non lineare; `4` è lineare ma non squarefree)
-- `is_expanding` è incompatibile con `is_linear` (un albero espandente non può essere una catena)
-- `is_squarefree` è incompatibile con `is_expanding` (se tutti gli esponenti sono `1`, nessun sottoalbero può ramificarsi)
-
-### Nota
-
-Questi invarianti emergono dalla struttura ricorsiva di PET e non hanno
-un corrispondente diretto nella fattorizzazione prima classica.
-
-## Metriche analitiche
-
-PET distingue tra metriche canoniche, metriche extended/research e classificatori derivati.
-
-Le metriche canoniche sono definite in `src/pet/core.py`, esposte da
-`metrics_dict(tree)`, mostrate da `pet metrics`, e incluse nei record JSONL
-prodotti da `pet scan`.
-
-Le metriche extended/research e i classificatori derivati sono definiti in
-`src/pet/metrics.py`. Possono essere utili per analisi esplorativa, ma non fanno
-automaticamente parte del contratto canonico di PET-Metrics.
-
-### Metriche canoniche
-
-Il set canonico corrente è:
-
-- `node_count(tree)` — numero totale di nodi PET
-- `leaf_count(tree)` — numero di foglie, cioè nodi con esponente `1`
-- `height(tree)` — altezza del PET in livelli
-- `max_branching(tree)` — massima ampiezza locale osservata nell'albero
-- `branch_profile(tree)` — numero di nodi per livello
-- `recursive_mass(tree)` — numero di nodi non appartenenti al livello radice
-- `average_leaf_depth(tree)` — profondità media delle foglie, con radice a profondità `1`
-- `leaf_depth_variance(tree)` — varianza popolazionale delle profondità delle foglie
-
-Queste metriche sono parte del contratto stabile di `pet metrics` e dello
-schema JSONL corrente.
-
-### Admission rule for canonical metrics
-
-A metric may be added to the canonical PET metric set only if all of the following hold:
-
-1. **Deterministic on canonical PETs**  
-   The metric must be a pure function of a valid canonical PET and must always return the same value for the same tree.
-
-2. **Independent from incidental representation details**  
-   The metric must not depend on serialization choices, implementation accidents, or traversal artifacts that do not carry structural meaning.
-
-3. **Semantically explicit**  
-   Its definition must be precise, compact, and understandable without relying on implementation-specific behavior.
-
-4. **Non-redundant**  
-   It must add structurally meaningful information that is not already captured well enough by the existing canonical metrics.
-
-5. **Empirically justified**  
-   It must help distinguish real observed PET families or notable cases, not only artificially constructed examples.
-
-6. **Generally useful**  
-   It must describe a recurring structural property of PETs, rather than a niche, ad hoc, or research-only curiosity.
-
-7. **Canonical-output worthy**  
-   Its value must be important enough to appear by default in the canonical metrics block, CLI metrics output, and scan JSONL records.
-
-Metrics that are informative but fail one or more of these criteria should remain in extended, research, or reporting layers rather than in the canonical metric set.
-
-### Metriche extended / research
-
-Le metriche seguenti sono disponibili per analisi esplorativa, ma non fanno parte
-del set canonico corrente:
-
-- `verticality_ratio(tree)` — rapporto `height / node_count`. Vale `1.0` per catene pure, tende a `0` per alberi piatti.
-- `structural_asymmetry(tree)` — deviazione standard del `branch_profile`. Vale `0.0` per alberi uniformi per livello.
-- `subtree_mixing_score(tree)` — score sperimentale di mixing locale tra sottoforme.
-- `leaf_ratio(tree)` — rapporto `leaf_count / node_count` come `Fraction` esatta.
-
-### Classificatori booleani
-
-I classificatori seguenti sono proprietà derivate da PET canonici validi:
-
-- `is_linear(tree)` — `True` se il PET è una catena pura (`max_branching == 1`).
-- `is_level_uniform(tree)` — `True` se tutti i livelli hanno lo stesso numero di nodi.
-- `is_squarefree(tree)` — `True` se `recursive_mass == 0` (tutti gli esponenti sono `1`).
-- `is_expanding(tree)` — `True` se l'ultimo livello ha più nodi del primo.
-- `has_root_mixed_simple_pattern(tree)` — helper research per uno specifico pattern root-level.
-
-### Classificatore morfologico
-
-`profile_shape(tree)` restituisce una stringa che descrive la forma del profilo:
-- `'point'` — albero di altezza 1 (numero squarefree o primo)
-- `'linear'` — catena pura, tutti i livelli con un solo nodo
-- `'normal'` — forma tipica, profilo non crescente
-- `'expanding'` — ultimo livello più largo del primo (raro: ~12 casi su 10000)
-- `'bell'` — picco interno al profilo, né al primo né all'ultimo livello (rarissimo: ~6 casi su 100000)
-
-### Osservazioni sui valori di leaf_ratio
-
-Il rapporto `leaf_count / node_count` appartiene a un insieme sparso e discreto.
-Famiglie identificate fino a N = 500000:
-
-- `1/k` — catene di altezza `k` (profilo `[1,1,...,1]`)
-- `k/(k+1)` — profilo `[k,1]`, converge a `1`
-- `k/(2k+1)` — profilo `[k,k,1]`, converge a `1/2`
-
-## Famiglie di leaf_ratio
-
-Il rapporto `leaf_count / node_count` appartiene a un insieme sparso e discreto di frazioni razionali.
-Le famiglie identificate seguono la forma generale `k / (p·k + 1)` dove `p >= 0`.
-
-### Famiglie accessibili (primi esempi raggiungibili)
-
-| p | formula | esempi di ratio | primo esempio | profilo tipico |
-|---|---|---|---|---|
-| 0 | `k/1` = `1` | `1` | N=2 | `[k]` |
-| 1 | `k/(k+1)` | `1/2, 2/3, 3/4, ...` | N=4 | `[k, 1]` |
-| 2 | `k/(2k+1)` | `1/3, 2/5, 3/7, ...` | N=16 | `[k, k, 1]` |
-| 3 | `k/(3k+1)` | `1/4, 2/7, ...` | N=65536 | `[k, k, k, 1]` |
-
-### Famiglie inaccessibili (primi esempi astronomici)
-
-Per `p >= 4`, le famiglie `k/(pk+1)` esistono teoricamente ma i loro primi esempi
-richiedono numeri della forma `2^(2^(2^...))` con profondità crescente —
-irraggiungibili per esplorazione diretta.
-
-Il primo esempio per `p=3, k=1` è già `N = 65536 = 2^16`.
-Il primo esempio per `p=4, k=1` richiederebbe `2^(2^(2^(2^(2^2)))) = 2^(2^65536)`,
-un numero con decine di migliaia di cifre.
-
-### Famiglie ibride
-
-Oltre alla serie principale, esistono ratio che non seguono la forma `k/(pk+1)`:
-
-| ratio | profilo | primo esempio |
-|---|---|---|
-| `3/8` | `[3, 3, 2]` | N=32400 |
-| `5/9` | `[5, 3, 1]` | N=277200 |
-| `4/7` | `[4, 2, 1]` | N=5040 |
-| `3/5` | `[3, 2]` | N=180 |
-| `5/8` | `[5, 2, 1]` | N=55440 |
-| `5/7` | `[5, 2]` | N=13860 |
-
-Questi ratio emergono da strutture miste in cui i livelli non sono uniformi.
-La loro classificazione completa è ancora aperta.
-
-### Nota
-La scarsità dei ratio accessibili è una conseguenza diretta della struttura ricorsiva di PET: ogni nuovo livello di profondità richiede esponenti che sono a loro volta numeri strutturalmente complessi, il cui primo esempio cresce in modo superesponenziale.
-
-## Confronto con famiglie aritmetiche note
-
-Le metriche PET sono state calcolate su quattro famiglie aritmetiche classiche per valutare il potere discriminante di PET rispetto alla teoria dei numeri tradizionale.
-
-### Primorials (2, 6, 30, 210, 2310, ...)
-
-Firma PET perfettamente uniforme:
-- `shape = point` per tutti
-- `height = 1`, `asym = 0.0`, `ratio = 1`
-
-Questo riflette il fatto che i primorials sono squarefree per costruzione (prodotto di primi distinti con esponente 1).
-PET li identifica istantaneamente, ma questo è equivalente al già noto criterio squarefree.
-
-### Numeri di Hamming (5-smooth)
-
-Nessuna firma PET coerente — mescola `point`, `linear`, `normal`.
-PET non li separa come famiglia distinta.
-
-### Numeri altamente composti
-
-Quasi tutti `shape = normal`, con `asym` e `ratio` crescenti all'aumentare di N.
-PET cattura la complessità strutturale crescente ma non li discrimina nettamente.
-
-### Numeri perfetti
-
-Troppo pochi per concludere (solo 4 noti e calcolabili).
-Nessuna firma PET comune identificata.
-
-### Conclusione
-
-PET separa nettamente solo i Primorials — ma questo coincide con la proprietà squarefree già nota. Per le altre famiglie, PET descrive la morfologia ma non offre discriminazione aggiuntiva rispetto alla fattorizzazione classica.
-
-Il valore di PET resta negli invarianti strutturali scoperti e nella rappresentazione ricorsiva canonica. PET-Algebra potrebbe essere il livello dove emerge potere classificatorio genuinamente nuovo.
-
-## PET-Algebra
-
-PET-Algebra studia le operazioni strutturali sui PET canonici.
-Tutte le operazioni producono PET canonici che rappresentano interi.
-Il codice vive in `src/pet/algebra.py`.
-
-### Operatori compositi: PET-MERGE `⊕` e PET-UNMERGE `⊖`
-
-Lo strumento di riscrittura value-level storico non fa parte di questa
-specifica PET-Base né definisce semantica PET canonica. Il solo contratto
-normativo PET/PEG 2.0 per i futuri operatori strutturali è
-[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
-
-PET può inoltre descrivere operatori compositi tra due strutture.
-
-`PET-MERGE` (`⊕`), leggibile in italiano come **somma PET**, sovrappone due
-strutture PET sommando le molteplicità dei componenti comuni.
-
-Esempio:
+The normative grammar is:
 
 ```text
-a^2 * b ⊕ b * c = a^2 * b^2 * c
+PETRA     ::= Leaf | Container
+Leaf      ::= 1
+Container ::= Product(Term+)
+Term      ::= Root ^ PETRA
 ```
 
-`PET-UNMERGE` (`⊖`), leggibile come **sottrazione PET**, rimuove da una
-struttura PET il contributo di un'altra struttura, sottraendo le molteplicità.
-È definita solo quando la struttura sottratta è contenuta nella struttura di
-partenza; altrimenti il risultato è non definito.
+`Container` owns an ordered, non-empty sequence of visible `Term` objects.
+`Term` owns exactly one root identity and exactly one exponent relation to a
+complete `PETRA` object.  `Leaf` is the terminal PETRA object.  It is not a
+container, a term, a root, or an empty product.
 
-Esempio:
+When a term's exponent is `Leaf`, its canonical exponent-one relation is
+implicit in compact notation.  The relation nevertheless owns a latent slot,
+written `^`, at which that `Leaf` can be materialized into depth.  Thus `^`
+is a relation target, not a node and not the numeric value one.
+
+An empty container is never a valid PETRA shape.  Any rewrite that removes
+the last term from a container replaces that container with `Leaf`; this is the
+canonical leaf restoration rule.
+
+### 1.2 Root identities and canonical order
+
+`Root` is an opaque, nonnumeric **positional identity**.  It is neither a
+prime label nor an integer.  Within one container in one shape state, its
+canonical spellings are the ordinal ranks `r0`, `r1`, ..., in visible-term
+order.  They are scoped to that container and are recomputed after every
+successful rewrite.  Thus `r0` is not a persistent instance identity: a term
+that was `r1` before a sibling deletion can be `r0` afterwards, and a newly
+appended term receives its rank only after canonicalization.
+
+Here, “opaque identity” means that the rank is not interpreted as a number,
+prime label, allocation token, or history-bearing object identifier.  It does
+not mean immutable identity across shape states.  A root rank identifies a
+term position only together with its containing state and container.  This is
+the same state-scoped positional basis as an address, so rank recomputation
+can retarget an old textual address without contradicting root opacity.
+
+The canonical child order is the sequence of those ranks.  A new term is
+inserted after the last visible term of its selected container; all ranks are
+then assigned from zero in sequence.  Deletion closes the sequence and
+reassigns ranks.  This rule is deterministic and depends only on the input
+shape and invocation.  It does not depend on object allocation order,
+traversal order, insertion history external to the current state, prime
+labels, or numeric magnitude.
+
+Root identities are unique within their container.  Multiple leaf terms are
+allowed: they are distinct terms because their root identities differ.  This
+is the only duplicate constraint needed by these operators.  In particular,
+"canonical leaf" means `r^1` with its exponent relation to `Leaf`; it does
+not mean a chosen prime.
+
+### 1.3 Shape notation and illustrative numeric notation
+
+This document writes a container as `C(r0^P0, r1^P1, ...)`.  For example,
+the anonymous shape illustrated by the familiar `2^2` is:
 
 ```text
-a^2 * b^2 * c ⊖ b * c = a^2 * b
+A = C(r0^C(r0^1))
 ```
 
-Questi nomi non indicano somma o sottrazione aritmetica dei valori interi:
-indicano somma e sottrazione delle molteplicità strutturali PET.
-
-### PET unit
-
-Gli operatori compositi introducono naturalmente un elemento neutro strutturale:
+The familiar expression is only a post-rewrite illustration obtained by a
+separate canonical display/projection layer.  It is never an operator input
+or target-selection mechanism.  Under that illustrative mapping, the shapes
+used below display as follows:
 
 ```text
-PET unit = 1
-generator = 1
-signature = []
+C(r0^C(r0^1), r1^1)          -> 2^2 * 3
+C(r0^C(r0^1, r1^1))          -> 2^(2 * 3)
+C(r0^C(r0^C(r0^1)))          -> 2^(2^2)
 ```
 
-Proprietà fondamentali:
+The examples do not assert that these numbers are chosen before the shape
+rewrite, nor that the root identities are prime labels.
+
+### 1.4 Canonical validation, normalization, and equality
+
+A PETRA shape is canonical when:
+
+- every object conforms to the grammar in section 1.1;
+- every container is non-empty;
+- every visible term occupies exactly one position in its container;
+- root ranks are exactly `r0`, `r1`, ..., in visible order;
+- every exponent relation targets one complete PETRA object;
+- no prime label, represented integer, allocation identity, or rewrite history
+  participates in structural identity.
+
+Canonical normalization assigns root ranks from visible order recursively. It
+does not choose primes, calculate values, reorder terms according to numeric
+magnitude, or reconstruct a shape from an integer.
+
+Canonical equality is recursive shape equality:
+
+- `Leaf` equals only `Leaf`;
+- two containers are equal when their ordered term sequences have equal length
+  and corresponding exponent targets are canonically equal;
+- root ranks follow from those positions and do not provide persistent identity
+  across shape states.
+
+Every public operator invocation receives an already valid canonical shape.
+Validation occurs before address parsing or resolution. Implementations must not
+silently normalize a malformed or non-canonical input before resolving its
+target.
+
+After a successful rewrite, the affected shape is normalized before witnesses
+and address effects are finalized. A failed rewrite preserves the exact
+`before_shape`.
+
+## 2. Positional structural addresses
+
+### 2.1 Syntax
+
+The normative serialized address grammar is:
 
 ```text
-P ⊕ 1 = P
-P ⊖ P = 1
+anchor-address ::= "@/"
+term-address   ::= "@/" index ("/" index)*
+slot-address   ::= term-address "/^"
+index          ::= "0" | nonzero-digit digit*
 ```
 
-`1` non è un PET ordinario secondo `encode(n)` storico, che accetta `n >= 2`,
-ma funziona come unità algebrica del layer composito.
-
-### Leggi osservate sui generatori flat
-
-Per i generatori flat primoriali:
-
-```text
-Flat(1) = 2
-Flat(2) = 6
-Flat(3) = 30
-Flat(4) = 210
-...
-```
-
-`PET-UNMERGE` riduce la massa strutturale quando il lato destro è contenuto:
-
-```text
-Flat(m) ⊖ Flat(n) = Flat(m-n), se m >= n
-```
-
-Se `m = n`, il risultato è la PET unit `1`.
-Se `m < n`, il risultato è non definito.
-
-`PET-MERGE` sovrappone le foglie: le foglie condivise aumentano molteplicità,
-mentre le foglie eccedenti restano semplici. Per esempio:
-
-```text
-30 ⊕ 6 = 180
-signature = [[], [[]], [[]]]
-```
-
-ossia:
-
-```text
-Flat(3) ⊕ Flat(2)
-= una foglia semplice + due foglie elevate
-```
-
-Queste proprietà sono attualmente cristallizzate nei test esplorativi
-`tests/test_pet_composite_operators.py`.
-
-### Operazione: graft
-
-`graft(tree, scion)` sostituisce ogni foglia (`None`) di `tree` con `scion`.
-
-Ogni nodo di `tree` il cui esponente è `None` (esponente = 1) riceve
-`scion` come nuovo sottoalbero esponenziale.
-
-**Esempio:**
-```
-PET(6)  = [(2,•),(3,•)]
-PET(2)  = [(2,•)]
-graft(PET(6), PET(2)) = [(2,[(2,•)]),(3,[(2,•)])] = PET(36)
-```
-
-### Proprietà algebriche di graft
-
-| Proprietà | Risultato |
-|---|---|
-| Commutatività | ✗ |
-| Associatività | ✓ |
-| Elemento identità | ✗ |
-| Elemento assorbente | ✗ |
-| Idempotenza | ✗ |
-
-`graft` è un'operazione **non commutativa ma associativa**.
-
-### Teorema 1 — graft su squarefree
-
-Per ogni intero `n` squarefree e ogni intero `k >= 2`:
-
-> `decode(graft(PET(n), PET(k))) = n^k`
-
-Innestare `PET(k)` su un PET squarefree equivale a elevare `n` alla potenza `k`.
-
-### Teorema 2 — autoinnesto su squarefree
-
-Per ogni intero `n` squarefree:
-
-> `decode(graft(PET(n), PET(n))) = n^n`
-
-L'autoinnesto di un PET squarefree produce `n^n`.
-
-### Corollario del Teorema 2 — graft iterato
-
-Definiamo il graft iterato `g^k(n)` come:
-- `g^0(n) = n`
-- `g^k(n) = graft(g^(k-1)(n), PET(n))`
-
-Per ogni `n` squarefree:
-
-> `decode(g^k(n)) = n^(n^(n^...))` — torre di potenze di altezza `k+1`
-
-Esempi per `n=2`:
-- `g^0(2) = 2`
-- `g^1(2) = 4 = 2^2`
-- `g^2(2) = 16 = 2^(2^2)`
-
-### Teorema 3 — graft ricorsivo (caso generale)
-
-Per ogni `n >= 2` e `k >= 2`:
-
-> `decode(graft(PET(n), PET(k))) = prod(p_i ^ f(e_i, k))`
-
-dove `f(e, k) = k` se `e = 1`, altrimenti `f(e, k) = decode(graft(PET(e), PET(k)))`.
-
-In altre parole: `graft(PET(n), PET(k))` eleva ricorsivamente ogni esponente
-nella fattorizzazione di `n` alla potenza `k`.
-
-I Teoremi 1 e 2 sono casi speciali:
-- quando `n` è squarefree, tutti gli esponenti sono `1` → `f(1,k) = k` → `decode = n^k`
-- quando `k = n` squarefree → `decode = n^n`
-
-### Nota
-
-Per `n` non squarefree il risultato di `graft` è sempre un intero valido, ma la corrispondenza con `n^k` o `n^n` non vale in generale.
-La struttura algebrica per i non-squarefree è ancora aperta.
-
-### Operazione: distance
-
-`distance(a, b)` misura la distanza strutturale tra due PET in termini di **coincidenza di primi**.
-
-- primi presenti in un solo albero contribuiscono con il loro intero node count
-- primi presenti in entrambi contribuiscono con la distanza ricorsiva tra i sottoalberi esponenziali
-- due foglie (`None`) hanno distanza `0`
-- `distance(a, a) = 0` per ogni PET
-
-### Operazione: structural_distance
-
-`structural_distance(a, b)` misura la distanza tra due PET ignorando i valori dei primi — confronta solo la **forma** dell'albero.
-
-- due PET hanno `structural_distance = 0` se e solo se sono isomorfi come alberi ordinati
-- `PET(4) = [(2,[(2,•)])]` e `PET(9) = [(3,[(2,•)])]` hanno `structural_distance = 0`
-
-### Relazione tra le due distanze
-
-Le due metriche sono complementari — nessuna sussume l'altra:
-
-| caso | distance | structural_distance |
-|---|---|---|
-| PET(2) vs PET(3) | 2 | 0 |
-| PET(4) vs PET(9) | 4 | 0 |
-| PET(12) vs PET(18) | 2 | 0 |
-| PET(2) vs PET(30) | 2 | 2 |
-| PET(4) vs PET(12) | 1 | 3 |
-
-`distance` cattura la somiglianza aritmetica (quali primi condividono),
-`structural_distance` cattura la somiglianza morfologica (che forma hanno).
-
-### Proprietà metriche
-
-Entrambe le distanze soddisfano le proprietà di una metrica:
-- `d(a,a) = 0`
-- `d(a,b) = d(b,a)` — simmetria
-- `d(a,c) <= d(a,b) + d(b,c)` — disuguaglianza triangolare
-
-### Relazione tra le due distanze
-
-`dist >= sdist` nella quasi totalità dei casi. Le eccezioni si verificano quando un PET è **sottostruttura ricorsiva** dell'altro — al primo livello (un PET ha più primi) o in profondità (un esponente è esteso ricorsivamente).
-
-In questi casi `dist` è piccola (condividono quasi tutti i primi) ma `sdist` è grande (le forme sono molto diverse).
-
-### Indipendenza dalle metriche scalari
-
-Sia `dh(a,b) = |height(a) - height(b)|` e `dn(a,b) = |node_count(a) - node_count(b)|`.
-
-Esistono coppie con `dh=0` e `dn=0` ma `distance>0` o `structural_distance>0`:
-
-| A | B | dist | sdist | dh | dn |
-|---|---|---|---|---|---|
-| 2 | 3 | 2 | 0 | 0 | 0 |
-| 4 | 9 | 4 | 0 | 0 | 0 |
-| 12 | 18 | 2 | 0 | 0 | 0 |
-| 36 | 60 | 4 | 4 | 0 | 0 |
-| 36 | 72 | 2 | 0 | 0 | 0 |
-
-`distance` e `structural_distance` sono quindi metriche genuinamente nuove —
-non riducibili a combinazioni di metriche scalari preesistenti come `height` e `node_count`.
-
-## Enumerazione shape-first (proposta operativa)
-
-Per i workflow operativi orientati alla shape, il criterio numerico
-"generatore minimo" non basta sempre.
-In particolare, quando si vuole esplorare o materializzare shape con priorità
-strutturale, serve una corsia dedicata che non ordini i casi solo per valore
-numerico del witness.
-
-### Obiettivo
-
-Introdurre un comando CLI dedicato all'enumerazione shape-first:
-
-```bash
-pet shape-enumerate --max-mass N
-```
-
-Questo comando non ridefinisce PET-Base e non sostituisce `pet encode`.
-Lavora invece nel layer operativo/algebrico, dove interessa enumerare
-shape esatte canoniche e materializzarne un witness minimo compatibile.
-
-### Ordinamento canonico proposto
-
-Le shape enumerate entro il bound scelto devono essere ordinate con priorità
-lessicografica:
-
-1. `height` decrescente
-2. `root_width` crescente
-3. ordine canonico stabile della shape (`shape_key` o equivalente)
-
-Interpretazione operativa:
-
-- prima si privilegia la verticalità
-- solo dopo si minimizza la larghezza della root
-- solo infine si usa un tie-break strutturale stabile
-
-### Parametri minimi
-
-MVP proposto:
-
-```bash
-pet shape-enumerate --max-mass N [--json] [--limit K] [--with-pet]
-```
-
-Dove:
-
-- `--max-mass N` limita l'enumerazione alle shape con massa strutturale `<= N`
-- `--json` emette record machine-friendly
-- `--limit K` tronca il numero di shape restituite
-- `--with-pet` include anche il witness PET materializzato oltre a `gamma`
-
-### Campi di output minimi
-
-Ogni record dovrebbe esporre almeno:
-
-- `shape`
-- `mass`
-- `height`
-- `root_width`
-- `gamma`
-
-Facoltativamente:
-
-- `pet`
-
-### Esempio di output testuale
-
-```text
-shape 1
-mass: 3
-height: 3
-root_width: 1
-gamma: 16
-shape: (((),),)
-
-shape 2
-mass: 3
-height: 2
-root_width: 2
-gamma: 12
-shape: (((),), ())
-```
-
-### Esempio di output JSON
+`@/` is a semantic anchor for the top-level PETRA shape.  It is not a node,
+container, term, leaf, root, or relation.  A numeric segment selects one
+visible **term** in the current container's canonical child order.  To follow
+another segment, the selected term's exponent target must be a `Container`;
+the next segment selects a term in that exponent container.  A segment cannot
+select a container, a leaf object, a root identity, or an exponent relation.
+
+`^` identifies the exponent relation owned by the immediately preceding term.
+Whether that relation is its latent exponent-one slot is an operator target
+check, not address traversal: it is latent exactly when its current target is
+`Leaf`. For `A` above, `@/0/0/^` identifies the latent slot of the inner
+`r0^1` term. No prime label is involved.
+
+The expected target type completes resolution:
+
+| Operator target | Address form | Resolution result |
+| --- | --- | --- |
+| SPROUT root anchor | `@/` | semantic root anchor; the current root shape may be a `Container` or `Leaf` |
+| nested container | term address | selected term's exponent target, which must be a container |
+| leaf term | term address | selected term itself, which must have exponent `Leaf` |
+| exponent relation | slot address | selected term's exponent relation; its target is checked by the operator |
+
+For `SPROUT`, `@/` is the semantic root anchor in both default and explicit
+mode.  When the root shape is `Leaf`, either mode materializes it as
+`C(r0^1)`.  No term address projects a `Leaf` into a container.
+
+### 2.2 Resolution failures and shape-state scope
+
+Every invocation receives a valid canonical PETRA shape. Shape validation
+precedes address parsing and resolution. An invalid or non-canonical shape is
+outside this operator contract and must not be normalized implicitly: doing so
+before resolution could change which object a positional address selects.
+Canonical rank normalization occurs only after a successful rewrite. A failed
+invocation preserves the exact before-shape.
+
+Addresses belong to exactly one pre-rewrite shape state.  They must be parsed
+and resolved against that state before a rewrite starts.  The stable generic
+resolution reasons are:
+
+- `address-malformed`
+- `address-out-of-range`
+- `address-crosses-leaf`
+
+The following ordered pipeline assigns exactly one stable failure reason to
+every invocation; a later phase is never evaluated after an earlier failure.
+
+1. Validate the invocation envelope: it must use the invocation schema,
+   name one of the four operators, and contain exactly a valid `target` mode
+   and the fields required by that mode. Any violation is
+   `invocation-invalid`.
+2. For `target.mode: "explicit"`, parse the address. A grammar failure is
+   `address-malformed`.
+3. Traverse its numeric term segments in the pre-rewrite shape. A missing
+   selected term is `address-out-of-range`; an attempt to continue through a
+   selected term whose exponent is `Leaf` is `address-crosses-leaf`. A final
+   `^` identifies its owner relation whether that relation is latent or
+   materialized.
+4. Apply the selected operator's target-form and shape preconditions in the
+   operator-specific order stated below. These checks, including whether a
+   slot is latent, never emit a generic address reason.
+5. For `target.mode: "default"`, skip address phases 2–3 and select from the
+   operator's eligible pre-rewrite targets. If none exists, emit that
+   operator's stated `*-no-eligible-*` reason.
+
+Consequently, `address-kind-mismatch` and `slot-not-latent` are not reason
+identifiers in this contract. An explicit target of the wrong syntactic form
+or structural kind is reported by the applicable operator-specific reason;
+an explicit GRAFT slot whose exponent is already a container is
+`graft-slot-already-materialized`.
+
+After a successful rewrite, clients must resolve any address again.  A rewrite
+may create, destroy, invalidate, or retarget an address.  Canonical rank
+renumbering alone can retarget a positional address. Since those ranks are
+positional rather than persistent identities, a client must not infer that an
+old textual address denotes the same term, container, or relation in the
+result.
+
+`address_effects` in a result is descriptive rather than an identity promise:
+it records the target address used before the rewrite and any returned
+post-rewrite witness address.  Implementations may additionally classify
+tracked addresses as `stable`, `created`, `destroyed`, `retargeted`, or
+`invalid`; no classification makes the old address reusable without resolving
+it in the after-shape.
+
+## 3. Invocation and result serialization
+
+The normative machine-readable invocation is JSON with an explicit target
+mode. Omission is invalid; it never silently means a default. Invocation and
+result use distinct serialized schema values.
 
 ```json
 {
-  "mass": 3,
-  "height": 3,
-  "root_width": 1,
-  "gamma": 16,
-  "shape": [[[]]]
+  "schema": "petra.operator-invocation.v1",
+  "operator": "SPROUT",
+  "target": { "mode": "default" }
 }
 ```
 
-### Nota di ambito
-
-Questa proposta riguarda l'interfaccia operativa shape-first.
-Non modifica:
-
-- la definizione canonica di PET
-- la serializzazione JSON canonica di PET
-- l'uso di `pet encode/decode` per gli interi
-
-Serve solo a rendere esplicita una corsia CLI coerente con la policy:
-
-- prima altezza
-- poi larghezza della root
-- poi ordine canonico stabile
-
-## Clustering delle famiglie aritmetiche con PET-Algebra
-
-Le distanze `distance` e `structural_distance` sono state applicate a quattro famiglie
-aritmetiche classiche per misurare il potere discriminante di PET-Algebra.
-L'analisi è in due fasi: famiglie sovrapposte (come definite classicamente) e famiglie
-disgiunte (ogni elemento assegnato alla famiglia più specifica).
-
-### Famiglie analizzate
-
-- **Primorials**: 2, 6, 30, 210, 2310, 30030, 510510
-- **Hamming** (5-smooth): elementi con fattori solo in {2,3,5}, fino a 256
-- **HighlyComposite**: numeri con più divisori di qualsiasi intero precedente, fino a 720720
-- **Perfect**: 6, 28, 496, 8128
-
-### Famiglie disgiunte
-
-Per l'analisi pulita ogni elemento è assegnato alla famiglia più specifica che lo contiene,
-con priorità: Perfect > Primorials > Hamming > HighlyComposite.
-
-Elementi rimossi per disgiunzione:
-
-| Famiglia | orig | kept | removed |
-|---|---|---|---|
-| Perfect | 4 | 4 | — |
-| Primorials | 7 | 6 | 6 |
-| Hamming | 30 | 28 | 2, 6 |
-| HighlyComposite | 37 | 26 | 2, 4, 6, 12, 24, 36, 48, 60, 120, 180, 240 |
-
-### Risultati intra-famiglia
-
-| Famiglia | dist diam | dist mean | sdist diam | sdist mean |
-|---|---|---|---|---|
-| Perfect | 4.00 | 3.50 | 2.00 | 1.33 |
-| Primorials | 6.00 | 2.67 | 6.00 | 2.67 |
-| Hamming | 7.00 | 3.60 | 6.00 | 2.49 |
-| HighlyComposite | 7.00 | 3.78 | 9.00 | 3.33 |
-
-Osservazioni:
-
-- **Perfect**: le due metriche divergono nettamente (dist diam=4, sdist diam=2). I numeri
-  perfetti hanno strutture morfologicamente simili — forma 2^(p-1)·(2^p-1) — ma usano
-  primi diversi. `structural_distance` cattura questa somiglianza, `distance` no.
-- **Primorials**: le due metriche coincidono esattamente. I primorials sono squarefree,
-  quindi i loro PET sono piatti — non c'è struttura ricorsiva da distinguere. Le due
-  metriche collassano sulla stessa cosa: contare le differenze tra insiemi di primi.
-- **HighlyComposite**: `sdist diam=9` è il più alto del dataset. La famiglia è
-  strutturalmente eterogenea — contiene sia alberi piatti che alberi profondi.
-
-### Outlier strutturale: 720720
-
-720720 = 2⁴·3²·5·7·11·13 è l'elemento più isolato morfologicamente dell'intero dataset
-HC (sdist min=4.00, mean=6.40 rispetto agli altri HC).
-
-```
-PET(720720):
-  node_count=9, leaf_count=6, height=3
-  max_branching=6, branch_profile=[6,2,1], recursive_mass=3
-```
-
-Combina la massima larghezza radice (6 rami) con la massima profondità (height=3)
-tra tutti gli HC. Nessun altro elemento HC ha questa combinazione.
-
-### Risultati inter-famiglia (famiglie disgiunte)
-
-#### distance
-
-| Famiglia A | Famiglia B | min | mean | max |
-|---|---|---|---|---|
-| Perfect | Primorials | 1.00 | 4.83 | 9.00 |
-| Perfect | Hamming | 1.00 | 3.75 | 8.00 |
-| Perfect | HighlyComposite | **3.00** | 6.15 | 10.00 |
-| Primorials | Hamming | 1.00 | 4.31 | 8.00 |
-| Primorials | HighlyComposite | 1.00 | 4.40 | 8.00 |
-| Hamming | HighlyComposite | 1.00 | 5.59 | 9.00 |
-
-#### structural_distance
-
-| Famiglia A | Famiglia B | min | mean | max |
-|---|---|---|---|---|
-| Perfect | Primorials | 1.00 | 3.67 | 7.00 |
-| Perfect | Hamming | 0.00 | 2.31 | 5.00 |
-| Perfect | HighlyComposite | **2.00** | 5.81 | 9.00 |
-| Primorials | Hamming | 1.00 | 4.21 | 8.00 |
-| Primorials | HighlyComposite | 1.00 | 4.28 | 8.00 |
-| Hamming | HighlyComposite | 0.00 | 6.26 | 10.00 |
-
-### Separabilità
-
-Nessuna coppia di famiglie risulta separata nel senso metrico forte
-(`gap_inter_min > max_intra_diam`). Il gap migliore è Perfect vs HighlyComposite
-con `distance` (gap=3.00, max_intra=7.00).
-
-La non-separazione riflette il fatto che queste famiglie si sovrappongono
-strutturalmente. PET le distingue **in media** (le mean inter sono sistematicamente
-più alte delle mean intra) ma non ai bordi.
-
-### Coppia più distinguibile
-
-**Perfect vs HighlyComposite** è la coppia meglio separata da PET:
-- `distance` gap=3.00 — i numeri perfetti e gli HC esclusivi condividono pochissimi primi
-- `structural_distance` gap=2.00 — sono anche morfologicamente distanti
-
-Ha senso strutturalmente: i numeri perfetti hanno forma rigida 2^(p-1)·(2^p-1),
-gli HC grandi sono alberi larghi e complessi senza schema fisso.
-
-### Conclusione
-
-PET-Algebra non separa nettamente le quattro famiglie nel senso metrico forte,
-ma cattura differenze reali e misurabili. Il potere discriminante è presente
-**in media** ma non abbastanza concentrato da produrre separazione netta ai bordi.
-
-Gli strumenti di analisi sono ora sotto `tools/research/`, in particolare
-`tools/research/cluster_families.py` per le famiglie originali.
-
-Per le famiglie disgiunte, il percorso canonico resta `pet families benchmark-disjoint`;
-il wrapper compatibile resta disponibile come `tools/cluster_families_disjoint.py`.
-
-## JSONL scan record schema (v2)
-
-The `pet scan` command produces one JSON object per line (JSONL).
-Each line represents one integer `n >= 2` together with its canonical PET
-encoding and structural analysis data.
-
-### Record model
-
-A scan record in schema v2 has the following top-level structure:
+An explicit target is:
 
 ```json
 {
-  "schema_version": 2,
-  "n": 72,
-  "pet": [
-    {"p": 2, "e": [{"p": 3, "e": null}]},
-    {"p": 3, "e": [{"p": 2, "e": null}]}
-  ],
-  "metrics": {
-    "node_count": 4,
-    "leaf_count": 2,
-    "height": 2,
-    "max_branching": 2,
-    "branch_profile": [2, 2],
-    "recursive_mass": 2,
-    "average_leaf_depth": 2.0,
-    "leaf_depth_variance": 0.0
-  },
-  "meta": {
-    "pet_format": "canonical-json"
-  }
+  "schema": "petra.operator-invocation.v1",
+  "operator": "GRAFT",
+  "target": { "mode": "explicit", "address": "@/0/0/^" }
 }
 ```
 
-### Required top-level fields
+The human-readable forms are `SPROUT`, `SHED`, `GRAFT`, and `PRUNE` for a
+default, and `OPERATOR @/…` for an explicit target, for example
+`GRAFT @/0/0/^`.  `@/`, positional segments, and `^` are rendered exactly as
+above; implementations must not translate them into prime-label paths.
 
-- `schema_version`: integer schema version for compatibility tracking
-- `n`: represented integer, with `n >= 2`
-- `pet`: canonical PET JSON representation
-- `metrics`: required structural metrics object
-
-### Optional top-level fields
-
-- `labels`: derived structural classifiers
-- `meta`: descriptive non-structural metadata
-
-### PET field
-
-`pet` stores the canonical machine-facing PET JSON representation.
-
-A PET JSON value is:
-
-- a non-empty list
-- of objects with exactly the keys `p` and `e`
-- where `p` is a prime integer
-- and `e` is either `null` (for exponent `1`) or another PET JSON value
-
-This is the only normative structural representation in JSONL scan output.
-Human-oriented renderings are out of scope for the dataset schema.
-
-### Metrics field
-
-The `metrics` object contains these required fields in schema v2:
-
-- `node_count`: total number of PET nodes
-- `leaf_count`: number of leaves (`e = null`)
-- `height`: PET height in levels
-- `max_branching`: maximum width at any local node set
-- `branch_profile`: number of nodes per depth level
-- `recursive_mass`: number of non-root nodes
-- `average_leaf_depth`: arithmetic mean of leaf depths, with root depth = 1
-- `leaf_depth_variance`: population variance of leaf depths
-
-All metric fields above are mandatory in schema v2.
-
-### Labels field
-
-If present, `labels` contains derived structural classifiers.
-
-Schema v2 reserves the following label names:
-
-- `is_linear`
-- `is_level_uniform`
-- `is_squarefree`
-- `is_expanding`
-- `profile_shape`
-
-These fields are derived convenience values, not the source of truth for PET structure.
-
-### Meta field
-
-If present, `meta` contains descriptive metadata about record encoding.
-
-Schema v2 defines:
-
-- `pet_format`: currently `"canonical-json"`
-
-Arithmetic metadata may be added later, but it is not part of the required base schema.
-
-### Stability and future evolution
-
-Schema v2 guarantees the naming and meaning of all required fields above.
-
-Compatibility rules:
-
-- new optional fields may be added without changing `schema_version`
-- removing or renaming required fields requires a new schema version
-- changing the meaning of a required field requires a new schema version
-- downstream consumers should ignore unknown optional fields
-
-### Example JSONL line
-
-```json
-{"schema_version":2,"n":72,"pet":[{"p":2,"e":[{"p":3,"e":null}]},{"p":3,"e":[{"p":2,"e":null}]}],"metrics":{"node_count":4,"leaf_count":2,"height":2,"max_branching":2,"branch_profile":[2,2],"recursive_mass":2,"average_leaf_depth":2.0,"leaf_depth_variance":0.0},"meta":{"pet_format":"canonical-json"}}
-```
-
-## Triage sperimentale: decimal rigid border
-
-Questa sezione documenta un comportamento sperimentale della pipeline di triage.
-Non fa parte della rappresentazione canonica PET e non modifica la semantica di
-`PET(N)`.
-
-### Preflight decimale
-
-La pipeline `tools/pet_triage_pipeline.sh` esegue un preflight leggero prima della
-diagnostica PET completa.
-
-Il preflight analizza la rappresentazione decimale di `N` e misura se contiene
-blocchi rigidi di `0`/`9` con transizioni forti tra blocchi. Questi casi possono
-rendere costosa la costruzione della firma PET completa o della race locale.
-
-Campi principali:
-
-- `decimal_rigid_border_score`
-- `decimal_rigid_border_hint`
-
-La regola sperimentale corrente è:
+A successful result has at least the exact serialized schema field shown:
 
 ```text
-decimal_rigid_border_hint = yes
-when digits >= 18 and decimal_rigid_border_score >= 0.28
+schema: "petra.operator-result.v1", status: "ok", operator, invocation_target, resolved_target,
+before_shape, after_shape, address_effects, reason: "<op>-applied"
 ```
 
-Questo hint non significa che `N` sia difficile da fattorizzare. Significa solo
-che la diagnostica PET completa può essere costosa per quella forma decimale.
+For a successful result:
 
-### Guard mode
+- `operator` is the normalized operator name;
+- `invocation_target` is the normalized default or explicit target from the
+  invocation, before target selection or resolution;
+- `resolved_target` identifies the selected pre-rewrite structural object,
+  relation, or semantic root anchor, including its structural kind and
+  pre-rewrite address when it has one;
+- `address_effects` records the resolved pre-rewrite target and exactly one
+  post-rewrite witness address. The witness identifies the appended leaf for
+  SPROUT, the surviving parent container target for SHED, the created terminal
+  leaf for GRAFT, or the restored latent slot for PRUNE. It is resolved in the
+  after-shape and is not an assertion that any old positional address retained
+  its identity.
 
-La pipeline supporta una modalità di guardia opt-in:
+The SHED witness uses `@/` when the surviving parent is the root container.
+For a surviving nested exponent container it uses the address of the owning
+term whose exponent relation targets that container. If SHED collapses its
+parent container to `Leaf`, the witness identifies the semantic root anchor
+or owning term through which SPROUT can restore the one-leaf container.
 
-```bash
-tools/pet_triage_pipeline.sh N --route-only --rigid-border-guard
-```
-
-Se il preflight produce `decimal_rigid_border_hint = yes`, la pipeline si ferma
-prima della race PET:
+A failed result has at least the exact serialized schema field shown:
 
 ```text
-preflight_guard_status = stopped
-preflight_guard_kind = decimal-rigid-border
-reason = decimal rigid border detected; skipping PET race diagnostic
-preflight_guard_suggested_next = use shallow decimal-rigid route or rerun without --rigid-border-guard to force PET race
+schema: "petra.operator-result.v1", status: "failed", operator, invocation_target, before_shape,
+reason: "<stable-reason-id>"
 ```
 
-Questa modalità evita timeout o elaborazioni lunghe quando il preflight ha già
-identificato una forma decimale rigida.
+It has no `after_shape`, `resolved_target`, or `address_effects`. `operator` is
+the normalized operator name, or `null` when envelope validation cannot
+normalize one. `invocation_target` is the normalized target object, or `null`
+when envelope validation cannot normalize one. An implementation may retain
+the raw invocation in an additional diagnostic field, but it must not affect
+the stable reason.
 
-### Shallow route mode
+The final concrete JSON representation of resolved targets and address effects
+is deferred to the canonical PETRA serialization phase; the semantics above
+are normative.
 
-La pipeline supporta anche una route shallow opt-in:
+The following matrix fixes the operator-specific reason after address parsing
+and traversal have succeeded:
 
-```bash
-tools/pet_triage_pipeline.sh N --route-only --decimal-rigid-shallow-route
-```
+| Operator | Resolved explicit form or state | Stable reason |
+| --- | --- | --- |
+| SPROUT | `@/` | accepted |
+| SPROUT | term whose exponent target is `Container` | accepted |
+| SPROUT | term whose exponent target is `Leaf`, or slot address | `sprout-target-not-container` |
+| SHED | term whose exponent target is `Leaf` | accepted |
+| SHED | `@/`, slot address, or term whose exponent target is `Container` | `shed-target-not-leaf` |
+| GRAFT | slot whose relation targets `Leaf` | accepted |
+| GRAFT | `@/` or term address | `graft-target-not-slot` |
+| GRAFT | slot whose relation targets `Container` | `graft-slot-already-materialized` |
+| PRUNE | eligible terminal-leaf term | accepted |
+| PRUNE | `@/`, slot address, or term whose exponent target is `Container` | `prune-target-not-terminal-leaf` |
+| PRUNE | leaf term directly in the root container | `prune-target-has-no-parent-relation` |
+| PRUNE | nested leaf term in a non-singleton exponent container | `prune-parent-not-singleton-exponent` |
 
-Se il preflight produce `decimal_rigid_border_hint = yes`, la pipeline evita la
-race PET completa e produce una route classica conservativa:
+A numeric projection may be an optional, non-normative derived field and must
+not participate in resolution or success/failure.
+
+## 4. Structural rewrites
+
+All rewrite rules below take a PETRA shape and the normalized invocation, resolve
+the stated target, perform exactly the stated structural replacement, and then
+canonicalize the affected container ranks.  Defaults are ergonomic target
+selection only; they are not a separate operator semantics.
+
+### 4.1 SPROUT — add width
+
+`SPROUT` inserts one canonical leaf term at the end of a selected container.
+
+| Item | Contract |
+| --- | --- |
+| Invocation | `SPROUT` with `target.mode` `default` or explicit container address |
+| Explicit target | `@/` selects the semantic root anchor; a term address projects to that term's materialized exponent container |
+| Default | the top-level insertion through `@/` |
+| Preconditions | a term-address target must project to a container; the root anchor accepts either a root container or root `Leaf` |
+| Explicit check order | accept `@/`; otherwise accept a term address only if its selected term's exponent is a `Container`; otherwise `sprout-target-not-container` |
+| Rewrite | append one canonical leaf term: `C(t0,...,tn) -> C(t0,...,tn,r(n+1)^1)`, then re-canonicalize ranks; root `Leaf -> C(r0^1)` for either root-anchor mode |
+| Success reason | `sprout-applied` |
+| Failure reasons | `invocation-invalid`, generic address reason, `sprout-target-not-container` |
+| Address effect | the new leaf has a returned witness address; all old positional addresses must still be re-resolved |
+
+The appended leaf receives the terminal rank after canonicalization, so no
+container-scoped positional identity is duplicated. It is not a newly chosen
+prime.
+
+Default example from `A`:
 
 ```text
-shallow_route_status = available
-shallow_route_kind = decimal-rigid-border-shallow-classic-probe
-suggested_command = python -m pet.cli opaque-probe N --trial-limit 20
+SPROUT
+C(r0^C(r0^1)) -> C(r0^C(r0^1), r1^1)
 ```
 
-Questa route non fattorizza `N` e non afferma che il probe classico troverà un
-fattore. È un handoff conservativo che evita il percorso PET costoso.
+Only after this rewrite may it be illustrated as `2^2 -> 2^2 * 3`.
 
-### Esempio
-
-Per:
+Root-leaf anchor example (both invocations have the same result):
 
 ```text
-9999999999000000000119
+SPROUT                 SPROUT @/
+Leaf -> C(r0^1)        Leaf -> C(r0^1)
 ```
 
-il preflight riporta:
+Explicit example:
 
 ```text
-decimal_rigid_border_score = 0.302
-decimal_rigid_border_hint = yes
+SPROUT @/0
+C(r0^C(r0^1)) -> C(r0^C(r0^1, r1^1))
 ```
 
-Con `--decimal-rigid-shallow-route`, la pipeline emette rapidamente:
+Here `@/0` selects the outer term and projects to its exponent container.  The
+post-rewrite illustrative notation is `2^(2 * 3)`.
+
+### 4.2 SHED — remove width
+
+`SHED` deletes one selected canonical leaf **term** from its parent container.
+The explicit target always denotes the leaf term, never its parent container.
+
+| Item | Contract |
+| --- | --- |
+| Invocation | `SHED` with `target.mode` `default` or explicit leaf-term address |
+| Explicit target | the term address must resolve to a direct leaf term (`Term(root, Leaf)`) |
+| Default | the last eligible direct leaf term of the top-level container in canonical order |
+| Preconditions | target is an eligible leaf term; its parent is a container |
+| Explicit check order | accept a term address only if its selected term's exponent is `Leaf`; otherwise `shed-target-not-leaf` |
+| Rewrite | remove that term from its parent; if no terms remain, replace the parent container with `Leaf` |
+| Success reason | `shed-applied` |
+| Failure reasons | `invocation-invalid`, generic address reason, `shed-target-not-leaf`, `shed-no-eligible-top-level-leaf` |
+| Address effect | removed target is destroyed; siblings can be retargeted by rank closure; an emptied parent is replaced by `Leaf` |
+
+The collapse of an emptied container to `Leaf` is canonical leaf restoration,
+not a numeric deletion or division.
+
+`shed-target-not-direct-child` is not a reason identifier in this contract.
+Every term selected by a valid term address is a direct child of the container
+traversed immediately before that segment, including nested leaf terms; SHED's
+only explicit target-type check is therefore `shed-target-not-leaf`.
+
+Default example:
 
 ```text
-shallow_route_kind = decimal-rigid-border-shallow-classic-probe
-suggested_command = python -m pet.cli opaque-probe 9999999999000000000119 --trial-limit 20
+SHED
+C(r0^C(r0^1), r1^1) -> C(r0^C(r0^1))
 ```
 
-Questo trasforma un input soggetto a timeout nella race PET in un caso
-classificato e instradato in modo shallow.
+It may then be displayed as `2^2 * 3 -> 2^2`.
 
-### Relazione con balanced-flat-border
-
-`decimal-rigid-border` è indipendente da `balanced-flat-border`.
-
-- `balanced-flat-border` descrive una relazione PET/composite-border.
-- `decimal-rigid-border` descrive un segnale nella rappresentazione decimale di
-  `N` che può rendere costosa la diagnostica PET completa.
-
-Un numero può quindi essere:
+Explicit example:
 
 ```text
-balanced-flat-border
-balanced-flat-border + decimal-rigid-border
+SHED @/0/1
+C(r0^C(r0^1, r1^1)) -> C(r0^C(r0^1))
 ```
 
-Nel secondo caso la pipeline può usare guard o shallow route per evitare di
-calcolare subito la firma PET completa.
+`@/0/1` is the selected inner leaf term; it is not an address for its parent
+exponent container.
 
-## Fronte aperto: large non-rigid opaque inputs
+### 4.3 GRAFT — add depth
 
-Il preflight `decimal-rigid-border` copre una famiglia specifica: numeri con
-blocchi decimali rigidi di `0`/`9` e transizioni forti. Non copre tutti i casi
-in cui la diagnostica PET completa può essere costosa.
+`GRAFT` materializes a selected latent exponent-one slot by replacing its
+`Leaf` target with a one-term container containing a canonical leaf.
 
-Sono stati osservati input grandi e non decimal-rigid che possono comunque
-rendere costosa la costruzione della firma PET completa o della race locale.
+| Item | Contract |
+| --- | --- |
+| Invocation | `GRAFT` with `target.mode` `default` or explicit slot address |
+| Explicit target | `term-address/^`; the selected relation must be latent (its current exponent target is `Leaf`) |
+| Default | deepest eligible latent slot; ties select the last slot in canonical preorder order |
+| Preconditions | the slot is latent; an already materialized exponent is ineligible |
+| Explicit check order | if the address is not a slot address, `graft-target-not-slot`; otherwise accept a relation targeting `Leaf`, or emit `graft-slot-already-materialized` |
+| Rewrite | `r^1 -> r^C(r0^1)` at the selected relation |
+| Success reason | `graft-applied` |
+| Failure reasons | `invocation-invalid`, generic address reason, `graft-target-not-slot`, `graft-slot-already-materialized`, `graft-no-eligible-latent-slot` |
+| Address effect | the old `^` slot is consumed; its new terminal child is returned as a witness; deeper addresses are created |
 
-Esempi sperimentali:
+Depth is the number of term segments from `@/` to the relation's owner term.
+Canonical preorder compares sibling indices left to right; "last" means the
+greatest eligible owner-term path at equal depth.  This is structural
+tie-breaking, not numeric ordering. PRUNE uses the same definition: the depth
+of a terminal leaf is the number of segments in that leaf's term address.
+
+Default example (the only eligible slot in `A`):
 
 ```text
-1234567891234567891234567
-3141592653589793238462643
-2718281828459045235360287
-8675309867530986753098675
+GRAFT
+C(r0^C(r0^1)) -> C(r0^C(r0^C(r0^1)))
 ```
 
-Questi input hanno tipicamente:
+The post-rewrite illustrative notation is `2^2 -> 2^(2^2)`.
+
+Explicit example:
 
 ```text
-decimal_rigid_border_hint = no
+GRAFT @/0/0/^
+C(r0^C(r0^1)) -> C(r0^C(r0^C(r0^1)))
 ```
 
-ma possono comunque andare in timeout nella route PET completa.
+For a tie, the eligible slots of
+`C(r0^C(r0^1), r1^C(r0^1))` are `@/0/0/^` and `@/1/0/^`; the default selects
+`@/1/0/^` because it is last in canonical order.
 
-### Interpretazione
+### 4.4 PRUNE — remove depth
 
-Questi casi non appartengono alla famiglia `decimal-rigid-border`.
-Sono meglio descritti, per ora, come:
+`PRUNE` deletes an eligible terminal leaf term from a singleton exponent
+container and restores its parent term's implicit exponent-one slot.
+
+| Item | Contract |
+| --- | --- |
+| Invocation | `PRUNE` with `target.mode` `default` or explicit terminal-leaf term address |
+| Explicit target | the address selects the leaf term itself |
+| Default | deepest eligible terminal leaf; ties select the last eligible leaf in canonical preorder order |
+| Preconditions | selected term has exponent `Leaf`; it is the sole term of a container; that container is the exponent target of a parent term (never the root container) |
+| Explicit check order | if the address is not a term address or its term's exponent is not `Leaf`, `prune-target-not-terminal-leaf`; otherwise if its parent is the root container, `prune-target-has-no-parent-relation`; otherwise if that parent is not singleton, `prune-parent-not-singleton-exponent`; otherwise accept |
+| Rewrite | let `leaf_term` be the selected leaf term, `exponent_container = C(leaf_term)` its singleton parent exponent container, and `parent_term` the term whose exponent relation targets `exponent_container`. Destroy `leaf_term`, `exponent_container`, and the relation `parent_term -> exponent_container`; create the replacement relation `parent_term -> Leaf`, which is `parent_term`'s restored latent `^` slot. `parent_term` and its containing and ancestor relations remain. |
+| Success reason | `prune-applied` |
+| Failure reasons | `invocation-invalid`, generic address reason, `prune-target-not-terminal-leaf`, `prune-parent-not-singleton-exponent`, `prune-target-has-no-parent-relation`, `prune-no-eligible-terminal-leaf` |
+| Address effect | the selected terminal term and its singleton exponent container are destroyed; the restored parent `^` slot is returned as a witness; ancestor paths must be re-resolved |
+
+"Terminal" here is deliberately stronger than "leaf": it requires both a
+leaf exponent and the singleton exponent-container parent relation.  Therefore
+`PRUNE` cannot remove one sibling from a wider exponent container; that is
+width removal and belongs to `SHED`.
+
+A terminal leaf term has no materialized descendants: its exponent is `Leaf`.
+PRUNE therefore does not destroy descendants of the selected leaf term. It
+destroys exactly that term, its singleton exponent container, and their parent
+exponent relation, then creates the `parent_term -> Leaf` relation described
+above.
+
+Default example:
 
 ```text
-large non-rigid opaque inputs
+PRUNE
+C(r0^C(r0^C(r0^1))) -> C(r0^C(r0^1))
 ```
 
-La causa non è ancora stata isolata in una metrica leggera affidabile.
+The result may be illustrated as `2^(2^2) -> 2^2`.
 
-Prime osservazioni:
-
-- il numero di cifre da solo non basta;
-- la struttura decimale da sola non basta;
-- la presenza di piccoli fattori può aiutare, ma non spiega tutti i casi;
-- il residuale dopo piccoli fattori può rimanere strutturalmente costoso.
-
-### Stato della policy
-
-Non esiste ancora una policy PET stabile per questi input.
-
-In particolare, la pipeline non deve trattarli automaticamente come
-`decimal-rigid-border`, perché il segnale decimale non lo giustifica.
-
-La classificazione corrente è quindi:
+Explicit example:
 
 ```text
-known open research front
+PRUNE @/0/0/0
+C(r0^C(r0^C(r0^1))) -> C(r0^C(r0^1))
 ```
 
-Una futura policy dovrà essere basata su evidenza empirica aggiuntiva, non su una
-soglia generica sul numero di cifre.
+## 5. Partial inverse laws
 
-### Relazione con decimal-rigid-border
+These are local, witness-aware rewrite laws.  They are not total algebraic
+inverses and neither operator name nor a default invocation carries enough
+history to make them total.
 
-`decimal-rigid-border` resta una famiglia specifica e utile:
+### 5.1 SPROUT and SHED
 
-```text
-pattern decimale rigido visibile
-→ preflight veloce
-→ guard/shallow route giustificati
-```
+If `SPROUT` succeeds on a container `C`, let `w` be the returned address of
+the appended leaf in the after-shape.  Re-resolve `w` in that after-shape and
+apply explicit `SHED w`.  The result is structurally equal to the before-shape
+provided no intervening rewrite changed that selected container.  A rewrite
+witness is sufficient; invocation history is not otherwise required.
 
-I `large non-rigid opaque inputs` sono diversi:
+Conversely, if `SHED` removes the final visible term of its parent container
+and that parent remains a container, a re-resolved explicit `SPROUT` at that
+parent reconstructs the before-shape. The target is `@/` for the root
+container, or the address of the owning term for a nested exponent container.
+If the deleted term was not final, `SPROUT` has no position argument and
+appends instead, so it cannot restore the original order. If SHED collapsed
+the root container to `Leaf`, only the root anchor, selected either by default
+or explicitly as `@/`, can restore a one-leaf root shape.
 
-```text
-nessun pattern decimale rigido sufficiente
-→ possibile costo alto della firma PET
-→ nessuna route shallow automatica ancora giustificata
-```
+Defaults make this partial.  A nested `SPROUT @/0` is not undone by default
+`SHED`, which searches only the top-level container.  In
+`C(r0^1, r1^C(r0^1), r2^1)`, shedding `@/0` and then sprouting at the root
+produces `C(r0^C(r0^1), r1^1, r2^1)`, not the original ordering.  Positional
+addresses also change as ranks close: an old `@/1` can select a different term
+after deleting `@/0`.  Even without a default, a container with several
+eligible leaf terms requires the returned SPROUT witness (or an explicit
+after-shape target): shedding a different eligible leaf is a valid rewrite,
+not the stated inverse.
+
+### 5.2 GRAFT and PRUNE
+
+If `GRAFT` succeeds at latent slot `s`, let `w` be its returned singleton
+terminal-leaf witness.  Re-resolve `w` in the after-shape and apply explicit
+`PRUNE w`; it restores the original latent slot and before-shape, provided no
+intervening rewrite altered the parent relation.  The witness is sufficient;
+an invocation history is not required.
+
+Conversely, a successful explicit `PRUNE` returns the restored slot witness.
+Re-resolve it in the after-shape and apply explicit `GRAFT`; it restores the
+pruned singleton depth.  The law fails outside PRUNE's singleton-parent
+precondition because a non-singleton deletion is not a depth inverse.
+
+Defaults are not an inverse guarantee.  If two eligible terminal leaves have
+the same maximum depth, default `PRUNE` chooses the last one, which may not be
+the leaf just grafted.  Likewise, default `GRAFT` can choose a deeper or later
+newly available slot rather than the slot restored by a prior prune.  The
+slot address consumed by GRAFT is invalid in its after-shape, and a terminal
+leaf address consumed by PRUNE is invalid in its after-shape; each inverse
+must use the returned after-shape witness rather than reuse the old address.
+
+## 6. Replacement architecture
+
+PETRA replaces the active PET runtime rather than extending it.
+
+The following concepts are obsolete as current runtime foundations:
+
+- the prime-labelled `PET` list-of-tuples representation;
+- `PETObject` as a value-derived object model;
+- `pet_object_from_int`;
+- `prime_label`;
+- prime-labelled structural addresses;
+- `after_value`;
+- `apply_operator_by_value`;
+- `NEW`, `DROP`, `INC`, and `DEC`;
+- graph, trace, and certificate replay by represented value;
+- the existing `pet` CLI and PET-Base JSON contract.
+
+No compatibility bridge, reader, command, test suite, or duplicate runtime is a
+PETRA requirement merely because it existed previously.
+
+Temporary coexistence during implementation is permitted only as an internal
+migration mechanism. The replacement is complete only when the obsolete
+runtime is removed and the active package and CLI are named `petra`.
+
+Historically useful PET behavior remains available through Git history, tag
+`v0.3.0`, and published releases.
+
+## 7. Prime-tower projection boundary
+
+A projection may eventually interpret canonical term positions through a
+deterministic prime sequence and derive a numeric prime-exponent tower.
+
+Such a projection is not part of the initial PETRA core.
+
+A future projection contract must independently define:
+
+- its domain and codomain;
+- whether all PETRA shapes are projectable;
+- prime assignment rules;
+- handling of values too large to materialize;
+- reverse projection, if any;
+- error and partiality semantics.
+
+Projection must never:
+
+- determine structural identity;
+- influence address resolution;
+- choose operator targets;
+- alter canonical order;
+- make factorization a prerequisite for structural rewrites.
+
+Primality checks, prime generation, and factorization may be introduced only
+when that projection contract demonstrates a concrete need.
+
+## 8. Metrics admission policy
+
+No historical PET metric becomes a PETRA metric automatically.
+
+A metric may enter the PETRA runtime only when it:
+
+- is defined directly on canonical PETRA shapes;
+- has an explicit domain and result type;
+- is independent of represented integers unless declared as a projection
+  metric;
+- remains well-defined across canonical normalization;
+- states whether it observes objects, terms, relations, addresses, rewrites, or
+  paths;
+- has examples and tests derived from this specification.
+
+Historical PET-Metrics and PET-METICA results remain research evidence. They
+must not be promoted as PETRA laws or invariants without a new derivation and
+admission decision.
+
+## 9. Graph, path, trace, and certificate boundary
+
+Graph, path, trace, and certificate facilities are derived layers, not
+prerequisites of the structural core.
+
+If introduced, they must operate on:
+
+- canonical PETRA shapes;
+- versioned structural invocations;
+- positional addresses resolved in each `before_shape`;
+- successful result witnesses;
+- explicit schema versions.
+
+They must not replay operations by integer value, prime-labelled identity, or
+legacy operator labels.
+
+No derived layer is required until a concrete PETRA use case justifies it.
+
+## 10. Implementation dependency order
+
+The canonical implementation order is:
+
+1. immutable PETRA shape model;
+2. canonical normalization and equality;
+3. positional structural-address parser and resolver;
+4. atomic rewrite result and witness model;
+5. `SPROUT` and `SHED`;
+6. `GRAFT` and `PRUNE`;
+7. canonical PETRA serialization;
+8. minimal PETRA CLI;
+9. optional derived layers justified by concrete requirements;
+10. removal of the PET runtime and completion of the package, CLI, and
+    repository rename.
+
+Graph, path, trace, certificate, metric, and numeric-projection work is not
+automatically mandatory.
+
+## 11. Conformance checklist
+
+A conforming PETRA implementation must:
+
+- implement the grammar and roles in section 1;
+- reject empty containers and malformed relations;
+- derive root ranks only from current visible position;
+- implement canonical validation, normalization, and equality;
+- resolve state-scoped positional addresses as specified in section 2;
+- preserve the invocation and result semantics in section 3;
+- implement all four operators, defaults, failures, and examples in section 4;
+- preserve only the partial inverse laws and counterexamples in section 5;
+- produce exactly one post-rewrite witness for every successful operator;
+- preserve the exact before-shape on failure;
+- avoid value-first, factorization-first, and prime-selection rewrite rules;
+- avoid permanent compatibility dependencies on the historical PET runtime;
+- treat projection and derived analytical layers as separate admissions.
+
+An implementation is not conforming merely because it reproduces historical
+PET numeric behavior.

@@ -1,9 +1,14 @@
 # PET/PEG 2.0 Structural Addresses and Identity
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Superseded as the canonical address contract.** This note documents the
 > current prime-label address implementation. Positional `@/…` paths and `^`
 > slots are normatively defined in
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 > Retain this document for legacy `PETObject` compatibility and research
 > observations.
 

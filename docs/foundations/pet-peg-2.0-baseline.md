@@ -1,9 +1,14 @@
 # PET/PEG 2.0 Executable Operator Semantics Baseline
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Legacy/research executable baseline.** Its prime-label and value-level
 > `NEW`, `DROP`, `INC`, and `DEC` behavior is not the canonical object-native
 > operator contract. See
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md)
+> [`../reference/SPEC.md`](../reference/SPEC.md)
 > for the future normative `SPROUT`, `SHED`, `GRAFT`, and `PRUNE` contract.
 
 ## Purpose

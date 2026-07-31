@@ -58,7 +58,7 @@ of its occurrences. No directory inherits a classification:
 | A | `docs/reference/CLI.md` | 4 |
 | A | `docs/reference/SPEC.md` | 4 |
 | A | `docs/reports/STATUS.md` | 4 |
-| S | `docs/foundations/pet-peg-2.0-object-native-operators.md` | 24 |
+| S | `docs/foundations/../reference/SPEC.md` | 24 |
 | H | `docs/foundations/operator-addresses.md` | 40 |
 | H | `docs/foundations/operator-algebra.md` | 8 |
 | H | `docs/foundations/path-history.md` | 3 |
@@ -128,7 +128,7 @@ document role is generated provenance, historical/archive evidence, or an
 explicit implementation-compatibility reference. No active navigation,
 specification, vision, roadmap, status claim, or public CLI description may
 present it as current PET semantics. The normative reference is
-[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+[`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Deferred to Phase 2
 

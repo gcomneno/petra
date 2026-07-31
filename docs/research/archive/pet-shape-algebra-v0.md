@@ -3,7 +3,7 @@
 > **Archived research model.** The `NEW`, `DROP`, `INC`, and `DEC` primitives
 > below are superseded as canonical PET semantics. The sole normative future
 > operator contract is
-> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+> [`../../reference/SPEC.md`](../../reference/SPEC.md).
 
 ## Scopo
 

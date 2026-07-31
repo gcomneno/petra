@@ -1,5 +1,10 @@
 # PET 2.0 — Research Roadmap
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 # Visione
 
 PET 2.0 rappresenta una maturazione ontologica e dinamica del framework PET/PEG.

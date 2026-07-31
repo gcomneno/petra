@@ -1,10 +1,15 @@
 # PET-aritmetica
 
+<!-- PETRA-HISTORICAL-RESEARCH -->
+> [!IMPORTANT]
+> **Historical or exploratory research.** Nothing in this document is normative for PETRA unless incorporated explicitly into [`../../reference/SPEC.md`](../../reference/SPEC.md).
+
+
 > Note: this document contains historical and exploratory PET-METICA material.
 > Its `NEW`, `DROP`, `INC`, and `DEC` material describes current executable
 > legacy PET-METICA behavior and research evidence, not canonical or future
 > PET semantics. The sole normative future operator contract is
-> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+> [`../../reference/SPEC.md`](../../reference/SPEC.md).
 > The companion operational notes, CLI reference, and bounded reports are
 > compatibility references for that legacy behavior; compositional/operator
 > material is non-core unless explicitly promoted later.
