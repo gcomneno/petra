@@ -1,5 +1,10 @@
 # PET/PEG 2.0 Object-Native Metrics
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This note defines PET/PEG 2.0 object-native metrics.
 
 The object-native metrics layer computes metrics directly from `PETObject`

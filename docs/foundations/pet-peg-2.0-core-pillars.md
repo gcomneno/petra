@@ -1,5 +1,10 @@
 # PET/PEG 2.0 Core Pillars
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 PET/PEG 2.0 must be grounded on structural concepts that are useful for the
 next implementation layer.
 
@@ -8,7 +13,7 @@ This document separates core concepts from research-only diagnostics.
 > **Legacy implementation boundary.** The `NEW`, `DROP`, `INC`, and `DEC`
 > examples below identify retained executable research behavior. The sole
 > normative future operator contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Boundary
 

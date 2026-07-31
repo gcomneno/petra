@@ -1,5 +1,10 @@
 # PET from first principles
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 PET starts from a research question, not from a command-line feature.
 
 What happens if positive integers are represented as recursive vertical

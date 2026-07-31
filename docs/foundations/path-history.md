@@ -1,9 +1,14 @@
 # PET Path-History v0
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Legacy/research path notation.** Any `NEW`, `DROP`, `INC`, or `DEC`
 > sequence below is evidence from the retained value-level model. The sole
 > normative future operator contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 # Introduzione
 

@@ -1,5 +1,10 @@
 # PET Research
 
+<!-- PETRA-HISTORICAL-RESEARCH -->
+> [!IMPORTANT]
+> **Historical or exploratory research.** Nothing in this document is normative for PETRA unless incorporated explicitly into [`../reference/SPEC.md`](../reference/SPEC.md).
+
+
 This directory contains active research material that is **not** part of the stable PET-Base specification.
 
 ## Structure
@@ -59,7 +64,7 @@ It describes the completed text-output pipeline: structural diagnosis, grip diag
 
 The probes below describe current executable legacy PET/PEG 2.0 behavior, not
 canonical or future PET semantics. The sole normative future operator contract
-is [`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+is [`../reference/SPEC.md`](../reference/SPEC.md).
 
 The retained foundation probes use X/Y/Z operator axes:
 
@@ -84,7 +89,7 @@ PET-METICA material is intentionally split by role. Its `NEW`, `DROP`, `INC`,
 and `DEC` references describe current executable legacy behavior or retained
 research evidence, never canonical or future PET semantics. The sole normative
 future operator contract is
-[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+[`../reference/SPEC.md`](../reference/SPEC.md).
 
 ### Current executable legacy PET-METICA behavior
 
@@ -145,7 +150,7 @@ For current project-wide source of truth, see:
 - `../VISION.md`
 - `../reports/STATUS.md`
 - `../reference/SPEC.md`
-- `../foundations/pet-peg-2.0-object-native-operators.md` for future PET/PEG
+- `../reference/SPEC.md` for future PET/PEG
   2.0 operator semantics; PET-METICA notes remain legacy compatibility and
   research evidence
 

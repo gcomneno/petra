@@ -1,5 +1,10 @@
 # PET/PEG 2.0 Traces, Certificates, and Exploration Boundary
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This note defines the PET/PEG 2.0 trace and certificate layer.
 
 The trace/certificate layer records and checks what happened.
@@ -14,7 +19,7 @@ That separation is intentional:
 > **Implementation-compatibility boundary.** The `NEW`, `DROP`, `INC`, and
 > `DEC` trace examples below record current retained value-level behavior. The
 > sole normative future operator contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Trace semantics
 

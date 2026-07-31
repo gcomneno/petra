@@ -1,5 +1,10 @@
 # PET first-principles API alias design
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This document defines the intended direction for explicit first-principles API
 aliases.
 

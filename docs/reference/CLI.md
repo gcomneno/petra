@@ -1,5 +1,10 @@
 # PET CLI Guide
 
+<!-- PETRA-HISTORICAL-REFERENCE -->
+> [!IMPORTANT]
+> **Historical PET runtime reference.** This document does not define PETRA. Use [`SPEC.md`](SPEC.md) for current semantics.
+
+
 Questa guida raccoglie l'uso pratico del command-line interface di PET.
 
 Il CLI è pensato come punto di accesso operativo per:
@@ -314,7 +319,7 @@ Nota: `distance` e `structural_distance` sono confronti tra strutture. Il
 rewrite cost è invece una distanza di cammino nel grafo orientato esposto
 dall'attuale CLI. Le sue etichette legacy non sono semantica PET canonica: il
 solo contratto normativo PET/PEG 2.0 per operatori futuri è
-[`../foundations/pet-peg-2.0-object-native-operators.md`](../foundations/pet-peg-2.0-object-native-operators.md).
+[`SPEC.md`](SPEC.md).
 
 ### 7. Validare e renderizzare un PET JSON
 

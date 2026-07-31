@@ -1,5 +1,10 @@
 # PET first-principles implementation audit
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This document audits the current PET implementation against the first-principles
 model defined in:
 
@@ -14,7 +19,7 @@ This audit does not change implementation behavior.
 > **Implementation-compatibility boundary.** References below to `NEW`,
 > `DROP`, `INC`, and `DEC` describe the current retained value-level
 > implementation only. The sole normative future operator contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Audit basis
 

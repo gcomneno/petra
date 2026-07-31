@@ -1,5 +1,10 @@
 # PET metrics first-principles audit
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This document audits `src/pet/metrics.py` against the current first-principles
 PET model and the stable PET-Base canonical metrics.
 

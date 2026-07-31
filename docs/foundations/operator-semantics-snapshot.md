@@ -1,9 +1,14 @@
 # PET/PEG Executable Operator Semantics Snapshot v0
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Legacy/research snapshot.** The executable value-level `NEW`, `DROP`,
 > `INC`, and `DEC` semantics below are not canonical PET operator semantics.
 > The future normative object-native contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
 ## Purpose
 

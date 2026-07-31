@@ -10,7 +10,7 @@ normative object-native operator contract.
 
 The normative foundation remains:
 
-- [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md)
+- [`../../reference/SPEC.md`](../../reference/SPEC.md)
 
 That contract deliberately defers symmetric relocation in its follow-up item
 “Research specification: object-native symmetric relocation”.

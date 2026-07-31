@@ -1,9 +1,14 @@
 # PET/PEG 2.0 Operator Semantics Promotion Policy
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Historical promotion policy.** Its `NEW`/`DROP`/`INC`/`DEC` reports and
 > experimental CLI boundary remain legacy research material. The canonical
 > future operator contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md);
+> [`../reference/SPEC.md`](../reference/SPEC.md);
 > this policy does not promote or define `SPROUT`, `SHED`, `GRAFT`, or `PRUNE`.
 
 This document defines the current promotion boundary for PET/PEG 2.0 operator

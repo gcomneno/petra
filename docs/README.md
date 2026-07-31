@@ -1,66 +1,42 @@
-# PET Documentation
-
-This directory is organized by role.
+# PETRA Documentation
 
 ## Read this first
 
-If you want to understand the project at a high level:
+1. [Canonical PETRA specification](reference/SPEC.md)
+2. [PETRA vision](VISION.md)
+3. [Implementation roadmap](../ROADMAP.md)
+4. [Current status](reports/STATUS.md)
 
-1. `VISION.md`
-2. `research/notes/PET-METICA.md`
-3. `reports/STATUS.md`
+The specification is the only normative source.
 
-## Core reference
+## Active documentation
 
-For the stable core and operational reference:
+- `reference/SPEC.md` — canonical grammar, addressing, rewrites, operators,
+  boundaries, and conformance.
+- `VISION.md` — project purpose and architectural direction.
+- `../ROADMAP.md` — dependency-ordered implementation plan.
+- `reports/STATUS.md` — current transition status.
 
-- `reference/SPEC.md` — formal PET-Base specification
-- `reference/CLI.md` — command-line usage guide
+## Historical and research material
 
-## Main areas
+The repository still contains documents produced during PET, PET/PEG 2.0,
+PET-Metrics, and PET-METICA development.
 
-- `foundations/` — PET/PEG 2.0 conceptual foundations and research roadmap
-- `reports/` — process docs, generated reports, and report data
-- `research/` — research notes, experiments, partial-shape material, and datasets that are not part of PET-Base
+They are retained temporarily for provenance and migration analysis. Unless the
+canonical PETRA specification explicitly incorporates a rule, those documents
+are:
 
-## Reading map
+- historical;
+- superseded;
+- research-only;
+- non-normative.
 
-### If you want the canonical representation
-Read:
+Directory indexes state the classification of their contents.
 
-1. `VISION.md`
-2. `reference/SPEC.md`
+## Source-of-truth rule
 
-### If you want the current rewrite-geometric line
-Read:
+When any older document conflicts with `reference/SPEC.md`, the PETRA
+specification wins.
 
-1. `research/notes/PET-METICA.md`
-2. `reports/STATUS.md`
-
-### If you want to use the CLI
-Read:
-
-1. `reference/CLI.md`
-
-### If you want the PET/PEG 2.0 foundation layer
-Read:
-
-1. `foundations/README.md`
-2. `foundations/pet-core-v0.md`
-3. `foundations/pet-2-roadmap.md`
-
-### If you want the live research material
-Start from:
-
-1. `research/`
-2. `reports/`
-
-## Source-of-truth notes
-
-- `research/notes/PET-METICA.md` is the current source of truth for the rewrite-geometric PET-METICA line.
-- `foundations/` contains PET/PEG 2.0 conceptual foundations and roadmap material.
-- `reference/SPEC.md` is the source of truth for PET-Base behavior.
-- `reports/STATUS.md` is the source of truth for what is stable, empirical, or exploratory.
-- `foundations/pet-peg-2.0-object-native-operators.md` is the sole normative
-  semantic reference for future PET/PEG 2.0 operators; it does not change
-  stable PET-Base or CLI behavior.
+No old CLI, JSON, operator, trace, graph, metric, or compatibility statement is
+binding on PETRA merely because it was previously stable.

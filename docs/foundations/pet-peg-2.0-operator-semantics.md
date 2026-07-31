@@ -1,9 +1,14 @@
 # PET/PEG 2.0 Operator Semantics
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 > **Superseded as canonical PET operator semantics.** This document records
 > the value-level `NEW`, `DROP`, `INC`, and `DEC` implementation snapshot.
 > The normative object-native contract is
-> [`pet-peg-2.0-object-native-operators.md`](pet-peg-2.0-object-native-operators.md).
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 > Keep this note for legacy/research behavior; do not use it to implement
 > canonical `SPROUT`, `SHED`, `GRAFT`, or `PRUNE`.
 

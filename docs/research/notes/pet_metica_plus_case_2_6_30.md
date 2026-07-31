@@ -3,7 +3,7 @@
 > **Legacy research case study.** Any `NEW`, `DROP`, `INC`, or `DEC` path
 > below is retained PET-METICA evidence, not canonical or future PET semantics.
 > The sole normative future operator contract is
-> [`../../foundations/pet-peg-2.0-object-native-operators.md`](../../foundations/pet-peg-2.0-object-native-operators.md).
+> [`../../reference/SPEC.md`](../../reference/SPEC.md).
 
 ## Scopo
 Questa nota fissa il caso composabile `(2,6,30)` come primo banco di prova reale per il candidato A-v0.

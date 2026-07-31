@@ -1,5 +1,10 @@
 # PET/PEG 2.0 Root-Base Recursion Semantics
 
+<!-- PETRA-HISTORICAL-FOUNDATION -->
+> [!IMPORTANT]
+> **Historical PET/PET-PEG design material.** This document does not define PETRA. Use [`../reference/SPEC.md`](../reference/SPEC.md) as the sole canonical specification.
+
+
 This note defines the first PET/PEG 2.0 root-base recursion semantics.
 
 Root-base recursion represents values as:
