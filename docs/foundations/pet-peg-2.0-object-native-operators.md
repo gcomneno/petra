@@ -145,6 +145,13 @@ mode.  When the root PET is `Leaf`, either mode materializes it as
 
 ### 2.2 Resolution failures and shape-state scope
 
+Every invocation receives a valid canonical PET shape. Shape validation
+precedes address parsing and resolution. An invalid or non-canonical shape is
+outside this operator contract and must not be normalized implicitly: doing so
+before resolution could change which object a positional address selects.
+Canonical rank normalization occurs only after a successful rewrite. A failed
+invocation preserves the exact before-shape.
+
 Addresses belong to exactly one pre-rewrite shape state.  They must be parsed
 and resolved against that state before a rewrite starts.  The stable generic
 resolution reasons are:
@@ -230,6 +237,27 @@ schema: "pet.object-native-operator-result.v1", status: "ok", operator, invocati
 before_shape, after_shape, address_effects, reason: "<op>-applied"
 ```
 
+For a successful result:
+
+- `operator` is the normalized operator name;
+- `invocation_target` is the normalized default or explicit target from the
+  invocation, before target selection or resolution;
+- `resolved_target` identifies the selected pre-rewrite structural object,
+  relation, or semantic root anchor, including its structural kind and
+  pre-rewrite address when it has one;
+- `address_effects` records the resolved pre-rewrite target and exactly one
+  post-rewrite witness address. The witness identifies the appended leaf for
+  SPROUT, the surviving parent container target for SHED, the created terminal
+  leaf for GRAFT, or the restored latent slot for PRUNE. It is resolved in the
+  after-shape and is not an assertion that any old positional address retained
+  its identity.
+
+The SHED witness uses `@/` when the surviving parent is the root container.
+For a surviving nested exponent container it uses the address of the owning
+term whose exponent relation targets that container. If SHED collapses its
+parent container to `Leaf`, the witness identifies the semantic root anchor
+or owning term through which SPROUT can restore the one-leaf container.
+
 A failed result has at least the exact serialized schema field shown:
 
 ```text
@@ -237,9 +265,37 @@ schema: "pet.object-native-operator-result.v1", status: "failed", operator, invo
 reason: "<stable-reason-id>"
 ```
 
-It has no `after_shape`.  A numeric projection may be an optional,
-non-normative derived field and must not participate in resolution or
-success/failure.
+It has no `after_shape`, `resolved_target`, or `address_effects`. `operator` is
+the normalized operator name, or `null` when envelope validation cannot
+normalize one. `invocation_target` is the normalized target object, or `null`
+when envelope validation cannot normalize one. An implementation may retain
+the raw invocation in an additional diagnostic field, but it must not affect
+the stable reason.
+
+The final concrete JSON representation of resolved targets and address effects
+is deferred to the object-native serialization issue; the semantics above are
+normative.
+
+The following matrix fixes the operator-specific reason after address parsing
+and traversal have succeeded:
+
+| Operator | Resolved explicit form or state | Stable reason |
+| --- | --- | --- |
+| SPROUT | `@/` | accepted |
+| SPROUT | term whose exponent target is `Container` | accepted |
+| SPROUT | term whose exponent target is `Leaf`, or slot address | `sprout-target-not-container` |
+| SHED | term whose exponent target is `Leaf` | accepted |
+| SHED | `@/`, slot address, or term whose exponent target is `Container` | `shed-target-not-leaf` |
+| GRAFT | slot whose relation targets `Leaf` | accepted |
+| GRAFT | `@/` or term address | `graft-target-not-slot` |
+| GRAFT | slot whose relation targets `Container` | `graft-slot-already-materialized` |
+| PRUNE | eligible terminal-leaf term | accepted |
+| PRUNE | `@/`, slot address, or term whose exponent target is `Container` | `prune-target-not-terminal-leaf` |
+| PRUNE | leaf term directly in the root container | `prune-target-has-no-parent-relation` |
+| PRUNE | nested leaf term in a non-singleton exponent container | `prune-parent-not-singleton-exponent` |
+
+A numeric projection may be an optional, non-normative derived field and must
+not participate in resolution or success/failure.
 
 ## 4. Structural rewrites
 
@@ -358,7 +414,8 @@ exponent container.
 Depth is the number of term segments from `@/` to the relation's owner term.
 Canonical preorder compares sibling indices left to right; "last" means the
 greatest eligible owner-term path at equal depth.  This is structural
-tie-breaking, not numeric ordering.
+tie-breaking, not numeric ordering. PRUNE uses the same definition: the depth
+of a terminal leaf is the number of segments in that leaf's term address.
 
 Default example (the only eligible slot in `A`):
 
@@ -439,10 +496,12 @@ witness is sufficient; invocation history is not otherwise required.
 
 Conversely, if `SHED` removes the final visible term of its parent container
 and that parent remains a container, a re-resolved explicit `SPROUT` at that
-parent reconstructs the before-shape.  If the deleted term was not final,
-`SPROUT` has no position argument and appends instead, so it cannot restore
-the original order.  If SHED collapsed the root container to `Leaf`, only the
-default anchor can restore a one-leaf root shape.
+parent reconstructs the before-shape. The target is `@/` for the root
+container, or the address of the owning term for a nested exponent container.
+If the deleted term was not final, `SPROUT` has no position argument and
+appends instead, so it cannot restore the original order. If SHED collapsed
+the root container to `Leaf`, only the root anchor, selected either by default
+or explicitly as `@/`, can restore a one-leaf root shape.
 
 Defaults make this partial.  A nested `SPROUT @/0` is not undone by default
 `SHED`, which searches only the top-level container.  In
