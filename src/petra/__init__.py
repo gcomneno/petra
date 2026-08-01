@@ -32,6 +32,8 @@ from .results import (
     SuccessfulResult,
 )
 from .operators import (
+    apply_graft,
+    apply_prune,
     apply_shed,
     apply_sprout,
 )
@@ -61,6 +63,8 @@ __all__ = [
     "render_address",
     "resolve_address",
     "to_canonical_data",
+    "apply_graft",
+    "apply_prune",
     "apply_shed",
     "apply_sprout",
     "validate_shape",
