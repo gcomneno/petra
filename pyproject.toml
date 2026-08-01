@@ -19,8 +19,8 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/gcomneno/pet"
-Issues = "https://github.com/gcomneno/pet/issues"
+Repository = "https://github.com/gcomneno/petra"
+Issues = "https://github.com/gcomneno/petra/issues"
 
 [project.scripts]
 pet = "pet.cli:main"

@@ -2,8 +2,8 @@
 
 ## Status
 
-**Closed** — commit [`f95a437`](https://github.com/gcomneno/pet/commit/f95a437) on `main`
-(prior sweep landing: [`8fa42e3`](https://github.com/gcomneno/pet/commit/8fa42e3)).
+**Closed** — commit [`f95a437`](https://github.com/gcomneno/petra/commit/f95a437) on `main`
+(prior sweep landing: [`8fa42e3`](https://github.com/gcomneno/petra/commit/8fa42e3)).
 
 GitHub Issues are disabled on this repository; this file is the formal closure
 record for the pass.
