@@ -31,6 +31,10 @@ from .results import (
     OperatorResult,
     SuccessfulResult,
 )
+from .operators import (
+    apply_shed,
+    apply_sprout,
+)
 
 __all__ = [
     "Address",
@@ -57,5 +61,7 @@ __all__ = [
     "render_address",
     "resolve_address",
     "to_canonical_data",
+    "apply_shed",
+    "apply_sprout",
     "validate_shape",
 ]
