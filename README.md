@@ -70,9 +70,9 @@ layers.
 ## Development
 
 The current documentation-only milestone is tracked by
-[issue #170](https://github.com/gcomneno/pet/issues/170), under the replacement
+[issue #170](https://github.com/gcomneno/petra/issues/170), under the replacement
 program in
-[issue #169](https://github.com/gcomneno/pet/issues/169).
+[issue #169](https://github.com/gcomneno/petra/issues/169).
 
 Runtime implementation begins only after the canonical specification is
 accepted.
