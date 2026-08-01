@@ -307,16 +307,26 @@ For a successful result:
   pre-rewrite address when it has one;
 - `address_effects` records the resolved pre-rewrite target and exactly one
   post-rewrite witness address. The witness identifies the appended leaf for
-  SPROUT, the surviving parent container target for SHED, the created terminal
-  leaf for GRAFT, or the restored latent slot for PRUNE. It is resolved in the
-  after-shape and is not an assertion that any old positional address retained
-  its identity.
+  SPROUT, the surviving parent container or restored collapsed relation for
+  SHED, the created terminal leaf for GRAFT, or the restored latent slot for
+  PRUNE. It is resolved in the after-shape and is not an assertion that any old
+  positional address retained its identity.
 
-The SHED witness uses `@/` when the surviving parent is the root container.
-For a surviving nested exponent container it uses the address of the owning
-term whose exponent relation targets that container. If SHED collapses its
-parent container to `Leaf`, the witness identifies the semantic root anchor
-or owning term through which SPROUT can restore the one-leaf container.
+The SHED witness distinguishes whether the selected leaf term's parent
+container survives or collapses:
+
+- a surviving root parent uses `@/`;
+- a surviving nested exponent container uses the address of the owning term
+  whose exponent relation targets that container;
+- a root parent that collapses to root `Leaf` uses `@/`, through which SPROUT
+  can materialize `C(r0^1)`;
+- a nested exponent container that collapses to `Leaf` uses the owning term's
+  latent slot address (`owner-term-address/^`), through which GRAFT can
+  materialize `C(r0^1)`.
+
+A plain owning term address is not a restoration witness after nested collapse:
+its exponent target is then `Leaf`, so SPROUT must continue to reject it with
+`sprout-target-not-container`.
 
 A failed result has at least the exact serialized schema field shown:
 
@@ -425,7 +435,7 @@ The explicit target always denotes the leaf term, never its parent container.
 | Rewrite | remove that term from its parent; if no terms remain, replace the parent container with `Leaf` |
 | Success reason | `shed-applied` |
 | Failure reasons | `invocation-invalid`, generic address reason, `shed-target-not-leaf`, `shed-no-eligible-top-level-leaf` |
-| Address effect | removed target is destroyed; siblings can be retargeted by rank closure; an emptied parent is replaced by `Leaf` |
+| Address effect | removed target is destroyed; siblings can be retargeted by rank closure; witness is `@/` for a root parent, the owning term address for a surviving nested parent, or the owning slot address for a collapsed nested parent |
 
 The collapse of an emptied container to `Leaf` is canonical leaf restoration,
 not a numeric deletion or division.
