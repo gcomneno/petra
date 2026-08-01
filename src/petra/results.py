@@ -3,8 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import TypeAlias
+
+try:
+    from enum import StrEnum as _StrEnum
+except ImportError:
+    from enum import Enum
+
+    class _StrEnum(str, Enum):
+        """Python 3.10-compatible subset of enum.StrEnum."""
+
+        def __str__(self) -> str:
+            return str(self.value)
+
+        def __format__(self, format_spec: str) -> str:
+            return format(self.value, format_spec)
 
 from .addresses import (
     Address,
@@ -17,7 +30,7 @@ from .addresses import (
 from .model import PetraShape, validate_shape
 
 
-class Operator(StrEnum):
+class Operator(_StrEnum):
     """One canonical PETRA structural operator."""
 
     SPROUT = "SPROUT"

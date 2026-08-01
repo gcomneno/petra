@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError, fields
+import subprocess
+import sys
+import textwrap
 from typing import get_args
 
 import pytest
@@ -1058,3 +1061,62 @@ def test_equivalent_failures_compare_equal() -> None:
     )
 
     assert result_a == result_b
+
+
+def test_operator_identity_falls_back_without_native_strenum() -> None:
+    """The Python 3.10 compatibility path preserves string-enum behavior."""
+
+    script = textwrap.dedent(
+        """
+        import enum
+        import json
+        import sys
+
+        if hasattr(enum, "StrEnum"):
+            delattr(enum, "StrEnum")
+
+        for module_name in tuple(sys.modules):
+            if (
+                module_name == "petra"
+                or module_name.startswith("petra.")
+            ):
+                del sys.modules[module_name]
+
+        import petra
+
+        operator = petra.Operator.SPROUT
+
+        assert isinstance(operator, str)
+        assert operator == "SPROUT"
+        assert operator.value == "SPROUT"
+        assert str(operator) == "SPROUT"
+        assert format(operator) == "SPROUT"
+        assert f"{operator:>8}" == "  SPROUT"
+        assert json.dumps(
+            {"operator": operator}
+        ) == '{"operator": "SPROUT"}'
+
+        assert tuple(
+            member.value
+            for member in petra.Operator
+        ) == (
+            "SPROUT",
+            "SHED",
+            "GRAFT",
+            "PRUNE",
+        )
+        """
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            script,
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
