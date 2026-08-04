@@ -23,8 +23,10 @@ Support only:
 - bounded child counts;
 - shallow depth.
 
-Determine the smallest geometric primitive set capable of preserving
-type, order, containment, and recursive identity.
+Phase 1 defines and implements a bounded canonical nested-frame layout for
+this proof domain: its coordinate system, orientation, placement, spacing,
+and normalization rules preserve type, order, containment, and recursive
+identity.
 
 Exit criterion:
 
@@ -32,7 +34,8 @@ Exact roundtrip for an exhaustive bounded shape corpus.
 
 ## Phase 2 — Canonical layout
 
-Define:
+Generalize, formalize, or extend layout rules beyond the bounded Phase 1 proof
+grammar, including:
 
 - coordinate system;
 - orientation;

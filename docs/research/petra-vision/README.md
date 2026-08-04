@@ -7,8 +7,8 @@ PETRA integration reference: `594fb8dcc2b42643e89cd229523f67e1fef2d599`
 
 ## Purpose
 
-This directory records the confidential technical foundation of
-PETRA VISION before implementation work begins.
+This directory records the confidential technical foundation,
+implementation, and evidence for PETRA VISION.
 
 PETRA VISION investigates a deterministic and reversible mapping
 between a minimal recursive structural kernel and canonical visual
@@ -40,6 +40,10 @@ n >= 1
 
 This kernel is a semantic contract, not a second public PETRA runtime
 model.
+
+The implemented canonical layout applies to this bounded proof grammar only.
+Generalized or final layout rules for domains beyond those bounds remain later
+research work.
 
 Native PETRA integration follows two explicit boundaries:
 

@@ -94,13 +94,17 @@ those decoded child positions.
 
 ## F. Recursive path and address correspondence
 
-Kernel-path traversal used for this evidence is a private, test-only oracle
-implemented independently of production code by direct tuple indexing. It is
-not a required production VISION path API.
+Two distinct, private test-only oracles support this evidence. The
+tuple-index kernel oracle follows child tuples independently of production
+path helpers. The geometry-path oracle instead traverses canonical occupied
+cell tuples directly: it derives the bounding extent, full-height frame and
+separator columns, ordered bays, and normalized child-cell regions. It does
+not call `decode_geometry` (or any production geometry path helper). Neither
+oracle is a required production VISION path API.
 
 For every resolvable kernel child path:
 
-- geometric traversal must identify the same terminal, group, or
+- direct occupied-cell traversal must identify the same terminal, group, or
   child relation;
 - geometric path indices must equal kernel child indices;
 - traversal across a terminal cell must fail;
@@ -133,6 +137,16 @@ Failure evidence must preserve the native address contract:
 
 Native address resolution is a verification oracle. The geometry
 encoder and decoder, and production adapter code, must not call it.
+
+The committed direct-cell evidence uses an independently enumerated ordered
+tree grammar with one terminal, non-empty ordered groups of width at most
+three, root depth zero, maximum depth three, and at most seven structural-node
+occurrences. It contains 110 shapes with exact node-count distribution
+`1, 1, 2, 5, 12, 28, 61` for counts one through seven. Across that corpus it
+records 110 root anchors, 574 non-root geometry paths, 574 term resolutions,
+574 exponent-slot resolutions, and 1,258 positive resolutions. This is
+evidence for the bounded implementation only; final consolidated validation
+and the final results and limitations record remain pending.
 
 ## G. Compositionality
 
