@@ -120,7 +120,8 @@ These are research categories, not legal claims.
 ## Matters not yet established
 
 - The optimal geometric primitive set.
-- The exact canonical layout algorithm.
+- The generalized or final canonical layout algorithm beyond the bounded
+  Phase 1 proof grammar.
 - Robustness under rotation, scaling, rasterisation, noise, and
   partial occlusion.
 - Whether canonical geometry should be unique absolutely or unique

@@ -45,11 +45,12 @@ It represents one kernel `OrderedGroup`.
 A bay is one geometrically delimited interior region of a container
 frame.
 
-Each bay represents one ordered child position.
+Each bay represents one ordered child position and is the geometric region
+embodying one exponent-slot target.
 
-The bay interior contains exactly one recursively encoded child
-geometry. Through the PETRA adapter, this region corresponds to a
-term's exponent slot.
+The bay interior contains exactly one recursively encoded child geometry. The
+complete nested child geometry corresponds to the target exponent shape; the
+native `Term` is the owning positional edge, not that child shape.
 
 ## Kernel semantic mapping
 
@@ -58,7 +59,7 @@ term's exponent slot.
 | `Terminal` | one solid terminal cell |
 | `OrderedGroup(...)` | one hollow container frame |
 | child position `i` | ordered bay `i` |
-| child shape | nested geometry inside bay `i` |
+| complete child shape | nested geometry inside bay `i` |
 
 ## Native PETRA adapter projection
 
@@ -66,11 +67,12 @@ term's exponent slot.
 | --- | --- |
 | `Leaf()` | `Terminal` |
 | `Container(...)` | `OrderedGroup(...)` |
-| `Term` at position `i` | child position `i` |
-| `Root(rank=i)` | positional assertion for child `i` |
-| exponent shape | child shape |
+| `Term` at position `i` | owning positional edge for bay `i` |
+| `Root(rank=i)` | positional assertion on that edge |
+| target exponent shape | complete child shape nested in bay `i` |
 
-No glyph is allocated specifically to `Root`.
+Neither `Term` nor `Root` receives an independent geometric glyph; `Root` is
+only the positional assertion on the owning edge.
 
 The adapter validates root ranks before encoding and reconstructs
 them by enumerating decoded child positions from left to right.
@@ -109,7 +111,10 @@ Bays are placed from left to right in kernel child order.
 
 Consecutive bays are separated by one complete orthogonal separator.
 
-Bays must not overlap.
+Canonical geometry is an occupied-cell set represented by a sorted tuple.
+Source-layer identity and overlapping identical drawings are not represented:
+drawing the same child twice at identical coordinates adds no observable
+geometry.
 
 ### Container extent
 
@@ -124,12 +129,12 @@ bounding boxes.
 
 ### Vertical alignment
 
-Bays share one canonical top edge.
+For a container of height `H`, every child maximum y-coordinate is `H - 3`.
+Children therefore share the same canonical upper alignment. A shorter child
+leaves unused space only toward smaller y-coordinates; children are not
+vertically centred.
 
-Shorter child geometries are aligned to the canonical bay origin;
-unused space may occur only according to the explicit sizing rule.
-
-No renderer-dependent centring is permitted.
+No renderer-dependent centring or alignment is permitted.
 
 ## Recursive encoder
 
@@ -185,6 +190,11 @@ serialized PETRA value, adapter-side state, or hidden payload.
 
 Phase 1 permits only translation normalisation.
 
+Translating the complete occupied-cell set by one uniform offset is accepted
+and normalised. Translation is malformed only when it affects part of the
+geometry, uses different offsets for different regions, or leaves residual
+cells from the pre-translation record.
+
 Rotation, reflection, non-uniform scaling, arbitrary resizing, and
 free-form deformation are not equivalent transformations during the
 initial proof.
@@ -213,21 +223,41 @@ OrderedGroup(OrderedGroup(Terminal), Terminal)
 In particular, exchanging two ordered bays must produce a different
 canonical geometry whenever their child shapes differ.
 
+Exchanging two distinct complete canonical bay regions is a valid semantic
+permutation: it is the canonical geometry of a different `OrderedGroup`.
+It is not a malformed geometry case. In contrast, transplanting child payload
+cells into fixed incompatible bay extents without rebuilding the canonical
+parent geometry is malformed.
+
 ## Rejection rules
 
 The decoder must reject geometry containing:
 
 - neither a valid terminal cell nor a valid container frame;
 - an empty container frame;
-- overlapping bays;
 - missing or partial separators;
-- multiple child geometries inside one bay;
+- a payload intrusion or bridge through required clearance across a
+  separator;
+- two distinct disconnected child components in one bay;
 - no child geometry inside a bay;
-- geometry crossing a bay boundary;
+- a child whose occupied cells cross a separator or bay boundary;
 - non-canonical clearance;
-- non-integer canonical coordinates;
 - trailing primitives outside the outer frame;
 - ambiguous terminal-versus-container topology.
+
+Here, a child crosses a separator or boundary only when its occupied cells
+intrude through the required clearance into those cells or into another bay;
+it does not refer to source-object identity.
+
+### Representation boundary
+
+`OrthogonalGeometry` construction or trusted-record revalidation handles
+non-tuple records, malformed cells, non-exact integer coordinates,
+noncanonical tuple ordering, and duplicate cell entries. These are
+representation-boundary failures, distinct from mutations that successfully
+construct a record and then reach `decode_geometry`. Constructor failures
+retain their `TypeError` or `ValueError` contracts; they are not necessarily
+`GeometrySyntaxError`.
 
 ## Non-reliance rule
 
@@ -237,3 +267,30 @@ source-code object identity must not affect decoding.
 
 Only canonical geometry and the fixed kernel grammar may determine
 the reconstructed VISION shape.
+
+## Decoder resource boundary
+
+The finite structural domain gives this grammar a finite canonical geometric
+envelope. Across the complete 110-shape Phase 1 corpus, the largest valid
+canonical record has:
+
+- at most `181` occupied cells;
+- bounding width at most `25` cells;
+- bounding height at most `13` cells.
+
+The decoder checks all three limits before it constructs a frame perimeter,
+iterates over a bounding width or height, or creates a bounding-box-scale
+collection. It also accepts coordinates only when each exact integer has
+magnitude at most `2^63 - 1`. This finite coordinate-resource rule still
+allows ordinary translated canonical geometries; translation remains the only
+normalisation and is not otherwise weakened.
+
+An over-budget or otherwise malformed `OrthogonalGeometry` record that
+reaches decoding fails with `GeometrySyntaxError` containing
+`GEOMETRY_MALFORMED`. A resource-envelope violation is a malformed decoder
+case, not a separate successful interpretation.
+
+At construction, `OrthogonalGeometry` snapshots a tuple subclass used for
+the outer cell record or an individual cell into exact built-in tuples.
+Therefore later mutable tuple-subclass behaviour cannot influence validation
+or decoding.

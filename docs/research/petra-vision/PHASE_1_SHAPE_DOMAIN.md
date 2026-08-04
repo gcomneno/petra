@@ -107,29 +107,47 @@ positional ranks.
 
 ## Path correspondence and PETRA address oracle
 
-The geometry core uses only recursively derived child-index paths:
+The geometry core uses only recursively derived child-index paths. A kernel
+path identifies the complete VISION shape reached by following its child
+indices; it does not identify an intermediate native PETRA object:
 
-| Kernel concept | Path | Geometric interpretation |
+| Kernel complete shape | Path | Geometric interpretation |
 | --- | --- | --- |
-| complete shape | `[]` | complete outer geometry |
-| first child | `[0]` | first ordered bay |
-| nested child | `[0, 2]` | third bay inside the first child |
+| root shape | `[]` | complete outer geometry |
+| complete first child shape | `[0]` | geometry nested in the first ordered bay |
+| complete nested child shape | `[0, 2]` | geometry nested in the third bay inside the first child |
 
 The decoder must derive every index from spatial order.
 
-For adapter verification, native PETRA addresses provide a reference
-oracle:
+For adapter verification only, native PETRA addresses provide a reference
+oracle. `@/` resolves a `ResolvedAnchor` whose `shape` is the complete native
+shape. For every non-empty kernel path `p`, `@/p` resolves a `ResolvedTerm`:
+the selected native `Term` is the positional edge owning the final child
+relation, not the complete child shape. `@/p/^` resolves a `ResolvedSlot` for
+that exponent relation.
 
-| PETRA concept | Address | Kernel correspondence |
+| Native resolver result | Address | Selected native object | Kernel correspondence |
+| --- | --- | --- | --- |
+| `ResolvedAnchor` | `@/` | complete native `shape` | complete root shape at `[]` |
+| `ResolvedTerm` | `@/p`, where `p` is non-empty | final owning `Term` | positional edge for the complete child shape at `p` |
+| `ResolvedSlot` | `@/p/^`, where `p` is non-empty | exponent slot with `owner` equal to the selected `Term` and `target` equal to `owner.exponent` | `adapt_petra_shape(target)` is the complete kernel child shape at `p` |
+
+For the focused nested path `p = [0, 2]`:
+
+| Address | Result | Meaning |
 | --- | --- | --- |
-| shape anchor | `@/` | path `[]` |
-| first term | `@/0` | child path `[0]` |
-| nested term | `@/0/2` | child path `[0, 2]` |
-| exponent slot | `@/0/2/^` | child relation at `[0, 2]` |
+| `@/0/2` | `ResolvedTerm` selecting the `Term` with rank `2` | the native positional edge that owns the final relation at `[0, 2]` |
+| `@/0/2/^` | `ResolvedSlot` whose `owner` is that same `Term` and whose `target` is `owner.exponent` | `adapt_petra_shape(slot.target)` is the complete kernel child shape reached at `[0, 2]` |
+
+Thus `@/0/2` and `@/0/2/^` carry the same index path but resolve different
+semantic objects: the first selects the owning `Term`; the second selects its
+exponent relation and target. Object identity, positional relation, and
+complete child shape must not be conflated.
 
 The geometry core must not call the native address parser or resolver.
 Address resolution is a compatibility test performed outside the
-encoder and decoder.
+encoder and decoder. This contract does not require a production VISION path
+API.
 
 Numeric labels, textual rank markers, hidden node IDs, serialized
 addresses, or auxiliary ordering tables are forbidden.
@@ -154,6 +172,47 @@ The node bound prevents combinatorial explosion while retaining:
 - sibling order;
 - mixed shallow and deep children;
 - repeated equal subshapes at distinct positions.
+
+## Enforced structural resource boundary
+
+The Phase 1 limits are runtime acceptance limits, not merely corpus
+generation guidance:
+
+- maximum ordered-group width: `3`;
+- maximum structural depth: `3`, with the complete input shape at depth `0`;
+- maximum total kernel-shape nodes: `7`;
+- every group is non-empty.
+
+Node accounting counts structural occurrences, not distinct Python object
+identities. Thus one immutable child referenced in two different ordered
+positions counts twice. Sharing is permitted when it is acyclic; a reference
+to an active ancestor is not permitted.
+
+`validate_vision_shape`, `encode_geometry`, `restore_petra_shape`, and
+`adapt_petra_shape` enforce the same boundary before recursive work. Any
+otherwise well-formed value beyond one or more of these limits raises
+`ValueError` with the stable message:
+
+```text
+VISION shape exceeds the Phase 1 structural bounds
+```
+
+Malformed values that remain within the Phase 1 resource envelope retain
+their structural `TypeError` or `ValueError` failures. When a value is both
+structurally malformed and outside a Phase 1 width, depth, or node limit, the
+stable resource error may take precedence: `ValueError` containing
+`VISION_SHAPE_OUT_OF_BOUNDS`. This bounds-first precedence prevents unbounded
+validation work; it does not make the value valid or decodable. The native
+adapter performs an iterative strict preflight before it calls a
+recursion-limited native validator: it requires
+the exact `Leaf`, `Container`, `Term`, and `Root` runtime classes, exact
+built-in tuples for container terms, exact non-negative integer ranks, and
+canonical positional ranks. It rejects cycles and post-construction record
+corruption at that boundary.
+
+`OrderedGroup` snapshots a tuple subclass into an exact built-in tuple on
+construction. This prevents externally mutable tuple-subclass iteration from
+changing a retained kernel value later.
 
 ## Explicit exclusions
 
