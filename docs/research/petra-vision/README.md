@@ -122,6 +122,9 @@ changed for this validation.
   records the readable Phase 1 complexity evidence results and limitations.
 - `PUBLIC_DISCLOSURE_BOUNDARY.md`
   separates previously public work from the new confidential work.
+- `DYNAMICAL_GEOMETRY_HYPOTHESIS.md`
+  formalizes a cross-cutting, unproven research hypothesis about geometry and
+  declared propagation dynamics.
 - `EXPERIMENT_PLAN.md`
   defines the staged proof and implementation programme.
 - `CONFIDENTIALITY_RULES.md`
@@ -134,10 +137,12 @@ grammar specification. Complexity evidence is complete: the committed JSON
 and Markdown artifacts record schema `petra.vision.phase1.complexity.v1`,
 version `1`, for an independent 110-shape corpus, with nine passing complexity
 contract tests. Timing values are diagnostic only, and no production
-implementation was modified for this validation. Phase 1 remains incomplete
-pending final independent completion review of the combined exhaustive
-evidence, final consolidated PETRA-suite evidence in the review environment,
-and the final results and limitations record.
+implementation was modified for this validation. A newly formalized
+cross-cutting dynamical-geometry research hypothesis records a possible
+temporal readout of canonical geometry under declared propagation laws; it is
+not proven and remains outside the Phase 1 completion gate. Phase 1 remains
+explicitly incomplete until its existing final consolidated validation and
+results/limitations gates are closed.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this
