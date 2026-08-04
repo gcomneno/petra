@@ -164,6 +164,12 @@ Adversarial tests must cover at least:
 Every malformed case must produce a stable explicit failure rather
 than best-effort reconstruction.
 
+Within the Phase 1 resource envelope, malformed values retain their
+structural `TypeError` or `ValueError` failures. If a value is both malformed
+and outside a Phase 1 width, depth, or node limit, `ValueError` containing
+`VISION_SHAPE_OUT_OF_BOUNDS` may take precedence to bound validation work;
+that precedence does not make the value valid or decodable.
+
 ## K. Complexity measurements
 
 For every corpus shape, record:
@@ -210,3 +216,19 @@ It does not establish:
 - cryptographic security;
 - final visual language;
 - production readiness.
+
+## Current hardening evidence and remaining gate work
+
+The prototype now has focused regression coverage for the enforced structural
+and geometric resource boundaries, exact native adapter runtime types,
+post-construction corruption, cycles, tuple-subclass snapshots, hostile deep
+chains, sparse huge-span geometry, the complete 110-shape geometry record
+digest, and exact bounded roundtrips.
+
+This is not a completion declaration. The remaining acceptance-gate evidence
+still to be completed and recorded includes an independently reviewed
+exhaustive corpus run, the full malformed-geometry matrix in section J,
+native-address correspondence evidence, dependency-boundary review, all
+PETRA-suite evidence in the review environment, and the required results and
+limitations record. Native PETRA kernel hardening remains outside this Phase 1
+adapter boundary.

@@ -7,6 +7,7 @@ import pytest
 from petra.vision import (
     OrderedGroup,
     Terminal,
+    VISION_SHAPE_OUT_OF_BOUNDS,
     validate_vision_shape,
 )
 
@@ -148,6 +149,92 @@ def test_validation_rechecks_a_manually_corrupted_child_container() -> None:
 
     with pytest.raises(TypeError, match="must be a tuple"):
         validate_vision_shape(corrupted)
+
+
+def test_ordered_group_snapshots_a_tuple_subclass_at_its_boundary() -> None:
+    class MutableTuple(tuple):
+        changed = False
+
+        def __iter__(self):
+            if type(self).changed:
+                return iter((object(),))
+            return tuple.__iter__(self)
+
+    source = MutableTuple((Terminal(),))
+    group = OrderedGroup(children=source)
+    MutableTuple.changed = True
+
+    assert type(group.children) is tuple
+    assert group.children == (Terminal(),)
+    assert validate_vision_shape(group) is None
+
+
+def test_validation_rejects_width_four_with_the_stable_bounds_error() -> None:
+    wide = OrderedGroup(
+        children=(Terminal(), Terminal(), Terminal())
+    )
+    object.__setattr__(
+        wide,
+        "children",
+        (*wide.children, Terminal()),
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(wide)
+
+
+def test_validation_gives_bounds_first_precedence_to_malformed_width_four() -> None:
+    corrupted = OrderedGroup(children=(Terminal(),))
+    object.__setattr__(
+        corrupted,
+        "children",
+        (object(), Terminal(), Terminal(), Terminal()),
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(corrupted)
+
+
+def test_validation_rejects_depth_four_with_the_stable_bounds_error() -> None:
+    deep: Terminal | OrderedGroup = Terminal()
+    for _ in range(4):
+        deep = OrderedGroup(children=(deep,))
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(deep)
+
+
+def test_validation_rejects_eight_structural_node_occurrences() -> None:
+    eight_nodes = OrderedGroup(
+        children=(
+            OrderedGroup(
+                children=(Terminal(), Terminal(), Terminal())
+            ),
+            OrderedGroup(children=(Terminal(), Terminal())),
+        )
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(eight_nodes)
+
+
+def test_shared_acyclic_children_count_at_every_structural_position() -> None:
+    shared = OrderedGroup(children=(Terminal(), Terminal()))
+    eight_occurrences = OrderedGroup(
+        children=(shared, shared, Terminal())
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(eight_occurrences)
+
+
+def test_deep_hostile_chain_fails_bounded_validation_not_recursion() -> None:
+    deep: Terminal | OrderedGroup = Terminal()
+    for _ in range(1_100):
+        deep = OrderedGroup(children=(deep,))
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        validate_vision_shape(deep)
 
 
 def test_kernel_runtime_types_contain_only_contract_fields() -> None:

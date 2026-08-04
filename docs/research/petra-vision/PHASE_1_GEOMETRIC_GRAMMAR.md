@@ -237,3 +237,30 @@ source-code object identity must not affect decoding.
 
 Only canonical geometry and the fixed kernel grammar may determine
 the reconstructed VISION shape.
+
+## Decoder resource boundary
+
+The finite structural domain gives this grammar a finite canonical geometric
+envelope. Across the complete 110-shape Phase 1 corpus, the largest valid
+canonical record has:
+
+- at most `181` occupied cells;
+- bounding width at most `25` cells;
+- bounding height at most `13` cells.
+
+The decoder checks all three limits before it constructs a frame perimeter,
+iterates over a bounding width or height, or creates a bounding-box-scale
+collection. It also accepts coordinates only when each exact integer has
+magnitude at most `2^63 - 1`. This finite coordinate-resource rule still
+allows ordinary translated canonical geometries; translation remains the only
+normalisation and is not otherwise weakened.
+
+An over-budget or malformed `OrthogonalGeometry` record fails decoding with
+`GeometrySyntaxError` containing `geometry does not match the Phase 1
+canonical grammar`. This is a resource rejection, not a new geometric
+message.
+
+At construction, `OrthogonalGeometry` snapshots a tuple subclass used for
+the outer cell record or an individual cell into exact built-in tuples.
+Therefore later mutable tuple-subclass behaviour cannot influence validation
+or decoding.

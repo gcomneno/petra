@@ -155,6 +155,47 @@ The node bound prevents combinatorial explosion while retaining:
 - mixed shallow and deep children;
 - repeated equal subshapes at distinct positions.
 
+## Enforced structural resource boundary
+
+The Phase 1 limits are runtime acceptance limits, not merely corpus
+generation guidance:
+
+- maximum ordered-group width: `3`;
+- maximum structural depth: `3`, with the complete input shape at depth `0`;
+- maximum total kernel-shape nodes: `7`;
+- every group is non-empty.
+
+Node accounting counts structural occurrences, not distinct Python object
+identities. Thus one immutable child referenced in two different ordered
+positions counts twice. Sharing is permitted when it is acyclic; a reference
+to an active ancestor is not permitted.
+
+`validate_vision_shape`, `encode_geometry`, `restore_petra_shape`, and
+`adapt_petra_shape` enforce the same boundary before recursive work. Any
+otherwise well-formed value beyond one or more of these limits raises
+`ValueError` with the stable message:
+
+```text
+VISION shape exceeds the Phase 1 structural bounds
+```
+
+Malformed values that remain within the Phase 1 resource envelope retain
+their structural `TypeError` or `ValueError` failures. When a value is both
+structurally malformed and outside a Phase 1 width, depth, or node limit, the
+stable resource error may take precedence: `ValueError` containing
+`VISION_SHAPE_OUT_OF_BOUNDS`. This bounds-first precedence prevents unbounded
+validation work; it does not make the value valid or decodable. The native
+adapter performs an iterative strict preflight before it calls a
+recursion-limited native validator: it requires
+the exact `Leaf`, `Container`, `Term`, and `Root` runtime classes, exact
+built-in tuples for container terms, exact non-negative integer ranks, and
+canonical positional ranks. It rejects cycles and post-construction record
+corruption at that boundary.
+
+`OrderedGroup` snapshots a tuple subclass into an exact built-in tuple on
+construction. This prevents externally mutable tuple-subclass iteration from
+changing a retained kernel value later.
+
 ## Explicit exclusions
 
 Phase 1 excludes:

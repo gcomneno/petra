@@ -20,8 +20,10 @@ from petra.vision import (
     Terminal,
     VisionShape,
     adapt_petra_shape,
+    encode_geometry,
     restore_petra_shape,
     validate_vision_shape,
+    VISION_SHAPE_OUT_OF_BOUNDS,
 )
 
 
@@ -237,6 +239,151 @@ def test_adapter_rejects_noncanonical_native_root_ranks() -> None:
 
     with pytest.raises(ValueError, match="expected r0"):
         adapt_petra_shape(noncanonical)
+
+
+def test_adapter_accepts_exact_native_leaf_and_container_records() -> None:
+    leaf = Leaf()
+    container = Container(
+        terms=(Term(root=Root(0), exponent=leaf),)
+    )
+
+    assert adapt_petra_shape(leaf) == Terminal()
+    assert adapt_petra_shape(container) == OrderedGroup(
+        children=(Terminal(),)
+    )
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        type("LeafSubclass", (Leaf,), {})(),
+        type(
+            "ContainerSubclass",
+            (Container,),
+            {},
+        )(
+            terms=(Term(root=Root(0), exponent=Leaf()),)
+        ),
+        Container(
+            terms=(
+                type("TermSubclass", (Term,), {})(
+                    root=Root(0),
+                    exponent=Leaf(),
+                ),
+            )
+        ),
+        Container(
+            terms=(
+                Term(
+                    root=type("RootSubclass", (Root,), {})(0),
+                    exponent=Leaf(),
+                ),
+            )
+        ),
+    ],
+)
+def test_adapter_rejects_native_runtime_subclasses(
+    malformed: object,
+) -> None:
+    with pytest.raises(TypeError):
+        adapt_petra_shape(malformed)  # type: ignore[arg-type]
+
+
+def test_adapter_rejects_post_construction_container_terms_list() -> None:
+    corrupted = Container(
+        terms=(Term(root=Root(0), exponent=Leaf()),)
+    )
+    object.__setattr__(corrupted, "terms", [corrupted.terms[0]])
+
+    with pytest.raises(TypeError, match="exact tuple"):
+        adapt_petra_shape(corrupted)
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda term: object.__setattr__(term, "root", object()),
+        lambda term: object.__setattr__(term.root, "rank", True),
+        lambda term: object.__setattr__(term.root, "rank", -1),
+        lambda term: object.__setattr__(term, "exponent", object()),
+    ],
+)
+def test_adapter_rejects_corrupted_term_roots_and_exponents(
+    corrupt: object,
+) -> None:
+    term = Term(root=Root(0), exponent=Leaf())
+    native = Container(terms=(term,))
+
+    corrupt(term)  # type: ignore[operator]
+
+    with pytest.raises((TypeError, ValueError)):
+        adapt_petra_shape(native)
+
+
+def test_adapter_rejects_a_manually_injected_native_cycle() -> None:
+    term = Term(root=Root(0), exponent=Leaf())
+    cyclic = Container(terms=(term,))
+    object.__setattr__(term, "exponent", cyclic)
+
+    with pytest.raises(ValueError, match="must be acyclic"):
+        adapt_petra_shape(cyclic)
+
+
+def test_adapter_rejects_out_of_bounds_native_shape_before_validation() -> None:
+    deep: Leaf | Container = Leaf()
+    for _ in range(1_100):
+        deep = Container(terms=(Term(root=Root(0), exponent=deep),))
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        adapt_petra_shape(deep)
+
+
+def test_adapter_gives_bounds_first_precedence_to_malformed_width_four() -> None:
+    corrupted = Container(terms=(Term(root=Root(0), exponent=Leaf()),))
+    object.__setattr__(
+        corrupted,
+        "terms",
+        (
+            object(),
+            Term(root=Root(1), exponent=Leaf()),
+            Term(root=Root(2), exponent=Leaf()),
+            Term(root=Root(3), exponent=Leaf()),
+        ),
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        adapt_petra_shape(corrupted)
+
+
+def test_adapter_counts_shared_native_children_by_occurrence() -> None:
+    shared = Container(
+        terms=(
+            Term(root=Root(0), exponent=Leaf()),
+            Term(root=Root(1), exponent=Leaf()),
+        )
+    )
+    eight_occurrences = Container(
+        terms=(
+            Term(root=Root(0), exponent=shared),
+            Term(root=Root(1), exponent=shared),
+            Term(root=Root(2), exponent=Leaf()),
+        )
+    )
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        adapt_petra_shape(eight_occurrences)
+
+
+def test_restore_and_encoding_reject_deep_hostile_kernel_chain() -> None:
+    deep: Terminal | OrderedGroup = Terminal()
+    for _ in range(1_100):
+        deep = OrderedGroup(children=(deep,))
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        restore_petra_shape(deep)
+
+    with pytest.raises(ValueError, match=VISION_SHAPE_OUT_OF_BOUNDS):
+        encode_geometry(deep)
 
 
 @pytest.mark.parametrize(

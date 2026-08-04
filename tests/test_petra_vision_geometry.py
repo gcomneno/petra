@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import hashlib
 import inspect
 from dataclasses import fields
 from functools import lru_cache
@@ -14,6 +15,9 @@ from petra.vision import (
     GeometrySyntaxError,
     OrderedGroup,
     OrthogonalGeometry,
+    PHASE_1_MAX_GEOMETRY_CELLS,
+    PHASE_1_MAX_GEOMETRY_HEIGHT,
+    PHASE_1_MAX_GEOMETRY_WIDTH,
     Terminal,
     VisionShape,
     decode_geometry,
@@ -152,6 +156,35 @@ def test_geometry_record_rejects_malformed_cell_data() -> None:
         OrthogonalGeometry(
             cells=((0, 0), (0, 0))
         )
+
+
+def test_geometry_record_snapshots_hostile_tuple_subclasses() -> None:
+    class MutableCells(tuple):
+        changed = False
+
+        def __iter__(self):
+            if type(self).changed:
+                return iter(((4, 0),))
+            return tuple.__iter__(self)
+
+    class MutableCell(tuple):
+        changed = False
+
+        def __iter__(self):
+            if type(self).changed:
+                return iter((9, 9))
+            return tuple.__iter__(self)
+
+    record = OrthogonalGeometry(
+        cells=MutableCells((MutableCell((0, 0)),))
+    )
+    MutableCells.changed = True
+    MutableCell.changed = True
+
+    assert type(record.cells) is tuple
+    assert type(record.cells[0]) is tuple
+    assert record.cells == ((0, 0),)
+    assert decode_geometry(record) == Terminal()
 
 
 def test_terminal_is_one_solid_unit_cell_at_the_origin() -> None:
@@ -304,6 +337,35 @@ def test_phase_1_geometry_is_injective_over_the_bounded_corpus() -> None:
 
     assert len(PHASE_1_CORPUS) == 110
     assert len(geometries) == len(PHASE_1_CORPUS)
+
+
+def test_all_existing_phase_1_geometries_retain_their_exact_records() -> None:
+    records = b"\n".join(
+        repr(encode_geometry(shape).cells).encode()
+        for shape in PHASE_1_CORPUS
+    )
+
+    assert hashlib.sha256(records).hexdigest() == (
+        "bec840cd14a9c9d3a9196aef856e3efc60d63977085c441c5b6a86b0360e868a"
+    )
+
+
+def test_decoder_accepts_canonical_geometry_at_every_resource_maximum() -> None:
+    geometries = tuple(
+        encode_geometry(shape)
+        for shape in PHASE_1_CORPUS
+    )
+
+    widest = max(geometries, key=lambda geometry: geometry_extent(geometry)[0])
+    tallest = max(geometries, key=lambda geometry: geometry_extent(geometry)[1])
+    fullest = max(geometries, key=lambda geometry: len(geometry.cells))
+
+    assert geometry_extent(widest)[0] == PHASE_1_MAX_GEOMETRY_WIDTH
+    assert geometry_extent(tallest)[1] == PHASE_1_MAX_GEOMETRY_HEIGHT
+    assert len(fullest.cells) == PHASE_1_MAX_GEOMETRY_CELLS
+    assert decode_geometry(widest) in PHASE_1_CORPUS
+    assert decode_geometry(tallest) in PHASE_1_CORPUS
+    assert decode_geometry(fullest) in PHASE_1_CORPUS
 
 
 def test_child_order_is_carried_only_by_bay_position() -> None:
@@ -489,6 +551,35 @@ def test_decoder_rejects_small_hollow_object_as_a_container() -> None:
         match=GEOMETRY_MALFORMED,
     ):
         decode_geometry(hollow)
+
+
+def test_decoder_rejects_a_huge_span_before_perimeter_construction() -> None:
+    hostile = OrthogonalGeometry(
+        cells=(
+            (0, 0),
+            (0, 4),
+            (999_999_999, 0),
+            (999_999_999, 4),
+        )
+    )
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(hostile)
+
+
+def test_decoder_rejects_coordinate_integer_resource_abuse() -> None:
+    hostile = OrthogonalGeometry(
+        cells=((0, 0), (1 << 80, 0))
+    )
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(hostile)
 
 
 def test_horizontal_reflection_is_a_different_valid_message() -> None:

@@ -19,6 +19,10 @@ Cell: TypeAlias = tuple[int, int]
 GEOMETRY_MALFORMED = (
     "geometry does not match the Phase 1 canonical grammar"
 )
+PHASE_1_MAX_GEOMETRY_CELLS = 181
+PHASE_1_MAX_GEOMETRY_WIDTH = 25
+PHASE_1_MAX_GEOMETRY_HEIGHT = 13
+PHASE_1_MAX_COORDINATE_MAGNITUDE = (1 << 63) - 1
 
 
 class GeometrySyntaxError(ValueError):
@@ -35,28 +39,53 @@ class OrthogonalGeometry:
         if not isinstance(self.cells, tuple):
             raise TypeError("geometry cells must be a tuple")
 
-        if not self.cells:
-            raise ValueError("geometry cells must be non-empty")
+        # Snapshot tuple subclasses at the public representation boundary.
+        # They can otherwise make later iteration depend on external mutable
+        # state despite this frozen dataclass.
+        source_cells = (
+            self.cells
+            if type(self.cells) is tuple
+            else tuple(self.cells)
+        )
+        trusted_cells: list[Cell] = []
 
-        for cell in self.cells:
-            if not isinstance(cell, tuple) or len(cell) != 2:
+        for cell in source_cells:
+            if not isinstance(cell, tuple):
                 raise TypeError(
                     "every geometry cell must be an (x, y) tuple"
                 )
 
-            x, y = cell
+            trusted_cell = (
+                cell
+                if type(cell) is tuple
+                else tuple(cell)
+            )
 
+            if len(trusted_cell) != 2:
+                raise TypeError(
+                    "every geometry cell must be an (x, y) tuple"
+                )
+
+            x, y = trusted_cell
             if type(x) is not int or type(y) is not int:
                 raise TypeError(
                     "geometry coordinates must be exact integers"
                 )
 
-        if tuple(sorted(self.cells)) != self.cells:
+            trusted_cells.append((x, y))
+
+        cells = tuple(trusted_cells)
+        object.__setattr__(self, "cells", cells)
+
+        if not cells:
+            raise ValueError("geometry cells must be non-empty")
+
+        if tuple(sorted(cells)) != cells:
             raise ValueError(
                 "geometry cells must use canonical coordinate order"
             )
 
-        if len(set(self.cells)) != len(self.cells):
+        if len(set(cells)) != len(cells):
             raise ValueError("geometry cells must not contain duplicates")
 
 
@@ -79,16 +108,17 @@ def normalize_geometry(
     """Translate geometry so that both minimum coordinates are zero."""
 
     current = _require_geometry(geometry)
+    cells = _trusted_geometry_cells(current)
 
-    minimum_x = min(x for x, _ in current.cells)
-    minimum_y = min(y for _, y in current.cells)
+    minimum_x = min(x for x, _ in cells)
+    minimum_y = min(y for _, y in cells)
 
     if minimum_x == 0 and minimum_y == 0:
         return current
 
     return _make_geometry(
         (x - minimum_x, y - minimum_y)
-        for x, y in current.cells
+        for x, y in cells
     )
 
 
@@ -98,11 +128,12 @@ def geometry_extent(
     """Return the width and height of one geometry bounding box."""
 
     current = _require_geometry(geometry)
+    cells = _trusted_geometry_cells(current)
 
-    minimum_x = min(x for x, _ in current.cells)
-    maximum_x = max(x for x, _ in current.cells)
-    minimum_y = min(y for _, y in current.cells)
-    maximum_y = max(y for _, y in current.cells)
+    minimum_x = min(x for x, _ in cells)
+    maximum_x = max(x for x, _ in cells)
+    minimum_y = min(y for _, y in cells)
+    maximum_y = max(y for _, y in cells)
 
     return (
         maximum_x - minimum_x + 1,
@@ -198,11 +229,89 @@ def decode_geometry(
 ) -> VisionShape:
     """Decode geometry after canonical translation normalisation."""
 
-    normalized = normalize_geometry(
-        _require_geometry(geometry)
+    current = _require_geometry(geometry)
+
+    try:
+        cells = _trusted_geometry_cells(
+            current,
+            enforce_decoder_budgets=True,
+        )
+    except (TypeError, ValueError) as error:
+        _reject(str(error))
+
+    minimum_x = min(x for x, _ in cells)
+    minimum_y = min(y for _, y in cells)
+    normalized = (
+        current
+        if minimum_x == 0 and minimum_y == 0
+        else _make_geometry(
+            (x - minimum_x, y - minimum_y)
+            for x, y in cells
+        )
     )
 
     return _decode_normalized_geometry(normalized)
+
+
+def _trusted_geometry_cells(
+    geometry: OrthogonalGeometry,
+    *,
+    enforce_decoder_budgets: bool = False,
+) -> tuple[Cell, ...]:
+    """Recheck a record after construction or hostile attribute mutation."""
+
+    cells = geometry.cells
+
+    if type(cells) is not tuple:
+        raise TypeError("geometry cells must be an exact tuple")
+
+    if not cells:
+        raise ValueError("geometry cells must be non-empty")
+
+    if enforce_decoder_budgets and len(cells) > PHASE_1_MAX_GEOMETRY_CELLS:
+        raise ValueError("geometry exceeds the Phase 1 cell budget")
+
+    for cell in cells:
+        if type(cell) is not tuple or len(cell) != 2:
+            raise TypeError(
+                "every geometry cell must be an exact (x, y) tuple"
+            )
+
+        x, y = cell
+        if type(x) is not int or type(y) is not int:
+            raise TypeError("geometry coordinates must be exact integers")
+
+        if enforce_decoder_budgets and (
+            x > PHASE_1_MAX_COORDINATE_MAGNITUDE
+            or x < -PHASE_1_MAX_COORDINATE_MAGNITUDE
+            or y > PHASE_1_MAX_COORDINATE_MAGNITUDE
+            or y < -PHASE_1_MAX_COORDINATE_MAGNITUDE
+        ):
+            raise ValueError(
+                "geometry coordinates exceed the Phase 1 resource limit"
+            )
+
+    if tuple(sorted(cells)) != cells:
+        raise ValueError("geometry cells must use canonical coordinate order")
+
+    if len(set(cells)) != len(cells):
+        raise ValueError("geometry cells must not contain duplicates")
+
+    if enforce_decoder_budgets:
+        minimum_x = min(x for x, _ in cells)
+        maximum_x = max(x for x, _ in cells)
+        minimum_y = min(y for _, y in cells)
+        maximum_y = max(y for _, y in cells)
+        width = maximum_x - minimum_x + 1
+        height = maximum_y - minimum_y + 1
+
+        if width > PHASE_1_MAX_GEOMETRY_WIDTH:
+            raise ValueError("geometry exceeds the Phase 1 width budget")
+
+        if height > PHASE_1_MAX_GEOMETRY_HEIGHT:
+            raise ValueError("geometry exceeds the Phase 1 height budget")
+
+    return cells
 
 
 def _decode_normalized_geometry(
@@ -313,6 +422,11 @@ def _decode_normalized_geometry(
         children=tuple(decoded_children),
     )
 
+    try:
+        validate_vision_shape(decoded)
+    except (TypeError, ValueError) as error:
+        _reject(str(error))
+
     if _encode_valid_shape(decoded) != geometry:
         _reject("geometry is not the canonical encoding of its shape")
 
@@ -330,6 +444,10 @@ __all__ = [
     "GEOMETRY_MALFORMED",
     "GeometrySyntaxError",
     "OrthogonalGeometry",
+    "PHASE_1_MAX_COORDINATE_MAGNITUDE",
+    "PHASE_1_MAX_GEOMETRY_CELLS",
+    "PHASE_1_MAX_GEOMETRY_HEIGHT",
+    "PHASE_1_MAX_GEOMETRY_WIDTH",
     "decode_geometry",
     "encode_geometry",
     "geometry_extent",
