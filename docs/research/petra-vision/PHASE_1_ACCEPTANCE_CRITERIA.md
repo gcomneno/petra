@@ -145,8 +145,11 @@ occurrences. It contains 110 shapes with exact node-count distribution
 `1, 1, 2, 5, 12, 28, 61` for counts one through seven. Across that corpus it
 records 110 root anchors, 574 non-root geometry paths, 574 term resolutions,
 574 exponent-slot resolutions, and 1,258 positive resolutions. This is
-evidence for the bounded implementation only; final consolidated validation
-and the final results and limitations record remain pending.
+evidence for the bounded implementation only. The final consolidated
+validation and the results and limitations record are complete as documented
+for the validated implementation and evidence head
+`ee88cec361b673e4a7b9f17de9300344d5c87d06`; the final independent completion
+audit remains pending.
 
 ## G. Compositionality
 
@@ -324,8 +327,10 @@ Phase 1 is complete only when:
 7. PETRA address resolution agrees with the adapter projection;
 8. the decoder uses geometry alone;
 9. the dependency boundary is verified;
-10. all existing PETRA tests remain green;
+10. the consolidated canonical PETRA-only suite remains green;
 11. results and limitations are recorded in the confidential dossier.
+12. a final independent completion audit confirms the complete dossier and
+    exact pull-request state.
 
 ## Explicit non-claim
 
@@ -365,9 +370,19 @@ timing run records 7 samples with 100 iterations per batch. Its values remain
 diagnostic only. The committed complexity contract evidence records nine
 passing tests; no production implementation was modified for this validation.
 
-This is not a completion declaration. The remaining acceptance-gate evidence
-still to be completed and recorded includes final independent completion review
-of the combined exhaustive evidence, final consolidated PETRA-suite evidence
-in the review environment, and the required final results and limitations
-record. Native PETRA kernel hardening remains outside this Phase 1 adapter
-boundary.
+The dedicated independent evidence-oracle suite passed with 7 passed. After
+the oracle repair, the focused PETRA VISION suite passed with 566 passed. The
+final consolidated canonical PETRA-only validation covered 12
+`tests/test_petra_*.py` files and passed with 1,006 passed, zero failures, in
+3.48 seconds. Push and pull-request CI both passed on the validated
+implementation and evidence head `ee88cec361b673e4a7b9f17de9300344d5c87d06`;
+the repository remained unchanged after the PETRA-only validation.
+
+This is not a completion declaration. Implementation, bounded evidence,
+independent repair review, and final consolidated PETRA validation are
+complete. The remaining legitimate gate is the final independent completion
+audit of the complete dossier and exact pull-request state. After that audit,
+the Phase 1 completion decision may be recorded. Native PETRA kernel
+hardening and the repository-wide PET-to-PETRA migration remain outside this
+Phase 1 adapter boundary; the latter requires a separate prerequisite branch
+or workstream.
