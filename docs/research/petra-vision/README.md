@@ -136,19 +136,28 @@ changed for this validation.
 ## Research status
 
 Current phase: Phase 1 kernel, adapter, and minimal geometric
-grammar specification. Complexity evidence is complete: the committed JSON
+grammar is formally complete for the declared bounded static contract only.
+Complexity evidence is complete: the committed JSON
 and Markdown artifacts record schema `petra.vision.phase1.complexity.v1`,
 version `1`, for an independent 110-shape corpus, with nine passing complexity
 contract tests. Timing values are diagnostic only, and no production
 implementation was modified for this validation. The validated implementation
 and evidence head is `ee88cec361b673e4a7b9f17de9300344d5c87d06`; its final
-consolidated PETRA validation and results/limitations record are complete. A
-cross-cutting dynamical-geometry research hypothesis records a possible
+consolidated PETRA validation and results/limitations record are complete.
+The completion decision followed the final independent read-only audit of the
+complete dossier and exact pull-request state at
+`e45f34859d5111317d8847248e55bca71c2b344a`, which ended with
+`READY TO RECORD PHASE 1 COMPLETION`; it did not rerun the consolidated
+1,006-test implementation validation on that later documentation revision.
+Completion is limited to the 110 ordered-shape kernel domain, maximum width
+3, maximum depth 3, maximum structural-node count 7, the declared canonical
+static geometry, the native PETRA adapter subset, and the recorded
+malformed-input, dependency, correspondence, complexity, and validation
+evidence. A cross-cutting dynamical-geometry research hypothesis records a possible
 temporal readout of canonical geometry under declared propagation laws; it is
-unproven and remains outside the Phase 1 completion gate. Phase 1 remains
-explicitly incomplete pending the final independent completion audit of the
-complete dossier and exact pull-request state. After that audit, the Phase 1
-completion decision may be recorded.
+unproven and remains outside the Phase 1 completion gate. The incomplete
+historical PET-to-PETRA migration remains a separate workstream and is not a
+Phase 1 requirement or regression.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this

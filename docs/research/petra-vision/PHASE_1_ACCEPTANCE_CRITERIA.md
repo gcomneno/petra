@@ -148,8 +148,10 @@ records 110 root anchors, 574 non-root geometry paths, 574 term resolutions,
 evidence for the bounded implementation only. The final consolidated
 validation and the results and limitations record are complete as documented
 for the validated implementation and evidence head
-`ee88cec361b673e4a7b9f17de9300344d5c87d06`; the final independent completion
-audit remains pending.
+`ee88cec361b673e4a7b9f17de9300344d5c87d06`. The complete dossier and exact
+pull-request state at `e45f34859d5111317d8847248e55bca71c2b344a` received the
+final independent read-only completion audit; that audit did not rerun the
+consolidated implementation validation.
 
 ## G. Compositionality
 
@@ -329,8 +331,21 @@ Phase 1 is complete only when:
 9. the dependency boundary is verified;
 10. the consolidated canonical PETRA-only suite remains green;
 11. results and limitations are recorded in the confidential dossier.
-12. a final independent completion audit confirms the complete dossier and
-    exact pull-request state.
+12. **Satisfied:** a final independent completion audit confirms the complete
+    dossier and exact pull-request state as internally consistent and free of
+    blocking findings.
+
+All Phase 1 completion-gate items are satisfied. The final independent
+read-only completion audit of the complete dossier and exact pull-request
+state at `e45f34859d5111317d8847248e55bca71c2b344a` ended with
+`READY TO RECORD PHASE 1 COMPLETION`. Phase 1 is formally complete for the
+declared bounded static contract only: the 110 ordered-shape kernel domain,
+maximum width 3, maximum depth 3, maximum structural-node count 7, the
+declared canonical static geometry, the native PETRA adapter subset, and the
+recorded malformed-input, dependency, correspondence, complexity, and
+validation evidence. The independently validated implementation and evidence
+revision remains `ee88cec361b673e4a7b9f17de9300344d5c87d06`; the later audit
+did not rerun its consolidated 1,006-test implementation validation.
 
 ## Explicit non-claim
 
@@ -347,7 +362,7 @@ It does not establish:
 - final visual language;
 - production readiness.
 
-## Current hardening evidence and remaining gate work
+## Current hardening evidence and completion record
 
 The prototype now has focused regression coverage for the enforced structural
 and geometric resource boundaries, exact native adapter runtime types,
@@ -378,11 +393,17 @@ final consolidated canonical PETRA-only validation covered 12
 implementation and evidence head `ee88cec361b673e4a7b9f17de9300344d5c87d06`;
 the repository remained unchanged after the PETRA-only validation.
 
-This is not a completion declaration. Implementation, bounded evidence,
-independent repair review, and final consolidated PETRA validation are
-complete. The remaining legitimate gate is the final independent completion
-audit of the complete dossier and exact pull-request state. After that audit,
-the Phase 1 completion decision may be recorded. Native PETRA kernel
-hardening and the repository-wide PET-to-PETRA migration remain outside this
-Phase 1 adapter boundary; the latter requires a separate prerequisite branch
-or workstream.
+This is a completion declaration for the declared bounded static contract
+only. The final independent read-only audit of the complete dossier and exact
+pull-request state at `e45f34859d5111317d8847248e55bca71c2b344a` ended with
+`READY TO RECORD PHASE 1 COMPLETION`, with no blocking findings and no bounded
+Phase 1 production defect. It confirmed consistency among implementation,
+tests, generated evidence, dossier, revision attribution, and exact remote
+PR/CI state; it independently recomputed the 110-shape corpus, deterministic
+records, digests, injectivity, and roundtrips, and confirmed the stated
+boundary segregation. The 1,006-test consolidated validation remains
+attributed solely to `ee88cec361b673e4a7b9f17de9300344d5c87d06` and was not
+rerun on the later documentation revision. Native PETRA kernel hardening and
+the repository-wide PET-to-PETRA migration remain outside this Phase 1 adapter
+boundary; the incomplete historical migration is a separate workstream, not a
+Phase 1 requirement or regression.

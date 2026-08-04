@@ -9,10 +9,19 @@ This record concerns the implementation and evidence head validated at
 afterward is not the tested implementation revision.
 
 Implementation, bounded evidence, independent repair review, and final
-consolidated PETRA validation are complete. Phase 1 is not yet declared
-complete: the remaining legitimate gate is a final independent completion
-audit of the complete dossier and exact pull-request state. After that audit,
-the Phase 1 completion decision may be recorded.
+consolidated PETRA validation are complete. The complete dossier and exact
+pull-request state at `e45f34859d5111317d8847248e55bca71c2b344a` then received
+the final independent read-only completion audit, which ended with
+`READY TO RECORD PHASE 1 COMPLETION`. Phase 1 is formally complete for the
+declared bounded static contract only. The audit found no blocking findings
+and no bounded Phase 1 production defect; it confirmed internal consistency
+of the implementation, tests, generated evidence, dossier, revision
+attribution, and exact remote PR/CI state. It independently recomputed the
+110-shape corpus, deterministic records, digests, injectivity, and roundtrips,
+and confirmed sound segregation of the abstract grammar, raw-cell traversal,
+production codec, and native address resolver. This completion audit did not
+rerun the consolidated 1,006-test implementation validation on the later
+documentation revision.
 
 ## Validated execution evidence
 
@@ -55,6 +64,12 @@ The evidence sources have segregated roles:
 
 These results establish the bounded static contract only.
 
+That contract is limited to the 110 ordered-shape kernel domain, maximum
+width 3, maximum depth 3, maximum structural-node count 7, the declared
+canonical static geometry, the native PETRA adapter subset, and the recorded
+malformed-input, dependency, correspondence, complexity, and validation
+evidence.
+
 ## Repository-wide validation observations
 
 These observations are separate from the PETRA VISION Phase 1 result.
@@ -72,7 +87,9 @@ These observations expose the already documented incomplete PET-to-PETRA
 runtime replacement. They are not evidence of PETRA VISION regressions. The
 repository-wide migration must be repaired in a separate prerequisite branch
 or workstream. It is not a PETRA VISION Phase 1 requirement, and this record
-does not propose permanently installing both namespaces.
+does not propose permanently installing both namespaces. The final audit
+treated this incomplete historical migration as a non-blocking observation,
+not a Phase 1 requirement or regression.
 
 ## Limitations and non-claims
 
