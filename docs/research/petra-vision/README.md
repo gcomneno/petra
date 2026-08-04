@@ -112,6 +112,10 @@ changed for this validation.
   defines the minimal nested-frame proof geometry.
 - `PHASE_1_ACCEPTANCE_CRITERIA.md`
   defines the executable proof obligations and completion gate.
+- `PHASE_1_COMPLEXITY_DATA.json`
+  records the deterministic, schema-governed Phase 1 complexity evidence.
+- `PHASE_1_COMPLEXITY_RESULTS.md`
+  records the readable Phase 1 complexity evidence results and limitations.
 - `PUBLIC_DISCLOSURE_BOUNDARY.md`
   separates previously public work from the new confidential work.
 - `EXPERIMENT_PLAN.md`
@@ -122,10 +126,14 @@ changed for this validation.
 ## Research status
 
 Current phase: Phase 1 kernel, adapter, and minimal geometric
-grammar specification. Phase 1 remains incomplete pending independent
-completion review of exhaustive corpus evidence, complexity measurements,
-final consolidated PETRA-suite evidence, and a final results and limitations
-record.
+grammar specification. Complexity evidence is complete: the committed JSON
+and Markdown artifacts record schema `petra.vision.phase1.complexity.v1`,
+version `1`, for an independent 110-shape corpus, with nine passing complexity
+contract tests. Timing values are diagnostic only, and no production
+implementation was modified for this validation. Phase 1 remains incomplete
+pending final independent completion review of the combined exhaustive
+evidence, final consolidated PETRA-suite evidence in the review environment,
+and the final results and limitations record.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this

@@ -249,19 +249,53 @@ limit remains malformed and must follow the decoder failure contract above.
 
 ## K. Complexity measurements
 
-For every corpus shape, record:
+Complexity evidence SHALL use schema identifier
+`petra.vision.phase1.complexity.v1` at schema version `1`. Its JSON top level
+SHALL contain exactly `schema`, `schema_version`, `environment`,
+`methodology`, `corpus`, `summary`, and `shapes`.
 
-- node count;
-- depth;
-- maximum width;
-- primitive count;
-- bounding-box width;
-- bounding-box height;
-- encoding time;
-- decoding time.
+`environment` SHALL contain exactly `python_implementation`, `python_version`,
+`platform`, and `timer`. The Python version SHALL be the timestamp-free Python
+release version. Evidence SHALL NOT contain timestamps, Python build dates,
+repository paths, usernames, hostnames, Git branch or commit metadata, or
+network-derived metadata.
 
-These measurements are diagnostic and do not yet impose performance
-success thresholds.
+`methodology` SHALL contain exactly `samples`, `iterations`, `warmup`,
+`timing`, `limitations`, `shape_identifier_derivation`, and
+`geometry_digest_derivation`. Timing is the median of per-batch integer
+nanoseconds per operation: each raw batch duration is floor-divided by the
+iteration count before the median is taken. Loop overhead is not subtracted.
+
+`corpus` SHALL contain exactly `shape_count`, `maximum_width`,
+`maximum_depth`, and `maximum_structural_node_occurrences`. `summary` SHALL
+contain exactly `deterministic_maxima`,
+`encoding_nanoseconds_per_operation`, and
+`decoding_nanoseconds_per_operation`; each timing aggregate SHALL contain
+integer `minimum`, `median`, and `maximum` values.
+
+Each `shapes` record SHALL contain exactly the following fields and types:
+
+- `index` (integer);
+- `shape_id` (string);
+- `structural_node_count`, `structural_depth`, and
+  `maximum_ordered_group_width` (integers);
+- `occupied_primitive_count`, `geometry_bounding_box_width`, and
+  `geometry_bounding_box_height` (integers);
+- `geometry_cells_digest` (string);
+- `roundtrip_verified` (boolean);
+- `encoding_median_nanoseconds_per_operation` and
+  `decoding_median_nanoseconds_per_operation` (integers).
+
+Both digest fields SHALL be lowercase, 64-character hexadecimal SHA-256
+values. A shape identifier is SHA-256 over UTF-8 text using this canonical
+tagged recursive encoding: `Terminal` is `T`; an ordered group with children
+`child0` through `childn` is `G[encoding(child0),...,encoding(childn)]`. The
+geometry digest is SHA-256 over the UTF-8 canonical compact JSON serialization
+of the geometry cell record, using JSON separators `,` and `:`.
+
+These measurements are diagnostic only. They impose no performance threshold
+and make no performance-success, optimality, production-readiness, or
+cross-machine-comparison claim.
 
 ## L. Phase 1 completion gate
 
@@ -308,9 +342,18 @@ The address evidence records 574 term resolutions, 574 exponent-slot
 resolutions, 1,258 positive address resolutions in total, and the three
 required failure-correspondence cases.
 
+The complexity evidence is complete. It conforms to the normative Section K
+schema `petra.vision.phase1.complexity.v1` at version `1`, over an independent
+corpus with node-occurrence counts `1, 1, 2, 5, 12, 28, 61` and total size
+`110`. The deterministic maxima recorded are 7 nodes, depth 3, ordered-group
+width 3, 181 occupied cells, and geometry dimensions 25 by 13. The diagnostic
+timing run records 7 samples with 100 iterations per batch. Its values remain
+diagnostic only. The committed complexity contract evidence records nine
+passing tests; no production implementation was modified for this validation.
+
 This is not a completion declaration. The remaining acceptance-gate evidence
-still to be completed and recorded includes independent completion review of
-the exhaustive corpus evidence, complexity measurements, final consolidated
-PETRA-suite evidence in the review environment, and the required results and
-limitations record. Native PETRA kernel hardening remains outside this Phase 1
-adapter boundary.
+still to be completed and recorded includes final independent completion review
+of the combined exhaustive evidence, final consolidated PETRA-suite evidence
+in the review environment, and the required final results and limitations
+record. Native PETRA kernel hardening remains outside this Phase 1 adapter
+boundary.
