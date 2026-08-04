@@ -45,23 +45,41 @@ def _require_vision_shape(value: object) -> VisionShape:
 
 
 def validate_vision_shape(shape: VisionShape) -> None:
-    """Validate a finite immutable VISION kernel shape iteratively."""
+    """Validate one finite immutable VISION kernel shape iteratively."""
 
     root = _require_vision_shape(shape)
-    pending: list[VisionShape] = [root]
-    visited: set[int] = set()
+
+    pending: list[tuple[VisionShape, bool]] = [
+        (root, False)
+    ]
+    active: set[int] = set()
+    validated: set[int] = set()
 
     while pending:
-        current = pending.pop()
+        current, expanded = pending.pop()
         current_id = id(current)
 
-        if current_id in visited:
+        if current_id in validated:
             continue
 
-        visited.add(current_id)
+        if expanded:
+            active.remove(current_id)
+            validated.add(current_id)
+            continue
+
+        if current_id in active:
+            raise ValueError("VISION shape must be acyclic")
+
+        active.add(current_id)
+        pending.append((current, True))
 
         if isinstance(current, Terminal):
             continue
+
+        if not isinstance(current.children, tuple):
+            raise TypeError(
+                "ordered group children must be a tuple"
+            )
 
         if not current.children:
             raise ValueError(
@@ -69,7 +87,14 @@ def validate_vision_shape(shape: VisionShape) -> None:
             )
 
         for child in reversed(current.children):
-            pending.append(_require_vision_shape(child))
+            required_child = _require_vision_shape(child)
+            child_id = id(required_child)
+
+            if child_id in active:
+                raise ValueError("VISION shape must be acyclic")
+
+            if child_id not in validated:
+                pending.append((required_child, False))
 
 
 __all__ = [

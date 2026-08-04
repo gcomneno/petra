@@ -124,6 +124,32 @@ def test_validation_rejects_non_kernel_values(
         )
 
 
+def test_validation_rejects_a_manually_injected_cycle() -> None:
+    cyclic = OrderedGroup(children=(Terminal(),))
+
+    object.__setattr__(
+        cyclic,
+        "children",
+        (cyclic,),
+    )
+
+    with pytest.raises(ValueError, match="must be acyclic"):
+        validate_vision_shape(cyclic)
+
+
+def test_validation_rechecks_a_manually_corrupted_child_container() -> None:
+    corrupted = OrderedGroup(children=(Terminal(),))
+
+    object.__setattr__(
+        corrupted,
+        "children",
+        [Terminal()],
+    )
+
+    with pytest.raises(TypeError, match="must be a tuple"):
+        validate_vision_shape(corrupted)
+
+
 def test_kernel_runtime_types_contain_only_contract_fields() -> None:
     assert tuple(field.name for field in fields(Terminal)) == ()
     assert tuple(field.name for field in fields(OrderedGroup)) == (
