@@ -164,6 +164,127 @@ After a successful rewrite, the affected shape is normalized before witnesses
 and address effects are finalized. A failed rewrite preserves the exact
 `before_shape`.
 
+### 1.5 Canonical textual serialization
+
+The canonical textual serialization is the public, deterministic shape
+representation used for display, transport between typed PETRA boundaries,
+fixtures, and future CLI input and output.
+
+Its grammar is:
+
+```text
+SerializedPETRA     ::= SerializedLeaf | SerializedContainer
+SerializedLeaf      ::= "1"
+SerializedContainer ::= "C(" SerializedTerm ("," SerializedTerm)* ")"
+SerializedTerm      ::= SerializedRoot "^" SerializedPETRA
+SerializedRoot      ::= "r" CanonicalIndex
+CanonicalIndex      ::= "0" | NonZeroDigit Digit*
+Digit               ::= "0" | NonZeroDigit
+NonZeroDigit        ::= "1" | "2" | "3" | "4" | "5"
+                      | "6" | "7" | "8" | "9"
+```
+
+For example:
+
+```text
+1
+C(r0^1)
+C(r0^C(r0^1),r1^1)
+C(r0^C(r0^C(r0^1)))
+```
+
+The serializer emits exactly:
+
+- ASCII characters;
+- lowercase `r`;
+- uppercase `C`;
+- decimal positional ranks without leading zeroes;
+- `^` between each root and its complete exponent target;
+- `,` between sibling terms;
+- parentheses around every container;
+- no whitespace;
+- no trailing newline.
+
+The parser may accept ASCII whitespace before, after, or between lexical
+tokens. Whitespace is not part of canonical output. Therefore accepted input
+such as `C( r0 ^ 1 , r1 ^ 1 )` serializes canonically as
+`C(r0^1,r1^1)`.
+
+Only ASCII space, horizontal tab, line feed, carriage return, form feed, and
+vertical tab are whitespace. In particular, whitespace is never allowed
+inside the single `r`-plus-decimal-digits root token.
+
+#### 1.5.1 Normative resource limits
+
+Canonical text processing uses these fixed limits:
+
+| Resource | Limit |
+| --- | ---: |
+| Input text length (including permitted whitespace) | 65,536 ASCII characters |
+| Nested container depth | 2,048 |
+| Total model nodes | 10,001 |
+| Terms in one container | 1,024 |
+| Decimal digits in one root-rank token | 4 |
+
+A total model node is one `Leaf`, `Container`, or `Term`; `Root` is owned by a
+term and is not counted separately. The odd total leaves room for the largest
+possible complete PETRA tree under that accounting. The limits are deliberately
+fixed and modest: they comfortably cover normal PETRA shapes, permit deep
+machine-generated shapes without relying on a Python call stack, and bound
+textual allocation and traversal work. The four-digit rank limit matches the
+largest canonical rank (`r1023`) allowed by the container-width limit.
+
+The parser checks the input-length limit before scanning and checks every other
+limit while scanning, before growing an unbounded container or nesting stack.
+Any malformed, truncated, hostile, or over-limit textual input raises
+`ShapeSyntaxError("shape-text-malformed")`.
+
+The serializer validates its typed input iteratively and applies the same
+depth, total-node, container-width, root-rank-digit, and rendered-text-length
+budgets. A typed shape that exceeds one of those budgets raises
+`ValueError("shape-serialization-limit-exceeded")`. Other invalid typed
+shapes retain the existing validation exception behavior (for example, a
+non-canonical rank raises `ValueError`).
+
+The parser constructs the typed PETRA model directly. It must not introduce a
+second public shape model or depend on the historical PET runtime.
+
+Parsed root ranks are preserved exactly long enough for canonical validation.
+The parser must not repair, normalize, reorder, or renumber them. Thus
+`C(r1^1)` is syntactically well formed but fails canonical shape validation;
+it is not silently converted to `C(r0^1)`.
+
+Parsing distinguishes textual grammar failure from canonical model validation:
+
+- malformed or incomplete text raises the dedicated PETRA shape syntax error
+  with stable reason `shape-text-malformed`;
+- a syntactically complete shape that violates canonical model invariants
+  raises the existing validation error;
+- non-text input is a textual grammar failure.
+
+Serialization first requires a valid canonical typed shape through the existing
+validation contract. It must not silently normalize invalid typed input.
+
+The public round-trip laws are:
+
+```text
+parse_shape(serialize_shape(shape)) == shape
+serialize_shape(parse_shape(text)) == canonical textual form of text
+```
+
+The second law normalizes only accepted textual presentation differences such
+as whitespace. It does not normalize semantically invalid root ranks or repair
+invalid PETRA structures.
+
+This shape serialization is distinct from:
+
+- structural-address serialization;
+- operator invocation and result envelopes;
+- JSON representation;
+- numeric projection;
+- persistence schema evolution;
+- historical PET formats.
+
 ## 2. Positional structural addresses
 
 ### 2.1 Syntax

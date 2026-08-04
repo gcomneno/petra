@@ -11,6 +11,8 @@ from petra import (
     Root,
     Term,
     normalize_shape,
+    parse_shape,
+    serialize_shape,
     to_canonical_data,
     validate_shape,
 )
@@ -22,6 +24,27 @@ def leaf_term(rank: int) -> Term:
 
 def single_leaf_container(rank: int = 0) -> Container:
     return Container(terms=(leaf_term(rank),))
+
+
+def deep_unary_shape(
+    depth: int,
+    terminal_width: int = 1,
+) -> Container:
+    shape: Leaf | Container = Leaf()
+    for level in range(depth):
+        if level == 0:
+            shape = Container(
+                terms=tuple(
+                    Term(root=Root(rank), exponent=Leaf())
+                    for rank in range(terminal_width)
+                )
+            )
+        else:
+            shape = Container(
+                terms=(Term(root=Root(0), exponent=shape),)
+            )
+    assert isinstance(shape, Container)
+    return shape
 
 
 def test_leaf_is_the_unique_terminal_shape_value() -> None:
@@ -45,6 +68,15 @@ def test_root_exposes_only_its_canonical_rank_name() -> None:
 
     assert root.rank == 2
     assert root.name == "r2"
+
+
+def test_root_rejects_int_subclasses_before_they_can_format() -> None:
+    class HostileInt(int):
+        def __format__(self, format_spec: str) -> str:
+            raise AssertionError("hostile formatting must not run")
+
+    with pytest.raises(TypeError, match="root rank must be an int"):
+        Root(HostileInt(0))
 
 
 @pytest.mark.parametrize("rank", [-1, True, 1.5, "1"])
@@ -226,6 +258,36 @@ def test_independently_allocated_canonical_shapes_compare_equal() -> None:
     assert left == right
     assert left is not right
     assert left.terms[0] is not right.terms[0]
+
+
+def test_deep_shape_equality_hashing_and_round_trip_are_stack_safe() -> None:
+    depth = 1_200
+    left = deep_unary_shape(depth)
+    right = deep_unary_shape(depth)
+
+    assert left == right
+    assert hash(left) == hash(right)
+    assert {left, right} == {left}
+    assert {left: "value"}[right] == "value"
+    assert parse_shape(serialize_shape(left)) == left
+
+
+def test_deep_shape_difference_near_terminal_region_is_detected() -> None:
+    left = deep_unary_shape(1_200)
+    right = deep_unary_shape(1_200, terminal_width=2)
+
+    assert left != right
+
+
+def test_deep_term_hashing_is_stack_safe_and_preserves_root_rank() -> None:
+    left = Term(root=Root(0), exponent=deep_unary_shape(1_200))
+    right = Term(root=Root(0), exponent=deep_unary_shape(1_200))
+
+    assert left == right
+    assert hash(left) == hash(right)
+    assert left != Term(root=Root(1), exponent=right.exponent)
+    assert left != object()
+    assert left.exponent != object()
 
 
 def test_order_is_structurally_significant() -> None:

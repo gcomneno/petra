@@ -21,6 +21,12 @@ from .model import (
     to_canonical_data,
     validate_shape,
 )
+from .serialization import (
+    SHAPE_TEXT_MALFORMED,
+    ShapeSyntaxError,
+    parse_shape,
+    serialize_shape,
+)
 from .results import (
     AddressEffects,
     DefaultTarget,
@@ -57,11 +63,15 @@ __all__ = [
     "ResolvedTerm",
     "Root",
     "SuccessfulResult",
+    "ShapeSyntaxError",
+    "SHAPE_TEXT_MALFORMED",
     "Term",
     "normalize_shape",
     "parse_address",
+    "parse_shape",
     "render_address",
     "resolve_address",
+    "serialize_shape",
     "to_canonical_data",
     "apply_graft",
     "apply_prune",
