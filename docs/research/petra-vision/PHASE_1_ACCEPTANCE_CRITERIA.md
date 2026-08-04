@@ -165,14 +165,42 @@ where applicable.
 
 ## I. Dependency boundary
 
-The Phase 1 architecture must demonstrate that:
+The Phase 1 dependency contract distinguishes exact direct production imports,
+permitted eager facade initialization, test-only oracle imports, and build and
+packaging dependencies.
 
-- the geometry core depends only on the VISION kernel contract;
-- native PETRA imports and validation remain confined to the adapter;
-- canonical serialization is only a fixture or comparison oracle;
-- native address resolution is only a compatibility oracle;
-- PETRA rewrite operators are not called by geometry code;
-- unrelated PETRA roadmap work does not gate the Phase 1 proof.
+- Direct production imports are exact: `kernel` has only permitted
+  standard-library imports; `geometry` has exactly its permitted internal
+  kernel edge; and `adapter` has exactly its permitted native model and kernel
+  edges.
+- VISION production modules contain no dynamic loading or `sys.modules`
+  lookup used to bypass those direct edges. Geometry and adapter operations do
+  not call addresses, serialization, rewrites, results, canonical-data
+  helpers, numeric projection, external manifests, filesystem, environment,
+  network, database, cache, or registry channels.
+- The eager `petra.vision` facade exports the documented exact public API.
+  Its eager loading is packaging behavior and does not weaken the direct
+  module dependency contract.
+- Addresses, canonical serialization, canonical-data helpers, and rewrite
+  operators are test-only compatibility oracles where applicable; native
+  imports and validation remain confined to the adapter.
+- Setuptools, pytest, and similar tooling are build or test dependencies, not
+  semantic decoder dependencies. Unrelated PETRA roadmap work does not gate
+  the Phase 1 proof.
+
+The dependency gate is complete. Committed evidence in
+`tests/test_petra_vision_dependencies.py` records five passing
+dependency-boundary tests over an independent bounded corpus of exactly 110
+shapes. It proves the exact direct AST import graph for the kernel, geometry,
+adapter, and VISION facade; the absence of `__import__`, importlib dynamic
+loading calls, and `sys.modules` bypasses in kernel, geometry, and adapter;
+and the exact ordered public exports of the eager `petra.vision` facade. The
+evidence also documents eager parent-package loading in a fresh interpreter.
+
+Across all 110 bounded shapes, the same evidence proves operational
+independence while address, serialization, canonical-data, normalization, and
+rewrite entry points are replaced with fail-fast sentinels. No production
+implementation was changed for this validation.
 
 ## J. Malformed-geometry rejection
 
@@ -281,8 +309,8 @@ resolutions, 1,258 positive address resolutions in total, and the three
 required failure-correspondence cases.
 
 This is not a completion declaration. The remaining acceptance-gate evidence
-still to be completed and recorded includes an independently reviewed
-exhaustive corpus run, dependency-boundary review, complexity measurements,
-final consolidated PETRA-suite evidence in the review environment, and the
-required results and limitations record. Native PETRA kernel hardening remains
-outside this Phase 1 adapter boundary.
+still to be completed and recorded includes independent completion review of
+the exhaustive corpus evidence, complexity measurements, final consolidated
+PETRA-suite evidence in the review environment, and the required results and
+limitations record. Native PETRA kernel hardening remains outside this Phase 1
+adapter boundary.

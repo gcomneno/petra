@@ -49,7 +49,9 @@ distinct shapes remain distinguishable.
 
 ## Phase 3 — Native decoder
 
-Build a decoder that consumes only canonical geometry.
+Formally harden, provide independent evidence for, or extend the canonical
+geometry-only decoder already included in the bounded Phase 1 feasibility
+prototype.
 
 The decoder must not receive hidden PETRA serialisation, integer
 values, node IDs, or external ordering metadata.

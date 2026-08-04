@@ -6,14 +6,17 @@
 
 Let:
 
-- `S` be the set of supported canonical PETRA shapes;
+- `P` be the set of supported canonical native PETRA shapes;
+- `V` be the set of bounded canonical VISION kernel shapes;
 - `C` be the set of canonical PETRA VISION geometries;
-- `R` be the set of rendered physical or raster observations.
+- `R` be the set of later rendered or physical observations.
 
 The foundational functions are:
 
-- `encode_geometry: S -> C`
-- `decode_geometry: C -> S`
+- `adapt: P -> V`
+- `restore: V -> P`
+- `encode_geometry: V -> C`
+- `decode_geometry: C -> V`
 
 A later observation pipeline may introduce:
 
@@ -22,16 +25,22 @@ A later observation pipeline may introduce:
 
 ## 2. Exact roundtrip
 
-For every supported shape `s`:
+For every supported `v` in `V`:
 
-`decode_geometry(encode_geometry(s)) == s`
+`decode_geometry(encode_geometry(v)) == v`
 
-Equality is native PETRA structural equality, not merely equality of
-a serialized integer or textual representation.
+Equality is VISION kernel structural equality.
+
+For every supported `p` in `P`:
+
+`restore(decode_geometry(encode_geometry(adapt(p)))) == p`
+
+Equality is native PETRA structural equality, not merely equality of a
+serialized integer or textual representation.
 
 ## 3. Determinism
 
-For equal canonical input shapes, `encode_geometry` must produce the
+For equal canonical VISION kernel shapes, `encode_geometry` must produce the
 same canonical geometric model.
 
 Rendering differences caused by display resolution must not change
@@ -39,20 +48,23 @@ canonical geometric identity.
 
 ## 4. Injectivity
 
-Distinct supported PETRA shapes must not map to the same canonical
-geometry.
+Distinct supported VISION kernel shapes must not map to the same canonical
+geometry. Native PETRA compatibility is supplied through `adapt` and
+`restore`.
 
 Formally:
 
-`encode_geometry(a) == encode_geometry(b) => a == b`
+`for all a, b in V: encode_geometry(a) == encode_geometry(b) => a == b`
 
 ## 5. Recursive correspondence
 
-A recursive PETRA subshape must correspond to an identifiable
-recursive geometric region or construction.
+A recursive VISION kernel subshape must correspond to an identifiable
+recursive geometric region or construction. The adapter establishes the
+correspondence between supported native PETRA subshapes and VISION kernel
+subshapes.
 
-Decoding must not depend on a hidden serialized copy of the complete
-PETRA shape.
+Decoding must not depend on a hidden serialized copy of the complete VISION
+kernel shape or native PETRA shape.
 
 ## 6. Positional preservation
 

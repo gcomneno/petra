@@ -60,6 +60,45 @@ Phase 1 therefore does not wait for completion of the overall PETRA
 roadmap or for unrelated PETRA utilities that are not used by the
 adapter.
 
+### Dependency layers
+
+The Phase 1 boundary distinguishes four layers:
+
+1. Production module implementation imports: `kernel` uses only the Python
+   standard library; `geometry` directly imports only the kernel plus the
+   standard library; and `adapter` directly imports only the native model plus
+   the kernel.
+2. Package-facade initialization and re-exports: `petra.vision` is an
+   intentionally eager public facade in Phase 1. Under normal Python import
+   semantics, importing a VISION submodule still initializes its parent
+   packages and can therefore cause eager transitive loading.
+3. Test-only compatibility oracles: addresses, serialization,
+   canonical-data helpers, and rewrite operators remain test-only oracles
+   where applicable, rather than inputs or callable dependencies of geometry
+   or adapter operations.
+4. Packaging and build dependencies: setuptools, pytest, and similar tooling
+   are build or test concerns, not semantic decoder dependencies.
+
+Eager facade loading is not a direct implementation dependency of the
+geometry algorithm and does not authorize geometry or adapter code to call
+unrelated native facilities.
+
+### Dependency-boundary evidence
+
+The dependency-boundary gate is complete. The committed
+`tests/test_petra_vision_dependencies.py` evidence has five passing tests over
+an independent bounded corpus of exactly 110 shapes. It proves the exact
+direct AST import graph of kernel, geometry, adapter, and the VISION facade;
+the absence of `__import__`, importlib dynamic-loading calls, and `sys.modules`
+bypasses in kernel, geometry, and adapter; and the exact ordered public
+exports of the eager `petra.vision` facade. It also documents eager
+parent-package loading in a fresh interpreter.
+
+With address, serialization, canonical-data, normalization, and rewrite entry
+points replaced by fail-fast sentinels, the evidence proves operational
+independence across all 110 bounded shapes. No production implementation was
+changed for this validation.
+
 ## Document map
 
 - `INVENTION_DISCLOSURE.md`
@@ -83,7 +122,10 @@ adapter.
 ## Research status
 
 Current phase: Phase 1 kernel, adapter, and minimal geometric
-grammar specification.
+grammar specification. Phase 1 remains incomplete pending independent
+completion review of exhaustive corpus evidence, complexity measurements,
+final consolidated PETRA-suite evidence, and a final results and limitations
+record.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this
