@@ -80,6 +80,13 @@ No bounded corpus collision is acceptable.
 For ordered groups with structurally distinct children, every
 non-identity child permutation must produce different geometry.
 
+Left-to-right bay order carries child order. Exchanging two distinct,
+complete canonical bay regions therefore produces the canonical geometry of
+a different valid `OrderedGroup`; it is not malformed merely because the
+semantic order changed. Reordering the serialized cell tuple is not a
+semantic bay permutation: it violates the `OrthogonalGeometry`
+representation order and is handled at that representation boundary.
+
 The decoder must reconstruct child order solely from bay order.
 
 The PETRA restore adapter must derive canonical root ranks solely from
@@ -146,29 +153,49 @@ The Phase 1 architecture must demonstrate that:
 
 ## J. Malformed-geometry rejection
 
-Adversarial tests must cover at least:
+The remaining malformed-geometry matrix must define and cover, at the
+occupied-cell level, at least:
 
-- deleted outer boundary segment;
-- deleted separator;
-- extra separator;
-- reordered bays;
-- overlapping bays;
+- a deleted outer-boundary cell or segment;
+- a deleted separator cell;
+- an add-only, full-height separator that produces a noncanonical
+  partition;
+- child payload cells transplanted into fixed incompatible bay extents
+  without rebuilding the canonical parent geometry;
+- a payload intrusion or bridge through required clearance across a
+  separator;
 - empty bay;
-- duplicate child in one bay;
-- child crossing a separator;
-- non-canonical translation residue;
-- primitive outside the frame;
-- solid frame confused with a leaf;
-- hollow unit object confused with a container.
+- two distinct disconnected child components in one bay;
+- partial translation, non-uniform translation, or residual cells from the
+  pre-translation record;
+- a primitive outside the canonical frame;
+- a solid non-terminal block;
+- a 3x3 hollow object smaller than the minimum container frame;
+- incorrect child top alignment;
+- incorrect child width or horizontal alignment;
+- noncanonical bottom clearance;
+- a bay that is too narrow;
+- a decoded structure exceeding Phase 1 structural bounds; and
+- a cell-count, width, height, or coordinate resource-envelope violation.
 
-Every malformed case must produce a stable explicit failure rather
-than best-effort reconstruction.
+A complete geometry translated by one uniform offset is valid and is
+normalised before decoding; it is not a malformed translation case.
 
-Within the Phase 1 resource envelope, malformed values retain their
-structural `TypeError` or `ValueError` failures. If a value is both malformed
-and outside a Phase 1 width, depth, or node limit, `ValueError` containing
-`VISION_SHAPE_OUT_OF_BOUNDS` may take precedence to bound validation work;
-that precedence does not make the value valid or decodable.
+Drawing an identical child twice at the same coordinates adds no observable
+geometry: canonical geometry is an occupied-cell set, so this cannot be a
+malformed decoder case. Source-layer identity and overlapping identical
+drawings are not represented.
+
+Every decoder-reached malformed case must raise `GeometrySyntaxError`
+containing `GEOMETRY_MALFORMED`, rather than produce best-effort
+reconstruction. This matrix remains acceptance-gate work until its tests and
+results are recorded; this section does not claim that every listed test
+already exists.
+
+At the representation boundary, malformed records retain their structural
+`TypeError` or `ValueError` failures. A successfully constructed record that
+reaches the decoder and is outside a Phase 1 structural or geometric resource
+limit remains malformed and must follow the decoder failure contract above.
 
 ## K. Complexity measurements
 

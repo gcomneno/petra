@@ -476,6 +476,153 @@ def test_decoder_rejects_child_inside_clearance_region() -> None:
         decode_geometry(_geometry_from_cells(cells))
 
 
+def test_decoder_rejects_payload_transplanted_into_incompatible_fixed_bays() -> None:
+    shape = OrderedGroup(
+        children=(
+            Terminal(),
+            OrderedGroup(children=(Terminal(),)),
+        )
+    )
+    cells = set(encode_geometry(shape).cells)
+    cells.remove((2, 6))
+    cells.difference_update(
+        {
+            (x, y)
+            for x in range(5, 12)
+            for y in range(1, 8)
+        }
+    )
+    cells.update(
+        (x + 2, y + 2)
+        for x, y in encode_geometry(
+            OrderedGroup(children=(Terminal(),))
+        ).cells
+    )
+    cells.add((6, 6))
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_payload_bridge_across_separator() -> None:
+    cells = set(
+        encode_geometry(
+            OrderedGroup(children=(Terminal(), Terminal()))
+        ).cells
+    )
+    cells.update({(3, 2), (5, 2)})
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_residual_cells_from_partial_translation() -> None:
+    geometry = _geometry_from_cells({(0, 0), (17, -11)})
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(geometry)
+
+
+def test_decoder_rejects_incorrect_child_top_alignment() -> None:
+    cells = _frame_cells(5, 6)
+    cells.add((2, 2))
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_incorrect_child_width_alignment() -> None:
+    cells = set(
+        encode_geometry(
+            OrderedGroup(
+                children=(
+                    Terminal(),
+                    OrderedGroup(children=(Terminal(),)),
+                )
+            )
+        ).cells
+    )
+    cells.difference_update({(6, y) for y in range(2, 7)})
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_noncanonical_bottom_clearance() -> None:
+    cells = _frame_cells(5, 6)
+    cells.add((2, 3))
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_explicit_too_narrow_bay() -> None:
+    cells = _frame_cells(5, 5)
+    cells.update((2, y) for y in range(5))
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+def test_decoder_rejects_geometry_decoding_to_width_four() -> None:
+    cells = _frame_cells(17, 5)
+    cells.update(
+        (x, y)
+        for x in (4, 8, 12)
+        for y in range(5)
+    )
+    cells.update({(2, 2), (6, 2), (10, 2), (14, 2)})
+
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
+@pytest.mark.parametrize(
+    "cells",
+    [
+        {
+            (x, y)
+            for x in range(14)
+            for y in range(13)
+        },
+        _frame_cells(5, 14) | {(2, 12)},
+    ],
+    ids=("cell_count", "height"),
+)
+def test_decoder_rejects_geometry_resource_budget_excesses(
+    cells: set[tuple[int, int]],
+) -> None:
+    with pytest.raises(
+        GeometrySyntaxError,
+        match=GEOMETRY_MALFORMED,
+    ):
+        decode_geometry(_geometry_from_cells(cells))
+
+
 def test_decoder_rejects_primitive_outside_the_canonical_frame() -> None:
     cells = set(
         encode_geometry(

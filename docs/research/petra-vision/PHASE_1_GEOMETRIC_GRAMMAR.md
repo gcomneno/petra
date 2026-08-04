@@ -109,7 +109,10 @@ Bays are placed from left to right in kernel child order.
 
 Consecutive bays are separated by one complete orthogonal separator.
 
-Bays must not overlap.
+Canonical geometry is an occupied-cell set represented by a sorted tuple.
+Source-layer identity and overlapping identical drawings are not represented:
+drawing the same child twice at identical coordinates adds no observable
+geometry.
 
 ### Container extent
 
@@ -124,12 +127,12 @@ bounding boxes.
 
 ### Vertical alignment
 
-Bays share one canonical top edge.
+For a container of height `H`, every child maximum y-coordinate is `H - 3`.
+Children therefore share the same canonical upper alignment. A shorter child
+leaves unused space only toward smaller y-coordinates; children are not
+vertically centred.
 
-Shorter child geometries are aligned to the canonical bay origin;
-unused space may occur only according to the explicit sizing rule.
-
-No renderer-dependent centring is permitted.
+No renderer-dependent centring or alignment is permitted.
 
 ## Recursive encoder
 
@@ -185,6 +188,11 @@ serialized PETRA value, adapter-side state, or hidden payload.
 
 Phase 1 permits only translation normalisation.
 
+Translating the complete occupied-cell set by one uniform offset is accepted
+and normalised. Translation is malformed only when it affects part of the
+geometry, uses different offsets for different regions, or leaves residual
+cells from the pre-translation record.
+
 Rotation, reflection, non-uniform scaling, arbitrary resizing, and
 free-form deformation are not equivalent transformations during the
 initial proof.
@@ -213,21 +221,41 @@ OrderedGroup(OrderedGroup(Terminal), Terminal)
 In particular, exchanging two ordered bays must produce a different
 canonical geometry whenever their child shapes differ.
 
+Exchanging two distinct complete canonical bay regions is a valid semantic
+permutation: it is the canonical geometry of a different `OrderedGroup`.
+It is not a malformed geometry case. In contrast, transplanting child payload
+cells into fixed incompatible bay extents without rebuilding the canonical
+parent geometry is malformed.
+
 ## Rejection rules
 
 The decoder must reject geometry containing:
 
 - neither a valid terminal cell nor a valid container frame;
 - an empty container frame;
-- overlapping bays;
 - missing or partial separators;
-- multiple child geometries inside one bay;
+- a payload intrusion or bridge through required clearance across a
+  separator;
+- two distinct disconnected child components in one bay;
 - no child geometry inside a bay;
-- geometry crossing a bay boundary;
+- a child whose occupied cells cross a separator or bay boundary;
 - non-canonical clearance;
-- non-integer canonical coordinates;
 - trailing primitives outside the outer frame;
 - ambiguous terminal-versus-container topology.
+
+Here, a child crosses a separator or boundary only when its occupied cells
+intrude through the required clearance into those cells or into another bay;
+it does not refer to source-object identity.
+
+### Representation boundary
+
+`OrthogonalGeometry` construction or trusted-record revalidation handles
+non-tuple records, malformed cells, non-exact integer coordinates,
+noncanonical tuple ordering, and duplicate cell entries. These are
+representation-boundary failures, distinct from mutations that successfully
+construct a record and then reach `decode_geometry`. Constructor failures
+retain their `TypeError` or `ValueError` contracts; they are not necessarily
+`GeometrySyntaxError`.
 
 ## Non-reliance rule
 
@@ -255,10 +283,10 @@ magnitude at most `2^63 - 1`. This finite coordinate-resource rule still
 allows ordinary translated canonical geometries; translation remains the only
 normalisation and is not otherwise weakened.
 
-An over-budget or malformed `OrthogonalGeometry` record fails decoding with
-`GeometrySyntaxError` containing `geometry does not match the Phase 1
-canonical grammar`. This is a resource rejection, not a new geometric
-message.
+An over-budget or otherwise malformed `OrthogonalGeometry` record that
+reaches decoding fails with `GeometrySyntaxError` containing
+`GEOMETRY_MALFORMED`. A resource-envelope violation is a malformed decoder
+case, not a separate successful interpretation.
 
 At construction, `OrthogonalGeometry` snapshots a tuple subclass used for
 the outer cell record or an individual cell into exact built-in tuples.
