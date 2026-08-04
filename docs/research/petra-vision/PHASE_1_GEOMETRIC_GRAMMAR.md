@@ -45,11 +45,12 @@ It represents one kernel `OrderedGroup`.
 A bay is one geometrically delimited interior region of a container
 frame.
 
-Each bay represents one ordered child position.
+Each bay represents one ordered child position and is the geometric region
+embodying one exponent-slot target.
 
-The bay interior contains exactly one recursively encoded child
-geometry. Through the PETRA adapter, this region corresponds to a
-term's exponent slot.
+The bay interior contains exactly one recursively encoded child geometry. The
+complete nested child geometry corresponds to the target exponent shape; the
+native `Term` is the owning positional edge, not that child shape.
 
 ## Kernel semantic mapping
 
@@ -58,7 +59,7 @@ term's exponent slot.
 | `Terminal` | one solid terminal cell |
 | `OrderedGroup(...)` | one hollow container frame |
 | child position `i` | ordered bay `i` |
-| child shape | nested geometry inside bay `i` |
+| complete child shape | nested geometry inside bay `i` |
 
 ## Native PETRA adapter projection
 
@@ -66,11 +67,12 @@ term's exponent slot.
 | --- | --- |
 | `Leaf()` | `Terminal` |
 | `Container(...)` | `OrderedGroup(...)` |
-| `Term` at position `i` | child position `i` |
-| `Root(rank=i)` | positional assertion for child `i` |
-| exponent shape | child shape |
+| `Term` at position `i` | owning positional edge for bay `i` |
+| `Root(rank=i)` | positional assertion on that edge |
+| target exponent shape | complete child shape nested in bay `i` |
 
-No glyph is allocated specifically to `Root`.
+Neither `Term` nor `Root` receives an independent geometric glyph; `Root` is
+only the positional assertion on the owning edge.
 
 The adapter validates root ranks before encoding and reconstructs
 them by enumerating decoded child positions from left to right.

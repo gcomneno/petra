@@ -8,10 +8,17 @@ from itertools import product
 import pytest
 
 from petra import (
+    Address,
+    AddressError,
     Container,
     Leaf,
+    ResolvedAnchor,
+    ResolvedSlot,
+    ResolvedTerm,
     Root,
     Term,
+    render_address,
+    resolve_address,
     serialize_shape,
     validate_shape,
 )
@@ -20,6 +27,7 @@ from petra.vision import (
     Terminal,
     VisionShape,
     adapt_petra_shape,
+    decode_geometry,
     encode_geometry,
     restore_petra_shape,
     validate_vision_shape,
@@ -108,6 +116,42 @@ def bounded_phase_1_corpus() -> tuple[VisionShape, ...]:
 PHASE_1_CORPUS = bounded_phase_1_corpus()
 
 
+def _kernel_shape_at_path(
+    shape: VisionShape,
+    path: tuple[int, ...],
+) -> VisionShape:
+    current = shape
+
+    for index in path:
+        if isinstance(current, Terminal):
+            raise IndexError("cannot traverse beyond a terminal")
+
+        current = current.children[index]
+
+    return current
+
+
+def _kernel_child_occurrences(
+    shape: VisionShape,
+) -> tuple[tuple[tuple[int, ...], VisionShape], ...]:
+    occurrences: list[tuple[tuple[int, ...], VisionShape]] = []
+    pending: list[tuple[tuple[int, ...], VisionShape]] = [((), shape)]
+
+    while pending:
+        path, current = pending.pop()
+
+        if isinstance(current, Terminal):
+            continue
+
+        for index in reversed(range(len(current.children))):
+            child = current.children[index]
+            child_path = (*path, index)
+            occurrences.append((child_path, child))
+            pending.append((child_path, child))
+
+    return tuple(occurrences)
+
+
 def _shape_metrics(
     shape: VisionShape,
 ) -> tuple[int, int, int]:
@@ -152,6 +196,86 @@ def test_phase_1_corpus_respects_all_normative_bounds() -> None:
         assert node_count <= 7
         assert depth <= 3
         assert width <= 3
+
+
+def test_every_bounded_geometry_path_matches_native_address_projection() -> None:
+    anchors = 0
+    child_paths = 0
+    term_resolutions = 0
+    slot_resolutions = 0
+
+    for vision_shape in PHASE_1_CORPUS:
+        decoded = decode_geometry(encode_geometry(vision_shape))
+
+        assert decoded == vision_shape
+
+        restored = restore_petra_shape(decoded)
+        anchor = resolve_address(restored, "@/")
+
+        assert type(anchor) is ResolvedAnchor
+        assert anchor.shape is restored
+        assert adapt_petra_shape(anchor.shape) == decoded
+        anchors += 1
+
+        for path, enumerated_child in _kernel_child_occurrences(decoded):
+            expected_child = _kernel_shape_at_path(decoded, path)
+            term_text = render_address(Address(indices=path))
+            slot_text = render_address(
+                Address(indices=path, is_slot=True)
+            )
+            term = resolve_address(restored, term_text)
+            slot = resolve_address(restored, slot_text)
+
+            assert expected_child == enumerated_child
+            assert type(term) is ResolvedTerm
+            assert type(slot) is ResolvedSlot
+            assert term.address.indices == path
+            assert slot.address.indices == path
+            assert term.term.root.rank == path[-1]
+            assert slot.owner is term.term
+            assert slot.target is slot.owner.exponent
+            assert adapt_petra_shape(slot.target) == expected_child
+            child_paths += 1
+            term_resolutions += 1
+            slot_resolutions += 1
+
+    assert anchors == 110
+    assert child_paths == 574
+    assert term_resolutions == 574
+    assert slot_resolutions == 574
+    assert anchors + term_resolutions + slot_resolutions == 1_258
+
+
+@pytest.mark.parametrize(
+    ("vision_shape", "path", "reason"),
+    [
+        (Terminal(), (0,), "address-out-of-range"),
+        (
+            OrderedGroup(children=(Terminal(),)),
+            (0, 0),
+            "address-crosses-leaf",
+        ),
+        (
+            OrderedGroup(children=(Terminal(), Terminal())),
+            (2,),
+            "address-out-of-range",
+        ),
+    ],
+)
+def test_kernel_path_failures_match_native_address_failures(
+    vision_shape: VisionShape,
+    path: tuple[int, ...],
+    reason: str,
+) -> None:
+    with pytest.raises(IndexError):
+        _kernel_shape_at_path(vision_shape, path)
+
+    address = render_address(Address(indices=path))
+
+    with pytest.raises(AddressError) as error:
+        resolve_address(restore_petra_shape(vision_shape), address)
+
+    assert error.value.reason == reason
 
 
 @pytest.mark.parametrize(

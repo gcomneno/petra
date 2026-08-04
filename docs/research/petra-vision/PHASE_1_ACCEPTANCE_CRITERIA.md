@@ -94,6 +94,10 @@ those decoded child positions.
 
 ## F. Recursive path and address correspondence
 
+Kernel-path traversal used for this evidence is a private, test-only oracle
+implemented independently of production code by direct tuple indexing. It is
+not a required production VISION path API.
+
 For every resolvable kernel child path:
 
 - geometric traversal must identify the same terminal, group, or
@@ -102,14 +106,33 @@ For every resolvable kernel child path:
 - traversal across a terminal cell must fail;
 - an out-of-range bay index must fail.
 
-For every mirrored native PETRA address:
+For every bounded shape, the address evidence must compare:
 
-- adapter-projected path indices must equal PETRA address indices;
-- the native resolver and geometric traversal must identify
-  corresponding anchors, terms, and exponent-slot relations.
+- `[]` with `@/`, which resolves the native anchor for the complete shape;
+- every non-empty path `p` with both `@/p` and `@/p/^`;
+- the selected term rank with `p[-1]`;
+- the slot owner with the term selected by `@/p`; and
+- the slot target, adapted back to VISION, with the complete child shape at
+  `p`.
+
+In particular, `@/p` selects the native positional `Term` owning the final
+child relation. `@/p/^` selects that relation's slot: its `owner` is the same
+term and its `target` is `owner.exponent`. The adapted slot target, rather
+than the `Term` itself, corresponds to the complete kernel child shape.
+
+Failure evidence must preserve the native address contract:
+
+- extending a root `Terminal` with index `0` corresponds to native
+  `ADDRESS_OUT_OF_RANGE`;
+- extending a path after a term whose exponent is `Leaf` corresponds to
+  native `ADDRESS_CROSSES_LEAF`;
+- selecting index `len(children)` from a group corresponds to native
+  `ADDRESS_OUT_OF_RANGE`; and
+- malformed address text remains covered by the native address contract and
+  is not a geometry failure.
 
 Native address resolution is a verification oracle. The geometry
-encoder and decoder must not call it.
+encoder and decoder, and production adapter code, must not call it.
 
 ## G. Compositionality
 
@@ -153,7 +176,7 @@ The Phase 1 architecture must demonstrate that:
 
 ## J. Malformed-geometry rejection
 
-The remaining malformed-geometry matrix must define and cover, at the
+The malformed-geometry matrix defines and covers, at the
 occupied-cell level, at least:
 
 - a deleted outer-boundary cell or segment;
@@ -188,9 +211,8 @@ drawings are not represented.
 
 Every decoder-reached malformed case must raise `GeometrySyntaxError`
 containing `GEOMETRY_MALFORMED`, rather than produce best-effort
-reconstruction. This matrix remains acceptance-gate work until its tests and
-results are recorded; this section does not claim that every listed test
-already exists.
+reconstruction. The listed malformed-geometry matrix has been implemented
+and tested as completed hardening evidence.
 
 At the representation boundary, malformed records retain their structural
 `TypeError` or `ValueError` failures. A successfully constructed record that
@@ -250,12 +272,17 @@ The prototype now has focused regression coverage for the enforced structural
 and geometric resource boundaries, exact native adapter runtime types,
 post-construction corruption, cycles, tuple-subclass snapshots, hostile deep
 chains, sparse huge-span geometry, the complete 110-shape geometry record
-digest, and exact bounded roundtrips.
+digest, exact bounded roundtrips, the complete malformed-geometry matrix, and
+exhaustive native-address correspondence across 110 anchors and 574 non-root
+child paths.
+
+The address evidence records 574 term resolutions, 574 exponent-slot
+resolutions, 1,258 positive address resolutions in total, and the three
+required failure-correspondence cases.
 
 This is not a completion declaration. The remaining acceptance-gate evidence
 still to be completed and recorded includes an independently reviewed
-exhaustive corpus run, the full malformed-geometry matrix in section J,
-native-address correspondence evidence, dependency-boundary review, all
-PETRA-suite evidence in the review environment, and the required results and
-limitations record. Native PETRA kernel hardening remains outside this Phase 1
-adapter boundary.
+exhaustive corpus run, dependency-boundary review, complexity measurements,
+final consolidated PETRA-suite evidence in the review environment, and the
+required results and limitations record. Native PETRA kernel hardening remains
+outside this Phase 1 adapter boundary.
