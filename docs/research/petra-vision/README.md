@@ -131,6 +131,9 @@ changed for this validation.
 - `DYNAMICAL_MESSAGE_EVIDENCE.md`
   records bounded exploratory Galton-like evidence, dynamic decoding,
   observation symmetry, information margins, and explicit non-claims.
+- `GRAPH_LAPLACIAN_EVIDENCE.md`
+  records the reproducible geometry-only graph-Laplacian protocol, controls,
+  `109/110` coordinate-free result, reflected collision, and limitations.
 - `EXPERIMENT_PLAN.md`
   defines the staged proof and implementation programme.
 - `CONFIDENTIALITY_RULES.md`
@@ -156,13 +159,16 @@ Completion is limited to the 110 ordered-shape kernel domain, maximum width
 3, maximum depth 3, maximum structural-node count 7, the declared canonical
 static geometry, the native PETRA adapter subset, and the recorded
 malformed-input, dependency, correspondence, complexity, and validation
-evidence. A cross-cutting dynamical-geometry research thread now has bounded
-exploratory computational support under one declared Galton-like law. The
-evidence is recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`; it does not establish
-a universal dynamic theorem, physical mechanism, security property, or Phase 1
-requirement. The thread remains outside the Phase 1 completion gate. The incomplete
-historical PET-to-PETRA migration remains a separate workstream and is not a
-Phase 1 requirement or regression.
+evidence. A cross-cutting dynamical-geometry research thread now has two
+bounded computational evidence records. `DYNAMICAL_MESSAGE_EVIDENCE.md`
+records the exploratory Galton-like `110/110` result under its declared
+oriented observation. `GRAPH_LAPLACIAN_EVIDENCE.md` records the reproducible
+geometry-only graph-Laplacian experiment, including its primary `109/110`
+coordinate-free result and reflected collision `#23/#41`. Neither record
+establishes a universal dynamic theorem, physical mechanism, security
+property, or Phase 1 requirement. The thread remains outside the Phase 1
+completion gate. The incomplete historical PET-to-PETRA migration remains a
+separate workstream and is not a Phase 1 requirement or regression.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this

@@ -34,35 +34,45 @@ Exact roundtrip for an exhaustive bounded shape corpus.
 
 ## Dynamical geometry research thread — after Phase 1 completion
 
-After Phase 1 completion, run a separate, reproducible computational research
-probe over all 110 Phase 1 shapes. This thread is outside the current Phase 1
+After Phase 1 completion, a separate computational research thread was opened
+over the 110 Phase 1 shapes. This thread remains outside the static Phase 1
 completion gate and does not renumber or alter the phases below.
 
-A transient Galton-like precursor has produced bounded exploratory evidence
+A transient Galton-like precursor produced bounded exploratory evidence
 recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`. It observed distinct exact
 terminal distributions for all 110 forms under one declared rule, together
 with dynamic decoding, reflection equivariance, observation-dependent
 equivalence classes, and finite precision margins.
 
-That precursor is not yet committed as a reproducible experiment, has no
-held-out corpus, and does not replace or complete the canonical first
-experiment below.
+The first canonical reproducible experiment has now been implemented as a
+geometry-only graph-Laplacian research tool and is recorded in
+`GRAPH_LAPLACIAN_EVIDENCE.md`.
 
-The first canonical experiment derives a four-neighbor adjacency graph solely from
-canonical occupied geometry cells and applies deterministic graph-Laplacian
-diffusion. Canonical impulse probes and canonical observation points must be
-derived from geometry alone, without PETRA serialization, native addresses,
-labels, metadata, object identity, or adapter-side channels. Record full
-trajectories or stable derived signatures, then test deterministic replay,
-authorized translation invariance, child-order sensitivity, bounded
-local-mutation sensitivity, and signature collisions. Compare structurally
-different shapes with similar elementary statistics, and retain every
-collision and negative result.
+It derives a four-neighbor adjacency graph solely from canonical occupied
+geometry cells and applies deterministic combinatorial graph-Laplacian
+diffusion. Its primary coordinate-free reader distinguishes `109/110` forms
+and retains the reflected collision `#23/#41`.
 
-This exploratory diagnostic has no performance threshold and makes no
-physical-media claim. Its results may inform later recursive-scaling,
-observation, and multiscale phases, but do not establish a dynamic decoder or
-change the static Phase 1 proof obligations.
+The experiment also records:
+
+- exact deterministic replay;
+- authorized translation invariance;
+- geometry-only identity-channel audits;
+- null, asymmetric, and symmetric probe controls;
+- temporal sensitivity;
+- `99/99` detected bounded local mutations of one declared type;
+- `164/165` distinguished pairs sharing selected elementary statistics;
+- the fact that oriented `110/110` observation is already achieved by the
+  oriented null control.
+
+The current implementation uses the natural disconnected graph boundary only.
+Held-out shapes, alternate boundary or graph constructions, explicit spectral
+controls, and independent reproduction remain later research gates.
+
+This diagnostic has no performance threshold and makes no physical-media
+claim. Its results may inform later recursive-scaling, observation, and
+multiscale phases, but do not establish a universal dynamic decoder or change
+the static Phase 1 proof obligations.
 
 ## Phase 2 — Canonical layout
 

@@ -13,8 +13,9 @@ This document records a sequence of transient, read-only computational
 experiments over the complete PETRA VISION Phase 1 bounded corpus.
 
 It is an evidence record for one declared Galton-like propagation model. It
-does not modify the static PETRA VISION technical contract, the Phase 1
-completion decision, or the planned graph-Laplacian experiment.
+does not modify the static PETRA VISION technical contract or the Phase 1
+completion decision. The later canonical graph-Laplacian experiment is recorded
+separately in `GRAPH_LAPLACIAN_EVIDENCE.md`.
 
 The experiments were executed as transient Python programs from the repository
 root. They did not modify production code, tests, generated evidence, or the
@@ -31,7 +32,7 @@ For a canonical geometry `C`, declared dynamics `D`, initial condition `I`,
 and observation procedure `O`, define:
 
 ```text
-Phi[D,I,O](C) = terminal probability distribution
+Phi(D, I, O; C) = terminal probability distribution
 ```
 
 For a sampled experiment with random realization `omega`:
@@ -511,8 +512,8 @@ This evidence does not establish:
 - cryptographic security;
 - novelty, patentability, inventive step, or freedom to operate;
 - production readiness;
-- completion of the planned graph-Laplacian experiment;
-- completion of a committed geometry-only audit;
+- reproduction of the Galton-like calculation from committed code;
+- independent reproduction of the Galton-like result;
 - completion of held-out or larger-domain validation.
 
 ## Methodological risks
@@ -533,29 +534,33 @@ The present evidence must be interpreted with these risks:
 
 No negative result or future collision should be suppressed.
 
-## Relationship to the planned experiment
+## Relationship to the canonical graph-Laplacian experiment
 
-`DYNAMICAL_GEOMETRY_HYPOTHESIS.md` and `EXPERIMENT_PLAN.md` specify a
+`DYNAMICAL_GEOMETRY_HYPOTHESIS.md` and `EXPERIMENT_PLAN.md` specified a
 geometry-only graph-Laplacian diffusion experiment as the first canonical
 reproducible dynamic probe.
 
-The Galton-like evidence recorded here is an exploratory precursor. It does
-not replace, complete, or prejudge that planned experiment.
+That experiment has now been implemented and is recorded in
+`GRAPH_LAPLACIAN_EVIDENCE.md`.
 
-The graph-Laplacian experiment remains valuable because it supplies:
+The Galton-like evidence remains an exploratory precursor and is not replaced
+by the later result. The two propagation families produce different bounded
+outcomes:
 
-- a different propagation family;
-- an independent test of geometry-derived dynamics;
-- explicit graph and spectral controls;
-- null and permuted probes;
-- boundary-condition sensitivity;
-- a stronger committed geometry-only audit;
-- an opportunity to test whether the observed distinguishability survives a
-  materially different law.
+- Galton-like terminal distributions: `110/110` under the declared oriented
+  observation convention;
+- graph-Laplacian primary coordinate-free signatures: `109/110`;
+- graph-Laplacian oriented signatures: `110/110`, with an oriented null
+  control that already produces `110/110`;
+- graph-Laplacian sole coordinate-free collision: reflected pair `#23/#41`.
+
+The comparison shows that distinguishability depends on propagation law,
+probe, graph construction, and observation convention. It does not establish a
+law-independent dynamic identity theorem.
 
 ## Reproducibility status
 
-Current status:
+Current status for the Galton-like thread specifically:
 
 ```text
 execution logs:              retained in private research conversation
@@ -583,15 +588,16 @@ reconstructed as a small geometry-only research tool with:
 
 The appropriate next gates are:
 
-1. preserve this record without promoting it to the static Phase 1 contract;
+1. preserve this Galton-like record without promoting it to the static Phase 1
+   contract;
 2. implement an independently auditable geometry-only version of the
    Galton-like direct calculation;
-3. reproduce the 110-signature result from committed code;
-4. add held-out shapes beyond the tuning corpus;
-5. run the planned graph-Laplacian experiment without tuning it to reproduce
-   the Galton result;
-6. compare invariants and collisions across the two propagation families;
-7. seek symbolic or interval-arithmetic certification of the closest
-   inequalities;
+3. reproduce the `110/110` Galton-like result from committed code;
+4. add held-out shapes beyond the original bounded corpus;
+5. compare invariants and collisions with the completed graph-Laplacian
+   experiment;
+6. seek symbolic or interval-arithmetic certification of the closest
+   Galton-like inequalities;
+7. seek independent implementations of both propagation families;
 8. evaluate observational and physical claims only in a separate later phase;
 9. retain the existing confidentiality and professional IP-review gates.

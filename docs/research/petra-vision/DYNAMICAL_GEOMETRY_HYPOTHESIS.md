@@ -112,52 +112,52 @@ hypothesis, not a result to be hidden or reclassified.
 
 ## Bounded exploratory Galton-like evidence
 
-A transient Galton-like computational thread has now supplied bounded evidence
-for deterministic replay, order-sensitive response, direct terminal
-probability propagation, finite-corpus dynamic distinguishability, inverse
-decoding, reflection equivariance, reader-dependent equivalence classes, and
-finite observation precision.
+A transient Galton-like computational thread supplied bounded evidence for
+deterministic replay, order-sensitive response, direct terminal probability
+propagation, finite-corpus dynamic distinguishability, inverse decoding,
+reflection equivariance, reader-dependent equivalence classes, and finite
+observation precision.
 
 The exact protocol, measurements, margins, decoder results, methodological
 risks, and non-claims are recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`.
 
-The evidence is specific to its declared rule, initial condition, bounded
-corpus, and observation convention. It does not replace the canonical
-geometry-only graph-Laplacian experiment below, satisfy its controls, or
-establish a physical mechanism.
+That evidence is specific to its declared rule, initial condition, bounded
+corpus, and observation convention. It does not establish a universal dynamic
+mechanism or replace the materially different graph-Laplacian evidence.
 
-## Minimal computational experiment
+## Completed canonical graph-Laplacian experiment
 
-This first canonical reproducible experiment is a diagnostic over all 110
-Phase 1 shapes.
-shapes. It is a neutral computational propagation law, not a performance
-benchmark or physical-media claim.
+The first canonical reproducible experiment has now been implemented and run
+over all 110 Phase 1 shapes. It is a neutral computational diagnostic, not a
+performance benchmark or physical-media claim.
 
-1. Start from each canonical occupied-cell geometry and derive a
-   four-neighbor adjacency graph solely from occupied geometry cells.
-2. Use deterministic graph-Laplacian diffusion as the first propagation law,
-   with the graph Laplacian defining `P_C` and fixed, documented integration
-   and sampling rules.
-3. Define canonical impulse probes and canonical observation points from
-   normalized occupied cells and graph structure only. Do not consult PETRA
-   serialization, native addresses, labels, adapter objects, or other native
-   identity data.
-4. Record each full trajectory or a stable, fully specified derived signature
-   `Sigma(C, p)`, together with declared model and probe parameters.
-5. Test deterministic replay, authorized translation invariance, child-order
-   sensitivity, and bounded local-mutation sensitivity.
-6. Count signature collisions, retain every collision and negative result,
-   and record their participating geometries rather than treating them as
-   failures of the dataset.
-7. Compare structurally different shapes having similar elementary statistics
-   (for example occupied-cell count, graph order, edge count, or bounding-box
-   dimensions) to distinguish simple size effects from candidate structural
-   effects.
+The frozen experiment:
 
-The experiment may produce evidence of distinguishability, collisions, or no
-useful separation. It introduces no required threshold, no claim of a
-physical propagation mechanism, and no extension to the Phase 1 completion
-gate.
+1. derives a four-neighbor adjacency graph solely from canonical occupied
+   geometry cells;
+2. uses the combinatorial graph Laplacian `L = D - A`;
+3. applies deterministic explicit-Euler propagation with exact integer
+   numerators;
+4. derives probes and observations from geometry and declared parameters only;
+5. records machine-readable signatures and all collisions;
+6. tests replay, translation invariance, probe and temporal sensitivity,
+   bounded local mutations, and shapes sharing elementary statistics;
+7. audits the dynamic core for forbidden PETRA identity channels.
+
+The occupied-cell graph contains one connected component per structural-node
+occurrence over all 110 forms. Under the primary asymmetric component probe and
+coordinate-free reader, the experiment produces `109/110` signatures. The sole
+collision is a horizontal-reflection pair whose disconnected component
+multisets are identical but spatially reordered.
+
+Oriented observation produces `110/110`, but an oriented null control already
+produces `110/110`; that result is therefore not attributed to diffusion.
+
+The complete protocol, results, controls, limitations, and non-claims are
+recorded in `GRAPH_LAPLACIAN_EVIDENCE.md`.
+
+The experiment introduces no required threshold, no physical propagation
+claim, and no extension to the Phase 1 completion gate.
 
 ## Risks, controls, and audit requirements
 
