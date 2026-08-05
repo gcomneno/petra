@@ -134,6 +134,10 @@ changed for this validation.
 - `GRAPH_LAPLACIAN_EVIDENCE.md`
   records the reproducible geometry-only graph-Laplacian protocol, controls,
   `109/110` coordinate-free result, reflected collision, and limitations.
+- `GRAPH_LAPLACIAN_WIDTH4_EVIDENCE.md`
+  records the separate experimental width=`4` structural extension: the
+  `27`-form held-out structural difference, unchanged v1 dynamics, observed
+  `136/137` coordinate-free extended result, and its conservative limits.
 - `EXPERIMENT_PLAN.md`
   defines the staged proof and implementation programme.
 - `CONFIDENTIALITY_RULES.md`
@@ -159,16 +163,21 @@ Completion is limited to the 110 ordered-shape kernel domain, maximum width
 3, maximum depth 3, maximum structural-node count 7, the declared canonical
 static geometry, the native PETRA adapter subset, and the recorded
 malformed-input, dependency, correspondence, complexity, and validation
-evidence. A cross-cutting dynamical-geometry research thread now has two
+evidence. A cross-cutting dynamical-geometry research thread now has three
 bounded computational evidence records. `DYNAMICAL_MESSAGE_EVIDENCE.md`
 records the exploratory Galton-like `110/110` result under its declared
 oriented observation. `GRAPH_LAPLACIAN_EVIDENCE.md` records the reproducible
 geometry-only graph-Laplacian experiment, including its primary `109/110`
-coordinate-free result and reflected collision `#23/#41`. Neither record
+coordinate-free result and reflected collision `#23/#41`. None of these records
 establishes a universal dynamic theorem, physical mechanism, security
 property, or Phase 1 requirement. The thread remains outside the Phase 1
 completion gate. The incomplete historical PET-to-PETRA migration remains a
 separate workstream and is not a Phase 1 requirement or regression.
+
+`GRAPH_LAPLACIAN_WIDTH4_EVIDENCE.md` separately records an experimental
+width=`4` structural extension. Its `27` held-out forms are the difference
+between two grammar-generated bounded domains, not an independent external
+corpus; its observed results do not expand the Phase 1 runtime contract.
 
 No production implementation, public specification, public issue,
 public presentation, or public benchmark is authorised from this

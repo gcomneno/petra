@@ -65,9 +65,30 @@ The experiment also records:
 - the fact that oriented `110/110` observation is already achieved by the
   oriented null control.
 
-The current implementation uses the natural disconnected graph boundary only.
-Held-out shapes, alternate boundary or graph constructions, explicit spectral
-controls, and independent reproduction remain later research gates.
+The initial v1 implementation uses the natural disconnected graph boundary
+only. Independently sourced held-out shapes, alternate boundary or graph
+constructions, explicit spectral controls, and independent reproduction remain
+later research gates.
+
+### Experimental width=4 structural extension
+
+The frozen v1 dynamic protocol has also been replayed without modification on
+an experimental structural extension: width at most `4`, depth at most `3`,
+and at most `7` nodes. The deterministic extended domain contains `137` forms;
+its `27` forms outside the original 110-form Phase 1 domain are treated as a
+held-out structural extension, not as an independent external corpus.
+
+`GRAPH_LAPLACIAN_WIDTH4_EVIDENCE.md` records `27/27` held-out separation for
+the declared readers. On the full extended domain, the coordinate-free global
+and component multiset readers remain `136/137`; the only collision is the
+preexisting pair whose disconnected component content is reordered in space.
+No new collision is observed. The null-oriented and oriented readers report
+`137/137`, subject to the original observation-channel limitation.
+
+This is experimental research only. It uses a local width=4 encoder precisely
+because the production Phase 1 validation contract remains unchanged and does
+not support width `4`. The result does not claim external generalization or a
+universal dynamic decoder.
 
 This diagnostic has no performance threshold and makes no physical-media
 claim. Its results may inform later recursive-scaling, observation, and
