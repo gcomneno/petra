@@ -4,12 +4,16 @@
 
 ## Status and scope
 
-Status: **research hypothesis**.
+Status: **research hypothesis with bounded exploratory computational support**.
 
-This hypothesis is not yet demonstrated for PETRA. It is not a Phase 1
-completion requirement and makes no novelty, robustness, security, or
-production-readiness claim. Literature and prior-art review remain pending
-through the private RADAR.
+One declared Galton-like propagation law has produced deterministic and
+sampled evidence over the complete 110-shape Phase 1 bounded corpus. That
+evidence is recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`.
+
+The result does not demonstrate a universal PETRA dynamic law, physical
+propagation, robustness, security, novelty, or production readiness. It is not
+a Phase 1 completion requirement. Literature and prior-art review remain
+pending through the private RADAR.
 
 This document extends the static PETRA VISION research model only. It does
 not change the Phase 1 geometry contract, its acceptance criteria, or the
@@ -106,9 +110,26 @@ hypothesis, not a result to be hidden or reclassified.
    injectivity of dynamic signatures is not required unless experiments later
    establish it for a precisely stated domain and protocol.
 
+## Bounded exploratory Galton-like evidence
+
+A transient Galton-like computational thread has now supplied bounded evidence
+for deterministic replay, order-sensitive response, direct terminal
+probability propagation, finite-corpus dynamic distinguishability, inverse
+decoding, reflection equivariance, reader-dependent equivalence classes, and
+finite observation precision.
+
+The exact protocol, measurements, margins, decoder results, methodological
+risks, and non-claims are recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`.
+
+The evidence is specific to its declared rule, initial condition, bounded
+corpus, and observation convention. It does not replace the canonical
+geometry-only graph-Laplacian experiment below, satisfy its controls, or
+establish a physical mechanism.
+
 ## Minimal computational experiment
 
-This first experiment is a reproducible diagnostic over all 110 Phase 1
+This first canonical reproducible experiment is a diagnostic over all 110
+Phase 1 shapes.
 shapes. It is a neutral computational propagation law, not a performance
 benchmark or physical-media claim.
 

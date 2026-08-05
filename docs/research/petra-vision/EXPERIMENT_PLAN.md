@@ -38,7 +38,17 @@ After Phase 1 completion, run a separate, reproducible computational research
 probe over all 110 Phase 1 shapes. This thread is outside the current Phase 1
 completion gate and does not renumber or alter the phases below.
 
-The first experiment derives a four-neighbor adjacency graph solely from
+A transient Galton-like precursor has produced bounded exploratory evidence
+recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`. It observed distinct exact
+terminal distributions for all 110 forms under one declared rule, together
+with dynamic decoding, reflection equivariance, observation-dependent
+equivalence classes, and finite precision margins.
+
+That precursor is not yet committed as a reproducible experiment, has no
+held-out corpus, and does not replace or complete the canonical first
+experiment below.
+
+The first canonical experiment derives a four-neighbor adjacency graph solely from
 canonical occupied geometry cells and applies deterministic graph-Laplacian
 diffusion. Canonical impulse probes and canonical observation points must be
 derived from geometry alone, without PETRA serialization, native addresses,

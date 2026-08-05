@@ -126,8 +126,11 @@ changed for this validation.
 - `PUBLIC_DISCLOSURE_BOUNDARY.md`
   separates previously public work from the new confidential work.
 - `DYNAMICAL_GEOMETRY_HYPOTHESIS.md`
-  formalizes a cross-cutting, unproven research hypothesis about geometry and
-  declared propagation dynamics.
+  formalizes the cross-cutting research hypothesis about geometry and declared
+  propagation dynamics.
+- `DYNAMICAL_MESSAGE_EVIDENCE.md`
+  records bounded exploratory Galton-like evidence, dynamic decoding,
+  observation symmetry, information margins, and explicit non-claims.
 - `EXPERIMENT_PLAN.md`
   defines the staged proof and implementation programme.
 - `CONFIDENTIALITY_RULES.md`
@@ -153,9 +156,11 @@ Completion is limited to the 110 ordered-shape kernel domain, maximum width
 3, maximum depth 3, maximum structural-node count 7, the declared canonical
 static geometry, the native PETRA adapter subset, and the recorded
 malformed-input, dependency, correspondence, complexity, and validation
-evidence. A cross-cutting dynamical-geometry research hypothesis records a possible
-temporal readout of canonical geometry under declared propagation laws; it is
-unproven and remains outside the Phase 1 completion gate. The incomplete
+evidence. A cross-cutting dynamical-geometry research thread now has bounded
+exploratory computational support under one declared Galton-like law. The
+evidence is recorded in `DYNAMICAL_MESSAGE_EVIDENCE.md`; it does not establish
+a universal dynamic theorem, physical mechanism, security property, or Phase 1
+requirement. The thread remains outside the Phase 1 completion gate. The incomplete
 historical PET-to-PETRA migration remains a separate workstream and is not a
 Phase 1 requirement or regression.
 
