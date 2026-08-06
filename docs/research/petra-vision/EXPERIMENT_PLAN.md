@@ -2,6 +2,11 @@
 
 > **CONFIDENTIAL — PRIVATE RESEARCH — NOT FOR PUBLIC RELEASE**
 
+> **Historical architectural Phase roadmap.** This file preserves Phases 0–7
+> and their recorded evidence and limitations. Active research sequencing is
+> governed by `RESEARCH_PIPELINE.md`; it defines the formal numbered Research
+> Gates and governs Structural Geometric Factorization (FGS) through Gate 1B.
+
 ## Phase 0 — Foundation
 
 - Freeze the confidential invention disclosure.
@@ -68,7 +73,7 @@ The experiment also records:
 The initial v1 implementation uses the natural disconnected graph boundary
 only. Independently sourced held-out shapes, alternate boundary or graph
 constructions, explicit spectral controls, and independent reproduction remain
-later research gates.
+later operational work.
 
 ### Experimental width=4 structural extension
 

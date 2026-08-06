@@ -139,7 +139,12 @@ changed for this validation.
   `27`-form held-out structural difference, unchanged v1 dynamics, observed
   `136/137` coordinate-free extended result, and its conservative limits.
 - `EXPERIMENT_PLAN.md`
-  defines the staged proof and implementation programme.
+  preserves the historical architectural Phase plan; active research
+  sequencing is governed by `RESEARCH_PIPELINE.md`.
+- `RESEARCH_PIPELINE.md`
+  is the single operational roadmap. It defines numbered Research Gates and
+  records Structural Geometric Factorization (FGS) as an approved feasibility
+  research direction governed by Gate 1B.
 - `CONFIDENTIALITY_RULES.md`
   defines operational rules for preserving confidentiality.
 
