@@ -53,13 +53,13 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 
 ### Gate 1A — Coordinate-free collision semantics
 
-**Status:** `next`
+**Status:** `complete`
 
 **Research question:** What equivalence relation is actually represented by the coordinate-free graph-Laplacian reader?
 
 **Scope:** Analyze disconnected-component permutations, reflected or spatially reordered components, and the distinction between inevitable and accidental collisions. Formally state the resulting quotient or equivalence-class interpretation. **Protocol:** adversarially enumerate the available component permutations, replay the declared reader deterministically, and classify each collision against that interpretation. Do not try to force a perfect score by silently preserving orientation. **Corpus:** the 110 Phase 1 forms initially, with targeted derived permutations and the recorded collision; later replays may use the 27 held-out and 137-form domains. **Controls:** oriented and coordinate-free readers remain separately labelled; audit that no orientation or coordinate identity enters the coordinate-free reader.
 
-**Success criteria:** a precise, reproducible equivalence relation explains the observed collisions and distinguishes inevitable from accidental ones. **Failure criteria:** unexplained collisions, non-deterministic classes, or a reader whose result depends on an undeclared identity channel. **Evidence artifacts:** enumeration manifest, signatures, equivalence definition, collision classification, identity audit, and replay digests. **Dependencies:** Gate 0. **Final decision:** pending; a positive decision describes a quotient, not complete structural discrimination.
+**Success criteria:** a precise, reproducible equivalence relation explains the observed collisions and distinguishes inevitable from accidental ones. **Failure criteria:** unexplained collisions, non-deterministic classes, or a reader whose result depends on an undeclared identity channel. **Evidence artifacts:** enumeration manifest, signatures, equivalence definition, collision classification, identity audit, and replay digests. **Dependencies:** Gate 0. **Final decision:** complete for the frozen v1 readers and declared bounded corpora. Both coordinate-free readers yield `109/110` on Phase 1, `27/27` on held-out width 4, and `136/137` on the 137-form extension; the only collision is `#23/#41`, classified structural because the readers discard disconnected-component spatial ordering. The declared distinct reordering family was fully reconstructed, validated, signed, and dynamically replayed (`22,917/22,917` matches for each coordinate-free reader); raw repeated-component permutation specifications are separately reported. Collision classes are enumerated before the known class is annotated and subtracted, and the reporting-metadata control uses independent replays. See `COORDINATE_FREE_COLLISION_EVIDENCE.md`. This is a quotient characterization, not complete structural discrimination or a theorem beyond the declared bounds.
 
 ### Gate 1B — Structural Geometric Factorization (FGS)
 
