@@ -23,8 +23,8 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 | Gate | Operational subject | Status |
 | --- | --- | --- |
 | 0 | Consolidated baseline | complete |
-| 1 | Structural units and coordinate-free semantics | next |
-| 2 | Global geometric coupling | planned |
+| 1 | Structural units and coordinate-free semantics | complete |
+| 2 | Global geometric coupling | next |
 | 3 | Explicit spectral controls | planned |
 | 4 | Adversarial collision generation | planned |
 | 5 | Orthogonal structural scaling | planned |
@@ -45,11 +45,11 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 
 ## Gate 1 — Structural units and coordinate-free semantics
 
-**Status:** `next`
+**Status:** `complete`
 
 **Research question:** Which structural units can be defined from canonical geometry without importing identity metadata, and what coordinate-free equivalence is actually observed?
 
-**Scope:** Gate 1 consists of ordered subgates 1A and 1B. **Protocol and corpus:** use the Gate 0 corpus first, with explicit controls and frozen replay artifacts. **Success/failure criteria:** each subgate has its own decision; Gate 1 does not convert a feasibility result into a decoding claim. **Evidence artifacts:** protocol, corpus manifest and digests, implementation provenance, per-form results, counterexamples, and a decision record. **Dependencies:** Gate 1A may proceed independently from the basic FGS contract. Gate 1B levels 1 and 2 may proceed immediately. Gate 1B level 3 must define its native geometric boundary before Gate 2 uses factors as dynamic units. **Final decision:** pending the subgate decisions.
+**Scope:** Gate 1 consists of ordered subgates 1A and 1B. **Protocol and corpus:** both subgates were evaluated from the frozen Gate 0 baseline with explicit controls and reproducible evidence artifacts. **Success/failure criteria:** each subgate retains its own bounded decision; Gate 1 does not convert either result into a complete decoding claim. **Evidence artifacts:** protocol, corpus manifests and digests, implementation provenance, per-form results, counterexamples, identity audits, deterministic replays, and decision records. **Dependencies:** Gate 1A characterizes the coordinate-free quotient semantics; Gate 1B establishes the bounded native FGS boundary required before factor-based use in Gate 2. **Final decision:** complete. Gate 1A and Gate 1B both have positive bounded decisions under their declared protocols, so Gate 2 may now evaluate factor-based constructions without upgrading either result into a universal decoding or uniqueness claim.
 
 ### Gate 1A — Coordinate-free collision semantics
 
@@ -63,29 +63,39 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 
 ### Gate 1B — Structural Geometric Factorization (FGS)
 
-**Status:** `next`
+**Status:** `complete`
 
 **Research question:** Can a valid canonical PETRA VISION geometry be decomposed directly into ordered canonical geometric factors corresponding exactly to the immediate branches of its structural root, and then recomposed without loss?
 
-FGS (Italian: *Fattorizzazione Geometrica Strutturale*; identifier: `FGS`) is conservatively defined as recursive, ordered, non-commutative, multiplicity-preserving, geometry-derived, exactly recomposable, and free from hidden identity or serialization channels.
+FGS (Italian: *Fattorizzazione Geometrica Strutturale*; identifier: `FGS`) is conservatively defined as recursive, ordered, non-commutative, multiplicity-preserving, geometry-derived, exactly recomposable, and free from declared hidden identity or serialization channels.
 
-There are three distinct levels:
+Three levels remain distinct:
 
-1. **Structural factorization:** `VisionShape` to its immediate ordered children. This is straightforward.
-2. **Decoder-based geometric factorization:** canonical geometry to `VisionShape` to ordered child factors. This is highly feasible using the existing bounded decoder.
-3. **Native structural geometric factorization:** canonical geometry directly to ordered branch regions without first invoking the complete structural decoder. This is the actual new research claim.
+1. **Structural factorization:** `VisionShape` to its immediate ordered children. This is the independent structural oracle.
+2. **Decoder-based geometric factorization:** canonical geometry to `VisionShape` to ordered child geometries. This remains a Phase 1 control.
+3. **Native structural geometric factorization:** canonical geometry directly to ordered canonical branch geometries without invoking the complete structural decoder. This is the Gate 1B research object.
 
-No analogy to unique prime factorization is established. `Terminal` is only an irreducible element relative to the current grammar, and composition is ordered and n-ary, not arithmetic multiplication.
+The native factorizer receives `OrthogonalGeometry`, identifies full-height root boundaries from occupied cells, extracts and normalizes each bay payload in left-to-right order, preserves repeated factor occurrences, recursively applies the same operation, and independently recomposes the parent from the resulting ordered factor sequence.
 
-**Scope and protocol:** first specify a native geometric boundary and ownership rule, then extract immediate factors and recursively replay on them. Compare decoder-based and native factorization using the same inputs and an independent structural oracle derived from abstract grammar children. The factorizer must not use shape codes, PETRA addresses, serialization, node IDs, original child lists, encoder metadata, or annotated coordinates. Require exact child order, exact multiplicity, deterministic replay, cell ownership without loss or duplication, canonical normalization of extracted factors, recursive applicability, exact recomposition, and malformed-geometry rejection.
+The inspected native source boundary imports only `OrthogonalGeometry` and `geometry_extent` from the geometry layer. It does not use `VisionShape`, `Terminal`, `OrderedGroup`, `decode_geometry`, `encode_geometry`, PETRA addresses, serialization, shape codes, corpus positions, filenames, object identity, or annotated factor boundaries. This is a source/AST audit, not a formal transitive information-flow proof.
 
-**Corpus:** begin exhaustively with all 110 Phase 1 forms. Replay later on the 27 width=`4` held-out forms and the full 137-form domain. **Controls:** independent grammar-child oracle; identity-channel audit; decoder-based baseline; deterministic duplicate runs; negative cases for incomplete frames, overlapping factor regions, children outside the parent, noncanonical spacing, isolated cells, ambiguous parent ownership, duplicate cell attribution, missing cells, and geometries that factor locally but cannot be recomposed canonically.
+**Evidence:** Phase 1 yields `110/110` immediate native/oracle agreement, `110/110` recursive native/oracle agreement, `110/110` exact recomposition, `110/110` deterministic replay, and `574/574` recursive non-root occurrences. The decoder-mediated Phase 1 control also yields `110/110`. Seven malformed controls pass, including a locally valid parent whose malformed extracted child is rejected during recursive replay.
 
-**Initial bounded success result:** all 110 valid Phase 1 geometries produce the exact immediate ordered factors, preserved multiplicity, deterministic output, exact recomposition, no hidden channel, and correct terminal handling. **Failure criteria:** any mismatch to the independent oracle, loss or duplication of cell ownership, noncanonical factor, nondeterminism, accepted malformed geometry, unrecomposable output, or undeclared identity dependency. **Evidence artifacts:** frozen corpus and digests; protocol; oracle output; per-form factor, ownership, normalization, and recomposition records; identity audit; negative-case results; decoder-based/native comparison; and decision record. **Dependencies:** Gate 0; level 3 additionally requires a declared native boundary. **Final decision:** pending. Only a positive level 3 decision authorizes factor-based units in Gate 2; neither levels 1–2 nor FGS alone constitute complete dynamic decoding.
+The unchanged Phase 1 factorizer generalizes to the disjoint width-4 held-out set with `27/27` immediate agreement, `27/27` recursive agreement, `27/27` exact recomposition, `27/27` deterministic replay, and `155/155` recursive occurrences. The production Phase 1 decoder is deliberately not extended for this held-out control.
+
+Across the complete 137-form domain, results are `137/137` immediate agreement, `137/137` recursive agreement, `137/137` exact recomposition, `137/137` deterministic replay, and `729/729` recursive non-root occurrences. The experimental width-4 encoder reproduces all frozen Phase 1 geometries exactly (`110/110` encoder continuity).
+
+The same native factorizer source is cryptographically identified in the Phase 1, held-out, and extended evidence by SHA256 `0362fa812c12ae718066cc077ab14e91d742af06c2e91c4e795e121900ca87ff`. Final evidence replays are byte-for-byte deterministic.
+
+No analogy to general unique prime factorization is established. `Terminal` is irreducible only relative to the frozen grammar, and composition is ordered and n-ary rather than arithmetic multiplication.
+
+**Final decision:** complete for the declared canonical geometric grammar and bounded 137-form domain. Native FGS is accepted as a bounded geometry-only, ordered, multiplicity-preserving, recursively applicable, exactly recomposable research object and may feed factor-based experiments in Gate 2.
+
+This does not establish theorem-level uniqueness over arbitrary geometries, robustness to perturbation, spectral uniqueness, complete dynamic decoding, or production API readiness. See `STRUCTURAL_GEOMETRIC_FACTORIZATION_CONTRACT.md` and `STRUCTURAL_GEOMETRIC_FACTORIZATION_EVIDENCE.md`.
 
 ## Gate 2 — Global geometric coupling
 
-**Status:** `planned`
+**Status:** `next`
 
 **Question/scope:** Compare the current local occupied-cell graph, component graph, factor graph only if Gate 1B establishes a valid factor boundary, weak distance-dependent coupling, and full-lattice or occupied/empty-field propagation. **Protocol/corpus/controls:** replay each construction on frozen Gate 0 corpora with coordinate-free readers, identity audits, null and matched coupling controls. Coordinates may determine physical or geometric construction but must not be handed directly to the final reader as identity metadata. **Success/failure:** retain only effects separable from controls; fail a construction that needs identity metadata or cannot replay. **Evidence:** specification, source provenance, signatures, controls, digests, and decision. **Dependencies:** Gate 1A; factor graph additionally requires positive Gate 1B level 3. **Final decision:** pending.
 
@@ -145,7 +155,7 @@ No analogy to unique prime factorization is established. `Terminal` is only an i
 
 ## Dependency order and stop conditions
 
-Current gate: **Gate 1 — Structural units and coordinate-free semantics**. Current subgates: **Gate 1A and Gate 1B feasibility/contract work may proceed in parallel, while native FGS results must precede factor-based use in Gate 2.**
+Current gate: **Gate 2 — Global geometric coupling**. Gate 1 is complete: Gate 1A characterizes the bounded coordinate-free quotient semantics, and Gate 1B establishes bounded native FGS as an admissible research object for factor-based Gate 2 experiments.
 
 Stop or defer the affected gate when inverse work requires hidden serialized data; canonical normalization creates unresolved collisions; factor ownership is ambiguous or lossy; geometry has no usable stated bound; canonicality rests on arbitrary renderer behavior; a scale lacks a PETRA boundary; or a result is only an ordinary labelled-tree representation. A stopped gate must record its negative evidence and receive one of the defined statuses; it must not be rescued by changing the reader or corpus silently.
 
