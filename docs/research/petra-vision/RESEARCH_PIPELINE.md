@@ -24,7 +24,7 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 | --- | --- | --- |
 | 0 | Consolidated baseline | complete |
 | 1 | Structural units and coordinate-free semantics | complete |
-| 2 | Global geometric coupling | next |
+| 2 | Global geometric coupling | in progress |
 | 3 | Explicit spectral controls | planned |
 | 4 | Adversarial collision generation | planned |
 | 5 | Orthogonal structural scaling | planned |
@@ -95,9 +95,77 @@ This does not establish theorem-level uniqueness over arbitrary geometries, robu
 
 ## Gate 2 — Global geometric coupling
 
-**Status:** `next`
+**Status:** `complete`
 
-**Question/scope:** Compare the current local occupied-cell graph, component graph, factor graph only if Gate 1B establishes a valid factor boundary, weak distance-dependent coupling, and full-lattice or occupied/empty-field propagation. **Protocol/corpus/controls:** replay each construction on frozen Gate 0 corpora with coordinate-free readers, identity audits, null and matched coupling controls. Coordinates may determine physical or geometric construction but must not be handed directly to the final reader as identity metadata. **Success/failure:** retain only effects separable from controls; fail a construction that needs identity metadata or cannot replay. **Evidence:** specification, source provenance, signatures, controls, digests, and decision. **Dependencies:** Gate 1A; factor graph additionally requires positive Gate 1B level 3. **Final decision:** pending.
+**Question/scope:** Determine whether geometry-derived interaction adds global
+coordinate-free information beyond disconnected occupied-cell, component, and
+factor representations.
+
+**Protocol/corpus/controls:** The declared matrix was replayed on the frozen
+Gate 0 corpora using geometry-only inputs, coordinate-free readers, matched
+nulls, identity-channel audits, translation/reflection controls, deterministic
+replay, and frozen pre-result protocols.
+
+The completed matrix is:
+
+- **G2-B0** — frozen occupied-cell baseline:
+  `109/110`, `27/27`, `136/137`;
+- **G2-C0** — explicit disconnected-component representation with no
+  inter-component coupling:
+  `109/110`, `27/27`, `136/137`, exactly no gain over B0;
+- **G2-D1** — weak clearance coupling:
+  `110/110`, `27/27`, `137/137`, retained as positive but probe-qualified;
+- **G2-F0** — unordered independent FGS factors:
+  `63/110`, `12/27`, `75/137`, retained as a valid non-injective
+  factor-boundary control;
+- **G2-F1** — geometry-derived FGS factor-proximity coupling using the
+  predeclared joint F0+F1 reader:
+  `75/110`, `18/27`, `93/137`, splitting 40, 25, and 65 collision-pairs
+  relative to joint null and introducing none;
+- **G2-L1** — uniform full-lattice propagation:
+  `67/110`, `16/27`, `83/137`, compared with matched no-propagation
+  `31/110`, `9/27`, `35/137`; 251, 29, and 339 collision-pairs are split
+  and none introduced;
+- **G2-E1** — occupancy-aware heterogeneous full lattice:
+  `67/110`, `16/27`, `83/137`, exactly no gain over the causal matched
+  uniform q=16 control.
+
+A bounded diagnostic additionally shows that uniform L1 q=8 and matched-uniform
+q=16 induce exactly the same equivalence partition and collision-pair set over
+all three frozen corpus partitions.
+
+**Final decision:** Gate 2 is complete with **positive bounded support for
+global geometric coupling**.
+
+Geometry-derived interaction can expose information unavailable to
+representation-only controls:
+
+- F1 demonstrates an incremental effect from geometric proximity among
+  geometry-derived factors;
+- L1 independently demonstrates an incremental effect from propagation through
+  the full geometry-derived lattice, including empty sites.
+
+C0 shows that merely preserving disconnected component boundaries does not
+explain the effect.
+
+F0 shows that factor boundaries alone do not explain F1.
+
+E1 shows that the tested occupancy-aware material law does not improve on the
+uniform lattice.
+
+D1 remains useful but causally qualified because its unique additional
+distinction depends on interaction with the asymmetric frozen probe.
+
+The exact reflected/reordered Gate 1A pair remains colliding under the
+reflection-equivariant primary constructions.
+
+Gate 2 therefore does not claim universal injectivity, intrinsic orientation or
+reflection breaking, spectral uniqueness, robustness, decoding, physical
+interpretation, or theorem-level generality.
+
+Evidence and detailed provenance are recorded in
+`GLOBAL_GEOMETRIC_COUPLING_CONTRACT.md` and
+`GLOBAL_GEOMETRIC_COUPLING_EVIDENCE.md`.
 
 ## Gate 3 — Explicit spectral controls
 
@@ -155,7 +223,7 @@ This does not establish theorem-level uniqueness over arbitrary geometries, robu
 
 ## Dependency order and stop conditions
 
-Current gate: **Gate 2 — Global geometric coupling**. Gate 1 is complete: Gate 1A characterizes the bounded coordinate-free quotient semantics, and Gate 1B establishes bounded native FGS as an admissible research object for factor-based Gate 2 experiments.
+Completed gates: **Gate 1 — Structural geometric factorization** and **Gate 2 — Global geometric coupling**. Next gate: **Gate 3 — Explicit spectral controls**, currently `planned` and not yet active.
 
 Stop or defer the affected gate when inverse work requires hidden serialized data; canonical normalization creates unresolved collisions; factor ownership is ambiguous or lossy; geometry has no usable stated bound; canonicality rests on arbitrary renderer behavior; a scale lacks a PETRA boundary; or a result is only an ordinary labelled-tree representation. A stopped gate must record its negative evidence and receive one of the defined statuses; it must not be rescued by changing the reader or corpus silently.
 
