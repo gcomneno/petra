@@ -24,7 +24,7 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 | --- | --- | --- |
 | 0 | Consolidated baseline | complete |
 | 1 | Structural units and coordinate-free semantics | complete |
-| 2 | Global geometric coupling | in progress |
+| 2 | Global geometric coupling | complete |
 | 3 | Explicit spectral controls | planned |
 | 4 | Adversarial collision generation | planned |
 | 5 | Orthogonal structural scaling | planned |

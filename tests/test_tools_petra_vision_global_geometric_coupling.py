@@ -1,4 +1,4 @@
-"""Gate 2 contract tests for global geometric coupling D1."""
+"""Gate 2 contract tests for global geometric coupling."""
 
 from __future__ import annotations
 

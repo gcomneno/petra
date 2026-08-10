@@ -2,13 +2,16 @@
 
 ## Status
 
-Gate 2 — Global geometric coupling: in progress.
+Gate 2 — Global geometric coupling: complete for the declared bounded domain.
 
 Issue: #198.
 
-Current evaluated candidate:
+The evidence chronology begins with:
 
 - G2-D1 — weak distance-dependent geometric coupling.
+
+Subsequent sections evaluate G2-F0, G2-F1, G2-L1, G2-E1, and G2-C0.
+The complete matrix and final Gate 2 decision are recorded below.
 
 Protocol:
 
