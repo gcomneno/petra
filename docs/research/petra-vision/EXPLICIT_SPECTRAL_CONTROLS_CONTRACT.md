@@ -197,6 +197,26 @@ B0/D1 probes are explicitly deferred to G3-P1/I1.
 
 No G3-T1 experiment is activated by this subprotocol.
 
+## G3-S0/S1 completed checkpoint
+
+G3-S0/S1 is complete on the frozen Phase 1, held-out, and extended corpus
+partitions.
+
+The bounded decision is mixed:
+
+- B0: positive exact spectral attribution;
+- D1: positive exact spectral attribution, insufficient to explain its frozen
+  dynamic discrimination;
+- F1: valid negative spectral attribution;
+- L1: valid negative spectral attribution.
+
+All three evidence artifacts have byte-identical deterministic replays.
+
+See `EXPLICIT_SPECTRAL_CONTROLS_S0_S1_EVIDENCE.md`.
+
+The next ordered Gate 3 step is G3-S2 component/factor spectral controls,
+followed by G3-H1. Probe and temporal experiments remain inactive.
+
 ## Primary causal comparisons
 
 Gate 3 must prefer one-variable-at-a-time comparisons.
