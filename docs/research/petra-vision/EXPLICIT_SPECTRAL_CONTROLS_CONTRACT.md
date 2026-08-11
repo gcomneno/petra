@@ -176,6 +176,27 @@ They are never evidence for coordinate-free recovery.
 Purpose: detect orientation leakage and separate it from intrinsic
 spectral/dynamic information.
 
+## Frozen G3-S0/S1 subprotocol
+
+The initial static/spectral attribution protocol is frozen separately in
+`EXPLICIT_SPECTRAL_CONTROLS_S0_S1_PROTOCOL.md`.
+
+It uses exact characteristic-polynomial signatures with no floating-point
+spectral tolerance.
+
+The frozen computational routes are:
+
+- B0: exact combinatorial-Laplacian charpoly;
+- D1: exact weighted-Laplacian charpoly;
+- F1: exact rational frozen propagation-operator charpoly;
+- L1: exact rectangular-grid Laplacian charpoly through a Cartesian-product
+  path-polynomial resultant.
+
+S0 operator statistics and intrinsic initial-state controls remain separate.
+B0/D1 probes are explicitly deferred to G3-P1/I1.
+
+No G3-T1 experiment is activated by this subprotocol.
+
 ## Primary causal comparisons
 
 Gate 3 must prefer one-variable-at-a-time comparisons.
