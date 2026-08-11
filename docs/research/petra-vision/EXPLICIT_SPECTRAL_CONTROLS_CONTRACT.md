@@ -217,6 +217,24 @@ See `EXPLICIT_SPECTRAL_CONTROLS_S0_S1_EVIDENCE.md`.
 The next ordered Gate 3 step is G3-S2 component/factor spectral controls,
 followed by G3-H1. Probe and temporal experiments remain inactive.
 
+## Frozen G3-S2 subprotocol
+
+The next ordered attribution family is frozen in
+`EXPLICIT_SPECTRAL_CONTROLS_S2_PROTOCOL.md`.
+
+Primary local spectral controls are:
+
+- B0: unordered spectra of native occupied connected components;
+- D1: unordered spectra of original local components using only weight-2
+  local edges and explicitly excluding clearance bridges;
+- F1: unordered spectra of immediate native FGS factors using each factor's
+  occupied-cell combinatorial Laplacian;
+- L1: explicitly not applicable because the frozen propagation medium is one
+  connected rectangular lattice and no new decomposition is introduced.
+
+G3-S2 remains separate from S0/S1 and does not activate H1, P1, I1, T1, or
+O1.
+
 ## Primary causal comparisons
 
 Gate 3 must prefer one-variable-at-a-time comparisons.
