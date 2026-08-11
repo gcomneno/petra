@@ -25,7 +25,7 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 | 0 | Consolidated baseline | complete |
 | 1 | Structural units and coordinate-free semantics | complete |
 | 2 | Global geometric coupling | complete |
-| 3 | Explicit spectral controls | planned |
+| 3 | Explicit spectral controls | next |
 | 4 | Adversarial collision generation | planned |
 | 5 | Orthogonal structural scaling | planned |
 | 6 | Independent reproduction | planned |
@@ -169,7 +169,7 @@ Evidence and detailed provenance are recorded in
 
 ## Gate 3 — Explicit spectral controls
 
-**Status:** `planned`
+**Status:** `next`
 
 **Question/scope:** Separate contributions from static graph statistics, Laplacian spectrum, per-component spectrum, per-factor spectrum only if FGS succeeds, heat trace, probe choice, impulse response, temporal observation, and orientation. **Protocol/corpus/controls:** ablate one contribution at a time on frozen Gate 0 replay corpora using matched probes and oriented versus coordinate-free controls. **Success/failure:** attribute only reproducible incremental information; fail claims confounded by observation or probe. **Evidence:** ablation matrix, signatures, collision sets, digests, decision. **Dependencies:** Gate 2; per-factor work requires positive Gate 1B. **Final decision:** pending.
 
