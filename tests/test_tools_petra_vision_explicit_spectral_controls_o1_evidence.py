@@ -695,7 +695,7 @@ def test_canonical_json_is_reproducible_for_synthetic_analysis():
     )
 
 
-def test_no_evidence_or_o1_work_artifact_exists_pre_observation():
+def test_published_evidence_records_frozen_runner_protocol():
     evidence = (
         ROOT
         / "docs"
@@ -704,11 +704,18 @@ def test_no_evidence_or_o1_work_artifact_exists_pre_observation():
         / "EXPLICIT_SPECTRAL_CONTROLS_O1_EVIDENCE.md"
     )
 
-    work = (
-        ROOT
-        / "_work"
-        / "petra-vision-gate3-o1"
+    assert evidence.is_file()
+
+    text = evidence.read_text(
+        encoding="utf-8"
     )
 
-    assert not evidence.exists()
-    assert not work.exists()
+    assert (
+        "petra-vision-explicit-spectral-controls-o1-evidence-v0"
+        in text
+    )
+
+    assert (
+        "Gate 4 remains separate and inactive"
+        in text
+    )

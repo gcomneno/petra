@@ -630,7 +630,7 @@ def test_no_corpus_or_shape_identity_api_is_used_by_o1():
         assert forbidden not in source
 
 
-def test_no_evidence_artifact_or_corpus_exists_pre_observation():
+def test_published_evidence_exists_after_observation():
     evidence = (
         ROOT
         / "docs"
@@ -639,11 +639,13 @@ def test_no_evidence_artifact_or_corpus_exists_pre_observation():
         / "EXPLICIT_SPECTRAL_CONTROLS_O1_EVIDENCE.md"
     )
 
-    work = (
-        ROOT
-        / "_work"
-        / "petra-vision-gate3-o1"
+    assert evidence.is_file()
+
+    text = evidence.read_text(
+        encoding="utf-8"
     )
 
-    assert not evidence.exists()
-    assert not work.exists()
+    assert (
+        "petra-vision-explicit-spectral-controls-o1-v0"
+        in text
+    )
