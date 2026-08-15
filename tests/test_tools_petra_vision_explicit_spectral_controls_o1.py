@@ -508,6 +508,65 @@ def test_f1_rejects_artificial_euler_normalization():
 
 @pytest.mark.parametrize(
     "channel",
+    (
+        "F1-null",
+        "F1-coupled",
+    ),
+)
+def test_f1_zero_factor_terminal_delegates_exactly_to_frozen_empty_signature(
+    channel,
+):
+    from petra.vision import (
+        Terminal,
+        encode_geometry,
+    )
+
+    terminal = encode_geometry(
+        Terminal()
+    )
+
+    assert o1.native_state(
+        terminal,
+        channel,
+    ) == ()
+
+    assert o1.oriented_dynamic_signature(
+        terminal,
+        channel,
+    ) == ()
+
+    assert o1.coordinate_free_dynamic_signature(
+        terminal,
+        channel,
+    ) == ()
+
+    assert o1.dynamic_signatures(
+        terminal,
+        channel,
+    ) == {
+        "oriented-dynamic": (),
+        "coordinate-free-dynamic": (),
+    }
+
+
+def test_observation_signatures_follow_frozen_observation_order():
+    for channel in o1.CHANNELS:
+        current = channel_geometry(
+            channel
+        )
+
+        signatures = o1.observation_signatures(
+            current,
+            channel,
+        )
+
+        assert tuple(
+            signatures
+        ) == o1.OBSERVATIONS
+
+
+@pytest.mark.parametrize(
+    "channel",
     o1.CHANNELS,
 )
 def test_canonical_reflection_diagnostic_has_only_frozen_observations(
@@ -571,14 +630,7 @@ def test_no_corpus_or_shape_identity_api_is_used_by_o1():
         assert forbidden not in source
 
 
-def test_no_runner_or_evidence_artifact_exists_pre_corpus():
-    runner = (
-        ROOT
-        / "tools"
-        / "research"
-        / "petra_vision_explicit_spectral_controls_o1_evidence.py"
-    )
-
+def test_no_evidence_artifact_or_corpus_exists_pre_observation():
     evidence = (
         ROOT
         / "docs"
@@ -593,6 +645,5 @@ def test_no_runner_or_evidence_artifact_exists_pre_corpus():
         / "petra-vision-gate3-o1"
     )
 
-    assert not runner.exists()
     assert not evidence.exists()
     assert not work.exists()

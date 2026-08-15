@@ -349,6 +349,11 @@ def _evolve_f1_from_state(
     if len(state) != len(graph.factors):
         raise ValueError("F1 state length mismatch")
 
+    # The frozen F1 readers define the zero-factor terminal case as
+    # the empty dynamic signature itself, not as six empty snapshots.
+    if not graph.factors:
+        return ()
+
     current = state
     sample_set = set(SAMPLE_STEPS)
     samples = []
@@ -531,15 +536,29 @@ def observation_signatures(
     geometry: OrthogonalGeometry,
     channel: str,
 ) -> dict[str, object]:
+    step_zero = step_zero_signatures(
+        geometry,
+        channel,
+    )
+
+    dynamic = dynamic_signatures(
+        geometry,
+        channel,
+    )
+
     return {
-        **step_zero_signatures(
-            geometry,
-            channel,
-        ),
-        **dynamic_signatures(
-            geometry,
-            channel,
-        ),
+        "coordinate-free-step0": step_zero[
+            "coordinate-free-step0"
+        ],
+        "oriented-step0": step_zero[
+            "oriented-step0"
+        ],
+        "coordinate-free-dynamic": dynamic[
+            "coordinate-free-dynamic"
+        ],
+        "oriented-dynamic": dynamic[
+            "oriented-dynamic"
+        ],
     }
 
 
