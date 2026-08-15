@@ -25,8 +25,8 @@ Only these statuses are used: `complete`, `next`, `planned`, `deferred`, `blocke
 | 0 | Consolidated baseline | complete |
 | 1 | Structural units and coordinate-free semantics | complete |
 | 2 | Global geometric coupling | complete |
-| 3 | Explicit spectral controls | next |
-| 4 | Adversarial collision generation | planned |
+| 3 | Explicit spectral controls | complete |
+| 4 | Adversarial collision generation | next |
 | 5 | Orthogonal structural scaling | planned |
 | 6 | Independent reproduction | planned |
 | 7 | Structural locality and sensitivity | planned |
@@ -169,13 +169,21 @@ Evidence and detailed provenance are recorded in
 
 ## Gate 3 — Explicit spectral controls
 
-**Status:** `next`
+**Status:** `complete`
 
-**Question/scope:** Separate contributions from static graph statistics, Laplacian spectrum, per-component spectrum, per-factor spectrum only if FGS succeeds, heat trace, probe choice, impulse response, temporal observation, and orientation. **Protocol/corpus/controls:** ablate one contribution at a time on frozen Gate 0 replay corpora using matched probes and oriented versus coordinate-free controls. **Success/failure:** attribute only reproducible incremental information; fail claims confounded by observation or probe. **Evidence:** ablation matrix, signatures, collision sets, digests, decision. **Dependencies:** Gate 2; per-factor work requires positive Gate 1B. **Final decision:** pending.
+**Question/scope:** Attribute the frozen PETRA VISION discrimination to static structure, full operator spectrum, component/factor spectra, spectral compression, probe choice, impulse response, temporal observation, and orientation controls without optimizing a new classifier.
+
+**Protocol/corpus/controls:** The ordered attribution matrix S0/S1 -> S2 -> H1 -> P1 -> I1 -> T1 -> O1 was frozen before each corresponding corpus observation and evaluated separately on Phase 1 (110), the independent held-out width-4 family (27), and the extended composition (137). Coordinate-free and oriented readers remain explicitly separated; probe and reflection qualifications are retained; deterministic replay, source-boundary audits, exact collision accounting, and evidence digests are recorded per family.
+
+**Final decision:** complete. Gate 3 establishes bounded causal attribution rather than universal decoding. Static/full-spectrum information explains substantial B0/D1 discrimination but does not subsume the stronger F1/L1 dynamic gains. Local spectra remain incomplete global controls. H1 yields a bounded non-generic lossless F1 spectral compression. Intrinsic P1/I1 controls expose a replicated bounded common B0/D1 discrimination quotient shared with S1. T1 finds no incremental temporal-order discrimination under the frozen schedule and retains replicated terminal-sufficiency/no-recollision behavior. O1 separates large native-order orientation leakage from coordinate-free evidence and establishes no coordinate-free orientation recovery; F1 supplies a replicated bounded native-order partition-stasis result.
+
+Evidence is recorded in the seven Gate 3 evidence documents and summarized in `EXPLICIT_SPECTRAL_CONTROLS_DECISION.md`.
+
+Gate 4 becomes the next operational gate only after this closure; no Gate 4 mutation protocol or experiment is part of Gate 3.
 
 ## Gate 4 — Adversarial collision generation
 
-**Status:** `planned`
+**Status:** `next`
 
 **Question/scope:** Generate reflection, component permutation, factor permutation, displacement, duplication, wrapping, unwrapping, statistic-preserving substitutions, and deliberately constructed counterexamples. **Protocol/corpus/controls:** enumerate valid and invalid mutations from frozen forms and compare declared readers to matched originals. **Success/failure:** classify each result without repairing it through hidden metadata; fail unclassified or non-replayable cases. **Evidence:** generator, manifests, counterexamples, signatures, classifications, decision. **Dependencies:** Gates 1A–3; factor permutations require positive Gate 1B. **Final decision:** pending.
 
