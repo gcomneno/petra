@@ -17,15 +17,24 @@ def deep_unary_shape(
     depth: int,
     *,
     rank: int = 0,
+    terminal_rank: int | None = None,
     terminal_width: int = 1,
 ) -> Container:
     shape: Leaf | Container = Leaf()
 
     for level in range(depth):
+        current_rank = (
+            terminal_rank
+            if level == 0 and terminal_rank is not None
+            else rank
+        )
         if level == 0:
             shape = Container(
                 terms=tuple(
-                    Term(root=Root(rank + offset), exponent=Leaf())
+                    Term(
+                        root=Root(current_rank + offset),
+                        exponent=Leaf(),
+                    )
                     for offset in range(terminal_width)
                 )
             )
@@ -44,7 +53,7 @@ def test_validate_shape_is_stack_safe_at_supported_depth(depth: int) -> None:
 
 
 def test_validate_shape_reports_deep_noncanonical_rank_deterministically() -> None:
-    malformed = deep_unary_shape(2_048, rank=7)
+    malformed = deep_unary_shape(2_048, terminal_rank=7)
 
     with pytest.raises(
         ValueError,
@@ -99,9 +108,29 @@ def test_normalize_shape_preserves_sibling_order() -> None:
 
     normalized = normalize_shape(shape)
 
-    assert len(normalized.terms[0].exponent.terms) == 1
-    assert len(normalized.terms[1].exponent.terms) == 2
+    first = normalized.terms[0].exponent
+    second = normalized.terms[1].exponent
+    assert isinstance(first, Container)
+    assert isinstance(second, Container)
+    assert len(first.terms) == 1
+    assert len(second.terms) == 2
     assert [term.root for term in normalized.terms] == [Root(0), Root(1)]
+
+
+def test_normalize_shape_reuses_shared_immutable_subshapes() -> None:
+    shared = Container(
+        terms=(Term(root=Root(5), exponent=Leaf()),)
+    )
+    shape = Container(
+        terms=(
+            Term(root=Root(8), exponent=shared),
+            Term(root=Root(3), exponent=shared),
+        )
+    )
+
+    normalized = normalize_shape(shape)
+
+    assert normalized.terms[0].exponent is normalized.terms[1].exponent
 
 
 @pytest.mark.parametrize("depth", [1_200, 2_048])
