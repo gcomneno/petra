@@ -63,15 +63,27 @@ class ShapeSyntaxError(ValueError):
 class InvocationSyntaxError(ValueError):
     """A deterministic raw PETRA invocation boundary failure."""
 
-    def __init__(self, reason: str) -> None:
+    def __init__(
+        self,
+        reason: str,
+        *,
+        operator: Operator | None = None,
+    ) -> None:
         if not isinstance(reason, str):
             raise TypeError("invocation syntax reason must be a str")
         if reason not in {INVOCATION_INVALID, ADDRESS_MALFORMED}:
             raise ValueError(
                 f"unknown invocation syntax reason: {reason}"
             )
+        if operator is not None and not isinstance(operator, Operator):
+            raise TypeError("operator must be an Operator or None")
+        if reason == INVOCATION_INVALID and operator is not None:
+            raise ValueError(
+                "invocation-invalid cannot carry a normalized operator"
+            )
 
         self.reason = reason
+        self.operator = operator
         super().__init__(reason)
 
 
@@ -345,7 +357,10 @@ def parse_invocation_json(value: object) -> tuple[Operator, InvocationTarget]:
         address = parse_address(target["address"])
     except AddressError as error:
         if error.reason == ADDRESS_MALFORMED:
-            raise InvocationSyntaxError(ADDRESS_MALFORMED) from None
+            raise InvocationSyntaxError(
+                ADDRESS_MALFORMED,
+                operator=operator,
+            ) from None
         raise AssertionError(
             "parsing an address must not produce traversal failures"
         ) from error

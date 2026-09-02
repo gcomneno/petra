@@ -24,6 +24,7 @@ Issues = "https://github.com/gcomneno/petra/issues"
 
 [project.scripts]
 pet = "pet.cli:main"
+petra = "petra.cli:main"
 
 [tool.pytest]
 pythonpath = ["src"]
