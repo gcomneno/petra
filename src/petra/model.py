@@ -217,42 +217,72 @@ def _require_shape(value: object) -> PetraShape:
 
 
 def validate_shape(shape: PetraShape) -> None:
-    """Validate grammar and canonical positional ranks recursively."""
+    """Validate grammar and canonical ranks without call-stack recursion."""
 
     current = _require_shape(shape)
+    pending: list[tuple[PetraShape, int]] = [(current, 0)]
 
-    if isinstance(current, Leaf):
-        return
+    while pending:
+        current, next_term = pending.pop()
 
-    for expected_rank, term in enumerate(current.terms):
-        expected_name = f"r{expected_rank}"
+        if isinstance(current, Leaf):
+            continue
 
-        if term.root.rank != expected_rank:
+        if next_term >= len(current.terms):
+            continue
+
+        term = current.terms[next_term]
+        expected_name = f"r{next_term}"
+
+        if term.root.rank != next_term:
             raise ValueError(
                 "non-canonical root rank: "
                 f"expected {expected_name}, got {term.root.name}"
             )
 
-        validate_shape(term.exponent)
+        # Match the recursive traversal contract exactly: finish validating
+        # this exponent before inspecting the next sibling term.
+        pending.append((current, next_term + 1))
+        pending.append((_require_shape(term.exponent), 0))
 
 
 def normalize_shape(shape: PetraShape) -> PetraShape:
-    """Return a recursively rank-normalized shape without reordering."""
+    """Return a rank-normalized shape using iterative post-order traversal."""
 
     current = _require_shape(shape)
+    normalized: dict[int, PetraShape] = {}
+    pending: list[tuple[PetraShape, bool]] = [(current, False)]
 
-    if isinstance(current, Leaf):
-        return current
+    while pending:
+        node, expanded = pending.pop()
+        node_id = id(node)
 
-    return Container(
-        terms=tuple(
-            Term(
-                root=Root(rank),
-                exponent=normalize_shape(term.exponent),
+        if node_id in normalized:
+            continue
+
+        if isinstance(node, Leaf):
+            normalized[node_id] = node
+            continue
+
+        if not expanded:
+            pending.append((node, True))
+            for term in reversed(node.terms):
+                child = _require_shape(term.exponent)
+                if id(child) not in normalized:
+                    pending.append((child, False))
+            continue
+
+        normalized[node_id] = Container(
+            terms=tuple(
+                Term(
+                    root=Root(rank),
+                    exponent=normalized[id(term.exponent)],
+                )
+                for rank, term in enumerate(node.terms)
             )
-            for rank, term in enumerate(current.terms)
         )
-    )
+
+    return normalized[id(current)]
 
 
 def to_canonical_data(shape: PetraShape) -> CanonicalData:
@@ -265,19 +295,40 @@ def to_canonical_data(shape: PetraShape) -> CanonicalData:
     current = _require_shape(shape)
     validate_shape(current)
 
-    if isinstance(current, Leaf):
-        return ("leaf",)
+    data: dict[int, CanonicalData] = {}
+    pending: list[tuple[PetraShape, bool]] = [(current, False)]
 
-    return (
-        "container",
-        tuple(
-            (
-                term.root.name,
-                to_canonical_data(term.exponent),
-            )
-            for term in current.terms
-        ),
-    )
+    while pending:
+        node, expanded = pending.pop()
+        node_id = id(node)
+
+        if node_id in data:
+            continue
+
+        if isinstance(node, Leaf):
+            data[node_id] = ("leaf",)
+            continue
+
+        if not expanded:
+            pending.append((node, True))
+            for term in reversed(node.terms):
+                child = _require_shape(term.exponent)
+                if id(child) not in data:
+                    pending.append((child, False))
+            continue
+
+        data[node_id] = (
+            "container",
+            tuple(
+                (
+                    term.root.name,
+                    data[id(term.exponent)],
+                )
+                for term in node.terms
+            ),
+        )
+
+    return data[id(current)]
 
 
 __all__ = [
