@@ -1,7 +1,11 @@
-"""Canonical textual serialization for PETRA shapes."""
+"""Canonical serialization boundaries for PETRA."""
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
+from .addresses import AddressError, parse_address, render_address
 from .model import (
     Container,
     Leaf,
@@ -9,9 +13,21 @@ from .model import (
     Root,
     Term,
 )
+from .results import (
+    AddressEffects,
+    DefaultTarget,
+    ExplicitTarget,
+    FailedResult,
+    InvocationTarget,
+    Operator,
+    OperatorResult,
+    SuccessfulResult,
+)
 
 
 SHAPE_TEXT_MALFORMED = "shape-text-malformed"
+INVOCATION_INVALID = "invocation-invalid"
+ADDRESS_MALFORMED = "address-malformed"
 
 _ASCII_WHITESPACE = frozenset(" \t\n\r\f\v")
 
@@ -25,6 +41,7 @@ _MAX_ROOT_RANK_DIGITS = 4
 _SHAPE_SERIALIZATION_LIMIT_EXCEEDED = (
     "shape-serialization-limit-exceeded"
 )
+_INVOCATION_SCHEMA = "petra.operator-invocation.v1"
 
 
 class ShapeSyntaxError(ValueError):
@@ -41,6 +58,25 @@ class ShapeSyntaxError(ValueError):
 
         self.reason = reason
         super().__init__(reason)
+
+
+class InvocationSyntaxError(ValueError):
+    """A deterministic raw PETRA invocation boundary failure."""
+
+    def __init__(self, reason: str) -> None:
+        if not isinstance(reason, str):
+            raise TypeError("invocation syntax reason must be a str")
+        if reason not in {INVOCATION_INVALID, ADDRESS_MALFORMED}:
+            raise ValueError(
+                f"unknown invocation syntax reason: {reason}"
+            )
+
+        self.reason = reason
+        super().__init__(reason)
+
+
+class _InvalidJson(ValueError):
+    """Internal strict-JSON rejection marker."""
 
 
 class _ContainerFrame:
@@ -261,6 +297,176 @@ def serialize_shape(shape: PetraShape) -> str:
     return "".join(chunks)
 
 
+def parse_invocation_json(value: object) -> tuple[Operator, InvocationTarget]:
+    """Parse one strict PETRA operator invocation JSON document."""
+
+    if type(value) is not str:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+
+    try:
+        payload = json.loads(
+            value,
+            object_pairs_hook=_strict_object,
+            parse_constant=_reject_json_constant,
+        )
+    except (json.JSONDecodeError, _InvalidJson, TypeError, ValueError):
+        raise InvocationSyntaxError(INVOCATION_INVALID) from None
+
+    if not isinstance(payload, dict) or set(payload) != {
+        "schema",
+        "operator",
+        "target",
+    }:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+    if payload["schema"] != _INVOCATION_SCHEMA:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+
+    try:
+        operator = Operator(payload["operator"])
+    except (TypeError, ValueError):
+        raise InvocationSyntaxError(INVOCATION_INVALID) from None
+
+    target = payload["target"]
+    if not isinstance(target, dict) or "mode" not in target:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+
+    mode = target["mode"]
+    if mode == "default":
+        if set(target) != {"mode"}:
+            raise InvocationSyntaxError(INVOCATION_INVALID)
+        return operator, DefaultTarget()
+
+    if mode != "explicit" or set(target) != {"mode", "address"}:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+    if type(target["address"]) is not str:
+        raise InvocationSyntaxError(INVOCATION_INVALID)
+
+    try:
+        address = parse_address(target["address"])
+    except AddressError as error:
+        if error.reason == ADDRESS_MALFORMED:
+            raise InvocationSyntaxError(ADDRESS_MALFORMED) from None
+        raise AssertionError(
+            "parsing an address must not produce traversal failures"
+        ) from error
+
+    return operator, ExplicitTarget(address)
+
+
+def serialize_invocation(
+    operator: Operator,
+    invocation_target: InvocationTarget,
+) -> str:
+    """Serialize one normalized invocation as canonical compact JSON."""
+
+    if not isinstance(operator, Operator):
+        raise TypeError("operator must be an Operator")
+    if not isinstance(invocation_target, (DefaultTarget, ExplicitTarget)):
+        raise TypeError(
+            "invocation_target must be a normalized target"
+        )
+
+    return _canonical_json(
+        {
+            "schema": _INVOCATION_SCHEMA,
+            "operator": operator.value,
+            "target": _invocation_target_data(invocation_target),
+        }
+    )
+
+
+def serialize_result(result: OperatorResult) -> str:
+    """Serialize one typed operator result as canonical compact JSON."""
+
+    if isinstance(result, SuccessfulResult):
+        payload: dict[str, Any] = {
+            "schema": result.schema,
+            "status": result.status,
+            "operator": result.operator.value,
+            "invocation_target": _invocation_target_data(
+                result.invocation_target
+            ),
+            "resolved_target": {
+                "kind": result.resolved_target.kind,
+                "address": render_address(result.resolved_target.address),
+            },
+            "before_shape": serialize_shape(result.before_shape),
+            "after_shape": serialize_shape(result.after_shape),
+            "address_effects": _address_effects_data(
+                result.address_effects
+            ),
+            "reason": result.reason,
+        }
+        return _canonical_json(payload)
+
+    if isinstance(result, FailedResult):
+        return _canonical_json(
+            {
+                "schema": result.schema,
+                "status": result.status,
+                "operator": (
+                    None
+                    if result.operator is None
+                    else result.operator.value
+                ),
+                "invocation_target": (
+                    None
+                    if result.invocation_target is None
+                    else _invocation_target_data(
+                        result.invocation_target
+                    )
+                ),
+                "before_shape": serialize_shape(result.before_shape),
+                "reason": result.reason,
+            }
+        )
+
+    raise TypeError("expected an OperatorResult")
+
+
+def _strict_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _InvalidJson("duplicate object key")
+        result[key] = value
+    return result
+
+
+def _reject_json_constant(value: str) -> Any:
+    raise _InvalidJson(f"non-standard JSON constant: {value}")
+
+
+def _canonical_json(payload: object) -> str:
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _invocation_target_data(
+    invocation_target: InvocationTarget,
+) -> dict[str, str]:
+    if isinstance(invocation_target, DefaultTarget):
+        return {"mode": "default"}
+
+    assert isinstance(invocation_target, ExplicitTarget)
+    return {
+        "mode": "explicit",
+        "address": render_address(invocation_target.address),
+    }
+
+
+def _address_effects_data(
+    address_effects: AddressEffects,
+) -> dict[str, str]:
+    return {
+        "target_address": render_address(address_effects.target_address),
+        "witness_address": render_address(address_effects.witness_address),
+    }
+
+
 def _validate_shape_for_serialization(shape: PetraShape) -> None:
     """Validate canonical typed input and the serialization resource budget."""
 
@@ -345,8 +551,14 @@ def _raise_serialization_limit() -> None:
 
 
 __all__ = [
+    "ADDRESS_MALFORMED",
+    "INVOCATION_INVALID",
+    "InvocationSyntaxError",
     "SHAPE_TEXT_MALFORMED",
     "ShapeSyntaxError",
+    "parse_invocation_json",
     "parse_shape",
+    "serialize_invocation",
+    "serialize_result",
     "serialize_shape",
 ]
