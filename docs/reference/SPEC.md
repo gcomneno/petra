@@ -463,9 +463,22 @@ when envelope validation cannot normalize one. An implementation may retain
 the raw invocation in an additional diagnostic field, but it must not affect
 the stable reason.
 
-The final concrete JSON representation of resolved targets and address effects
-is deferred to the canonical PETRA serialization phase; the semantics above
-are normative.
+The concrete JSON representation is canonical and contains no persistent
+identity. A `resolved_target` is exactly an object with `kind` and `address`.
+`kind` is one of `anchor`, `term`, or `slot`, and `address` is the canonical
+state-scoped PETRA address of that resolved pre-rewrite target.
+
+`address_effects` is exactly an object with `target_address` and
+`witness_address`. `target_address` is the canonical address resolved in the
+before-shape; `witness_address` is the single canonical post-rewrite witness
+address resolved in the after-shape. Neither address is a persistent identity.
+
+Canonical invocation and result serialization uses JSON with object keys sorted
+lexicographically, compact separators, no insignificant whitespace, and no
+trailing newline. Accepted invocation JSON may contain ordinary JSON
+whitespace, but duplicate object keys and non-standard JSON constants are
+invalid. These serialization rules do not change the failure precedence,
+operator semantics, or state-scoped address rules above.
 
 The following matrix fixes the operator-specific reason after address parsing
 and traversal have succeeded:
