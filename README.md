@@ -3,22 +3,28 @@
 PETRA is a recursive, canonical, shape-first algebra for prime-exponent tower
 structures.
 
-The project is replacing the former **PET — Prime Exponent Tree** runtime.
-PETRA is not a compatibility layer above PET-Base and does not maintain a
-parallel legacy model.
+The project replaces the former **PET — Prime Exponent Tree** runtime. PETRA is
+not a compatibility layer above PET and does not preserve historical PET
+behavior merely for continuity.
 
 ## Current status
 
-The repository is in a documentation-first replacement phase.
+PETRA is now the maintained runtime, distribution, and command-line surface.
 
-- The canonical PETRA architecture is defined.
-- The immutable PETRA runtime has not been implemented yet.
-- Existing code under `src/pet/` belongs to the historical PET baseline.
+- The canonical PETRA architecture is defined by the specification.
+- The immutable PETRA runtime is implemented under `src/petra/`.
+- Canonical positional addresses, result/witness records, serialization, and
+  the `SPROUT`, `SHED`, `GRAFT`, and `PRUNE` operators are implemented.
+- The minimal maintained CLI is `petra`.
+- Phase 8 — minimal CLI — is complete.
+- The Phase 9 readiness audit concluded `PHASE_10_READY`.
+- Phase 10 — complete replacement — is active.
+- `src/pet/` remains temporarily in the repository as historical migration
+  residue, but it is not part of the maintained PETRA distribution surface.
 - Tag `v0.3.0` preserves the final historical PET release.
-- New implementation work will be created under `src/petra/`.
 
-Do not treat the current `pet` CLI, PET-Base JSON, `PETObject`, PET-Metrics,
-PET-METICA, or legacy operators as PETRA behavior.
+Do not treat the historical `pet` CLI, PET-Base JSON, `PETObject`, PET-Metrics,
+PET-METICA, numeric projection, or legacy operators as PETRA behavior.
 
 ## Canonical sources
 
@@ -27,9 +33,10 @@ PET-METICA, or legacy operators as PETRA behavior.
 3. [PETRA implementation roadmap](ROADMAP.md)
 4. [Documentation map](docs/README.md)
 5. [Current project status](docs/reports/STATUS.md)
+6. [Maintained PETRA CLI reference](docs/reference/CLI.md)
 
-The specification is the sole normative source. Other documents are explanatory,
-historical, or research material.
+The specification is the sole normative source. Other documents are
+explanatory, historical, planning, or research material.
 
 ## Core grammar
 
@@ -50,6 +57,20 @@ The canonical operators are:
 - `GRAFT`;
 - `PRUNE`.
 
+## Maintained CLI
+
+A maintained installation exposes the `petra` command:
+
+```bash
+petra '1' '{"schema":"petra.operator-invocation.v1","operator":"SPROUT","target":{"mode":"default"}}'
+```
+
+The CLI accepts one canonical PETRA shape and one strict invocation JSON
+document, then emits one canonical operator-result JSON document. See
+[`docs/reference/CLI.md`](docs/reference/CLI.md) for the exact current boundary.
+
+The historical `pet` command is not a maintained PETRA interface.
+
 ## Role of primes
 
 Concrete primes are not runtime identities.
@@ -62,17 +83,12 @@ factorization are outside the initial structural core.
 
 PETRA reuses only artifacts required by a concrete PETRA contract.
 
-The former PET implementation remains available through Git history, tags, and
-releases. Obsolete APIs, commands, formats, tests, tools, and readers will be
-removed from the active runtime rather than retained as permanent compatibility
-layers.
+Historical PET behavior remains recoverable through Git history, tags, and
+releases. Obsolete APIs, commands, formats, tests, tools, and readers are
+removed or retargeted during Phase 10 rather than retained as permanent
+compatibility layers.
 
-## Development
-
-The current documentation-only milestone is tracked by
-[issue #170](https://github.com/gcomneno/petra/issues/170), under the replacement
-program in
-[issue #169](https://github.com/gcomneno/petra/issues/169).
-
-Runtime implementation begins only after the canonical specification is
-accepted.
+The replacement program is tracked by
+[issue #169](https://github.com/gcomneno/petra/issues/169). The current Phase 10
+distribution-boundary slice is tracked by
+[issue #226](https://github.com/gcomneno/petra/issues/226).
