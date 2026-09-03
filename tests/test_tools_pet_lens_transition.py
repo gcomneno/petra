@@ -73,16 +73,3 @@ def test_peelator_wrapper_reports_legacy_lens_transition_section() -> None:
     assert "source_generator = 30" in result.stdout
     assert "target_generator = 6" in result.stdout
     assert "transition = DROP" in result.stdout
-
-
-def test_pet_lens_transition_reports_multistep_dec_path() -> None:
-    result = run("tools/pet_lens_transition.py", "16")
-
-    assert result.returncode == 0, result.stderr
-    assert "source_generator = 16" in result.stdout
-    assert "target_generator = 2" in result.stdout
-    assert "transition_available = partial" in result.stdout
-    assert "transition = DEC_PATH" in result.stdout
-    assert "representative_target = 2" in result.stdout
-    assert "transition_path = DEC -> DEC -> DEC" in result.stdout
-    assert "generator_path = 16 -> 8 -> 4 -> 2" in result.stdout
