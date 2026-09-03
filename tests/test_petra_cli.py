@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ast
-import configparser
 import subprocess
 import sys
 import sysconfig
@@ -49,11 +48,43 @@ def _petra_console_script_path() -> Path:
     raise AssertionError(f"petra console script not found in {scripts_dir}")
 
 
-def _load_pyproject() -> configparser.ConfigParser:
-    project = configparser.ConfigParser()
-    loaded = project.read("pyproject.toml", encoding="utf-8")
-    assert loaded == ["pyproject.toml"]
-    return project
+def _pyproject_value(section: str, key: str) -> object:
+    lines = Path("pyproject.toml").read_text(encoding="utf-8").splitlines()
+    current_section: str | None = None
+
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            current_section = stripped[1:-1]
+            continue
+        if current_section != section or not stripped.startswith(f"{key} ="):
+            continue
+
+        value = stripped.split("=", 1)[1].strip()
+        while value.count("[") > value.count("]"):
+            index += 1
+            value += " " + lines[index].strip()
+        return ast.literal_eval(value)
+
+    raise AssertionError(f"missing pyproject assignment: [{section}] {key}")
+
+
+def _pyproject_scripts() -> dict[str, str]:
+    lines = Path("pyproject.toml").read_text(encoding="utf-8").splitlines()
+    scripts: dict[str, str] = {}
+    current_section: str | None = None
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            current_section = stripped[1:-1]
+            continue
+        if current_section != "project.scripts" or not stripped:
+            continue
+        key, raw_value = stripped.split("=", 1)
+        scripts[key.strip()] = ast.literal_eval(raw_value.strip())
+
+    return scripts
 
 
 def _default_invocation(operator: str) -> str:
@@ -75,18 +106,10 @@ def _explicit_invocation(operator: str, address: str) -> str:
 
 
 def test_petra_console_script_entry_point_is_declared() -> None:
-    project = _load_pyproject()
-
-    assert ast.literal_eval(project["project"]["name"]) == "petra"
-    scripts = {
-        key: ast.literal_eval(value)
-        for key, value in project["project.scripts"].items()
-    }
-    assert scripts == {"petra": "petra.cli:main"}
-
-    package_find = project["tool.setuptools.packages.find"]
-    assert ast.literal_eval(package_find["where"]) == ["src"]
-    assert ast.literal_eval(package_find["include"]) == ["petra"]
+    assert _pyproject_value("project", "name") == "petra"
+    assert _pyproject_scripts() == {"petra": "petra.cli:main"}
+    assert _pyproject_value("tool.setuptools.packages.find", "where") == ["src"]
+    assert _pyproject_value("tool.setuptools.packages.find", "include") == ["petra"]
 
 
 def test_petra_console_script_entry_point_executes_in_editable_environment() -> None:
