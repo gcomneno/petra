@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import ast
+import configparser
 import os
 import subprocess
 import sys
-import tomllib
 import venv
 import zipfile
 from pathlib import Path
@@ -13,9 +13,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load_project() -> dict[str, object]:
-    with (ROOT / "pyproject.toml").open("rb") as project_file:
-        return tomllib.load(project_file)
+def _load_project() -> configparser.ConfigParser:
+    project = configparser.ConfigParser()
+    loaded = project.read(ROOT / "pyproject.toml", encoding="utf-8")
+    assert loaded == [str(ROOT / "pyproject.toml")]
+    return project
 
 
 def _venv_python(venv_dir: Path) -> Path:
@@ -33,14 +35,16 @@ def _venv_script(venv_dir: Path, name: str) -> Path:
 def test_distribution_configuration_exposes_only_petra() -> None:
     project = _load_project()
 
-    assert project["project"]["name"] == "petra"
-    assert project["project"]["scripts"] == {
-        "petra": "petra.cli:main",
+    assert ast.literal_eval(project["project"]["name"]) == "petra"
+    scripts = {
+        key: ast.literal_eval(value)
+        for key, value in project["project.scripts"].items()
     }
+    assert scripts == {"petra": "petra.cli:main"}
 
-    package_find = project["tool"]["setuptools"]["packages"]["find"]
-    assert package_find["where"] == ["src"]
-    assert package_find["include"] == ["petra"]
+    package_find = project["tool.setuptools.packages.find"]
+    assert ast.literal_eval(package_find["where"]) == ["src"]
+    assert ast.literal_eval(package_find["include"]) == ["petra"]
 
 
 def test_built_and_installed_distribution_contains_only_petra(
