@@ -3,9 +3,9 @@ requires = ["setuptools>=65.5.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pet"
+name = "petra"
 version = "0.1.4"
-description = "PET — Prime Exponent Tree: canonical recursive representation of integers"
+description = "PETRA — Prime Exponent Tower Recursive Algebra: canonical recursive shape-first algebra"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -23,8 +23,11 @@ Repository = "https://github.com/gcomneno/petra"
 Issues = "https://github.com/gcomneno/petra/issues"
 
 [project.scripts]
-pet = "pet.cli:main"
 petra = "petra.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["petra"]
 
 [tool.pytest]
 pythonpath = ["src"]

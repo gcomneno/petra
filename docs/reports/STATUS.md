@@ -3,50 +3,76 @@
 ## Current architecture
 
 **PETRA — Prime Exponent Tower Recursive Algebra** is the sole current project
-architecture.
+architecture and maintained runtime surface.
 
-Status: **canonical specification transition in progress**.
+Status: **Phase 10 — complete replacement in progress**.
 
 ## Completed
 
 - the PETRA name and expansion are approved;
 - the project is shape-first rather than value-first;
+- immutable PETRA shapes, normalization, equality, and positional addresses are
+  implemented under `src/petra/`;
+- typed operator results and witnesses are implemented;
 - `SPROUT`, `SHED`, `GRAFT`, and `PRUNE` are the canonical operators;
-- numeric projection, primality, and factorization are outside the initial core;
+- canonical shape, invocation, and result serialization are implemented;
+- Phase 8 delivered the minimal canonical `petra` CLI;
+- the Phase 9 transition audit concluded `PHASE_10_READY`;
+- numeric projection, primality, and factorization remain outside the initial
+  core;
 - permanent PET compatibility is not a requirement;
-- the former PET runtime is preserved historically through Git and tag `v0.3.0`.
+- the former PET runtime remains historically recoverable through Git and tag
+  `v0.3.0`.
 
 ## Current work
 
-The active milestone establishes:
+Phase 10 is replacing the remaining mixed PET/PETRA repository surfaces.
 
-- one canonical PETRA specification;
-- one vision;
-- one implementation roadmap;
-- clear historical classification of prior PET material.
+The active distribution-boundary slice makes PETRA the sole maintained package
+and CLI identity while leaving `src/pet/` temporarily present as migration
+residue. Subsequent Phase 10 slices may remove or retarget obsolete PET tests,
+tools, documentation, and source files.
 
-This milestone is documentation-only.
+## Maintained runtime
 
-## Not yet implemented
+The maintained PETRA surface includes:
 
-- `src/petra`;
-- immutable PETRA shapes;
-- canonical normalization and equality;
-- positional address resolution;
-- direct structural rewrite results;
-- PETRA operators;
-- PETRA serialization;
-- the `petra` CLI.
+- `src/petra/`;
+- canonical PETRA shapes and addresses;
+- typed result/witness records;
+- direct structural operators;
+- canonical serialization;
+- the `petra` console command.
+
+The maintained runtime does not depend on `src/pet/`.
 
 ## Historical runtime
 
-The current checkout still contains the former `src/pet` runtime and its tests.
+The current checkout still contains the former `src/pet/` runtime and a large
+historical PET test/tool surface.
 
-That code remains executable during the transition but does not define PETRA.
-It will be removed after the replacement implementation is complete.
+That code is migration residue during Phase 10. Its presence does not make it a
+maintained product surface and does not create a PETRA requirement. Historical
+behavior is preserved by repository history rather than permanent
+compatibility.
+
+## Research boundary
+
+Research under `docs/research/` and related research tooling remains
+non-canonical unless explicitly promoted through a separate decision and
+canonical implementation change. Sparse-image and PETRA VISION research are
+not part of this Phase 10 distribution-boundary slice.
 
 ## Source of truth
 
 The sole normative source is:
 
 - [`../reference/SPEC.md`](../reference/SPEC.md)
+
+Work ordering is recorded in:
+
+- [`../../ROADMAP.md`](../../ROADMAP.md)
+
+The Phase 9 → Phase 10 readiness evidence is recorded in:
+
+- [`petra-phase-9-to-10-audit.md`](petra-phase-9-to-10-audit.md)
