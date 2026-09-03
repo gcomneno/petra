@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import ast
+import configparser
 import subprocess
 import sys
 import sysconfig
-import tomllib
 from pathlib import Path
 
 from petra import (
@@ -48,6 +49,13 @@ def _petra_console_script_path() -> Path:
     raise AssertionError(f"petra console script not found in {scripts_dir}")
 
 
+def _load_pyproject() -> configparser.ConfigParser:
+    project = configparser.ConfigParser()
+    loaded = project.read("pyproject.toml", encoding="utf-8")
+    assert loaded == ["pyproject.toml"]
+    return project
+
+
 def _default_invocation(operator: str) -> str:
     return (
         '{"schema":"petra.operator-invocation.v1",'
@@ -67,16 +75,18 @@ def _explicit_invocation(operator: str, address: str) -> str:
 
 
 def test_petra_console_script_entry_point_is_declared() -> None:
-    with open("pyproject.toml", "rb") as project_file:
-        project = tomllib.load(project_file)
+    project = _load_pyproject()
 
-    assert project["project"]["name"] == "petra"
-    assert project["project"]["scripts"] == {
-        "petra": "petra.cli:main",
+    assert ast.literal_eval(project["project"]["name"]) == "petra"
+    scripts = {
+        key: ast.literal_eval(value)
+        for key, value in project["project.scripts"].items()
     }
-    package_find = project["tool"]["setuptools"]["packages"]["find"]
-    assert package_find["where"] == ["src"]
-    assert package_find["include"] == ["petra"]
+    assert scripts == {"petra": "petra.cli:main"}
+
+    package_find = project["tool.setuptools.packages.find"]
+    assert ast.literal_eval(package_find["where"]) == ["src"]
+    assert ast.literal_eval(package_find["include"]) == ["petra"]
 
 
 def test_petra_console_script_entry_point_executes_in_editable_environment() -> None:
