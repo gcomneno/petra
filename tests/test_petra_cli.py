@@ -70,7 +70,13 @@ def test_petra_console_script_entry_point_is_declared() -> None:
     with open("pyproject.toml", "rb") as project_file:
         project = tomllib.load(project_file)
 
-    assert project["project"]["scripts"]["petra"] == "petra.cli:main"
+    assert project["project"]["name"] == "petra"
+    assert project["project"]["scripts"] == {
+        "petra": "petra.cli:main",
+    }
+    package_find = project["tool"]["setuptools"]["packages"]["find"]
+    assert package_find["where"] == ["src"]
+    assert package_find["include"] == ["petra"]
 
 
 def test_petra_console_script_entry_point_executes_in_editable_environment() -> None:
