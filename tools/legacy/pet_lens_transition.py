@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
@@ -27,60 +26,6 @@ def extract_value(text: str, key: str) -> str:
         if stripped.startswith(prefix):
             return stripped[len(prefix):]
     return "unknown"
-
-
-def transition_move_from_label(label: str) -> str:
-    return label.split("(", 1)[0]
-
-
-def classify_transition_path(labels: list[str]) -> str:
-    moves = [transition_move_from_label(label) for label in labels]
-    unique_moves = set(moves)
-
-    if not moves:
-        return "unknown"
-
-    if len(unique_moves) == 1:
-        return f"{moves[0]}_PATH"
-
-    return "MIXED_PATH"
-
-
-def find_transition_path(source_generator: int, target_generator: int) -> dict[str, str]:
-    rewrite_text = run_tool(
-        "-m",
-        "pet.cli",
-        "rewrite",
-        "explain",
-        str(source_generator),
-        str(target_generator),
-        "--json",
-    )
-    rewrite = json.loads(rewrite_text)
-
-    if not rewrite.get("reachable"):
-        return {
-            "available": "no",
-            "move": "unknown",
-            "representative_target": "unknown",
-            "target_generator": str(target_generator),
-            "transition_path": "unknown",
-            "generator_path": "unknown",
-        }
-
-    path = rewrite.get("path", [])
-    labels = [step["label"] for step in path]
-    generators = [str(source_generator)]
-    generators.extend(str(step["dst"]) for step in path)
-
-    return {
-        "available": "partial",
-        "move": classify_transition_path(labels),
-        "representative_target": str(target_generator),
-        "target_generator": str(target_generator),
-        "transition_path": " -> ".join(transition_move_from_label(label) for label in labels),
-        "generator_path": " -> ".join(generators),
-    }
 
 
 def max_prime_factor(n: int) -> int:
@@ -174,7 +119,12 @@ def find_transition(
         match["representative_path"] = f"{source_generator} -> {match['representative_target']}"
         return match
 
-    return find_transition_path(source_generator, target_generator)
+    return {
+        "available": "no",
+        "move": "unknown",
+        "representative_target": "unknown",
+        "target_generator": str(target_generator),
+    }
 
 
 def main() -> int:
