@@ -1,4 +1,4 @@
-PYTHON := python3
+PYTHON ?= python3
 PYTHONPATH := src
 
 .PHONY: test demo docs-check
