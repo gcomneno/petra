@@ -3,7 +3,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import textwrap
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,52 +27,19 @@ def test_make_demo_uses_installed_cli_and_cleans_up(tmp_path):
         check=True,
     )
 
-    expected = textwrap.dedent(
-        """\
-        PET-Base demo (N=72)
-
-        1. Encode canonical JSON
-        [
-          {
-            "p": 2,
-            "e": [
-              {
-                "p": 3,
-                "e": null
-              }
-            ]
-          },
-          {
-            "p": 3,
-            "e": [
-              {
-                "p": 2,
-                "e": null
-              }
-            ]
-          }
-        ]
-
-        2. Show canonical metrics
-        N = 72
-        node_count = 4
-        leaf_count = 2
-        height = 2
-        max_branching = 2
-        branch_profile = [2, 2]
-        recursive_mass = 2
-        average_leaf_depth = 2.0
-        leaf_depth_variance = 0.0
-
-        3. Validate encoded artifact
-        OK
-
-        4. Decode encoded artifact
-        72
-
-        5. Assert roundtrip
-        OK: decoded value matches original N=72
-        """
+    expected = (
+        "PETRA canonical CLI demo\n"
+        "\n"
+        "shape = 1\n"
+        'invocation = {"schema":"petra.operator-invocation.v1",'
+        '"operator":"SPROUT","target":{"mode":"default"}}\n'
+        "\n"
+        '{"address_effects":{"target_address":"@/","witness_address":"@/0"},'
+        '"after_shape":"C(r0^1)","before_shape":"1",'
+        '"invocation_target":{"mode":"default"},"operator":"SPROUT",'
+        '"reason":"sprout-applied",'
+        '"resolved_target":{"address":"@/","kind":"anchor"},'
+        '"schema":"petra.operator-result.v1","status":"ok"}\n'
     )
 
     assert result.stdout == expected
