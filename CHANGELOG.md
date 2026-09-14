@@ -51,6 +51,7 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 ## [Unreleased]
 
 ### Added
+- `SECURITY.md` con policy di segnalazione e scope del progetto.
 - Badge DOI Zenodo nel README e campo `doi:` in `CITATION.cff` (`10.5281/zenodo.22741778`, concept DOI che punta sempre all'ultima versione).
 - Prima release pubblica su Zenodo: `PETRA — Prime Exponent Tower Recursive Algebra v1.0.3`, DOI versione `10.5281/zenodo.22741779`.
 - Gate di qualità in CI: `ruff check` (E, F, I, UP, B, SIM, RUF) e `mypy` (strict-ish) eseguiti su `src/petra/` e sui test canonical. Configurazione in `pyproject.toml` sotto `[tool.ruff]` e `[tool.mypy]`.
