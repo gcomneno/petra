@@ -1,6 +1,7 @@
 """Bounded structural search over PETRA canonical shapes."""
 
 from .atlas import (
+    AtlasBackedDistance,
     DistanceAtlas,
     ShapeAtlas,
     build_distance_atlas,
@@ -27,6 +28,7 @@ from .projection import (
 from .search import Path, ResolverError, Step, resolve
 
 __all__ = [
+    "AtlasBackedDistance",
     "DistanceAtlas",
     "DistanceCache",
     "ShapeAtlas",

@@ -240,3 +240,73 @@ def load_distance_atlas(path: str | Path) -> DistanceAtlas:
     }
 
     return DistanceAtlas(by_pair=by_pair)
+
+class AtlasBackedDistance:
+    """Distance oracle that consults a persistent atlas before the Resolver.
+
+    Three-tier lookup:
+
+    1. Persistent distance atlas (loaded from disk) — O(1)
+    2. Per-session DistanceCache — O(1) for repeated queries
+    3. A* Resolver — slow fallback, exact result
+
+    The wrapper is additive: it does not replace
+    ``structural_distance_shapes`` or ``DistanceCache``. Callers who do not
+    need the atlas keep using the previous API unchanged.
+    """
+
+    def __init__(
+        self,
+        atlas: DistanceAtlas,
+        *,
+        max_depth: int = 30,
+        max_nodes: int = 80,
+        max_visited: int = 200_000,
+    ) -> None:
+        from .distance import DistanceCache
+
+        self._atlas = atlas
+        self._runtime = DistanceCache(
+            max_depth=max_depth,
+            max_nodes=max_nodes,
+            max_visited=max_visited,
+        )
+        self.atlas_hits = 0
+        self.runtime_misses = 0
+
+    @classmethod
+    def from_path(
+        cls,
+        path: str | Path,
+        **kwargs: object,
+    ) -> "AtlasBackedDistance":
+        return cls(load_distance_atlas(path), **kwargs)  # type: ignore[arg-type]
+
+    def distance_shapes(self, a: object, b: object) -> int:
+        if a == b:
+            return 0
+
+        text_a = serialize_shape(a)  # type: ignore[arg-type]
+        text_b = serialize_shape(b)  # type: ignore[arg-type]
+        if text_a == text_b:
+            return 0
+
+        pair = (
+            (text_a, text_b) if text_a <= text_b else (text_b, text_a)
+        )
+        cached = self._atlas.by_pair.get(pair)
+        if cached is not None:
+            self.atlas_hits += 1
+            return cached
+
+        self.runtime_misses += 1
+        return self._runtime.distance(a, b)  # type: ignore[arg-type]
+
+    def distance_numbers(self, a: int, b: int) -> int:
+        from .distance import int_to_shape
+
+        return self.distance_shapes(int_to_shape(a), int_to_shape(b))
+
+    @property
+    def atlas_pair_count(self) -> int:
+        return self._atlas.pair_count
