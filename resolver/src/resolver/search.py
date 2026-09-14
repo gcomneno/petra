@@ -12,12 +12,9 @@ lower bounds:
 - maximum-depth distance,
 - leaf-count distance.
 
-Each canonical operator changes node count by exactly +/-2, and changes
-maximum depth and leaf count by at most 1, so the maximum of these three
-distances is a lower bound on the number of remaining steps. A* is
-therefore optimal whenever it finds a path.
-
-Neighbor enumeration is pruned per operator, as in the previous version.
+Per-shape metrics are cached by object identity during one ``resolve``
+call. This is safe because all visited shapes are kept alive by the
+frontier and the visited set, so identity is never reused within a call.
 """
 
 from __future__ import annotations
@@ -26,7 +23,7 @@ import heapq
 from collections import deque
 from dataclasses import dataclass
 from itertools import count
-from typing import Iterator
+from typing import Callable, Iterator
 
 from petra import (
     Address,
@@ -140,16 +137,6 @@ def _leaf_count(shape: PetraShape) -> int:
         for term in current.terms:
             stack.append(term.exponent)
     return total
-
-
-def _heuristic(shape: PetraShape, target: PetraShape) -> int:
-    """Admissible lower bound on the remaining steps."""
-
-    return max(
-        abs(_node_count(shape) - _node_count(target)) // 2,
-        abs(_max_depth(shape) - _max_depth(target)),
-        abs(_leaf_count(shape) - _leaf_count(target)),
-    )
 
 
 def _all_term_addresses(
@@ -278,6 +265,62 @@ def _enrich_path(path: Path, key: PrimeKey) -> Path:
     )
 
 
+def _build_cached_metrics(
+    target_shape: PetraShape,
+) -> tuple[
+    Callable[[PetraShape], int],
+    Callable[[PetraShape], int],
+]:
+    """Return (heuristic, node_count) closures with per-call caches."""
+
+    node_cache: dict[int, int] = {}
+    depth_cache: dict[int, int] = {}
+    leaf_cache: dict[int, int] = {}
+    heuristic_cache: dict[int, int] = {}
+
+    target_nodes = _node_count(target_shape)
+    target_depth = _max_depth(target_shape)
+    target_leaves = _leaf_count(target_shape)
+
+    def node_count(shape: PetraShape) -> int:
+        key = id(shape)
+        cached = node_cache.get(key)
+        if cached is None:
+            cached = _node_count(shape)
+            node_cache[key] = cached
+        return cached
+
+    def max_depth(shape: PetraShape) -> int:
+        key = id(shape)
+        cached = depth_cache.get(key)
+        if cached is None:
+            cached = _max_depth(shape)
+            depth_cache[key] = cached
+        return cached
+
+    def leaf_count(shape: PetraShape) -> int:
+        key = id(shape)
+        cached = leaf_cache.get(key)
+        if cached is None:
+            cached = _leaf_count(shape)
+            leaf_cache[key] = cached
+        return cached
+
+    def heuristic(shape: PetraShape) -> int:
+        key = id(shape)
+        cached = heuristic_cache.get(key)
+        if cached is None:
+            cached = max(
+                abs(node_count(shape) - target_nodes) // 2,
+                abs(max_depth(shape) - target_depth),
+                abs(leaf_count(shape) - target_leaves),
+            )
+            heuristic_cache[key] = cached
+        return cached
+
+    return heuristic, node_count
+
+
 def resolve(
     source: str | PetraShape,
     target: str | PetraShape,
@@ -308,13 +351,15 @@ def resolve(
         )
         return _enrich_path(path, key) if key is not None else path
 
-    if _node_count(source_shape) > max_nodes:
+    heuristic, node_count = _build_cached_metrics(target_shape)
+
+    if node_count(source_shape) > max_nodes:
         raise ResolverError("source shape exceeds max_nodes")
-    if _node_count(target_shape) > max_nodes:
+    if node_count(target_shape) > max_nodes:
         raise ResolverError("target shape exceeds max_nodes")
 
     tie = count()
-    h0 = _heuristic(source_shape, target_shape)
+    h0 = heuristic(source_shape)
     open_set: list[tuple[int, int, int, PetraShape, tuple[Step, ...]]] = [
         (h0, 0, next(tie), source_shape, ())
     ]
@@ -348,7 +393,7 @@ def resolve(
 
         for step in _neighbors(current_shape):
             neighbor = step.after_shape
-            if _node_count(neighbor) > max_nodes:
+            if node_count(neighbor) > max_nodes:
                 continue
 
             new_g = g + 1
@@ -357,7 +402,7 @@ def resolve(
 
             best_g[neighbor] = new_g
             new_path = (*current_path, step)
-            new_f = new_g + _heuristic(neighbor, target_shape)
+            new_f = new_g + heuristic(neighbor)
             heapq.heappush(
                 open_set,
                 (new_f, new_g, next(tie), neighbor, new_path),
