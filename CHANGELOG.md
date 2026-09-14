@@ -5,6 +5,11 @@ Tutte le modifiche rilevanti di questo progetto saranno documentate qui.
 Il formato si ispira a Keep a Changelog.
 Versioning corrente: `1.y.z`.
 
+## [1.0.2] — 2026-09-14
+
+### Fixed
+- `tests/test_petra_distribution_boundary.py`: il test che verifica la presenza di `src/pet/` ora skippa esplicitamente quando il runtime storico è assente, invece di fallire. Necessario per distribuzioni self-contained che omettono volontariamente `src/pet/` (es. archivio Zenodo della superficie pubblica). Il test diventerà no-op automaticamente quando Phase 10 rimuoverà il runtime storico.
+
 ## [1.0.1] — 2026-09-14
 
 ### Fixed
