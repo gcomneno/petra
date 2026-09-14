@@ -53,48 +53,35 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 ### Added
 - Badge DOI Zenodo nel README e campo `doi:` in `CITATION.cff` (`10.5281/zenodo.22741778`, concept DOI che punta sempre all'ultima versione).
 - Prima release pubblica su Zenodo: `PETRA — Prime Exponent Tower Recursive Algebra v1.0.3`, DOI versione `10.5281/zenodo.22741779`.
+- Gate di qualità in CI: `ruff check` (E, F, I, UP, B, SIM, RUF) e `mypy` (strict-ish) eseguiti su `src/petra/` e sui test canonical. Configurazione in `pyproject.toml` sotto `[tool.ruff]` e `[tool.mypy]`.
+- Tool research PET-METICA: `pet_metica_range_sweep.py` (scan multi-tier) e `pet_metica_seven_family_probe.py` (probe mirato su `7×{2^k,3^k}`), con test e report generated associati.
+- Research note `docs/research/notes/pet_metica_seven_family_tier_drift.md` e scorecard di chiusura pass in `docs/research/experiments/pet-metica-seven-family-ladder-pass.md`.
+- Passaggio di fondazione first-principles: esempi, semantica `collapse(P)`, audit implementativo, classificazione moduli, audit metriche e boundary per API aliases.
+- `scripts/check_docs_consistency.py` per controllare link Markdown locali e riferimenti Python sorgente non più esistenti.
+- Target `make docs-check` per eseguire il controllo documentale leggero.
+- Pipeline canonica `tools/pet_triage_pipeline.sh` per il workflow PET triage.
+- Flusso PET race diagnostic -> classic handoff policy -> classic verification.
+- Namespace operativi per i tool: `tools/core/`, `tools/classic/`, `tools/legacy/`, `tools/research/`.
+- Wrapper compatibili root-level per preservare i vecchi percorsi `tools/*.py` e `tools/*.sh`.
+- `.pet-cache/` come area locale per cache, stati e artefatti generati non tracciati.
 
 ### Changed
-- Introdotto il marker `legacy` (applicato automaticamente da `tests/conftest.py`) sui test che esercitano il runtime PET storico (`src/pet/`) e i tool PET (`tools/pet_*`). Il gate CI canonical (`-m "not slow and not legacy"`) copre 198 test; il gate legacy (1014 test) gira solo su `main` come informativo.
+- Introdotto il marker `legacy` (applicato automaticamente da `tests/conftest.py`) sui test che esercitano il runtime PET storico (`src/pet/`) e i tool PET (`tools/pet_*`). Il gate CI canonical (`-m "not slow and not legacy"`) copre 719 test; il gate legacy (557 test) gira solo su `main` come informativo.
 - CI: il job legacy PET è condizionato a `push` su `main`, non blocca le PR e non fallisce il workflow (`continue-on-error: true`).
+- `src/petra/results.py`: fallback `StrEnum` basato su `sys.version_info` invece di `try/except ImportError`. Stesso comportamento runtime, ma mypy ora inferisce correttamente `Operator` come enum e non più come `str`.
+- `src/petra/serialization.py`: `_malformed` annotato `NoReturn`.
+- `src/petra/model.py`: `_is_shape` annotato `TypeGuard[PetraShape]`.
+- `src/petra/cli.py`: variabile dell'eccezione rinominata per evitare shadowing.
+- Fix ruff minori (import sorting, f-string, iterable unpacking, `zip(strict=False)`, raw string, noqa mirati per cifre unicode intenzionali nei test).
+- Documentazione pubblica: chiarita la separazione tra PET-Base, First-principles PET, PET-Metrics, PET/PEG 2.0 e PET-METICA.
+- Allineati README, SPEC/STATUS e foundation docs intorno ai confini tra contratto stabile, layer object-native, metriche estese e tooling research.
+- Corretto il riferimento storico `src/pet_algebra.py` verso il percorso reale `src/pet/algebra.py`.
 
 ### Fixed
 - `tests/test_petra_shape_model_stack_safety.py`: alza localmente `sys.setrecursionlimit` così i test di stack-safety a profondità 2048 passano anche su CPython 3.10 e 3.11, dove il consumo di C stack per frame è maggiore rispetto a 3.12.
 - `tests/test_report_contracts.py`: corretti i path dei report a `docs/reports/generated/`; il contract test era silenziosamente skippato prima.
 - CI: installazione degli extras di test nel job `docs` (`pip install -e ".[test]"`), che mancava e causava exit 127.
 - `petra --version` ora stampa la versione installata del pacchetto.
-
-### Added
-- Aggiunti tool research PET-METICA: `pet_metica_range_sweep.py` (scan multi-tier) e `pet_metica_seven_family_probe.py` (probe mirato su `7×{2^k,3^k}`), con test e report generated associati.
-- Aggiunta research note `docs/research/notes/pet_metica_seven_family_tier_drift.md` e scorecard di chiusura pass in `docs/research/experiments/pet-metica-seven-family-ladder-pass.md`.
-- Aggiunto il passaggio di fondazione first-principles: esempi, semantica `collapse(P)`, audit implementativo, classificazione moduli, audit metriche e boundary per API aliases.
-- Aggiunto `scripts/check_docs_consistency.py` per controllare link Markdown locali e riferimenti Python sorgente non più esistenti.
-- Aggiunto il target `make docs-check` per eseguire il controllo documentale leggero.
-- Aggiunta la pipeline canonica `tools/pet_triage_pipeline.sh` per il workflow PET triage.
-- Aggiunto il flusso PET race diagnostic -> classic handoff policy -> classic verification.
-- Aggiunti namespace operativi per i tool:
-  - `tools/core/`
-  - `tools/classic/`
-  - `tools/legacy/`
-  - `tools/research/`
-- Aggiunti wrapper compatibili root-level per preservare i vecchi percorsi `tools/*.py` e `tools/*.sh`.
-- Aggiunta `.pet-cache/` come area locale per cache, stati e artefatti generati non tracciati.
-
-### Changed
-- Chiarita nella documentazione pubblica la separazione tra PET-Base, First-principles PET, PET-Metrics, PET/PEG 2.0 e PET-METICA.
-- Allineati README, SPEC/STATUS e foundation docs intorno ai confini tra contratto stabile, layer object-native, metriche estese e tooling research.
-- Corretto il riferimento storico `src/pet_algebra.py` verso il percorso reale `src/pet/algebra.py`.
-- `tools/peelator.sh` ora è un wrapper compatibile verso `tools/pet_triage_pipeline.sh`.
-- I tool PET triage core sono stati spostati sotto `tools/core/`.
-- I tool di scansione classic sono stati spostati sotto `tools/classic/`.
-- I vecchi lens diagnostics sono stati spostati sotto `tools/legacy/`.
-- I tool report/research/PET-METICA sono stati spostati sotto `tools/research/`.
-- Aggiornata la documentazione operativa per riflettere la tassonomia namespaced dei tool.
-
-### Removed
-- Rimossi dal tracking Git artefatti PET generati precedentemente presenti sotto `artifacts/`.
-- Rimossi esperimenti falliti di builder, support-realization, dismantle, bytes-to-build e pet-friendliness.
-- Rimossi i comandi di planning target-directed `plan`, `branch-plan`, `plan-best` e `branch-plan-best`.
 
 ## [0.1.4] - 2026-04-14
 

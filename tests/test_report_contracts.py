@@ -1,8 +1,7 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 import pytest
-
 
 REPORT_CONTRACTS = {
     "docs/reports/generated/metrics-2-10000.md": {
