@@ -50,13 +50,7 @@ def _append_leaf(
     """Append one canonical terminal leaf without touching old terms."""
 
     return Container(
-        terms=target.terms
-        + (
-            Term(
-                root=Root(len(target.terms)),
-                exponent=Leaf(),
-            ),
-        )
+        terms=(*target.terms, Term(root=Root(len(target.terms)), exponent=Leaf()))
     )
 
 

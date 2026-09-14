@@ -6,8 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import TypeAlias
 
-from .model import Container, Leaf, PetraShape, Term, validate_shape
-
+from .model import Leaf, PetraShape, Term, validate_shape
 
 ADDRESS_MALFORMED = "address-malformed"
 ADDRESS_OUT_OF_RANGE = "address-out-of-range"

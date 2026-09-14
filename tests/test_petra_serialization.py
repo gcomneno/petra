@@ -180,9 +180,9 @@ def test_parser_accepts_ascii_whitespace_between_tokens(
         "C(r0^^1)",
         "C(r0^1))",
         "1 trailing",
-        "C(r0^١)",
-        "C(r０^1)",
-        "C(r0^１)",
+        "C(r0^١)",  # noqa: RUF001
+        "C(r０^1)",  # noqa: RUF001
+        "C(r0^１)",  # noqa: RUF001
         "\u00a01\u00a0",
     ],
 )
@@ -374,7 +374,7 @@ def test_serializer_rejects_typed_shapes_over_resource_limits(
 ) -> None:
     with pytest.raises(
         ValueError,
-        match="^shape-serialization-limit-exceeded$",
+        match=r"^shape-serialization-limit-exceeded$",
     ):
         serialize_shape(shape)
 
@@ -471,9 +471,7 @@ def test_operator_results_round_trip_through_shape_text(
         Leaf(),
     )
 
-    if apply_operator is apply_sprout:
-        shape = seed
-    elif apply_operator is apply_shed:
+    if apply_operator is apply_sprout or apply_operator is apply_shed:
         shape = seed
     elif apply_operator is apply_graft:
         shape = container(Leaf())

@@ -26,7 +26,6 @@ from petra import (
     validate_shape,
 )
 
-
 Shape = Leaf | Container
 Target = DefaultTarget | ExplicitTarget
 DepthOperator = Callable[

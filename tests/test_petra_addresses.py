@@ -160,8 +160,8 @@ def test_valid_addresses_parse_and_render_canonically(
         "@/1 ",
         "@/1.0",
         "@/a",
-        "@/١",
-        "@/１",
+        "@/١",  # noqa: RUF001
+        "@/１",  # noqa: RUF001
         "@/^",
         "@/0^",
         "@/0/^^",

@@ -21,6 +21,22 @@ from .model import (
     to_canonical_data,
     validate_shape,
 )
+from .operators import (
+    apply_graft,
+    apply_prune,
+    apply_shed,
+    apply_sprout,
+)
+from .results import (
+    AddressEffects,
+    DefaultTarget,
+    ExplicitTarget,
+    FailedResult,
+    InvocationTarget,
+    Operator,
+    OperatorResult,
+    SuccessfulResult,
+)
 from .serialization import (
     ADDRESS_MALFORMED,
     INVOCATION_INVALID,
@@ -33,25 +49,11 @@ from .serialization import (
     serialize_result,
     serialize_shape,
 )
-from .results import (
-    AddressEffects,
-    DefaultTarget,
-    ExplicitTarget,
-    FailedResult,
-    InvocationTarget,
-    Operator,
-    OperatorResult,
-    SuccessfulResult,
-)
-from .operators import (
-    apply_graft,
-    apply_prune,
-    apply_shed,
-    apply_sprout,
-)
 
 __all__ = [
     "ADDRESS_MALFORMED",
+    "INVOCATION_INVALID",
+    "SHAPE_TEXT_MALFORMED",
     "Address",
     "AddressEffects",
     "AddressError",
@@ -60,7 +62,6 @@ __all__ = [
     "DefaultTarget",
     "ExplicitTarget",
     "FailedResult",
-    "INVOCATION_INVALID",
     "InvocationSyntaxError",
     "InvocationTarget",
     "Leaf",
@@ -71,7 +72,6 @@ __all__ = [
     "ResolvedSlot",
     "ResolvedTerm",
     "Root",
-    "SHAPE_TEXT_MALFORMED",
     "ShapeSyntaxError",
     "SuccessfulResult",
     "Term",

@@ -4,7 +4,6 @@ import sys
 
 import pytest
 
-
 # CPython 3.10/3.11 consume more C stack per Python frame than 3.12,
 # so the same depth-2048 comparison raises RecursionError there with
 # the default limit. The library code itself is iterative; the limit is

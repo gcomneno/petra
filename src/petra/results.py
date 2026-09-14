@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from typing import TypeAlias
 
-try:
+if sys.version_info >= (3, 11):
     from enum import StrEnum as _StrEnum
-except ImportError:
+else:
     from enum import Enum
 
     class _StrEnum(str, Enum):

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, NoReturn
 
 from .addresses import AddressError, parse_address, render_address
 from .model import (
@@ -23,7 +23,6 @@ from .results import (
     OperatorResult,
     SuccessfulResult,
 )
-
 
 SHAPE_TEXT_MALFORMED = "shape-text-malformed"
 INVOCATION_INVALID = "invocation-invalid"
@@ -94,7 +93,7 @@ class _InvalidJson(ValueError):
 class _ContainerFrame:
     """The partially parsed state of one open textual container."""
 
-    __slots__ = ("terms", "pending_root")
+    __slots__ = ("pending_root", "terms")
 
     def __init__(self) -> None:
         self.terms: list[Term] = []
@@ -255,7 +254,7 @@ class _Parser:
         frame.pending_root = None
         return "delimiter", result
 
-    def _malformed(self) -> None:
+    def _malformed(self) -> NoReturn:
         raise ShapeSyntaxError(SHAPE_TEXT_MALFORMED)
 
 
@@ -568,8 +567,8 @@ def _raise_serialization_limit() -> None:
 __all__ = [
     "ADDRESS_MALFORMED",
     "INVOCATION_INVALID",
-    "InvocationSyntaxError",
     "SHAPE_TEXT_MALFORMED",
+    "InvocationSyntaxError",
     "ShapeSyntaxError",
     "parse_invocation_json",
     "parse_shape",

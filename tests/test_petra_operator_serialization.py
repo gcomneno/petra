@@ -28,8 +28,8 @@ def test_default_invocation_round_trips_canonically(operator: Operator) -> None:
     text = serialize_invocation(operator, target)
 
     assert text == (
-        '{"operator":"%s","schema":"petra.operator-invocation.v1",'
-        '"target":{"mode":"default"}}' % operator.value
+        f'{{"operator":"{operator.value}","schema":"petra.operator-invocation.v1",'
+        '"target":{"mode":"default"}}'
     )
     assert parse_invocation_json(text) == (operator, target)
 

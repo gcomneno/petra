@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TypeAlias, TypeGuard
 
 
 @dataclass(frozen=True)
@@ -100,7 +100,7 @@ CanonicalData: TypeAlias = (
 )
 
 
-def _is_shape(value: object) -> bool:
+def _is_shape(value: object) -> TypeGuard[PetraShape]:
     return isinstance(value, (Leaf, Container))
 
 
@@ -147,7 +147,7 @@ def _shape_equal(left: PetraShape, right: PetraShape) -> bool:
 
         for left_term, right_term in zip(
             current_left.terms,
-            current_right.terms,
+            current_right.terms, strict=False,
         ):
             if type(left_term) is not type(right_term):
                 return False

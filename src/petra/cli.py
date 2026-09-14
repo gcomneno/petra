@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import argparse
 import sys
-from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from collections.abc import Callable, Sequence
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
 from typing import TextIO
 
+from .model import PetraShape
 from .operators import (
     apply_graft,
     apply_prune,
     apply_shed,
     apply_sprout,
 )
-from .model import PetraShape
 from .results import (
     FailedResult,
     InvocationTarget,
@@ -94,13 +95,13 @@ def _main(
     try:
         operator, target = parse_invocation_json(args.invocation_json)
     except InvocationSyntaxError as error:
-        result = FailedResult(
+        failure = FailedResult(
             operator=error.operator,
             invocation_target=None,
             before_shape=shape,
             reason=error.reason,
         )
-        print(serialize_result(result), file=stdout)
+        print(serialize_result(failure), file=stdout)
         return 1
 
     result = _APPLY_OPERATOR[operator](shape, target)

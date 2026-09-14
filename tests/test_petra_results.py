@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError, fields
 import subprocess
 import sys
 import textwrap
+from dataclasses import FrozenInstanceError, fields
 from typing import get_args
 
 import pytest
@@ -99,12 +99,7 @@ def make_success(
 
     invocation_target: DefaultTarget | ExplicitTarget
 
-    if explicit:
-        invocation_target = ExplicitTarget(
-            address=target_address,
-        )
-    else:
-        invocation_target = DefaultTarget()
+    invocation_target = ExplicitTarget(address=target_address) if explicit else DefaultTarget()
 
     resolved_target = resolve_address(
         before_shape,
@@ -1063,6 +1058,14 @@ def test_equivalent_failures_compare_equal() -> None:
     assert result_a == result_b
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 11),
+    reason=(
+        "the StrEnum fallback is only reachable on Python < 3.11 with the "
+        "current implementation (guarded by sys.version_info); on newer "
+        "interpreters enum.StrEnum is used unconditionally"
+    ),
+)
 def test_operator_identity_falls_back_without_native_strenum() -> None:
     """The Python 3.10 compatibility path preserves string-enum behavior."""
 
