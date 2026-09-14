@@ -1,4 +1,5 @@
 # PETRA Phase 10 — Scan/Query Slice Audit
+<!-- docs-check: allow-stale-src-refs -->
 
 ## Context
 

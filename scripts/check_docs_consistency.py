@@ -10,6 +10,11 @@ MARKDOWN_FILES = [ROOT / "README.md"]
 MARKDOWN_FILES.extend(sorted((ROOT / "docs").rglob("*.md")))
 
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+# A document may opt out of the source-reference check with this directive,
+# for example a Phase 10 audit that intentionally cites removed sources.
+ALLOW_STALE_SRC_REFS_RE = re.compile(
+    r"<!--\s*docs-check:\s*allow-stale-src-refs\s*-->"
+)
 SRC_PY_REF_RE = re.compile(r"(src/pet(?:/[A-Za-z0-9_./-]+|_[A-Za-z0-9_./-]+)\.py)")
 
 
@@ -76,6 +81,10 @@ def _check_markdown_links(path: Path) -> list[str]:
 def _check_src_python_refs(path: Path) -> list[str]:
     errors: list[str] = []
     text = path.read_text(encoding="utf-8")
+
+    if ALLOW_STALE_SRC_REFS_RE.search(text):
+        return errors
+
     rel_path = path.relative_to(ROOT)
 
     for line_no, line in enumerate(text.splitlines(), start=1):

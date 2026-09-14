@@ -27,7 +27,6 @@ from .guarded_redirect import build_row as build_guarded_redirect_row
 from .structural_route import build_structural_route_result
 from .metrics import extended_metrics
 from .families import register_subparser as register_families_subparser, run_args as run_families
-from .query import register_subparser as register_query_subparser, run_args as run_query
 from .metrics import (
     is_expanding,
     is_level_uniform,
@@ -6704,12 +6703,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_explain.add_argument("--json", action="store_true")
 
-    # scan
-    p_scan = subparsers.add_parser("scan", help="scan range and output JSONL dataset")
-    p_scan.add_argument("start", type=int)
-    p_scan.add_argument("end", type=int)
-    p_scan.add_argument("--jsonl", required=True)
-
     # atlas
     p_atlas = subparsers.add_parser(
         "atlas",
@@ -7035,7 +7028,6 @@ def main(argv: list[str] | None = None) -> int:
     p_branch_neighbors.add_argument("--json", action="store_true")
 
     # query / families
-    register_query_subparser(subparsers)
     register_families_subparser(subparsers)
 
     args = parser.parse_args(argv[1:])
@@ -7617,18 +7609,6 @@ def main(argv: list[str] | None = None) -> int:
                             )
                     if neighborhood["truncated"]:
                         print("  [truncated by --max-nodes]")
-
-        elif args.command == "scan":
-            from .scan import scan_range, write_jsonl
-
-            if args.start < 2:
-                raise ValueError("start must be >= 2")
-
-            if args.end < args.start:
-                raise ValueError("end must be >= start")
-
-            records = scan_range(args.start, args.end)
-            write_jsonl(records, args.jsonl)
 
         elif args.command == "atlas":
             stats = atlas(args.file)
@@ -8250,9 +8230,6 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"    observed_local_count = {row['observed_local_count']}")
                     print(f"    observed_local_shapes = {row['observed_local_shapes']}")
                     print(f"    observed_local_gammas = {row['observed_local_gammas']}")
-
-        elif args.command == "query":
-            return run_query(args)
 
         elif args.command == "families":
             return run_families(args)

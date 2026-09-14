@@ -1,5 +1,14 @@
 # PET canonical workflow
 
+> [!IMPORTANT]
+> **Phase 10 historical notice.** The `pet scan` and `pet query` commands
+> described in this document no longer exist. The scan/query subsystem was
+> removed in Phase 10 as part of the historical PET runtime deletion.
+> Reproduction commands involving `pet scan` or `python3 -m src.pet.cli scan`
+> are retained for provenance only and no longer work. Use the maintained
+> Resolver at `resolver/` for shape and distance analysis over bounded
+> integer ranges.
+
 ## Scope
 
 This document defines the current canonical workflows for PET as a bounded,
