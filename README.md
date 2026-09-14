@@ -73,6 +73,19 @@ document, then emits one canonical operator-result JSON document. See
 
 The historical `pet` command is not a maintained PETRA interface.
 
+## Running the tests
+
+The canonical test gate excludes slow research tests and the historical
+PET legacy surface:
+
+~~~bash
+pytest tests/ -q -m "not slow and not legacy"
+~~~
+
+Running the full suite without filters takes considerably longer and
+includes historical migration residue that is not part of the maintained
+PETRA contract.
+
 ## Role of primes
 
 Concrete primes are not runtime identities.
