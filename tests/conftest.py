@@ -68,9 +68,19 @@ def _module_imports_pet(path: Path) -> bool:
     return False
 
 
+_LEGACY_FILENAMES = {
+    "test_scan_jsonl_schema.py",
+    "test_scan_query.py",
+    "test_cli_query.py",
+    "test_atlas_summary.py",
+}
+
+
 def _is_legacy(path: Path) -> bool:
     name = path.name
     if name == "test_pet.py" or name.startswith("test_pet_") or name.startswith("test_tools_pet_"):
+        return True
+    if name in _LEGACY_FILENAMES:
         return True
     if name in _LEGACY_IMPORT_MODULES:
         return True
