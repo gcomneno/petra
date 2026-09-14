@@ -5,6 +5,13 @@ Tutte le modifiche rilevanti di questo progetto saranno documentate qui.
 Il formato si ispira a Keep a Changelog.
 Versioning corrente: `1.y.z`.
 
+## [1.0.1] — 2026-09-14
+
+### Fixed
+- `tests/conftest.py`: il pattern `startswith("test_pet")` marcava erroneamente come `legacy` anche i test `test_petra_*`, escludendoli dal gate CI canonical. Il marker ora richiede `test_pet.py`, `test_pet_*` o `test_tools_pet_*` espliciti.
+  - Prima: 198 canonical / 1078 legacy
+  - Dopo: 719 canonical (655 non-slow) / 557 legacy
+
 ## [1.0.0] — 2026-09-14
 
 Prima release PETRA. La linea di versione riparte da `1.0.0` per scelta:
@@ -29,6 +36,7 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 
 ### Removed
 - La compatibilità permanente con PET non è un requisito e non è fornita.
+
 
 ## [Unreleased]
 
