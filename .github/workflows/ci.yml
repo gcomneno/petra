@@ -58,8 +58,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install package
-        run: pip install -e .
+      - name: Install package and test dependencies
+        run: pip install -e ".[test]"
 
       - name: Check docs consistency
         run: make docs-check

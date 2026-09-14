@@ -5,19 +5,19 @@ import pytest
 
 
 REPORT_CONTRACTS = {
-    "docs/reports/metrics-2-10000.md": {
+    "docs/reports/generated/metrics-2-10000.md": {
         "kind": "scan-backed",
     },
-    "docs/reports/atlas-2-100000.md": {
+    "docs/reports/generated/atlas-2-100000.md": {
         "kind": "scan+summary-backed",
     },
-    "docs/reports/atlas-2-1000000.md": {
+    "docs/reports/generated/atlas-2-1000000.md": {
         "kind": "scan+summary-backed",
     },
-    "docs/reports/families-benchmark-disjoint.md": {
+    "docs/reports/generated/families-benchmark-disjoint.md": {
         "kind": "script-backed-benchmark",
     },
-    "docs/reports/signatures-catalog-2-1000000.md": {
+    "docs/reports/generated/signatures-catalog-2-1000000.md": {
         "kind": "scan-backed",
     },
 }
