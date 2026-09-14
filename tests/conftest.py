@@ -70,7 +70,7 @@ def _module_imports_pet(path: Path) -> bool:
 
 def _is_legacy(path: Path) -> bool:
     name = path.name
-    if name.startswith("test_pet") or name.startswith("test_tools_pet_"):
+    if name == "test_pet.py" or name.startswith("test_pet_") or name.startswith("test_tools_pet_"):
         return True
     if name in _LEGACY_IMPORT_MODULES:
         return True
