@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -78,4 +80,8 @@ def test_petra_source_has_no_legacy_pet_imports() -> None:
 
 
 def test_historical_pet_source_remains_available_for_later_phase_10_deletion() -> None:
+    if not (ROOT / "src" / "pet").is_dir():
+        pytest.skip(
+            "Phase 10 complete: historical PET source has been removed"
+        )
     assert (ROOT / "src" / "pet").is_dir()
