@@ -42,8 +42,13 @@ jobs:
       - name: Install package and test dependencies
         run: pip install -e ".[test]"
 
-      - name: Run tests
-        run: pytest -q -m "not slow" --durations=30 --durations-min=1.0
+      - name: Run canonical PETRA tests
+        run: pytest -q -m "not slow and not legacy" --durations=30 --durations-min=1.0
+
+      - name: Run legacy PET tests (informational, main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pytest -q -m "legacy and not slow" --durations=10 --durations-min=5.0
+        continue-on-error: true
 
   docs:
     runs-on: ubuntu-latest

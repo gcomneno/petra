@@ -34,6 +34,7 @@ pythonpath = ["src"]
 
 markers = [
     "slow: slow research/integration tests excluded from default CI",
+    "legacy: PET-era tests retained during Phase 10; not part of the maintained PETRA surface",
 ]
 
 [project.optional-dependencies]

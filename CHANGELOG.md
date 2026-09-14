@@ -32,6 +32,10 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 
 ## [Unreleased]
 
+### Changed
+- Introdotto il marker `legacy` (applicato automaticamente da `tests/conftest.py`) sui test che esercitano il runtime PET storico (`src/pet/`) e i tool PET (`tools/pet_*`). Il gate CI canonical (`-m "not slow and not legacy"`) copre 198 test; il gate legacy (1014 test) gira solo su `main` come informativo.
+- CI: il job legacy PET è condizionato a `push` su `main`, non blocca le PR e non fallisce il workflow (`continue-on-error: true`).
+
 ### Fixed
 - `tests/test_petra_shape_model_stack_safety.py`: alza localmente `sys.setrecursionlimit` così i test di stack-safety a profondità 2048 passano anche su CPython 3.10 e 3.11, dove il consumo di C stack per frame è maggiore rispetto a 3.12.
 - `tests/test_report_contracts.py`: corretti i path dei report a `docs/reports/generated/`; il contract test era silenziosamente skippato prima.
