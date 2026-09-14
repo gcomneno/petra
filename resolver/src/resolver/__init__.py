@@ -26,9 +26,21 @@ from .projection import (
     project,
 )
 from .search import Path, ResolverError, Step, resolve
+from .verify import (
+    StepFailure,
+    VerificationResult,
+    VerifyError,
+    VerifyStep,
+    verify_path,
+)
 
 __all__ = [
     "AtlasBackedDistance",
+    "StepFailure",
+    "VerificationResult",
+    "VerifyError",
+    "VerifyStep",
+    "verify_path",
     "DistanceAtlas",
     "DistanceCache",
     "ShapeAtlas",

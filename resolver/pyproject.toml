@@ -21,6 +21,7 @@ classifiers = [
 [project.scripts]
 resolver = "resolver.cli:main"
 resolver-distance = "resolver.distance_cli:main"
+resolver-verify = "resolver.verify_cli:main"
 
 [project.optional-dependencies]
 test = [
