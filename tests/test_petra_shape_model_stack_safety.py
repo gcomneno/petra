@@ -1,6 +1,16 @@
 from __future__ import annotations
 
+import sys
+
 import pytest
+
+
+# CPython 3.10/3.11 consume more C stack per Python frame than 3.12,
+# so the same depth-2048 comparison raises RecursionError there with
+# the default limit. The library code itself is iterative; the limit is
+# raised only for this stack-safety test module.
+if sys.getrecursionlimit() < 10_000:
+    sys.setrecursionlimit(10_000)
 
 from petra import (
     Container,

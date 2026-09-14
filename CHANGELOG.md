@@ -32,6 +32,12 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 
 ## [Unreleased]
 
+### Fixed
+- `tests/test_petra_shape_model_stack_safety.py`: alza localmente `sys.setrecursionlimit` così i test di stack-safety a profondità 2048 passano anche su CPython 3.10 e 3.11, dove il consumo di C stack per frame è maggiore rispetto a 3.12.
+- `tests/test_report_contracts.py`: corretti i path dei report a `docs/reports/generated/`; il contract test era silenziosamente skippato prima.
+- CI: installazione degli extras di test nel job `docs` (`pip install -e ".[test]"`), che mancava e causava exit 127.
+- `petra --version` ora stampa la versione installata del pacchetto.
+
 ### Added
 - Aggiunti tool research PET-METICA: `pet_metica_range_sweep.py` (scan multi-tier) e `pet_metica_seven_family_probe.py` (probe mirato su `7×{2^k,3^k}`), con test e report generated associati.
 - Aggiunta research note `docs/research/notes/pet_metica_seven_family_tier_drift.md` e scorecard di chiusura pass in `docs/research/experiments/pet-metica-seven-family-ladder-pass.md`.
