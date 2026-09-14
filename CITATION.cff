@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use PETRA in academic work, please cite it as below."
+title: "PETRA — Prime Exponent Tower Recursive Algebra"
+abstract: >
+  PETRA is a recursive, canonical, shape-first algebra for prime-exponent
+  tower structures. It provides immutable shapes, state-scoped positional
+  addresses, canonical serialization, and direct structural rewrites
+  (SPROUT, SHED, GRAFT, PRUNE). Concrete primes, primality testing, prime
+  generation, and integer factorization are outside the initial structural
+  core.
+type: software
+authors:
+  - family-names: "Comneno"
+    given-names: "Giancarlo Cicellyn"
+    alias: "gcomneno"
+repository-code: "https://github.com/gcomneno/petra"
+url: "https://github.com/gcomneno/petra"
+license: MIT
+version: 1.0.0
+date-released: "2026-09-14"
+keywords:
+  - "prime exponent tower"
+  - "recursive algebra"
+  - "structural rewriting"
+  - "canonical serialization"
+  - "shape-first"
+  - "symbolic computation"

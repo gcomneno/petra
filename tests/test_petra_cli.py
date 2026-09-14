@@ -276,3 +276,12 @@ def test_cli_does_not_accept_legacy_pet_operator_names() -> None:
     assert result.returncode == 1
     assert result.stdout == expected
     assert result.stderr == ""
+
+
+def test_petra_cli_version_flag_prints_installed_version() -> None:
+    from importlib.metadata import version as _pkg_version
+
+    result = _run_petra_cli_args(["--version"])
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == f"petra {_pkg_version('petra')}"

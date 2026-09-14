@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "petra"
-version = "0.1.4"
+version = "1.0.0"
 description = "PETRA — Prime Exponent Tower Recursive Algebra: canonical recursive shape-first algebra"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,4 +34,15 @@ pythonpath = ["src"]
 
 markers = [
     "slow: slow research/integration tests excluded from default CI",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8,<10",
+    "sympy>=1.12,<2",
+]
+dev = [
+    "petra[test]",
+    "ruff>=0.6",
+    "mypy>=1.10",
 ]

@@ -3,7 +3,32 @@
 Tutte le modifiche rilevanti di questo progetto saranno documentate qui.
 
 Il formato si ispira a Keep a Changelog.
-Versioning corrente: `0.y.z`.
+Versioning corrente: `1.y.z`.
+
+## [1.0.0] — 2026-09-14
+
+Prima release PETRA. La linea di versione riparte da `1.0.0` per scelta:
+PETRA non è un successore compatibile di PET, quindi ereditare il numero di
+versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
+
+### Added
+- Architettura PETRA come unica superficie mantenuta (runtime, distribuzione, CLI).
+- Address posizionali canonici, record tipizzati result/witness e serializzazione canonica sotto `src/petra/`.
+- Operatori canonici: `SPROUT`, `SHED`, `GRAFT`, `PRUNE`.
+- CLI canonica minimale `petra <shape> <invocation-json>`.
+- Flag `petra --version` che stampa la versione installata del pacchetto.
+- SPEC normativa in `docs/reference/SPEC.md`.
+- Dipendenze di test dichiarate in `[project.optional-dependencies]` (`pip install -e ".[test]"`).
+
+### Changed
+- Versione del progetto portata da `0.1.4` a `1.0.0`.
+- `pytest` e `sympy` non vengono più installati ad-hoc: sono dichiarati e pinnati.
+
+### Deprecated
+- `src/pet/` e `tools/pet_*` restano nel working tree come residuo di migrazione durante Phase 10. Non fanno parte della superficie PETRA mantenuta e saranno rimossi in una release 1.x successiva.
+
+### Removed
+- La compatibilità permanente con PET non è un requisito e non è fornita.
 
 ## [Unreleased]
 

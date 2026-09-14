@@ -92,3 +92,22 @@ The replacement program is tracked by
 [issue #169](https://github.com/gcomneno/petra/issues/169). The current Phase 10
 distribution-boundary slice is tracked by
 [issue #226](https://github.com/gcomneno/petra/issues/226).
+
+## Versioning
+
+PETRA uses semantic versioning with an explicit discontinuity:
+
+- `v0.1.0` ... `v0.3.0` are historical **PET** releases. They are preserved
+  as Git tags for archaeological reference and are not part of the PETRA
+  contract.
+- `v1.0.0` is the first **PETRA** release. The version line restarts at
+  `1.0.0` by design: PETRA is not a compatible successor of PET, so inheriting
+  the PET version number would be misleading.
+- The `petra` distribution tracks the PETRA line only. Releases with
+  version `< 1.0.0` belong to the historical PET packaging and should not be
+  installed for PETRA use.
+
+Stability commitment: within the `1.x` line, the canonical serialization,
+operator semantics, and CLI contract defined in
+[`docs/reference/SPEC.md`](docs/reference/SPEC.md) are frozen. Additions are
+allowed; breaking changes require a `2.0.0` bump.

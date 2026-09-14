@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from collections.abc import Callable, Sequence
 from typing import TextIO
 
@@ -27,6 +28,15 @@ from .serialization import (
     parse_shape,
     serialize_result,
 )
+
+
+def _package_version() -> str:
+    """Return the installed PETRA distribution version, or 'unknown'."""
+
+    try:
+        return _pkg_version("petra")
+    except PackageNotFoundError:
+        return "unknown"
 
 
 _APPLY_OPERATOR: dict[
@@ -62,6 +72,11 @@ def _main(
             "Apply one canonical PETRA operator invocation to one "
             "canonical PETRA shape."
         ),
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"petra {_package_version()}",
     )
     parser.add_argument("shape_text")
     parser.add_argument("invocation_json")
