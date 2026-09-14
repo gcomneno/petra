@@ -5,6 +5,11 @@ Tutte le modifiche rilevanti di questo progetto saranno documentate qui.
 Il formato si ispira a Keep a Changelog.
 Versioning corrente: `1.y.z`.
 
+## [1.0.3] — 2026-09-14
+
+### Fixed
+- `tests/test_petra_distribution_boundary.py::test_distribution_source_boundary_keeps_legacy_out_of_package_discovery`: stesso trattamento del test gemello già sistemato in 1.0.2. Ora skippa esplicitamente quando `src/pet/` è assente, così distribuzioni self-contained (es. archivio Zenodo) restano autoconsistenti.
+
 ## [1.0.2] — 2026-09-14
 
 ### Fixed
