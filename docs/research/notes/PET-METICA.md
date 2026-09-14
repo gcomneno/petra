@@ -1,4 +1,5 @@
 # PET-aritmetica
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-RESEARCH -->
 > [!IMPORTANT]

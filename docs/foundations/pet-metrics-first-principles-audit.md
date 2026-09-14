@@ -1,4 +1,5 @@
 # PET metrics first-principles audit
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

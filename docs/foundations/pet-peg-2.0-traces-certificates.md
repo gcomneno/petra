@@ -1,4 +1,5 @@
 # PET/PEG 2.0 Traces, Certificates, and Exploration Boundary
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

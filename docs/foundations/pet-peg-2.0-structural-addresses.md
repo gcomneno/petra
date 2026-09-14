@@ -1,4 +1,5 @@
 # PET/PEG 2.0 Structural Addresses and Identity
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

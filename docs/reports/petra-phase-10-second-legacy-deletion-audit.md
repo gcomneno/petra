@@ -1,4 +1,5 @@
 # PETRA Phase 10 Second Legacy Deletion Audit
+<!-- docs-check: allow-stale-src-refs -->
 
 ## Context
 

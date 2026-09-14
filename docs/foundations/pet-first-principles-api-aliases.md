@@ -1,4 +1,5 @@
 # PET first-principles API alias design
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

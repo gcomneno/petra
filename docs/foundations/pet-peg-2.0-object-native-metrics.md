@@ -1,4 +1,5 @@
 # PET/PEG 2.0 Object-Native Metrics
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

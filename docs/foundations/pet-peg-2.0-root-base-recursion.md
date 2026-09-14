@@ -1,4 +1,5 @@
 # PET/PEG 2.0 Root-Base Recursion Semantics
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]

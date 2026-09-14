@@ -1,4 +1,5 @@
 # PET first-principles implementation audit
+<!-- docs-check: allow-stale-src-refs -->
 
 <!-- PETRA-HISTORICAL-FOUNDATION -->
 > [!IMPORTANT]
