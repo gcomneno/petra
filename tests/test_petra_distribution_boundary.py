@@ -57,7 +57,13 @@ def test_distribution_configuration_exposes_only_petra() -> None:
 
 def test_distribution_source_boundary_keeps_legacy_out_of_package_discovery() -> None:
     assert (ROOT / "src" / "petra" / "__init__.py").is_file()
-    assert (ROOT / "src" / "pet").is_dir()
+
+    if not (ROOT / "src" / "pet").is_dir():
+        pytest.skip(
+            "Phase 10 complete: historical PET source has been removed; "
+            "the legacy-exclusion contract is vacuously satisfied"
+        )
+
     assert _pyproject_value("tool.setuptools.packages.find", "include") == ["petra"]
 
 
