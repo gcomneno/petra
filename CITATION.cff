@@ -10,11 +10,12 @@ abstract: >
   core.
 type: software
 authors:
-  - family-names: "Comneno"
-    given-names: "Giancarlo Cicellyn"
+  - family-names: "Cicellyn Comneno"
+    given-names: "Giancarlo"
     alias: "gcomneno"
 repository-code: "https://github.com/gcomneno/petra"
 url: "https://github.com/gcomneno/petra"
+doi: "10.5281/zenodo.22741778"
 license: MIT
 version: 1.0.0
 date-released: "2026-09-14"

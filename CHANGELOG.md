@@ -50,6 +50,10 @@ versione PET sarebbe fuorviante. L'ultima release PET resta il tag `v0.3.0`.
 
 ## [Unreleased]
 
+### Added
+- Badge DOI Zenodo nel README e campo `doi:` in `CITATION.cff` (`10.5281/zenodo.22741778`, concept DOI che punta sempre all'ultima versione).
+- Prima release pubblica su Zenodo: `PETRA — Prime Exponent Tower Recursive Algebra v1.0.3`, DOI versione `10.5281/zenodo.22741779`.
+
 ### Changed
 - Introdotto il marker `legacy` (applicato automaticamente da `tests/conftest.py`) sui test che esercitano il runtime PET storico (`src/pet/`) e i tool PET (`tools/pet_*`). Il gate CI canonical (`-m "not slow and not legacy"`) copre 198 test; il gate legacy (1014 test) gira solo su `main` come informativo.
 - CI: il job legacy PET è condizionato a `push` su `main`, non blocca le PR e non fallisce il workflow (`continue-on-error: true`).
