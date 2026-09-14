@@ -73,6 +73,30 @@ document, then emits one canonical operator-result JSON document. See
 
 The historical `pet` command is not a maintained PETRA interface.
 
+## Satellite projects
+
+The repository also hosts **Resolver**, a derived layer that operates on
+PETRA shapes without extending PETRA semantics.
+
+- Location: `resolver/`
+- Install: `pip install -e ./resolver` (after PETRA is installed)
+- Command-line: `resolver`, `resolver-distance`, `resolver-verify`
+
+Resolver provides:
+
+- an A* search that finds the shortest canonical edit path between two
+  PETRA shapes;
+- a structural distance oracle between known-factorization integers;
+- a persistent shape and distance atlas over a bounded range;
+- a path verifier for proposed edit sequences.
+
+Resolver imports from `petra` and never the other way around. The core
+PETRA runtime, specification, and command-line interface are unchanged by
+its presence.
+
+See [`resolver/README.md`](resolver/README.md) for the maintained
+contract.
+
 ## Running the tests
 
 The canonical test gate excludes slow research tests and the historical
