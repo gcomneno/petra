@@ -167,7 +167,14 @@ def _term_hash(term: Term) -> int:
 
 
 def _shape_hash(shape: PetraShape) -> int:
-    """Return a structural shape hash with an iterative post-order walk."""
+    """Return a structural shape hash with an iterative post-order walk.
+
+    Container hashes are cached on the object itself via an internal
+    non-dataclass attribute. Because PETRA shapes are immutable, the hash
+    of a Container never changes during its lifetime. The cache is
+    garbage-collected together with the Container, so there is no risk of
+    identity reuse or cross-call contamination.
+    """
 
     hashes: dict[int, int] = {}
     pending: list[tuple[PetraShape, bool]] = [(shape, False)]
@@ -183,6 +190,12 @@ def _shape_hash(shape: PetraShape) -> int:
             continue
 
         assert isinstance(current, Container)
+
+        cached = current.__dict__.get("_petra_hash_cache")
+        if cached is not None:
+            hashes[current_id] = cached
+            continue
+
         if not expanded:
             pending.append((current, True))
             for term in current.terms:
@@ -191,7 +204,7 @@ def _shape_hash(shape: PetraShape) -> int:
                     pending.append((child, False))
             continue
 
-        hashes[current_id] = hash(
+        result = hash(
             (
                 "petra.container",
                 tuple(
@@ -206,6 +219,8 @@ def _shape_hash(shape: PetraShape) -> int:
                 ),
             )
         )
+        hashes[current_id] = result
+        object.__setattr__(current, "_petra_hash_cache", result)
 
     return hashes[id(shape)]
 
@@ -217,21 +232,36 @@ def _require_shape(value: object) -> PetraShape:
 
 
 def validate_shape(shape: PetraShape) -> None:
-    """Validate grammar and canonical ranks without call-stack recursion."""
+    """Validate grammar and canonical ranks without call-stack recursion.
+
+    Validation results are memoized on the shape object itself via an
+    internal non-dataclass attribute. Because PETRA shapes are immutable,
+    a shape that has already been validated never needs to be re-validated.
+    This reduces repeated validation of the same object from O(N) to O(1).
+    """
 
     current = _require_shape(shape)
+
+    if current.__dict__.get("_petra_validated"):
+        return
+
     pending: list[tuple[PetraShape, int]] = [(current, 0)]
 
     while pending:
-        current, next_term = pending.pop()
+        node, next_term = pending.pop()
 
-        if isinstance(current, Leaf):
+        if isinstance(node, Leaf):
+            object.__setattr__(node, "_petra_validated", True)
             continue
 
-        if next_term >= len(current.terms):
+        if node.__dict__.get("_petra_validated"):
             continue
 
-        term = current.terms[next_term]
+        if next_term >= len(node.terms):
+            object.__setattr__(node, "_petra_validated", True)
+            continue
+
+        term = node.terms[next_term]
         expected_name = f"r{next_term}"
 
         if term.root.rank != next_term:
@@ -242,7 +272,7 @@ def validate_shape(shape: PetraShape) -> None:
 
         # Match the recursive traversal contract exactly: finish validating
         # this exponent before inspecting the next sibling term.
-        pending.append((current, next_term + 1))
+        pending.append((node, next_term + 1))
         pending.append((_require_shape(term.exponent), 0))
 
 
