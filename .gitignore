@@ -24,6 +24,8 @@ artifacts/
 
 docs/research/*.zst
 docs/research/*.bin
+docs/research/datasets/*
+!docs/research/datasets/.gitkeep
 docs/reports/data/
 
 .mypy_cache
