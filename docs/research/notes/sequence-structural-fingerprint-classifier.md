@@ -44,27 +44,61 @@ Stable fingerprints at N = 200:
 Every tested family occupies a distinct region of the (red, exp, stab)
 space.
 
-## Observation 2 — Exponential bases collide
+## Observation 2 — Exponential bases collide within structural classes
 
-Sequences `k^n` for different bases k share the same fingerprint:
+Sequences `k^n` for prime bases k share the same fingerprint:
 
-| Sequence | red | exp | stab |
-| --- | ---: | ---: | ---: |
-| 2^n | 38.2 | 40.7 | 21.1 |
-| 3^n | 38.2 | 40.7 | 21.1 |
-| 7^n | 38.2 | 40.7 | 21.1 |
+| Sequence | red | exp | stab | shapes |
+| --- | ---: | ---: | ---: | ---: |
+| 2^n | 37.3 | 40.7 | 22.0 | 11 |
+| 3^n | 37.3 | 40.7 | 22.0 | 11 |
+| 5^n | 37.3 | 40.7 | 22.0 | 11 |
+| 7^n | 37.3 | 40.7 | 22.0 | 11 |
+| 11^n | 37.3 | 40.7 | 22.0 | 11 |
+| 13^n | 37.3 | 40.7 | 22.0 | 11 |
 
 This is not an experimental coincidence. It follows from the shape
-projection:
+projection: for a prime k,
 
-    shape(2^n) = C(r0^shape(n))
-    shape(3^n) = C(r0^shape(n))
-    shape(k^n) = C(r0^shape(n))    for any prime k
+    shape(k^n) = C(r0^shape(n))
 
-The shape of `k^n` depends only on `shape(n)`, not on `k`. The
-transition `n -> n+1` therefore produces the same structural variation
-for every base. The collision is a property of the projection, not a
-limitation of the classifier.
+The shape of `k^n` depends only on `shape(n)`, not on which prime k is.
+The transition `n -> n+1` produces the same structural variation for
+every prime base.
+
+The collision does **not** extend to composite bases. Composite bases
+have their own shapes, and the shape of `k^n` depends on how the
+exponent `n` distributes across the factors of `k`.
+
+Fingerprints for composite bases at N = 60:
+
+| Base | Factorization | red | exp | stab | class |
+| ---: | --- | ---: | ---: | ---: | --- |
+| 6 | 2 * 3 | 37.3 | 40.7 | 22.0 | product of distinct primes |
+| 10 | 2 * 5 | 37.3 | 40.7 | 22.0 | product of distinct primes |
+| 12 | 2^2 * 3 | 37.3 | 40.7 | 22.0 | product of distinct primes |
+| 4 | 2^2 | 32.2 | 35.6 | 32.2 | square of a prime |
+| 9 | 3^2 | 32.2 | 35.6 | 32.2 | square of a prime |
+| 8 | 2^3 | 39.0 | 42.4 | 18.6 | cube of a prime |
+
+Three structural classes emerge:
+
+1. **products of distinct primes** (including single primes): bases
+   2, 3, 5, 6, 10, 12 share the same fingerprint;
+2. **square of a prime**: bases 4, 9 share a different fingerprint;
+3. **cube of a prime**: base 8 has its own fingerprint.
+
+The case `12 = 2^2 * 3` is worth noting. Although 12 contains a squared
+prime, its fingerprint matches the "product of distinct primes" class,
+not the "square of a prime" class. The reason is that `12^n =
+2^(2n) * 3^n`, and the structural variation of `2^(2n)` as a function
+of `n` is closer to `2^shape(n)` than to `2^(2*shape(n))`. The
+classifying property is not the shape of the base alone, but how the
+shape of the base interacts with the iteration index.
+
+The collision is a property of the shape projection and of the
+algebraic structure of `k^n`. It is not a limitation of the classifier
+and not a universal law of exponentials.
 
 ## Observation 3 — Algebraic variation is distinguished
 
