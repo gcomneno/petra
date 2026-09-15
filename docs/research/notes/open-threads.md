@@ -36,6 +36,8 @@ representative for both.
 "fingerprint is a class invariant"). Classification is not settled:
 the cumulative fingerprint may or may not converge.
 
+**Forward.** Continued in T16 (convergence of the cumulative fingerprint).
+
 **Prerequisite for.** T02 (functor).
 
 ### T02 — Functoriality of the fingerprint
@@ -190,6 +192,35 @@ Compute its structural fingerprint. Does it have a distinctive profile?
 **Minimal example.** First gaps: 1, 2, 2, 4, 2, 4, 2, 4, 6, 2, 6, ...
 
 **Status.** open.
+
+### T16 — Convergence of the cumulative fingerprint
+
+**Statement.** The cumulative fingerprint `F(1, N) = (red, exp, stab)`
+of `k^n` is observed to drift slowly as `N` grows, but its limit is
+not known to exist. Decide empirically and, if possible, analytically,
+whether `F(1, N)` converges for each base `k`, and at what rate.
+
+**Minimal example.** For `k = 2`:
+
+- `F(1, 60)   ≈ (37.3, 40.7, 22.0)`
+- `F(1, 500)  ≈ (40.5, 41.5, 18.0)`
+- `F(1, 2000) ≈ (41.0, 41.1, 17.9)`
+
+The value moves by ~3 points between `N = 60` and `N = 500`, then by
+less than 0.5 points between `N = 500` and `N = 2000`. Slow
+convergence, slow drift, or neither — undecided.
+
+**Status.** open.
+
+**Depends on.** T01 (decomposition and fingerprint layer).
+
+**Prerequisite for.** A stable notion of "structural class" that does
+not depend on a chosen window.
+
+**Notes.** The fingerprint layer is implemented in
+`resolver/src/resolver/fingerprint.py`. The motivation and the
+falsification of the naive "class = window fingerprint" reading are
+in `exponential-base-structural-class.md`.
 
 ## Notes on the list
 
