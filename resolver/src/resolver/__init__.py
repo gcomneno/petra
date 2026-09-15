@@ -26,6 +26,12 @@ from .projection import (
     project,
 )
 from .search import Path, ResolverError, Step, resolve
+from .structural_algebra import (
+    contains,
+    join,
+    meet,
+    structural_overlap,
+)
 from .verify import (
     StepFailure,
     VerificationResult,
@@ -36,6 +42,10 @@ from .verify import (
 
 __all__ = [
     "AtlasBackedDistance",
+    "contains",
+    "join",
+    "meet",
+    "structural_overlap",
     "StepFailure",
     "VerificationResult",
     "VerifyError",
