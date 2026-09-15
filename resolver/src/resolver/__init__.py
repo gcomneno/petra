@@ -19,6 +19,12 @@ from .distance import (
     structural_distance_numbers,
     structural_distance_shapes,
 )
+from .fingerprint import (
+    Transition,
+    fingerprint_cumulative,
+    fingerprint_window,
+    transition,
+)
 from .projection import (
     PrimeKey,
     ProjectionError,
@@ -62,6 +68,10 @@ __all__ = [
     "save_distance_atlas",
     "save_shape_atlas",
     "DistanceError",
+    "Transition",
+    "fingerprint_cumulative",
+    "fingerprint_window",
+    "transition",
     "Path",
     "PrimeKey",
     "ProjectionError",
