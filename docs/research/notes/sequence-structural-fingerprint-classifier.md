@@ -112,6 +112,69 @@ not distinguish individual sequences that differ only in a
 multiplicative constant or a base prime. It does distinguish algebraic
 variation that changes the factorization structure of the sequence.
 
+## Multi-scale classification via threshold clustering
+
+The (red, exp, stab) triple defines a point in a three-dimensional
+space. Treating the Euclidean distance between points as a similarity
+measure, a single-linkage hierarchical clustering reveals a multi-level
+structure.
+
+At N = 100, on a set of ten tested sequences (Fibonacci, Lucas, Pell,
+Jacobsthal, Squares, Cubes, 2^n, Mersenne, Catalan, Factorial):
+
+| Threshold | Groups | Structure |
+| ---: | ---: | --- |
+| 2.0 | 10 | Every sequence isolated |
+| 3.0 | 6 | First natural pairs emerge |
+| 4.0 | 5 | Linear recursive and polynomial/exponential clusters form |
+| 6.0 | 3 | Saturation: three stable structural types |
+| 12.0 | 3 | No further merging |
+
+The clustering saturates at three groups:
+
+1. **Linear and exponential growth**: Fibonacci, Lucas, Pell,
+   Jacobsthal, Mersenne, 2^n, Squares, Cubes.
+2. **Catalan**: isolated.
+3. **Factorial**: isolated.
+
+Catalan and Factorial are structural outliers under this metric. The
+remaining eight sequences form a single cluster at threshold 6.0
+despite their algebraic differences.
+
+The same fingerprint can therefore be read at three granularities:
+
+- **tight** (threshold ~2): distinguishes individual sequences;
+- **medium** (threshold ~4): groups algebraic families;
+- **broad** (threshold ~6+): groups growth classes.
+
+The granularity is a user-controllable parameter, not a fixed property
+of the method.
+
+## Two unexpected adjacencies
+
+The clustering reveals two adjacencies that are not obvious from the
+algebraic definitions:
+
+**Lucas and Mersenne are close (distance 2.5).** Lucas is defined by
+the linear recurrence `L(n) = L(n-1) + L(n-2)` with seed `(1, 3)`,
+and grows asymptotically as `phi^n`. Mersenne is `M(n) = 2^n - 1` and
+grows as `2^n`. The two sequences have different asymptotic bases and
+different algebraic structure. They nonetheless produce nearly
+identical shape-transition profiles at N = 100.
+
+**Fibonacci is farther from Mersenne (distance 5.7) than Lucas is.**
+Fibonacci and Lucas share the same recurrence and the same asymptotic
+base. Yet their distances to Mersenne differ by a factor of two. The
+difference is entirely in the seed values `(1, 1)` versus `(1, 3)`.
+
+Together, these two observations show that the shape fingerprint is
+sensitive to the initial conditions of a sequence, not only to its
+asymptotic growth. Two sequences with the same asymptotic behavior can
+have different fingerprints if their early values differ.
+
+The two adjacencies are recorded here as observations, not as
+explanations. Their cause is not analyzed in this note.
+
 ## Interpretation
 
 Two kinds of information are captured by the fingerprint:
