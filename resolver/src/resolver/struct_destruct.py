@@ -2,10 +2,10 @@
 
 This module defines two derived operations:
 
-- `compose(A, B)`: the set of shapes obtained by grafting `B` onto
+- `struct(A, B)`: the set of shapes obtained by grafting `B` onto
   every attachment point of `A`. An attachment point is a term whose
   exponent is currently the implicit leaf.
-- `decompose(A)`: the set of pairs `(B, C)` obtained by detaching one
+- `destruct(A)`: the set of pairs `(B, C)` obtained by detaching one
   explicit exponent of `A`. One level only; recursion is not applied.
 
 The leaf is implicit and is never detached: it is the neutral
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from petra import Container, Leaf, PetraShape, Root, Term, validate_shape
 
-__all__ = ["compose", "decompose"]
+__all__ = ["destruct", "struct"]
 
 
 def _leaf_positions(shape: PetraShape) -> list[tuple[int, ...]]:
@@ -101,7 +101,7 @@ def _extract_at(shape: PetraShape, address: tuple[int, ...]) -> PetraShape:
     return _extract_at(term.exponent, tuple(rest))
 
 
-def compose(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
+def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
     """Return the set of shapes obtained by grafting `b` onto `a`.
 
     Every implicit-leaf term of `a` is a possible attachment point. For
@@ -120,7 +120,7 @@ def compose(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
     return frozenset(results)
 
 
-def decompose(a: PetraShape) -> frozenset[tuple[PetraShape, PetraShape]]:
+def destruct(a: PetraShape) -> frozenset[tuple[PetraShape, PetraShape]]:
     """Return the set of pairs `(b, c)` obtained by detaching one explicit exponent from `a`.
 
     One level only. `b` is `a` with the exponent reduced to a leaf; `c`
