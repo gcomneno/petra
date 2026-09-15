@@ -227,7 +227,9 @@ Canonical text processing uses these fixed limits:
 | Decimal digits in one root-rank token | 4 |
 
 A total model node is one `Leaf`, `Container`, or `Term`; `Root` is owned by a
-term and is not counted separately. The odd total leaves room for the largest
+term and is not counted separately. The corresponding runtime primitive is
+`petra.node_count(shape)`, admitted under the metrics policy in section 8.
+The odd total leaves room for the largest
 possible complete PETRA tree under that accounting. The limits are deliberately
 fixed and modest: they comfortably cover normal PETRA shapes, permit deep
 machine-generated shapes without relying on a Python call stack, and bound
@@ -811,6 +813,21 @@ A metric may enter the PETRA runtime only when it:
 Historical PET-Metrics and PET-METICA results remain research evidence. They
 must not be promoted as PETRA laws or invariants without a new derivation and
 admission decision.
+
+### Admitted metrics
+
+`petra.node_count(shape) -> int`
+
+- Defined directly on canonical PETRA shapes.
+- Domain: `PetraShape`. Result type: `int`.
+- Independent of represented integers.
+- Well-defined across canonical normalization.
+- Observes objects: one `Leaf`, one `Container`, or one `Term` each
+  contributes 1; `Root` is owned by a `Term` and is not counted separately.
+- Tests: `tests/test_petra_metrics.py`.
+
+This is the first metric admitted to PETRA under this policy. It supersedes
+no historical PET metric.
 
 ## 9. Graph, path, trace, and certificate boundary
 
