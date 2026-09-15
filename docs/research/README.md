@@ -51,6 +51,12 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
   a duplication lemma, two falsified conjectures, and a methodological
   warning: the fingerprint is window-dependent, not a class invariant.
 
+- [`notes/form-road-value-boundary.md`](notes/form-road-value-boundary.md)
+  — T01/T16 boundary note. Form (`shape(n)`), strada (a sequence of
+  canonical operators between two forms), and value (`n`) are three
+  distinct levels. The signature of a transition is the pair
+  `(shape(n), shape(n+1))`, not the strada, not the value.
+
 ### Code
 
 The current research line has produced a derived layer in the Resolver:
