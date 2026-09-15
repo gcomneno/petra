@@ -222,6 +222,25 @@ not depend on a chosen window.
 falsification of the naive "class = window fingerprint" reading are
 in `exponential-base-structural-class.md`.
 
+### T17 — Asymmetry of structural_distance_numbers
+
+**Statement.** `structural_distance_numbers(a, b)` is not always equal to
+`structural_distance_numbers(b, a)`. Example:
+`structural_distance_numbers(30030, 2) = 7` while
+`structural_distance_numbers(2, 30030) = 5`. The resolver uses A*, and
+its search order depends on the direction. Decide whether the
+asymmetry is acceptable (directional distance) or a bug to fix.
+
+**Minimal example.** See above; `30030` is the product of the first six
+primes.
+
+**Status.** open.
+
+**Notes.** Discovered during T16 session, unrelated to the struct/
+destruct work. The failing test
+`resolver/tests/test_distance.py::test_distance_numbers_is_symmetric`
+currently keeps the resolver suite red on `main`.
+
 ## Notes on the list
 
 The list is intentionally not prioritized. New threads should be
