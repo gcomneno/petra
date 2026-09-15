@@ -1,11 +1,80 @@
 # PET Research
 
+This directory contains research material at two distinct levels:
+
+1. **Current PETRA research** — active research directions on the PETRA
+   runtime, the Resolver satellite, and the shape-space framework.
+   Non-normative for PETRA semantics, but actively maintained.
+2. **Historical PET research** — research material produced before the
+   PETRA replacement, retained as evidence and provenance. Not
+   normative and not maintained.
+
+For PETRA semantics, the sole normative source is
+[`../reference/SPEC.md`](../reference/SPEC.md).
+
+## Current PETRA research
+
+The current PETRA research line explores shape-space as a setting for
+analyzing integer sequences and dynamics. The work uses the Resolver
+satellite (`../../resolver/`) and the PETRA canonical runtime
+(`../../src/petra/`) without extending either.
+
+### Living registry
+
+- [`notes/open-threads.md`](notes/open-threads.md) — index of active and
+  dormant research directions. Each thread has a statement, a minimal
+  example, a status, and dependencies. Updated as work progresses.
+
+### Notes
+
+- [`notes/collatz-structural-signature.md`](notes/collatz-structural-signature.md)
+  — the Collatz trajectory in shape space: 13 shapes over 112 values,
+  reduction-dominant transitions, and a comparison with a random control.
+
+- [`notes/arithmetic-maps-structural-fingerprint.md`](notes/arithmetic-maps-structural-fingerprint.md)
+  — cross-map comparison of reduction/expansion/stability profiles.
+  Collatz is reduction-dominant (56.7–59.4%); phi, n+1, n+2, n+3 and
+  2n+1 are balanced or expansion-dominant.
+
+- [`notes/collatz-ranking-obstruction.md`](notes/collatz-ranking-obstruction.md)
+  — a negative structural result: no ranking function over pure PETRA
+  shapes can establish termination of the Collatz map. Proof by
+  counterexample plus experimental confirmation.
+
+- [`notes/sequence-structural-fingerprint-classifier.md`](notes/sequence-structural-fingerprint-classifier.md)
+  — the (red, exp, stab) profile as a classifier of integer sequence
+  families. Convergent across N, multi-scale via threshold clustering,
+  with structural-class collisions for exponential bases.
+
+### Code
+
+The current research line has produced a derived layer in the Resolver:
+
+- `../../resolver/src/resolver/structural_algebra.py` — contains, meet,
+  join, overlap as analytic operators on PETRA shapes.
+
+### Boundary
+
+Current PETRA research:
+
+- does not extend canonical PETRA semantics;
+- does not modify `src/petra/`;
+- is not part of the maintained PETRA distribution surface;
+- is bounded and empirical, not a source of theorems unless explicitly
+  proved.
+
+## Historical PET research
+
 <!-- PETRA-HISTORICAL-RESEARCH -->
 > [!IMPORTANT]
-> **Historical or exploratory research.** Nothing in this document is normative for PETRA unless incorporated explicitly into [`../reference/SPEC.md`](../reference/SPEC.md).
+> **Historical or exploratory research.** Nothing in this section is
+> normative for PETRA unless incorporated explicitly into
+> [`../reference/SPEC.md`](../reference/SPEC.md).
 
-
-This directory contains active research material that is **not** part of the stable PET-Base specification.
+This section contains research material produced before the PETRA
+replacement. It documents the PET, PET-Base, PET/PEG 2.0, PET-Metrics,
+and PET-METICA research lines. It is retained as evidence and
+provenance. It is not maintained.
 
 ## Structure
 
@@ -54,7 +123,7 @@ Look in:
 
 ## Operational PET route pipeline
 
-The current PET-to-classic routing pipeline is documented in:
+The PET-to-classic routing pipeline is documented in:
 
 - `pet_route_pipeline.md`
 
@@ -62,9 +131,9 @@ It describes the completed text-output pipeline: structural diagnosis, grip diag
 
 ## PET/PEG 2.0 operator probes
 
-The probes below describe current executable legacy PET/PEG 2.0 behavior, not
-canonical or future PET semantics. The sole normative future operator contract
-is [`../reference/SPEC.md`](../reference/SPEC.md).
+The probes below describe historical PET/PEG 2.0 behavior, not
+canonical PETRA semantics. The sole normative operator contract is
+[`../reference/SPEC.md`](../reference/SPEC.md).
 
 The retained foundation probes use X/Y/Z operator axes:
 
@@ -72,29 +141,28 @@ The retained foundation probes use X/Y/Z operator axes:
 - Y — recursive refinement
 - Z — connectivity dynamics
 
-The current research-only probes are:
+The historical research probes were:
 
-- `../../tools/research/pet_operator_axis_invariant_probe.py` — validates the first operator-axis invariants against the existing shape-level operator algebra.
-- `../../tools/research/pet_operator_address_probe.py` — resolves documented PET/PEG 2.0 recursive operator addresses against PET objects produced by `pet.encode(N)`.
-- `../../tools/research/pet_operator_x_address_probe.py` — classifies hypothetical address-aware X-axis operations using the uniform parent-support form `NEW(parent_address, q)` / `DROP(parent_address, p)`.
-- `../../tools/research/pet_operator_y_address_probe.py` — classifies address-aware Y-axis targets for `INC(address)` / `DEC(address)` without mutating PET objects.
-- `../../tools/research/pet_operator_y_mutation_probe.py` — emits research-only hypothetical Y-axis value-level exponent mutations for `INC(address)` / `DEC(address)`.
-- `../../tools/research/pet_operator_z_route_probe.py` — validates research-only Z-axis history-prefix route references for `REDIRECT(...)` / `SHADOW_SELECT(...)`.
+- `tools/research/pet_operator_axis_invariant_probe.py`
+- `tools/research/pet_operator_address_probe.py`
+- `tools/research/pet_operator_x_address_probe.py`
+- `tools/research/pet_operator_y_address_probe.py`
+- `tools/research/pet_operator_y_mutation_probe.py`
+- `tools/research/pet_operator_z_route_probe.py`
 
-These probes are not part of stable PET-Base behavior. They do not change CLI defaults, core operator semantics, routing, anchor selection, or residual descent.
+These probes were removed during Phase 10 together with the historical
+PET runtime. They remain recoverable through Git history.
 
 ## PET-METICA reading map
 
-PET-METICA material is intentionally split by role. Its `NEW`, `DROP`, `INC`,
-and `DEC` references describe current executable legacy behavior or retained
-research evidence, never canonical or future PET semantics. The sole normative
-future operator contract is
-[`../reference/SPEC.md`](../reference/SPEC.md).
+PET-METICA material is intentionally split by role. Its `NEW`, `DROP`,
+`INC`, and `DEC` references describe historical behavior or retained
+research evidence, never canonical PETRA semantics.
 
-### Current executable legacy PET-METICA behavior
+### Historical PET-METICA behavior
 
-These compatibility references describe the current rewrite-geometric CLI and
-research line:
+These compatibility references describe the historical rewrite-geometric
+CLI and research line:
 
 - `notes/PET-METICA.md`
 - `notes/pet_metica_minimal_definitions.md`
@@ -103,26 +171,25 @@ research line:
 
 ### Supporting notes
 
-These notes support the current line with bounded observations, generator
-structure, local rewrite laws, or empirical vocabulary:
+These notes support the historical line with bounded observations,
+generator structure, local rewrite laws, or empirical vocabulary:
 
 - `notes/pet-grammar-note.md`
 - `notes/pet-local-generator-algebra-note.md`
 - `notes/pet-generator-structural-encoding-note.md`
 - `notes/pet-exponent-shape-trace-observed-patterns.md`
 - `notes/pet-shape-families-note.md`
-- `notes/pet_metica_seven_family_tier_drift.md` — bounded ladder on `7×{2^k,3^k}` seed asymmetry and explicit tier-drift correction
+- `notes/pet_metica_seven_family_tier_drift.md`
 - `notes/pet-multiplicative-grammar.md`
 - `notes/pet-problem-statement.md`
-- `notes/pet-completion-aware-residual-descent.md` — structural walls, lateral doors, trap-doors, and completion-aware residual descent observations
-- `notes/pet-operator-semantics-pattern-distribution.md` — experimental PET/PEG operator-semantics matrix pattern distribution through 100,000
-- `notes/pet-object-native-relocation-permutation.md` — bounded research specification for object-native `SWAP`, `PERMUTE`, and the separate cryptographic-selection boundary of `SCRAMBLE`
+- `notes/pet-completion-aware-residual-descent.md`
+- `notes/pet-operator-semantics-pattern-distribution.md`
+- `notes/pet-object-native-relocation-permutation.md`
 
 ### Experimental / not core
 
 These files explore PET-METICA `⊕` candidates, comparisons, examples, or
-negative results. They are useful research material, but they are not part of
-the current operational core:
+negative results:
 
 - `notes/pet_metica_plus_design.md`
 - `notes/pet_metica_plus_semantics_v0.md`
@@ -133,9 +200,9 @@ the current operational core:
 - `notes/pet_metica_plus_case_2_6_30.md`
 - `notes/pet_metica_plus_decision.md`
 
-## Important note
+## Important note on historical material
 
-Files in `research/` are research material.
+Files in the historical section are research material.
 
 They may contain:
 
@@ -150,67 +217,20 @@ For current project-wide source of truth, see:
 - `../VISION.md`
 - `../reports/STATUS.md`
 - `../reference/SPEC.md`
-- `../reference/SPEC.md` for future PET/PEG
-  2.0 operator semantics; PET-METICA notes remain legacy compatibility and
-  research evidence
 
-## PET/PEG 2.0 operator semantics reports
+## Historical PET/PEG 2.0 operator semantics reports
 
-Promotion policy:
+Promotion policy (historical):
 
 - `../foundations/pet-peg-2.0-operator-semantics-promotion-policy.md`
 
-The PET/PEG 2.0 foundation layer now has experimental documented reports that
-aggregate the executable X/Y/Z operator probes.
+The PET/PEG 2.0 foundation layer had experimental documented reports that
+aggregated the executable X/Y/Z operator probes.
 
-Single-number report:
+These reports and their tools were removed during Phase 10. They remain
+recoverable through Git history.
 
-- `../../tools/research/pet_operator_semantics_report.py` — aggregates PET/PEG
-  2.0 operator-semantics probe output for one integer.
+## Historical guarded redirect research
 
-Multi-number matrix report:
-
-- `../../tools/research/pet_operator_semantics_report_matrix.py` — scans
-  explicit numbers and/or ranges, derives pattern signatures, groups numbers by
-  shared observed patterns, and summarizes pattern anatomy.
-
-Related probes:
-
-- `../../tools/research/pet_operator_xy_commutativity_probe.py`
-- `../../tools/research/pet_operator_address_stability_probe.py`
-- `../../tools/research/pet_operator_axis_invariant_probe.py`
-
-Example experimental report commands:
-
-    python tools/research/pet_operator_semantics_report.py 60
-    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18
-    python tools/research/pet_operator_semantics_report_matrix.py 60 --range 12 14 --json
-    pet experimental operator-semantics report 60
-    pet experimental operator-semantics matrix --range 12 18
-
-For large ranges, the matrix report can emit filtered pattern-group views without
-per-number rows:
-
-    python tools/research/pet_operator_semantics_report_matrix.py --range 2 100 --top-patterns 3 --no-rows
-    python tools/research/pet_operator_semantics_report_matrix.py --range 12 18 --min-count 2 --pattern leaf-blocked --no-rows --json
-
-Matrix pattern groups also include experimental `pattern_class` labels, such as
-`single-support-leaf`, `multi-support-removal`, and
-`multi-support-recursive-leaf-blocked`, to make recurrent operator-semantics
-patterns easier to compare across ranges.
-
-Use `--anatomy` to include arithmetic anatomy summaries for each pattern
-group, including `omega_dist`, `big_omega_dist`, `max_exp_dist`,
-`first_nonflat_exp_dist`, `squarefree_ratio`, and `has_support_2_3_ratio`.
-
-Use `--check-rules` to include experimental rule-check summaries in the
-matrix payload, including the observed multi-support nonflat rule.
-
-Use `--compact-text` to suppress large text-only number lists and print a
-shorter summary, rule-check section, and compact pattern-group lines.
-
-These probes and experimental reports are not part of stable PET-Base
-behavior. They do not change CLI defaults, core operator semantics, routing,
-anchor selection, or residual descent.
 - `notes/pet-guarded-redirect-factor-chain-certificates.md` — factor-chain product certificates for guarded redirect structural factorization research.
 - `notes/pet-guarded-redirect-structural-wall-families.md` — structural-prefix wall families observed in guarded redirect factor-chain research.
