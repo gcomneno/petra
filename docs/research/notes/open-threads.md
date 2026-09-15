@@ -29,6 +29,13 @@ representative for both.
 
 **Status.** in progress.
 
+**Notes.** First result recorded in
+`exponential-base-structural-class.md`: exact identity
+`shape(k^n) = C(r0^shape(e₁n), …)`, a duplication lemma
+(`{a,a} ≡ {a}`), and two falsified conjectures ("1 wins",
+"fingerprint is a class invariant"). Classification is not settled:
+the cumulative fingerprint may or may not converge.
+
 **Prerequisite for.** T02 (functor).
 
 ### T02 — Functoriality of the fingerprint

@@ -46,6 +46,11 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
   families. Convergent across N, multi-scale via threshold clustering,
   with structural-class collisions for exponential bases.
 
+- [`notes/exponential-base-structural-class.md`](notes/exponential-base-structural-class.md)
+  — T01 first result. Exact identity `shape(k^n) = C(r0^shape(e₁n), …)`,
+  a duplication lemma, two falsified conjectures, and a methodological
+  warning: the fingerprint is window-dependent, not a class invariant.
+
 ### Code
 
 The current research line has produced a derived layer in the Resolver:
