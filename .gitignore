@@ -28,6 +28,7 @@ docs/reports/data/
 
 .mypy_cache
 .pytest_cache
+.ruff_cache
 
 tmp/
 .pet-cache/

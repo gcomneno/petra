@@ -177,7 +177,6 @@ generator structure, local rewrite laws, or empirical vocabulary:
 - `notes/pet-grammar-note.md`
 - `notes/pet-local-generator-algebra-note.md`
 - `notes/pet-generator-structural-encoding-note.md`
-- `notes/pet-exponent-shape-trace-observed-patterns.md`
 - `notes/pet-shape-families-note.md`
 - `notes/pet_metica_seven_family_tier_drift.md`
 - `notes/pet-multiplicative-grammar.md`
