@@ -21,7 +21,7 @@ canonical operator vocabulary (SPROUT, SHED, GRAFT, PRUNE).
 
 from __future__ import annotations
 
-from petra import Container, Leaf, PetraShape, Root, Term
+from petra import Container, Leaf, PetraShape, Root, Term, node_count
 
 
 def contains(a: PetraShape, b: PetraShape) -> bool:
@@ -84,13 +84,5 @@ def structural_overlap(a: PetraShape, b: PetraShape) -> float:
 
     m = meet(a, b)
     j = join(a, b)
-    return _node_count(m) / _node_count(j)
+    return node_count(m) / node_count(j)
 
-
-def _node_count(shape: PetraShape) -> int:
-    if isinstance(shape, Leaf):
-        return 1
-    total = 1
-    for t in shape.terms:
-        total += 1 + _node_count(t.exponent)
-    return total

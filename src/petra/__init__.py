@@ -21,6 +21,9 @@ from .model import (
     to_canonical_data,
     validate_shape,
 )
+from .metrics import (
+    node_count,
+)
 from .operators import (
     apply_graft,
     apply_prune,
@@ -79,6 +82,7 @@ __all__ = [
     "apply_prune",
     "apply_shed",
     "apply_sprout",
+    "node_count",
     "normalize_shape",
     "parse_address",
     "parse_invocation_json",
