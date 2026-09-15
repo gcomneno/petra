@@ -23,25 +23,38 @@ from petra import Container, Leaf, PetraShape, Root, Term, validate_shape
 __all__ = ["destruct", "struct"]
 
 
+def _term_depth(shape: PetraShape) -> int:
+    """Return the depth of the shallowest leaf inside `shape` (Leaf = 0)."""
+
+    if isinstance(shape, Leaf):
+        return 0
+    assert isinstance(shape, Container)
+    best: int | None = None
+    for term in shape.terms:
+        d = 1 + _term_depth(term.exponent)
+        if best is None or d < best:
+            best = d
+    assert best is not None
+    return best
+
+
 def _leaf_positions(shape: PetraShape) -> list[tuple[int, ...]]:
     """Return the addresses of the implicit-leaf terms of `shape`.
 
-    An implicit-leaf term is a term of the root container whose exponent
-    is `Leaf`. Only the first level is considered: the interior of an
-    explicit exponent is not an attachment point.
+    Order: shallowest first (depth of the exponent's shallowest leaf,
+    ascending). Ties keep the natural left-to-right order.
 
-    Addresses are tuples of indices from the root, so `(i,)` for the
-    i-th term of the root container.
+    Only the root container is considered at this level. Special case:
+    the bare leaf `○` is itself an attachment point, at address `()`.
     """
 
-    positions: list[tuple[int, ...]] = []
     if isinstance(shape, Leaf):
-        return positions
+        return [()]
+
     assert isinstance(shape, Container)
-    for i, term in enumerate(shape.terms):
-        if isinstance(term.exponent, Leaf):
-            positions.append((i,))
-    return positions
+    indexed = list(enumerate(shape.terms))
+    indexed.sort(key=lambda pair: _term_depth(pair[1].exponent))
+    return [(i,) for i, term in indexed if isinstance(term.exponent, Leaf)]
 
 
 def _explicit_positions(shape: PetraShape, prefix: tuple[int, ...] = ()) -> list[tuple[int, ...]]:
@@ -71,7 +84,7 @@ def _replace_at(
     """
 
     if not address:
-        raise ValueError("address must select a term")
+        return replacement
 
     head, *rest = address
     assert isinstance(shape, Container)
@@ -111,6 +124,10 @@ def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
 
     validate_shape(a)
     validate_shape(b)
+
+    # Neutral right: grafting the leaf onto any shape is the identity.
+    if isinstance(b, Leaf):
+        return frozenset({a})
 
     results: set[PetraShape] = set()
     for pos in _leaf_positions(a):

@@ -84,9 +84,20 @@ def test_destruct_does_not_recurse_into_detached() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_struct_leaf_a_gives_empty() -> None:
-    # A = Leaf has no attachment points
-    assert struct(parse_shape("1"), parse_shape("C(r0^1)")) == frozenset()
+def test_struct_leaf_a_replaces_mother() -> None:
+    # struct(○, B) = {B}: the mother hook replaces itself with B
+    b = parse_shape("C(r0^1)")
+    assert struct(parse_shape("1"), b) == frozenset({b})
+
+
+def test_struct_leaf_b_is_identity() -> None:
+    # struct(A, ○) = {A}: grafting the leaf leaves A unchanged
+    a = parse_shape("C(r0^C(r0^1))")
+    assert struct(a, parse_shape("1")) == frozenset({a})
+
+
+def test_struct_leaf_leaf_is_leaf() -> None:
+    assert struct(parse_shape("1"), parse_shape("1")) == frozenset({parse_shape("1")})
 
 
 def test_struct_single_attachment() -> None:
