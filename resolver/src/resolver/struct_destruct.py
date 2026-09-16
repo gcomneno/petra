@@ -18,7 +18,7 @@ they consume shapes and produce shapes, and do not modify the runtime.
 
 from __future__ import annotations
 
-from petra import Container, Leaf, PetraShape, Root, Term, validate_shape
+from petra import Container, Leaf, PetraShape, Root, Term, node_count, validate_shape
 
 __all__ = ["destruct", "struct"]
 
@@ -125,12 +125,20 @@ def _extract_at(shape: PetraShape, address: tuple[int, ...]) -> PetraShape:
     return _extract_at(term.exponent, tuple(rest))
 
 
-def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
+def struct(
+    a: PetraShape,
+    b: PetraShape,
+    *,
+    max_nodes: int | None = None,
+) -> frozenset[PetraShape]:
     """Return the set of shapes obtained by grafting `b` onto `a`.
 
     Every implicit-leaf term of `a` is a possible attachment point. For
     each, the implicit leaf is replaced by `b`. The result is a set,
     because `a` may have several attachment points.
+
+    If `max_nodes` is not None, the total node count of all results
+    (summed) must not exceed it; otherwise `ValueError` is raised.
     """
 
     validate_shape(a)
@@ -146,6 +154,7 @@ def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
             assert isinstance(a, Container)
             results.add(_append_father(a, b, at_end=True))
             results.add(_append_father(a, b, at_end=False))
+        _check_max_nodes(results, max_nodes)
         return frozenset(results)
 
     results: set[PetraShape] = set()
@@ -153,7 +162,22 @@ def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
         candidate = _apply_attachment(a, kind, pos, b)
         validate_shape(candidate)
         results.add(candidate)
+    _check_max_nodes(results, max_nodes)
     return frozenset(results)
+
+
+def _check_max_nodes(
+    results: set[PetraShape],
+    max_nodes: int | None,
+) -> None:
+    if max_nodes is None:
+        return
+    total = sum(node_count(r) for r in results)
+    if total > max_nodes:
+        raise ValueError(
+            f"struct: total node_count {total} exceeds max_nodes "
+            f"{max_nodes}"
+        )
 
 
 def _apply_attachment(
@@ -212,7 +236,7 @@ def _append_father(
 
 
 def destruct(a: PetraShape) -> frozenset[tuple[PetraShape, PetraShape]]:
-    """Return the set of pairs `(b, c)` obtained by detaching one explicit exponent from `a`.
+    """Return the set of pairs `(b, c)` from `a`.
 
     One level only. `b` is `a` with the exponent reduced to a leaf; `c`
     is the detached exponent. A shape with no explicit exponents gives

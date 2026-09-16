@@ -90,10 +90,30 @@ def test_struct_leaf_a_replaces_mother() -> None:
     assert struct(parse_shape("1"), b) == frozenset({b})
 
 
-def test_struct_leaf_b_is_identity() -> None:
-    # struct(A, ○) = {A}: grafting the leaf leaves A unchanged
-    a = parse_shape("C(r0^C(r0^1))")
-    assert struct(a, parse_shape("1")) == frozenset({a})
+def test_struct_leaf_b_adds_leaf_father() -> None:
+    # struct(A, ○) returns:
+    # - {A}: identity (replace with a leaf is a no-op)
+    # - append: a new leaf father at the tail
+    # - prepend: a new leaf father at the head
+    # If A has only leaf fathers, append and prepend collapse, so the
+    # result may have fewer than three elements.
+    a = parse_shape("C(r0^C(r0^1))")   # ○^(A^(A))
+    result = struct(a, parse_shape("1"))
+    # identity + append + prepend
+    assert parse_shape("C(r0^C(r0^1))") in result          # identity
+    assert parse_shape("C(r0^C(r0^1),r1^1)") in result     # append
+    assert parse_shape("C(r0^1,r1^C(r0^1))") in result     # prepend
+    assert len(result) == 3
+
+
+def test_struct_leaf_b_on_all_leaf_fathers_collapses() -> None:
+    # A = ○^(A × B): append and prepend produce the same shape
+    # because leaf fathers are indistinguishable.
+    a = parse_shape("C(r0^1,r1^1)")
+    result = struct(a, parse_shape("1"))
+    assert len(result) == 2
+    assert parse_shape("C(r0^1,r1^1)") in result          # identity
+    assert parse_shape("C(r0^1,r1^1,r2^1)") in result     # append == prepend
 
 
 def test_struct_leaf_leaf_is_leaf() -> None:
