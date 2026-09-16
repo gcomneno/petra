@@ -205,3 +205,21 @@ only 17 distinct values, and the top 6 cover 83% of the pairs. It is
 too coarse to discriminate. Recorded in
 `t04-overlap-too-coarse.md`.
 
+## P9 — Arithmetic layer above the Resolver
+
+**Statement.** Build a class that keeps `(shape, key)` together and
+supports arithmetic operations on the pair.
+
+**Why now.** Thread T05 proposed this. It predates the shape-first
+consolidation.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. PETRA is shape-first; the value does not
+appear in the shape by construction. A `(shape, key)` pair restores
+the value and reintroduces arithmetic at the core of the object
+model. The proposed operators (`12 / 3 = 4`) are not general: they
+work only when the arithmetic operation has a structural counterpart.
+An arithmetic layer is a possible external application of PETRA, not
+an extension of it.
+

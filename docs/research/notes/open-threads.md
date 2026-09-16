@@ -92,10 +92,16 @@ yet explored.
 supports arithmetic operations (division, multiplication, addition) on
 this pair, delegating structural edits to the canonical operators.
 
-**Minimal example.** `12 / 3 = 4` via SHED on the shape, with the key
-tracking which prime was removed.
+**Status.** closed (out of scope).
 
-**Status.** open.
+**Notes.** PETRA is shape-first: the value does not appear in the
+shape, by construction (SPEC §1.2, and the exact identity in
+`exponential-base-structural-class.md`). A `(shape, key)` pair that
+restores the value reintroduces arithmetic at the core of the object
+model. Division `12 / 3 = 4` works only when the divisor divides the
+dividend; the operator is not general. The thread predates the
+shape-first consolidation. It is a possible external application of
+PETRA, not an extension of PETRA.
 
 ### T06 — Structural elision as p/p = 1
 
