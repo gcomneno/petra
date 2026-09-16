@@ -272,3 +272,18 @@ invariant under the mirror map `3n-1`?
 +20 points. The sign of `k` does not matter; the factor 3 does.
 Recorded in `t08-3n-minus-1.md`.
 
+## P13 — Fingerprint catalogue
+
+**Statement.** Build a catalogue of fingerprints for known sequence
+families and use it to classify novel sequences.
+
+**Why now.** Thread T10 proposed this.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Two reasons: `fingerprint.py` handles only
+`base^n`, not arbitrary sequences; the fingerprint is window-dependent
+and not a class invariant, so a catalogue would have no stable
+entries. P1 also showed that integer families do not separate in shape
+space.
+

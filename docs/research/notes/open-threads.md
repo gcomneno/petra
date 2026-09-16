@@ -172,10 +172,21 @@ whether this "shape-plus-context" state recovers a ranking function.
 **Statement.** Build a catalogue of fingerprints for many known
 sequence families. Use it to assign novel sequences to families.
 
-**Minimal example.** Given an unlabeled sequence, compute the
-fingerprint and look up the nearest catalogue entry.
+**Status.** closed (out of scope).
 
-**Status.** open. Related to T02.
+**Notes.** Two independent reasons:
+
+- `fingerprint.py` computes the fingerprint of `base^n`, not of an
+  arbitrary sequence. A catalogue for Fibonacci, Beatty, or prime
+  gaps would need a different fingerprint, which does not exist.
+- The fingerprint is window-dependent and not a class invariant
+  (`exponential-base-structural-class.md`, both conjectures
+  falsified). A catalogue built on a non-invariant has no stable
+  entries.
+
+Additionally, P1 showed that classical integer families do not
+separate in shape space. Even if the catalogue existed, it would not
+discriminate.
 
 ### T11 — Beatty sequences and other non-obvious families
 
