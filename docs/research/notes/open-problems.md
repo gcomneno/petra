@@ -30,7 +30,19 @@ except running the measurement.
 pairwise structural distances, report the confusion matrix between
 intra-family compactness and inter-family separation.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Negative. `docs/reports/generated/families-benchmark-disjoint.md`
+records a bounded benchmark on disjoint samples of the four families
+(Perfect 4, Primorials 6, Hamming 28, HighlyComposite 26), under both
+`distance` and `structural_distance`. PET does not produce hard
+separation under the strict gap test. Perfect is the tightest family
+(structural diameter 2.00); HighlyComposite the widest. The strongest
+average separation is Perfect vs HighlyComposite. Perfect and Hamming
+reach structural distance 0.00 on at least one pair.
+
+The question is closed. Larger samples would only confirm the negative,
+and Perfect numbers are too rare to enlarge the sample meaningfully.
 
 ## P2 — Collatz reduction dominance: explanation or counterexample
 
