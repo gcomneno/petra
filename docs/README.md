@@ -20,7 +20,7 @@ The specification is the only normative source.
 ## Historical and research material
 
 The repository still contains documents produced during PET, PET/PEG 2.0,
-PET-Metrics, and PET-METICA development.
+and PET-Metrics development.
 
 They are retained temporarily for provenance and migration analysis. Unless the
 canonical PETRA specification explicitly incorporates a rule, those documents

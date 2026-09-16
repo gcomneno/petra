@@ -25,8 +25,7 @@ PETRA is now the maintained runtime, distribution, and command-line surface.
   residue, but it is not part of the maintained PETRA distribution surface.
 - Tag `v0.3.0` preserves the final historical PET release.
 
-Do not treat the historical `pet` CLI, PET-Base JSON, `PETObject`, PET-Metrics,
-PET-METICA, numeric projection, or legacy operators as PETRA behavior.
+Do not treat the historical `pet` CLI, PET-Base JSON, `PETObject`, PET-Metrics, numeric projection, or legacy operators as PETRA behavior.
 
 ## Canonical sources
 

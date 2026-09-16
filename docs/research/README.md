@@ -90,7 +90,7 @@ Current PETRA research:
 
 This section contains research material produced before the PETRA
 replacement. It documents the PET, PET-Base, PET/PEG 2.0, PET-Metrics,
-and PET-METICA research lines. It is retained as evidence and
+research lines. It is retained as evidence and
 provenance. It is not maintained.
 
 ## Structure
@@ -113,9 +113,6 @@ Start in:
 
 - `experiments/`
 
-Recent closure record:
-
-- `experiments/pet-metica-seven-family-ladder-pass.md` — seven-family tier ladder (300–1200), tier-drift correction, closed in commit f95a437
 
 Recent archive record:
 
@@ -169,52 +166,6 @@ The historical research probes were:
 
 These probes were removed during Phase 10 together with the historical
 PET runtime. They remain recoverable through Git history.
-
-## PET-METICA reading map
-
-PET-METICA material is intentionally split by role. Its `NEW`, `DROP`,
-`INC`, and `DEC` references describe historical behavior or retained
-research evidence, never canonical PETRA semantics.
-
-### Historical PET-METICA behavior
-
-These compatibility references describe the historical rewrite-geometric
-CLI and research line:
-
-- `notes/PET-METICA.md`
-- `notes/pet_metica_minimal_definitions.md`
-- `notes/pet_metica_operational_semantics.md`
-- `notes/pet_metica_claims_snapshot.md`
-
-### Supporting notes
-
-These notes support the historical line with bounded observations,
-generator structure, local rewrite laws, or empirical vocabulary:
-
-- `notes/pet-grammar-note.md`
-- `notes/pet-local-generator-algebra-note.md`
-- `notes/pet-generator-structural-encoding-note.md`
-- `notes/pet-shape-families-note.md`
-- `notes/pet_metica_seven_family_tier_drift.md`
-- `notes/pet-multiplicative-grammar.md`
-- `notes/pet-problem-statement.md`
-- `notes/pet-completion-aware-residual-descent.md`
-- `notes/pet-operator-semantics-pattern-distribution.md`
-- `notes/pet-object-native-relocation-permutation.md`
-
-### Experimental / not core
-
-These files explore PET-METICA `⊕` candidates, comparisons, examples, or
-negative results:
-
-- `notes/pet_metica_plus_design.md`
-- `notes/pet_metica_plus_semantics_v0.md`
-- `notes/pet_metica_plus_av0_counterexamples.md`
-- `notes/pet_metica_plus_av1_semantics.md`
-- `notes/pet_metica_plus_av1_vs_cv0.md`
-- `notes/pet_metica_plus_candidate_examples.md`
-- `notes/pet_metica_plus_case_2_6_30.md`
-- `notes/pet_metica_plus_decision.md`
 
 ## Important note on historical material
 

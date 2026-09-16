@@ -28,7 +28,7 @@ This classification is based on:
 - the first-principles implementation audit
 - current documentation references
 - the current distinction between PET-Base, first-principles PET, PET/PEG 2.0,
-  PET-Metrics, PET-METICA, routing, and research tooling
+  PET-Metrics, routing, and research tooling
 
 The categories below are intentionally conservative.
 
@@ -98,7 +98,7 @@ of truth.
 | `families.py` | active research and analysis tooling | integer-family experiments | Useful for bounded family analysis, not core semantics. |
 | `scan.py` | active research and analysis tooling | scan records and dataset generation | Supports empirical workflows. Its stable output contract should be judged separately from research interpretation. |
 | `query.py` | active research and analysis tooling | JSONL and dataset query operations | Tooling layer for generated data, not PET definition. |
-| `rewrite_metric.py` | active research and analysis tooling | rewrite graph and distance experiments | PET-METICA-facing research module. Bounded empirical findings should not be presented as general theorems. |
+| `rewrite_metric.py` | active research and analysis tooling | rewrite graph and distance experiments | Research module for rewrite graph and distance experiments. Bounded empirical findings should not be presented as general theorems. |
 | `structural_route.py` | experimental routing and advisory tooling | structural route command backend | Higher-level route/tooling layer. Not first-principles core. |
 | `guarded_redirect.py` | experimental routing and advisory tooling | guarded redirect backend | Experimental routing support promoted to package code. Requires separate audit before any stronger stability claim. |
 | `lens_api.py` | experimental routing and advisory tooling | optional PET lens advisory API | Useful integration surface, but not PET-Base semantics. |
@@ -193,7 +193,7 @@ The repo should currently be read as layered architecture:
 2. first-principles conceptual model
 3. PET/PEG object-native layer
 4. metrics and scan tooling
-5. PET-METICA and research experiments
+5. research experiments
 6. routing, advisory, and mixed CLI workflows
 
 This classification keeps the project useful without pretending that every

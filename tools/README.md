@@ -38,7 +38,7 @@ working tree:
 
 - the `pet` CLI and all its subcommands
 - the `pet_*` triage scripts and their compatibility wrappers
-- the lens diagnostics, guarded redirect probes, and PET-METICA tooling
+- the lens diagnostics and guarded redirect probes
 - the scan/query dataset pipeline
 
 They are preserved in Git history and in the audit documents under

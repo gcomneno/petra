@@ -54,7 +54,6 @@ If you are changing behavior or documentation, these files are usually the most 
 - `docs/README.md`
 - `docs/VISION.md`
 - `docs/reports/STATUS.md`
-- `docs/research/notes/PET-METICA.md`
 - `docs/reference/CLI.md`
 - `docs/reference/SPEC.md`
 - `docs/reports/README.md`
@@ -69,7 +68,7 @@ Operator-side tools are namespaced by role:
 - `tools/core/` — PET triage core and policy-first handoff
 - `tools/classic/` — bounded classic verification support
 - `tools/legacy/` — historical lens diagnostics
-- `tools/research/` — dataset/report helpers and PET-METICA research helpers
+- `tools/research/` — dataset/report helpers and research helpers
 
 Root-level `tools/*.py` and `tools/*.sh` entries are usually compatibility wrappers.
 When adding new tooling, prefer the appropriate namespaced directory.
@@ -103,7 +102,6 @@ Please keep that distinction explicit:
 
 - stable definitions, contracts, and behavior belong in the main docs and implementation
 - empirical observations, bounded patterns, and research-facing notes should stay in the appropriate research/report documents
-- rewrite-geometric findings belong in `docs/research/notes/PET-METICA.md` only when they are stated carefully as empirical or as clearly delimited claims
 
 Do not present exploratory observations as established facts.
 

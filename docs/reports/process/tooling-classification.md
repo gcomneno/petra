@@ -52,7 +52,7 @@ implementations are grouped by role:
 - `tools/core/` — PET triage core and policy-first handoff.
 - `tools/classic/` — bounded classic verification support.
 - `tools/legacy/` — historical lens diagnostics kept for comparison and tests.
-- `tools/research/` — dataset/report helpers and PET-METICA / shape research tools.
+- `tools/research/` — dataset/report helpers and shape research tools.
 
 Root-level wrappers remain available for existing scripts, tests, and
 documentation examples. Directory placement, not wrapper presence, defines the
@@ -259,7 +259,7 @@ Canonical CLI alternative:
 
 Compatibility wrappers remain in `tools/` with the same filenames.
 
-### PET-METICA and structural research helpers
+### Structural research helpers
 
 - `tools/research/pet_shape_algebra.py`
 - `tools/research/pet_rewrite_metric.py`

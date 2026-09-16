@@ -147,7 +147,7 @@ The minimal PETRA CLI does not expose the former PET utilities for:
 
 - integer encode/decode;
 - prime factorization;
-- PET metrics or PET-METICA;
+- PET metrics;
 - graph/path exploration;
 - scans, atlases, or dataset queries;
 - historical rewrite/operator compatibility.

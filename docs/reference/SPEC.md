@@ -6,8 +6,8 @@ This document is the **single canonical specification** for:
 
 **PETRA — Prime Exponent Tower Recursive Algebra**
 
-It supersedes the active PET-Base, PET/PEG 2.0, PET-Metrics, and executable
-PET-METICA product architecture. Earlier documents remain historical,
+It supersedes the active PET-Base, PET/PEG 2.0, and executable
+PET-Metrics product architecture. Earlier documents remain historical,
 research, or design evidence only. They do not define current PETRA behavior.
 
 PETRA is shape-first. Its primary objects are recursive canonical structures,
@@ -810,7 +810,7 @@ A metric may enter the PETRA runtime only when it:
   paths;
 - has examples and tests derived from this specification.
 
-Historical PET-Metrics and PET-METICA results remain research evidence. They
+Historical PET-Metrics results remain research evidence. They
 must not be promoted as PETRA laws or invariants without a new derivation and
 admission decision.
 

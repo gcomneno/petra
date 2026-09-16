@@ -46,8 +46,8 @@ The canonical operator vocabulary is:
 
 ## One architecture
 
-PETRA replaces PET-Base, PET/PEG compatibility layers, PET-Metrics tied to the
-old representation, and the executable PET-METICA rewrite runtime.
+PETRA replaces PET-Base, PET/PEG compatibility layers, and PET-Metrics tied to the
+old representation.
 
 Those projects remain part of the research history, but they are not permanent
 layers beneath PETRA.

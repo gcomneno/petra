@@ -60,7 +60,6 @@ For project-wide source of truth, see:
 
 - `../VISION.md`
 - `STATUS.md`
-- `../research/notes/PET-METICA.md`
 - `../reference/SPEC.md`
 - `../reference/SPEC.md` for the sole
   normative future PET/PEG 2.0 operator semantics

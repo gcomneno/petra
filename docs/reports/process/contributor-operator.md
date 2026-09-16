@@ -164,7 +164,7 @@ Current tool implementations are namespaced:
 - `tools/core/` — PET triage core and policy-first handoff
 - `tools/classic/` — bounded classic verification support
 - `tools/legacy/` — historical lens diagnostics
-- `tools/research/` — dataset/report and PET-METICA research helpers
+- `tools/research/` — dataset/report and research helpers
 
 The first-class structural factorization entry point is the main PET CLI:
 
