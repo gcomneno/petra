@@ -77,6 +77,66 @@ This note fits the boundary distinction recorded in
 The chain is a strada. The form is the target. The construction shows
 that every form has at least one strada from the bare leaf.
 
+## Scaling and limits
+
+The reconstruction algorithm's cost is proportional to the
+`node_count` of the target, which depends on the multiplicative
+structure of `n`, not on the number of digits of `n`.
+
+### Smooth numbers
+
+Smooth numbers (`n = 2^k`, `n = 2^a * 3^b * ...`) build in constant
+time regardless of size:
+
+| n | time | node_count |
+| --- | ---: | ---: |
+| 2^100 | 0.00s | 7 |
+| 2^1000 | 0.00s | 11 |
+| 2^100000 | 0.25s | 11 |
+| 2^1000000 | 0.25s | 15 |
+| 2^10000000 | 0.33s | 11 |
+
+`node_count` does not grow monotonically with the exponent. It
+depends on `shape(k)` for `n = 2^k`, hence on the factorization of `k`
+itself. `k = 10^6 = 2^6 * 5^6` gives a larger shape than
+`k = 10^7 = 2^7 * 5^7`.
+
+### Semiprimes
+
+The practical limit is in `sympy.factorint`, not in the
+reconstruction:
+
+| prime size | total n | time | outcome |
+| --- | ---: | ---: | --- |
+| 20 digits | 39 | 2.9s | ok |
+| 25 digits | 49 | 1.3s | ok |
+| 30 digits | 59 | >15s | timeout |
+| 35 digits | 69 | >15s | timeout |
+
+Beyond ~25-30 digits per prime, factoring a semiprime is not feasible
+with the current tooling. The reconstructed shape, however, is
+trivially small (`○^(A × B)`) regardless of prime size: two large
+primes are indistinguishable from two small ones in the shape.
+
+### Products of distinct primes raised to powers
+
+The most structurally rich cases are products of many distinct primes,
+each raised to a power:
+
+- `2^100 * 3^50 * 5^30`: 27 nodes, 0.25s
+- `2^1000 * 3^500`: 21 nodes, 0.25s
+- `(2*3*5*7*11*13)^50`: 49 nodes, 0.34s
+
+All build in under a second. The limit is again factorization, not
+reconstruction.
+
+### Conclusion
+
+The shape and its reconstruction scale with the multiplicative
+structure of `n`, not with the magnitude of `n`. Smooth numbers of
+millions of digits are reconstructed in constant time. Semiprimes of
+moderate size hit the limits of `sympy.factorint`.
+
 ## Boundary
 
 This note does not claim:
