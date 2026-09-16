@@ -292,9 +292,8 @@ in `exponential-base-structural-class.md`.
 
 **Statement.** A test in the resolver suite fails intermittently when
 the full test suite is run, but passes when run alone. Observed on
-`test_explored_equals_length_plus_one_on_wide_shapes[8]`: the resolver
-explores more than `max_visited=1000` shapes and raises `ResolverError`.
-Likely an execution-order or budget-edge issue, not a logic bug.
+`test_wide_path_length_matches_width[8]`: the resolved path length is
+10 instead of 8.
 
 **Minimal example.** `pytest tests/ resolver/tests/` sometimes shows
 one failure; `pytest resolver/tests/test_resolver.py` alone passes.

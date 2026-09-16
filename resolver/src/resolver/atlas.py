@@ -17,7 +17,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from petra import serialize_shape
+from petra import PetraShape, serialize_shape
 
 from .distance import int_to_shape
 
@@ -169,7 +169,7 @@ def build_distance_atlas(
 
     from .distance import DistanceCache
 
-    shapes: dict[str, object] = {}
+    shapes: dict[str, PetraShape] = {}
     for text in shape_atlas.by_shape:
         shapes[text] = parse_shape(text)
 

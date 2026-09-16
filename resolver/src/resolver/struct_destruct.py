@@ -98,7 +98,7 @@ def _attachment_points(
     assert isinstance(shape, Container)
     indexed = list(enumerate(shape.terms))
     indexed.sort(key=lambda pair: _term_depth(pair[1].exponent))
-    replace_positions = [
+    replace_positions: list[tuple[str, tuple[int, ...]]] = [
         ("replace", (i,))
         for i, term in indexed
         if isinstance(term.exponent, Leaf)
@@ -250,17 +250,17 @@ def struct(
 
     # Special case: grafting the bare leaf ○.
     if isinstance(b, Leaf):
-        results: set[PetraShape] = {a}
+        leaf_results: set[PetraShape] = {a}
         if not isinstance(a, Leaf):
             assert isinstance(a, Container)
-            results.add(_append_father(a, b, at_end=True))
-            results.add(_append_father(a, b, at_end=False))
+            leaf_results.add(_append_father(a, b, at_end=True))
+            leaf_results.add(_append_father(a, b, at_end=False))
             if inner:
                 for addr in _inner_container_addresses(a):
-                    results.add(_append_father_at(a, addr, b, at_end=True))
-                    results.add(_append_father_at(a, addr, b, at_end=False))
-        _check_max_nodes(results, max_nodes)
-        return frozenset(results)
+                    leaf_results.add(_append_father_at(a, addr, b, at_end=True))
+                    leaf_results.add(_append_father_at(a, addr, b, at_end=False))
+        _check_max_nodes(leaf_results, max_nodes)
+        return frozenset(leaf_results)
 
     results: set[PetraShape] = set()
     for kind, pos in _attachment_points(a, inner=inner):

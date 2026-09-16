@@ -65,6 +65,8 @@ select = [
 ignore = [
     "E501",  # line length is enforced by the formatter, not the linter
     "B008",  # function call in default arg (unused here)
+    "RUF001",  # ambiguous unicode: × is the PETRA container separator
+    "RUF002",  # ambiguous unicode in docstring: same reason
 ]
 
 [tool.ruff.lint.per-file-ignores]

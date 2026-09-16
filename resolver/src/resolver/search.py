@@ -272,10 +272,10 @@ def _build_cached_metrics(
 ]:
     """Return (heuristic, node_count) closures with per-call caches."""
 
-    node_cache: dict[int, int] = {}
-    depth_cache: dict[int, int] = {}
-    leaf_cache: dict[int, int] = {}
-    heuristic_cache: dict[int, int] = {}
+    node_cache: dict[PetraShape, int] = {}
+    depth_cache: dict[PetraShape, int] = {}
+    leaf_cache: dict[PetraShape, int] = {}
+    heuristic_cache: dict[PetraShape, int] = {}
 
     target_nodes = _node_count(target_shape)
     target_depth = _max_depth(target_shape)
