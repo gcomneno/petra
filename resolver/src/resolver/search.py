@@ -20,10 +20,9 @@ frontier and the visited set, so identity is never reused within a call.
 from __future__ import annotations
 
 import heapq
-from collections import deque
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from itertools import count
-from typing import Callable, Iterator
 
 from petra import (
     Address,
@@ -367,7 +366,7 @@ def resolve(
     explored = 0
 
     while open_set:
-        f, g, _, current_shape, current_path = heapq.heappop(open_set)
+        _f, g, _, current_shape, current_path = heapq.heappop(open_set)
 
         if best_g.get(current_shape, g + 1) < g:
             continue

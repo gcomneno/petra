@@ -160,10 +160,7 @@ def _print_human(path: Path) -> None:
 
     for index, step in enumerate(path.steps, start=1):
         target = step.invocation_target
-        if isinstance(target, DefaultTarget):
-            address = "default"
-        else:
-            address = str(target.address)
+        address = "default" if isinstance(target, DefaultTarget) else str(target.address)
 
         line = (
             f"{index}. {step.operator.value} {address}"

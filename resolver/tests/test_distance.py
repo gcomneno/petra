@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
-
 from petra import parse_shape, serialize_shape
+
 from resolver import (
     DistanceCache,
     DistanceError,
@@ -12,7 +12,6 @@ from resolver import (
     structural_distance_numbers,
     structural_distance_shapes,
 )
-
 
 # ---------------------------------------------------------------------------
 # int_to_shape

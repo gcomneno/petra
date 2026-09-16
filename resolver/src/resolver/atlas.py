@@ -13,9 +13,9 @@ queries are O(1).
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
 
 from petra import serialize_shape
 
@@ -165,8 +165,9 @@ def build_distance_atlas(
 ) -> DistanceAtlas:
     """Compute pairwise structural distances between all distinct shapes."""
 
-    from .distance import DistanceCache, int_to_shape
     from petra import parse_shape
+
+    from .distance import DistanceCache
 
     shapes: dict[str, object] = {}
     for text in shape_atlas.by_shape:
@@ -279,7 +280,7 @@ class AtlasBackedDistance:
         cls,
         path: str | Path,
         **kwargs: object,
-    ) -> "AtlasBackedDistance":
+    ) -> AtlasBackedDistance:
         return cls(load_distance_atlas(path), **kwargs)  # type: ignore[arg-type]
 
     def distance_shapes(self, a: object, b: object) -> int:

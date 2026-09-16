@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from petra import parse_shape
+
 from resolver.struct_destruct import destruct, struct
 
 

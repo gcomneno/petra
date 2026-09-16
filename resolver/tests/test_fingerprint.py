@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import pytest
-
 from petra import parse_shape
+
 from resolver import (
     fingerprint_cumulative,
     fingerprint_window,
     transition,
 )
-
 
 # ---------------------------------------------------------------------------
 # transition
@@ -69,8 +68,8 @@ def test_cumulative_equals_window_from_one() -> None:
 def test_shape_of_power_matches_int_to_shape() -> None:
     """Internal consistency: shape_of_power(12, 3) == int_to_shape(12**3)."""
 
-    from resolver.fingerprint import _shape_of_power
     from resolver import int_to_shape
+    from resolver.fingerprint import _shape_of_power
 
     for base, n in [(2, 5), (12, 3), (6, 4), (30, 2)]:
         assert _shape_of_power(base, n) == int_to_shape(base ** n)

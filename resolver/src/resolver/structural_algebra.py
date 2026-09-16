@@ -35,10 +35,7 @@ def contains(a: PetraShape, b: PetraShape) -> bool:
     assert isinstance(a, Container) and isinstance(b, Container)
     if len(a.terms) > len(b.terms):
         return False
-    for ta, tb in zip(a.terms, b.terms):
-        if not contains(ta.exponent, tb.exponent):
-            return False
-    return True
+    return all(contains(ta.exponent, tb.exponent) for ta, tb in zip(a.terms, b.terms, strict=False))
 
 
 def meet(a: PetraShape, b: PetraShape) -> PetraShape:

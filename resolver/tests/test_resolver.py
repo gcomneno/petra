@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 import pytest
+from petra import DefaultTarget, ExplicitTarget, parse_shape
 
-from petra import DefaultTarget, ExplicitTarget, parse_shape, serialize_shape
 from resolver import (
     PrimeKey,
     ProjectionError,
@@ -15,7 +15,6 @@ from resolver import (
     resolve,
 )
 from resolver.cli import main as cli_main
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -143,7 +142,7 @@ def test_path_is_connected() -> None:
     path = resolve("1", tower_shape(4), max_depth=8, max_nodes=20)
 
     assert path.steps[0].before_shape == path.source
-    for previous, current in zip(path.steps, path.steps[1:]):
+    for previous, current in zip(path.steps, path.steps[1:], strict=False):
         assert previous.after_shape == current.before_shape
     assert path.steps[-1].after_shape == path.target
 

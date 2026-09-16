@@ -331,10 +331,7 @@ def _append_father(
     assert isinstance(a, Container)
     existing = list(a.terms)
     new_term = Term(root=Root(0), exponent=b)
-    if at_end:
-        ordered = existing + [new_term]
-    else:
-        ordered = [new_term] + existing
+    ordered = [*existing, new_term] if at_end else [new_term, *existing]
     rebuilt = tuple(
         Term(root=Root(i), exponent=term.exponent)
         for i, term in enumerate(ordered)
@@ -401,10 +398,7 @@ def destruct(
         results.add((detached, reduced, "exponent"))
 
     for container_addr in _all_container_addresses(a):
-        if container_addr == ():
-            container = a
-        else:
-            container = _extract_at(a, container_addr)
+        container = a if container_addr == () else _extract_at(a, container_addr)
         assert isinstance(container, Container)
         for i in range(len(container.terms)):
             full_addr = (*container_addr, i)

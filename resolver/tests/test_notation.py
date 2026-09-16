@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from petra import parse_shape
+
 from resolver import int_to_shape
 from resolver.notation import to_mother_notation
 

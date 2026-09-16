@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from petra import parse_shape, serialize_shape
+
 from resolver import (
     contains,
     int_to_shape,

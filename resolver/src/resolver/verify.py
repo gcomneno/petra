@@ -16,11 +16,10 @@ by a human, another tool, or the Resolver itself.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from petra import (
-    Address,
     DefaultTarget,
     ExplicitTarget,
     FailedResult,
@@ -32,7 +31,6 @@ from petra import (
     apply_shed,
     apply_sprout,
     parse_shape,
-    serialize_shape,
     validate_shape,
 )
 

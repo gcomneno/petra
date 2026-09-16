@@ -144,10 +144,7 @@ class DistanceCache:
         if a == b:
             return 0
 
-        if hash(a) <= hash(b):
-            key = (a, b)
-        else:
-            key = (b, a)
+        key = (a, b) if hash(a) <= hash(b) else (b, a)
 
         cached = self._cache.get(key)
         if cached is not None:

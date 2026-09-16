@@ -5,12 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from petra import parse_shape
 
-from petra import parse_shape, serialize_shape
 from resolver import (
     AtlasBackedDistance,
     DistanceAtlas,
-    ShapeAtlas,
     build_shape_atlas,
     iter_shapes_by_size,
     load_distance_atlas,
@@ -18,7 +17,6 @@ from resolver import (
     save_distance_atlas,
     save_shape_atlas,
 )
-
 
 # ---------------------------------------------------------------------------
 # ShapeAtlas
