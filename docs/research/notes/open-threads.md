@@ -207,10 +207,12 @@ three limitations.
 **Statement.** Test whether the fingerprint of a sequence changes when
 sampled sparsely (every second term, every k-th term).
 
-**Minimal example.** Fibonacci vs every-second-Fibonacci (which is
-Fibonacci itself, shifted).
+**Status.** closed (out of scope).
 
-**Status.** open.
+**Notes.** Same reason as T10 and T11: the thread presupposes a
+fingerprint for arbitrary sequences, which does not exist.
+`fingerprint.py` handles only `base^n`. Sparse sampling of an
+arbitrary sequence cannot be measured.
 
 ### T13 — Distribution of overlap in a range
 

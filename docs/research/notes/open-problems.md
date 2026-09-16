@@ -300,3 +300,15 @@ sums of two squares, random walks with drift.
 does not exist, and on the assumption that families separate in
 shape space, which P1 falsified.
 
+## P15 — Invariance under sparse sampling
+
+**Statement.** Test whether the fingerprint of a sequence changes when
+sampled every k-th term.
+
+**Why now.** Thread T12 proposed this.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Depends on a fingerprint for arbitrary
+sequences, which does not exist.
+
