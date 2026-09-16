@@ -137,6 +137,57 @@ structure of `n`, not with the magnitude of `n`. Smooth numbers of
 millions of digits are reconstructed in constant time. Semiprimes of
 moderate size hit the limits of `sympy.factorint`.
 
+## Step count of the single-chain reconstruction
+
+The height-first single-chain algorithm appends one leaf at a time.
+Every append adds exactly two nodes: one `Term` and one `Leaf`. The
+initial shape is the bare leaf, which counts as one node.
+
+Therefore the number of append steps for a target with `node_count = N`
+is:
+
+    steps = (N - 1) / 2
+
+Verified on `n = 1..200` via `rebuild_recursive.py`: no failures.
+
+This count is a property of the algorithm, not of the shape. It is an
+upper bound: other construction strategies could use fewer steps by
+attaching larger pieces at once.
+
+## Comparison with BFS reconstruction
+
+Two reconstruction tools are available:
+
+- `rebuild_recursive.py` — height-first, single chain, only leaf
+  appends. Step count: `(N-1)/2` for `node_count = N`.
+- `rebuild_shape.py` — BFS with a piece set. `--pieces minimal` uses
+  only the bare leaf and the one-father container. `--pieces all` uses
+  every shape with `node_count < target`.
+
+Empirical step counts:
+
+| n | recursive (leaf appends) | BFS minimal | BFS all |
+| ---: | ---: | ---: | ---: |
+| 12 | 4 | 3 | 3 |
+| 30 | 4 | 4 | 3 |
+| 720 | 7 | (none) | 3 |
+| 3600 | 8 | (none) | 3 |
+
+Notes:
+
+- BFS `minimal` fails on larger targets (`720`, `3600`): with only the
+  bare leaf and the one-father container, some targets are not
+  reachable at all.
+- BFS `all` stays at 3 steps regardless of target size, but it uses
+  pieces whose `node_count` is close to the target's. It presupposes
+  that such pieces are available. If only the bare leaf is given, those
+  pieces must first be built, and the cost is hidden.
+- The recursive algorithm grows as `(N-1)/2`, which is an upper bound
+  when only the bare leaf is given.
+
+The two counts are not directly comparable: they assume different
+starting material.
+
 ## Boundary
 
 This note does not claim:
