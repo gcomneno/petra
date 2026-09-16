@@ -112,4 +112,10 @@ from the PETRA construction boundary.
 integers `n <= N` that realize each shape, for increasing `N`. Report
 the growth rate per shape.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Negative. The shape is a coarse descriptor: many integers
+share the same shape. At `N = 10000`, only 64 distinct shapes exist,
+and the top 10 shapes cover 92.7% of the integers. The most frequent
+shape is always `○^(A × B)` (semiprimes with distinct primes), growing
+roughly linearly with `N`. Recorded in `shape-multiplicity.md`.
