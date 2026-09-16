@@ -257,3 +257,18 @@ separates from the other eight tested bases at `N = 60`. With
 nine collapse to a single class. The metric choice is not neutral.
 Recorded in `t07-finer-metrics-change-classification.md`.
 
+## P12 — Reduction profile of 3n-1
+
+**Statement.** Is the reduction profile of Collatz (`3n+1`)
+invariant under the mirror map `3n-1`?
+
+**Why now.** P2 showed all `3n+k` (k odd) are reduction-dominant.
+`3n-1` is the case `k = -1`. The tool exists.
+
+**Status.** closed.
+
+**Result.** Positive. `3n-1` is reduction-dominant, same profile as
+`3n+k` (k > 0). Five starting values tested, margins between +13 and
++20 points. The sign of `k` does not matter; the factor 3 does.
+Recorded in `t08-3n-minus-1.md`.
+

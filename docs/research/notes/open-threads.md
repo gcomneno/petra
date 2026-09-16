@@ -146,7 +146,12 @@ so the results may differ substantially.
 
 **Minimal example.** Start at 5 under `3n - 1`.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Positive. `3n-1` is reduction-dominant, same profile as
+`3n+k` (k odd, k > 0). Five starting values tested, all with
+`red > exp`. The sign of `k` does not matter. Recorded in
+`t08-3n-minus-1.md`.
 
 ### T09 — Shape-plus-context for deterministic succession
 
