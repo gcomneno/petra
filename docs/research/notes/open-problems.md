@@ -142,5 +142,12 @@ the limit is known, and the fix is local.
 **First step.** Implement the fourth hook, then re-run the four pairs
 from `t01_exponential_struct_destruct.py` and check phase B on each.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Positive on the tested cases. Phase A: `struct` gains a
+keyword `inner: bool = False`. Phase B: with `inner=True`, every
+destruct case is recomposed on the four tested pairs (12^3, 30^2,
+30^3, 6^4) and on six additional shapes (14 tests pass). The limit
+found in T01 is resolved. Recorded in
+`p5-symmetric-struct-destruct.md`.
 

@@ -4,7 +4,9 @@ This module defines two derived operations:
 
 - `struct(A, B)`: the set of shapes obtained by grafting `B` onto
   every attachment point of `A`. An attachment point is a term whose
-  exponent is currently the implicit leaf.
+  exponent is currently the implicit leaf, plus append/prepend at the
+  root, plus (when `inner=True`) append/prepend at every inner
+  container.
 - `destruct(A)`: the set of triples `(piece, rest, kind)` obtained by
   detaching one detachable point of `A`. Two kinds:
 
@@ -47,7 +49,31 @@ def _term_depth(shape: PetraShape) -> int:
     return best
 
 
-def _attachment_points(shape: PetraShape) -> list[tuple[str, tuple[int, ...]]]:
+def _inner_container_addresses(shape: PetraShape) -> list[tuple[int, ...]]:
+    """Return addresses of every container reachable as an exponent.
+
+    A container is "inner" if it is the exponent of a term, at any
+    depth. The root container is not included (its address is `()`).
+    """
+
+    if isinstance(shape, Leaf):
+        return []
+    assert isinstance(shape, Container)
+    addresses: list[tuple[int, ...]] = []
+    for i, term in enumerate(shape.terms):
+        if isinstance(term.exponent, Container):
+            here = (i,)
+            addresses.append(here)
+            for sub in _inner_container_addresses(term.exponent):
+                addresses.append((i, *sub))
+    return addresses
+
+
+def _attachment_points(
+    shape: PetraShape,
+    *,
+    inner: bool = False,
+) -> list[tuple[str, tuple[int, ...]]]:
     """Return the attachment points of `shape` for `struct`.
 
     Each point is a pair `(kind, address)` where:
@@ -55,9 +81,12 @@ def _attachment_points(shape: PetraShape) -> list[tuple[str, tuple[int, ...]]]:
     - `kind = "replace"`: replace the leaf at `address` with a shape.
       Ordered by shallowest-leaf depth ascending, ties left to right.
     - `kind = "append"`: add a new father at the end of `shape`.
-      Address is `()` (no position needed).
+      Address is `()`.
     - `kind = "prepend"`: add a new father at the beginning of `shape`.
-      Address is `()` (no position needed).
+      Address is `()`.
+    - `kind = "inner_append"` / `"inner_prepend"`: add a new father at
+      the end / beginning of an inner container. Address selects the
+      container. Only included when `inner=True`.
 
     Special case: the bare leaf `○` has one attachment point of kind
     `"replace"` at address `()`, representing the mother hook.
@@ -74,10 +103,20 @@ def _attachment_points(shape: PetraShape) -> list[tuple[str, tuple[int, ...]]]:
         for i, term in indexed
         if isinstance(term.exponent, Leaf)
     ]
-    return replace_positions + [("append", ()), ("prepend", ())]
+    root_points = [("append", ()), ("prepend", ())]
+    if not inner:
+        return replace_positions + root_points
+    inner_points: list[tuple[str, tuple[int, ...]]] = []
+    for addr in _inner_container_addresses(shape):
+        inner_points.append(("inner_append", addr))
+        inner_points.append(("inner_prepend", addr))
+    return replace_positions + root_points + inner_points
 
 
-def _explicit_positions(shape: PetraShape, prefix: tuple[int, ...] = ()) -> list[tuple[int, ...]]:
+def _explicit_positions(
+    shape: PetraShape,
+    prefix: tuple[int, ...] = (),
+) -> list[tuple[int, ...]]:
     """Return the addresses of every term whose exponent is not `Leaf`."""
 
     positions: list[tuple[int, ...]] = []
@@ -88,7 +127,6 @@ def _explicit_positions(shape: PetraShape, prefix: tuple[int, ...] = ()) -> list
         here = (*prefix, i)
         if not isinstance(term.exponent, Leaf):
             positions.append(here)
-            # one level only: do NOT recurse into this exponent
     return positions
 
 
@@ -195,12 +233,13 @@ def struct(
     b: PetraShape,
     *,
     max_nodes: int | None = None,
+    inner: bool = False,
 ) -> frozenset[PetraShape]:
     """Return the set of shapes obtained by grafting `b` onto `a`.
 
-    Every implicit-leaf term of `a` is a possible attachment point. For
-    each, the implicit leaf is replaced by `b`. The result is a set,
-    because `a` may have several attachment points.
+    Every implicit-leaf term of `a` is a possible attachment point, plus
+    append/prepend at the root. When `inner=True`, append/prepend at
+    every inner container are also included.
 
     If `max_nodes` is not None, the total node count of all results
     (summed) must not exceed it; otherwise `ValueError` is raised.
@@ -210,20 +249,21 @@ def struct(
     validate_shape(b)
 
     # Special case: grafting the bare leaf ○.
-    # Replace with ○ is the identity (a leaf substituted by a leaf leaves
-    # the shape unchanged), so it contributes {a} once. Append and
-    # prepend still add a new leaf father at tail or head.
     if isinstance(b, Leaf):
         results: set[PetraShape] = {a}
         if not isinstance(a, Leaf):
             assert isinstance(a, Container)
             results.add(_append_father(a, b, at_end=True))
             results.add(_append_father(a, b, at_end=False))
+            if inner:
+                for addr in _inner_container_addresses(a):
+                    results.add(_append_father_at(a, addr, b, at_end=True))
+                    results.add(_append_father_at(a, addr, b, at_end=False))
         _check_max_nodes(results, max_nodes)
         return frozenset(results)
 
     results: set[PetraShape] = set()
-    for kind, pos in _attachment_points(a):
+    for kind, pos in _attachment_points(a, inner=inner):
         candidate = _apply_attachment(a, kind, pos, b)
         validate_shape(candidate)
         results.add(candidate)
@@ -257,6 +297,10 @@ def _apply_attachment(
     - `"append"`: add `b` as a new father at the end of `a`'s root container.
     - `"prepend"`: add `b` as a new father at the beginning of `a`'s
       root container.
+    - `"inner_append"`: add `b` as a new father at the end of the
+      container at `address`.
+    - `"inner_prepend"`: add `b` as a new father at the beginning of
+      the container at `address`.
     """
 
     if kind == "replace":
@@ -265,6 +309,10 @@ def _apply_attachment(
         return _append_father(a, b, at_end=True)
     if kind == "prepend":
         return _append_father(a, b, at_end=False)
+    if kind == "inner_append":
+        return _append_father_at(a, address, b, at_end=True)
+    if kind == "inner_prepend":
+        return _append_father_at(a, address, b, at_end=False)
     raise ValueError(f"unknown attachment kind: {kind}")
 
 
@@ -274,14 +322,9 @@ def _append_father(
     *,
     at_end: bool,
 ) -> PetraShape:
-    """Add `b` as a new father of the root container of `a`, at head or tail.
-
-    The new father is a term with the next rank at the boundary and
-    exponent `b`. Ranks are recomputed from zero in order.
-    """
+    """Add `b` as a new father of the root container of `a`, at head or tail."""
 
     if isinstance(a, Leaf):
-        # adding a father to the bare leaf produces a one-father container
         new_term = Term(root=Root(0), exponent=b)
         return Container(terms=(new_term,))
 
@@ -292,12 +335,42 @@ def _append_father(
         ordered = existing + [new_term]
     else:
         ordered = [new_term] + existing
-    # recompute ranks from zero in order
     rebuilt = tuple(
         Term(root=Root(i), exponent=term.exponent)
         for i, term in enumerate(ordered)
     )
     return Container(terms=rebuilt)
+
+
+def _append_father_at(
+    shape: PetraShape,
+    address: tuple[int, ...],
+    b: PetraShape,
+    *,
+    at_end: bool,
+) -> PetraShape:
+    """Add `b` as a new father of the inner container at `address`.
+
+    `address` must select a container reachable as an exponent of
+    `shape`. The empty address is not allowed here; use
+    `_append_father` for the root.
+    """
+
+    if not address:
+        raise ValueError("address must select an inner container")
+    head, *rest = address
+    assert isinstance(shape, Container)
+    term = shape.terms[head]
+    assert isinstance(term.exponent, Container)
+    if not rest:
+        new_exponent = _append_father(term.exponent, b, at_end=at_end)
+    else:
+        new_exponent = _append_father_at(term.exponent, tuple(rest), b, at_end=at_end)
+    new_terms = tuple(
+        Term(root=t.root, exponent=(new_exponent if i == head else t.exponent))
+        for i, t in enumerate(shape.terms)
+    )
+    return Container(terms=new_terms)
 
 
 def destruct(
