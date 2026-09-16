@@ -190,3 +190,18 @@ fingerprint is order-invariant. The multiset `{e1, ..., er}` is the
 only surviving input. Verified on pairs `(12, 18)` and `(60, 90)`.
 Recorded in `t03-multiset-invariant.md`.
 
+## P8 — Meet/join as clustering tools
+
+**Statement.** Use meet and join to cluster shapes by structural
+similarity, via `overlap = node_count(meet) / node_count(join)`.
+
+**Why now.** The tool exists (`resolver.structural_algebra`), the
+application was never tested.
+
+**Status.** closed.
+
+**Result.** Negative. On `N = 500` (124251 pairs), the overlap takes
+only 17 distinct values, and the top 6 cover 83% of the pairs. It is
+too coarse to discriminate. Recorded in
+`t04-overlap-too-coarse.md`.
+
