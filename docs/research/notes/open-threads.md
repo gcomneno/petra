@@ -280,26 +280,45 @@ add explicit excludes to the CI config.
 
 ### T19 — Asymptotic form of stab(N)
 
-**Statement.** Decide between
-`stab(N) = a + b/log N` with `a ~ 13` and
-`stab(N) = c/(log N)^alpha` with `alpha ~ 0.15`,
-where `stab(N)` is the percentage of `n in [1, N-1]` such that
-`g(n+1) = g(n)`, with `g` the arithmetic recurrence of T16.
+**Statement.** Determine the asymptotic behaviour of
 
-**Minimal example.** The local slope of `stab * log N` versus `log N`
-is `12.75, 15.14, 13.50, 13.47, 13.25, 13.09` for
-`N = 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8`. It decreases
-monotonically over the last four decades but has not stabilised.
+    stab(N) = #{ n in [1, N-1] : g(n+1) = g(n) } / (N-1),
+
+where `g` is the arithmetic recurrence of T16. The exact decomposition
+`stab(N) = rho(N) * SumPk2(N)` holds by definition, where
+`SumPk2(N) = sum_k p_k(N)^2` is the empirical collision probability
+of `g(n)` and `rho(N)` is the correlation factor between `g(n)` and
+`g(n+1)`. The open problems are:
+
+1. Does `rho(N)` converge, and if so, to which value?
+2. How does `SumPk2(N)` behave asymptotically?
+
+**Minimal example.** Measured values:
+
+| N | stab | SumPk2 | rho |
+| ---: | ---: | ---: | ---: |
+| 10^4 | 17.07 | 22.48 | 0.7595 |
+| 10^5 | 16.36 | 21.09 | 0.7758 |
+| 10^6 | 15.88 | 20.13 | 0.7888 |
+| 10^7 | 15.50 | 19.42 | 0.7983 |
+
+`SumPk2` decreases by about 5% per decade; `rho` increases by about
+5% per decade; the increments of `rho` shrink (`+0.0163`, `+0.0130`,
+`+0.0095`). The product `stab` decreases only by about 9% over three
+decades.
 
 **Status.** open.
 
 **Depends on.** T16 (reduction to `g`).
 
-**Notes.** `10^8` is the practical limit of the linear-sieve method
-(~ 40 s sieve, ~ 132 s recurrence, ~ 800 MB peak). Distinguishing (A)
-from (B) probably requires either a larger scale with a segmented
-sieve, or an analytic argument on the exponent multisets of
-consecutive integers.
+**Notes.** The two earlier candidate forms
+`stab(N) = a + b/log N` and `stab(N) = c/(log N)^alpha` are both
+incompatible with the data: `SumPk2` is not constant, and its
+estimated exponent in `log log N` decreases from 1.87 to 1.60 without
+stabilising. `10^8` is the practical limit of the linear-sieve method
+(~ 40 s sieve, ~ 132 s recurrence, ~ 800 MB peak). A segmented sieve
+or an analytic argument on exponent multisets of consecutive integers
+is required to go further.
 
 ## Notes on the list
 

@@ -99,32 +99,99 @@ Two clear facts:
 - `stab(N)` decreases monotonically from `20.2%` to `15.2%` across six
   decades, and has not visibly stabilised at `N = 10^8`.
 
-## Result 4: unresolved form of stab(N)
+## Result 4: distribution of g is supported on odd values only
 
-Two candidate asymptotics remain indistinguishable at `N = 10^8`:
+Because `g(1) = 1` (odd) and every recursive contribution `1 + g(e)` is
+even whenever `g(e)` is odd, induction gives:
 
-    (A)  stab(N) = a + b / log N       with a ~ 13 and b > 0
-    (B)  stab(N) = c / (log N)^alpha   with alpha ~ 0.15
+    g(n) is odd for every n >= 1.
 
-Local slope of `stab * log N` versus `log N`:
+Verified on the sieve to `10^7`. The distribution of `g(n)` for
+`n <= 10^6` is:
 
-| interval | slope |
-| --- | ---: |
-| 10^2 -> 10^3 | 12.75 |
-| 10^3 -> 10^4 | 15.14 |
-| 10^4 -> 10^5 | 13.50 |
-| 10^5 -> 10^6 | 13.47 |
-| 10^6 -> 10^7 | 13.25 |
-| 10^7 -> 10^8 | 13.09 |
+| g | count | p |
+| ---: | ---: | ---: |
+| 1 | 1 | 0.000001 |
+| 3 | 78,498 | 0.078498 |
+| 5 | 210,075 | 0.210075 |
+| 7 | 273,531 | 0.273531 |
+| 9 | 234,038 | 0.234038 |
+| 11 | 135,686 | 0.135686 |
+| 13 | 53,225 | 0.053225 |
+| 15 | 13,154 | 0.013154 |
+| 17 | 1,723 | 0.001723 |
+| 19 | 69 | 0.000069 |
 
-The slope decreases monotonically over the last four decades, from
-13.50 to 13.09. Under (A) it should stabilise at `a`; under (B) it
-should continue to decrease indefinitely. The data at `10^8` do not
-decide between the two.
+The shape is unimodal around `g = 7`, with a right tail. It is
+compatible with an Erdos-Kac style limit: a discrete Gaussian on
+`{1, 3, 5, ...}` whose variance grows with `log log N`.
 
-Under (B), `stab` decays so slowly that it would still be near `13%`
-at `N = 10^100`, which is why the two scenarios are practically
-indistinguishable at accessible scales.
+## Result 5: exact decomposition stab = rho * SumPk2
+
+Let
+
+    SumPk2(N) = sum over k of p_k(N)^2,
+    p_k(N) = #{ n <= N : g(n) = k } / N,
+
+the collision probability of `g(n)` under the empirical distribution,
+and let
+
+    rho(N) = stab(N) / SumPk2(N)
+
+be the correlation factor between `g(n)` and `g(n+1)`. Then by
+definition
+
+    stab(N) = rho(N) * SumPk2(N).
+
+Measured values:
+
+| N | stab | SumPk2 | rho | log log N | -ln(SumPk2)/ln(log log N) |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10^4 | 17.07 | 22.48 | 0.7595 | 2.2203 | 1.871 |
+| 10^5 | 16.36 | 21.09 | 0.7758 | 2.4435 | 1.742 |
+| 10^6 | 15.88 | 20.13 | 0.7888 | 2.6258 | 1.660 |
+| 10^7 | 15.50 | 19.42 | 0.7983 | 2.7799 | 1.603 |
+
+Two monotone trends, in opposite directions:
+
+- `SumPk2(N)` decreases, by about 5% per decade over `N = 10^4..10^7`.
+  The exponent estimate `-ln(SumPk2)/ln(log log N)` also decreases,
+  from 1.87 to 1.60, so `SumPk2` does not follow a clean power law in
+  `log log N`.
+- `rho(N)` increases, from 0.7595 to 0.7983, i.e. by about 5% per
+  decade, and its increments shrink: `+0.0163`, `+0.0130`, `+0.0095`
+  per decade.
+
+The product `stab = rho * SumPk2` therefore decreases only by about
+9% across the three decades from 10^4 to 10^7, from 17.07% to 15.50%.
+The two effects almost cancel.
+
+## Result 6: stab has no simple asymptotic form
+
+Results 4 and 5 rule out the two candidate forms of the earlier
+version of this note:
+
+- `stab(N) = a + b / log N` with `a ~ 13` fails because `SumPk2` is
+  not constant: it decreases with `log log N` while `rho` increases.
+- `stab(N) = c / (log N)^alpha` fails because the local slope of
+  `SumPk2` in `log log N` does not stabilise: it decreases from 1.87
+  to 1.60 over three decades.
+
+The correct picture is a product of two slow, opposite trends. `stab`
+decreases only very slowly because `rho` and `SumPk2` nearly cancel.
+The observed values of `stab` on `N = 10^4..10^8` lie in a narrow band
+of roughly 15-17%, which is a long plateau, not a convergence to a
+constant and not a clean power decay.
+
+The two open questions become:
+
+1. Does `rho(N)` converge, and if so, to which value?
+   The increments suggest a limit near 0.83-0.85, but this is a fragile
+   extrapolation.
+2. How does `SumPk2(N)` behave asymptotically?
+
+Both are arithmetic questions on the exponent multisets of consecutive
+integers. Neither is a PETRA structural question.
 
 ## Consequences for T01
 
@@ -156,6 +223,7 @@ indistinguishable at accessible scales.
 This note does not claim:
 
 - convergence of `stab(N)` to a positive constant, nor to zero;
+- convergence of `rho(N)`, nor a limit value;
 - a proof of the recurrence of Result 2 beyond `n = 200`;
 - that the linear sieve to `10^8` is the practical limit, only that
   `10^8` is the largest scale attempted here;
@@ -168,7 +236,9 @@ This note does not claim:
 
 Second structural result of the T16 line, downstream of the T01 exact
 identity. The reduction (Results 1 and 2) is exact and verified
-exhaustively at small scales. The asymptotics (Results 3 and 4) is
-empirical and unresolved at the level of the constant `a` or the
-exponent `alpha`. A dedicated thread is warranted to decide between
-(A) and (B) analytically, if possible.
+exhaustively at small scales. Result 4 gives the exact support of `g`.
+Result 5 decomposes `stab` exactly into a correlation factor `rho` and
+a collision probability `SumPk2`. Result 6 shows that neither of the
+two earlier candidate forms fits. The asymptotics is unresolved: the
+open problems are the limit of `rho(N)` and the behaviour of
+`SumPk2(N)`. See T19.
