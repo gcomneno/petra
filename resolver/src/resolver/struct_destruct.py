@@ -5,8 +5,17 @@ This module defines two derived operations:
 - `struct(A, B)`: the set of shapes obtained by grafting `B` onto
   every attachment point of `A`. An attachment point is a term whose
   exponent is currently the implicit leaf.
-- `destruct(A)`: the set of pairs `(B, C)` obtained by detaching one
-  explicit exponent of `A`. One level only; recursion is not applied.
+- `destruct(A)`: the set of triples `(piece, rest, kind)` obtained by
+  detaching one detachable point of `A`. Two kinds:
+
+  - `"exponent"`: a term whose exponent is not `Leaf`. `piece` is the
+    explicit exponent; `rest` is `A` with that exponent reduced to
+    `Leaf`.
+  - `"father"`: a term inside a container with at least 2 terms.
+    `piece` is the exponent of that term (possibly `Leaf`); `rest` is
+    `A` without that term, with ranks recomputed.
+
+  One level only; recursion is not applied.
 
 The leaf is implicit and is never detached: it is the neutral
 placeholder. Composition makes it explicit; decomposition makes it
@@ -83,6 +92,29 @@ def _explicit_positions(shape: PetraShape, prefix: tuple[int, ...] = ()) -> list
     return positions
 
 
+def _all_container_addresses(
+    shape: PetraShape,
+    prefix: tuple[int, ...] = (),
+) -> list[tuple[int, ...]]:
+    """Return the addresses of every container with at least 2 terms.
+
+    Used by `destruct` to locate the containers from which a father can
+    be detached. The address is the empty tuple for the root container.
+    """
+
+    if isinstance(shape, Leaf):
+        return []
+    assert isinstance(shape, Container)
+    addresses: list[tuple[int, ...]] = []
+    if len(shape.terms) >= 2:
+        addresses.append(prefix)
+    for i, term in enumerate(shape.terms):
+        addresses.extend(
+            _all_container_addresses(term.exponent, (*prefix, i))
+        )
+    return addresses
+
+
 def _replace_at(
     shape: PetraShape,
     address: tuple[int, ...],
@@ -123,6 +155,39 @@ def _extract_at(shape: PetraShape, address: tuple[int, ...]) -> PetraShape:
     if not rest:
         return term.exponent
     return _extract_at(term.exponent, tuple(rest))
+
+
+def _remove_father_at(
+    shape: PetraShape,
+    address: tuple[int, ...],
+) -> PetraShape:
+    """Return a copy of `shape` without the father at `address`.
+
+    The ranks of the remaining terms are recomputed from zero in order.
+    The address must select a term of a container with at least 2 terms,
+    otherwise a `ValueError` is raised.
+    """
+
+    if not address:
+        raise ValueError("address must select a term")
+    head, *rest = address
+    assert isinstance(shape, Container)
+    term = shape.terms[head]
+    if not rest:
+        remaining = [t for i, t in enumerate(shape.terms) if i != head]
+        if not remaining:
+            raise ValueError("cannot remove the only father")
+        rebuilt = tuple(
+            Term(root=Root(i), exponent=t.exponent)
+            for i, t in enumerate(remaining)
+        )
+        return Container(terms=rebuilt)
+    new_exponent = _remove_father_at(term.exponent, tuple(rest))
+    new_terms = tuple(
+        Term(root=t.root, exponent=(new_exponent if i == head else t.exponent))
+        for i, t in enumerate(shape.terms)
+    )
+    return Container(terms=new_terms)
 
 
 def struct(
@@ -235,20 +300,47 @@ def _append_father(
     return Container(terms=rebuilt)
 
 
-def destruct(a: PetraShape) -> frozenset[tuple[PetraShape, PetraShape]]:
-    """Return the set of pairs `(b, c)` from `a`.
+def destruct(
+    a: PetraShape,
+) -> frozenset[tuple[PetraShape, PetraShape, str]]:
+    """Return the set of triples `(piece, rest, kind)` from `a`.
 
-    One level only. `b` is `a` with the exponent reduced to a leaf; `c`
-    is the detached exponent. A shape with no explicit exponents gives
-    the empty set.
+    One level only. Two kinds of detachable points:
+
+    - `"exponent"`: a term whose exponent is not `Leaf`. `piece` is the
+      explicit exponent; `rest` is `a` with that exponent reduced to
+      `Leaf`.
+    - `"father"`: a term inside a container with at least 2 terms.
+      `piece` is the exponent of that term (possibly `Leaf`); `rest` is
+      `a` without that term, with ranks recomputed.
+
+    A shape with no detachable point gives the empty set.
     """
 
     validate_shape(a)
 
-    pairs: set[tuple[PetraShape, PetraShape]] = set()
+    results: set[tuple[PetraShape, PetraShape, str]] = set()
+
     for pos in _explicit_positions(a):
         detached = _extract_at(a, pos)
         reduced = _replace_at(a, pos, Leaf())
         validate_shape(reduced)
-        pairs.add((reduced, detached))
-    return frozenset(pairs)
+        results.add((detached, reduced, "exponent"))
+
+    for container_addr in _all_container_addresses(a):
+        if container_addr == ():
+            container = a
+        else:
+            container = _extract_at(a, container_addr)
+        assert isinstance(container, Container)
+        for i in range(len(container.terms)):
+            full_addr = (*container_addr, i)
+            piece = _extract_at(a, full_addr)
+            try:
+                rest = _remove_father_at(a, full_addr)
+            except ValueError:
+                continue
+            validate_shape(rest)
+            results.add((piece, rest, "father"))
+
+    return frozenset(results)
