@@ -136,9 +136,17 @@ def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
     validate_shape(a)
     validate_shape(b)
 
-    # Neutral right: grafting the leaf onto any shape is the identity.
+    # Special case: grafting the bare leaf ○.
+    # Replace with ○ is the identity (a leaf substituted by a leaf leaves
+    # the shape unchanged), so it contributes {a} once. Append and
+    # prepend still add a new leaf father at tail or head.
     if isinstance(b, Leaf):
-        return frozenset({a})
+        results: set[PetraShape] = {a}
+        if not isinstance(a, Leaf):
+            assert isinstance(a, Container)
+            results.add(_append_father(a, b, at_end=True))
+            results.add(_append_father(a, b, at_end=False))
+        return frozenset(results)
 
     results: set[PetraShape] = set()
     for kind, pos in _attachment_points(a):

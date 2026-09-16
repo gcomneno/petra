@@ -31,7 +31,7 @@ from resolver.struct_destruct import struct
 def build_pieces(target_nodes: int, cap: int) -> list[PetraShape]:
     """Elementary pieces with node_count < target_nodes and <= cap."""
 
-    pieces: list[PetraShape] = []
+    pieces: list[PetraShape] = [Leaf()]
     for n in range(2, 200):
         s = int_to_shape(n)
         nc = node_count(s)
