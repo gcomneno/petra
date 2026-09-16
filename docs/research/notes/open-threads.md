@@ -109,10 +109,15 @@ PETRA, not an extension of PETRA.
 structural elision returns Leaf. Ambiguity arises when terms are
 indistinguishable without a key.
 
-**Minimal example.** `C(r0^1, r1^1)` could be `2*3` or `3*2`; eliding
-one leaf is ambiguous without the key.
+**Status.** closed (out of scope).
 
-**Status.** open. Related to T05.
+**Notes.** Same scope argument as T05. SHED (canonical width
+removal) already elides a leaf father. The reduced shape is unique.
+What is not determined is which leaf was removed when several are
+indistinguishable, and that requires a key. A key reintroduces
+arithmetic in the object model. PETRA does not carry persistent
+identities between terms; two leaves are the same thing. Tracking
+which one was elided is history, not structure.
 
 ### T07 — Finer structural metrics
 

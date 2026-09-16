@@ -223,3 +223,20 @@ work only when the arithmetic operation has a structural counterpart.
 An arithmetic layer is a possible external application of PETRA, not
 an extension of it.
 
+## P10 — Structural elision as p/p = 1
+
+**Statement.** Given two indistinguishable leaf fathers in a
+container, eliding one returns a unique reduced shape. Tracking
+*which* one was elided requires a key.
+
+**Why now.** Thread T06 proposed this, as a companion to T05.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Same scope argument as P9. SHED already
+elides a leaf father, and the reduced shape is unique. The ambiguity
+is only in tracking the removed leaf, which requires a key and
+reintroduces arithmetic. PETRA does not carry persistent identities
+between terms; two leaves are the same thing. History is not
+structure.
+
