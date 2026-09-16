@@ -162,7 +162,10 @@ whether this "shape-plus-context" state recovers a ranking function.
 **Minimal example.** `6` and `15` share a shape; `6 mod 4 = 2`,
 `15 mod 4 = 3`. The two residues have different Collatz successors.
 
-**Status.** open.
+**Status.** closed (covered by P3).
+
+**Result.** Negative. No bounded `k` is universal. See
+`shape-context-not-bounded.md`.
 
 ### T10 — Fingerprint catalogue
 
