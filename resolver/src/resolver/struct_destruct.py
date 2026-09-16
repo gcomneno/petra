@@ -38,23 +38,34 @@ def _term_depth(shape: PetraShape) -> int:
     return best
 
 
-def _leaf_positions(shape: PetraShape) -> list[tuple[int, ...]]:
-    """Return the addresses of the implicit-leaf terms of `shape`.
+def _attachment_points(shape: PetraShape) -> list[tuple[str, tuple[int, ...]]]:
+    """Return the attachment points of `shape` for `struct`.
 
-    Order: shallowest first (depth of the exponent's shallowest leaf,
-    ascending). Ties keep the natural left-to-right order.
+    Each point is a pair `(kind, address)` where:
 
-    Only the root container is considered at this level. Special case:
-    the bare leaf `○` is itself an attachment point, at address `()`.
+    - `kind = "replace"`: replace the leaf at `address` with a shape.
+      Ordered by shallowest-leaf depth ascending, ties left to right.
+    - `kind = "append"`: add a new father at the end of `shape`.
+      Address is `()` (no position needed).
+    - `kind = "prepend"`: add a new father at the beginning of `shape`.
+      Address is `()` (no position needed).
+
+    Special case: the bare leaf `○` has one attachment point of kind
+    `"replace"` at address `()`, representing the mother hook.
     """
 
     if isinstance(shape, Leaf):
-        return [()]
+        return [("replace", ())]
 
     assert isinstance(shape, Container)
     indexed = list(enumerate(shape.terms))
     indexed.sort(key=lambda pair: _term_depth(pair[1].exponent))
-    return [(i,) for i, term in indexed if isinstance(term.exponent, Leaf)]
+    replace_positions = [
+        ("replace", (i,))
+        for i, term in indexed
+        if isinstance(term.exponent, Leaf)
+    ]
+    return replace_positions + [("append", ()), ("prepend", ())]
 
 
 def _explicit_positions(shape: PetraShape, prefix: tuple[int, ...] = ()) -> list[tuple[int, ...]]:
@@ -130,11 +141,66 @@ def struct(a: PetraShape, b: PetraShape) -> frozenset[PetraShape]:
         return frozenset({a})
 
     results: set[PetraShape] = set()
-    for pos in _leaf_positions(a):
-        candidate = _replace_at(a, pos, b)
+    for kind, pos in _attachment_points(a):
+        candidate = _apply_attachment(a, kind, pos, b)
         validate_shape(candidate)
         results.add(candidate)
     return frozenset(results)
+
+
+def _apply_attachment(
+    a: PetraShape,
+    kind: str,
+    address: tuple[int, ...],
+    b: PetraShape,
+) -> PetraShape:
+    """Apply one attachment of `b` onto `a`.
+
+    - `"replace"`: replace the leaf at `address` with `b`.
+    - `"append"`: add `b` as a new father at the end of `a`'s root container.
+    - `"prepend"`: add `b` as a new father at the beginning of `a`'s
+      root container.
+    """
+
+    if kind == "replace":
+        return _replace_at(a, address, b)
+    if kind == "append":
+        return _append_father(a, b, at_end=True)
+    if kind == "prepend":
+        return _append_father(a, b, at_end=False)
+    raise ValueError(f"unknown attachment kind: {kind}")
+
+
+def _append_father(
+    a: PetraShape,
+    b: PetraShape,
+    *,
+    at_end: bool,
+) -> PetraShape:
+    """Add `b` as a new father of the root container of `a`, at head or tail.
+
+    The new father is a term with the next rank at the boundary and
+    exponent `b`. Ranks are recomputed from zero in order.
+    """
+
+    if isinstance(a, Leaf):
+        # adding a father to the bare leaf produces a one-father container
+        new_term = Term(root=Root(0), exponent=b)
+        return Container(terms=(new_term,))
+
+    assert isinstance(a, Container)
+    existing = list(a.terms)
+    new_term = Term(root=Root(0), exponent=b)
+    if at_end:
+        ordered = existing + [new_term]
+    else:
+        ordered = [new_term] + existing
+    # recompute ranks from zero in order
+    rebuilt = tuple(
+        Term(root=Root(i), exponent=term.exponent)
+        for i, term in enumerate(ordered)
+    )
+    return Container(terms=rebuilt)
 
 
 def destruct(a: PetraShape) -> frozenset[tuple[PetraShape, PetraShape]]:
