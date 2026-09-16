@@ -28,8 +28,15 @@ from resolver.notation import to_mother_notation
 from resolver.struct_destruct import struct
 
 
-def build_pieces(target_nodes: int, cap: int) -> list[PetraShape]:
-    """Elementary pieces with node_count < target_nodes and <= cap."""
+def build_pieces(mode: str, target_nodes: int, cap: int) -> list[PetraShape]:
+    """Elementary pieces.
+
+    - mode = "all": all shapes with node_count < target_nodes and <= cap
+    - mode = "minimal": only ○ and ○^(A) (the two atomic pieces)
+    """
+
+    if mode == "minimal":
+        return [Leaf(), int_to_shape(2)]
 
     pieces: list[PetraShape] = [Leaf()]
     for n in range(2, 200):
@@ -132,6 +139,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="max node_count for elementary pieces (default: target nodes - 1)",
     )
+    parser.add_argument(
+        "--pieces",
+        choices=("all", "minimal"),
+        default="all",
+        help="piece set: 'all' (default) or 'minimal' (○ and ○^(A) only)",
+    )
     args = parser.parse_args(argv)
 
     target = int_to_shape(args.target_n)
@@ -139,9 +152,9 @@ def main(argv: list[str] | None = None) -> int:
     max_nodes = args.max_nodes if args.max_nodes is not None else target_nodes + 5
     piece_cap = args.piece_cap if args.piece_cap is not None else target_nodes - 1
 
-    pieces = build_pieces(target_nodes, piece_cap)
+    pieces = build_pieces(args.pieces, target_nodes, piece_cap)
     print(f"target: {to_mother_notation(target)}  (node_count={target_nodes})")
-    print(f"pieces: {len(pieces)} elementary shapes with node_count <= {piece_cap}")
+    print(f"pieces: mode={args.pieces}, {len(pieces)} elementary shapes")
     print(f"max nodes: {max_nodes}   max depth: {args.max_depth}")
     print()
 
