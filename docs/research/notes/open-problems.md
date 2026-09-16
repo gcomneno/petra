@@ -173,3 +173,20 @@ and `N = 60`, the map `F_T` exists on the sample. The fingerprint
 classes appear to follow `shape(base)`. Recorded in
 `t02-functoriality-partial.md`. General question open.
 
+## P7 — Multiset-of-exponents invariant
+
+**Statement.** Does `fingerprint(k^n)` depend only on the multiset of
+exponents in `k`, not on the numeric values of the primes nor on their
+order?
+
+**Why now.** The exact identity in
+`exponential-base-structural-class.md` already answers this.
+
+**Status.** closed.
+
+**Result.** Positive. The identity removes the prime values from the
+shape. `node_count` is symmetric under reordering of terms, so the
+fingerprint is order-invariant. The multiset `{e1, ..., er}` is the
+only surviving input. Verified on pairs `(12, 18)` and `(60, 90)`.
+Recorded in `t03-multiset-invariant.md`.
+
