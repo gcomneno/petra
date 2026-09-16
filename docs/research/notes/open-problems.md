@@ -312,3 +312,38 @@ sampled every k-th term.
 **Result.** Not pursued. Depends on a fingerprint for arbitrary
 sequences, which does not exist.
 
+## P16 — Distribution of overlap in a range
+
+**Statement.** Compute the distribution of `overlap(a, b)` across all
+pairs in a range.
+
+**Why now.** Thread T13 proposed this.
+
+**Status.** closed (covered by P8).
+
+**Result.** Negative. Same as P8: 17 distinct values on `N = 500`,
+top 6 covering 83% of pairs.
+
+## P17 — Fingerprint of a Collatz trajectory
+
+**Statement.** Treat a Collatz trajectory as a sequence and compute
+its fingerprint.
+
+**Why now.** Thread T14 proposed this.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Depends on a fingerprint for arbitrary
+sequences, which does not exist.
+
+## P18 — Structural signature of prime gaps
+
+**Statement.** Compute the structural fingerprint of the prime gaps.
+
+**Why now.** Thread T15 proposed this.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Same limitation as T10, T11, T12, T14: no
+fingerprint for arbitrary sequences exists.
+

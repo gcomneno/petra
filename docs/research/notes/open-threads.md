@@ -217,33 +217,34 @@ arbitrary sequence cannot be measured.
 ### T13 — Distribution of overlap in a range
 
 **Statement.** Compute the distribution of `overlap(a, b)` across all
-pairs in `[2, 1000]`. Compare with the distance distribution from the
-existing distance atlas.
+pairs in a range.
 
-**Minimal example.** The distance atlas says mean distance is ~3.6.
-What is the mean overlap?
+**Status.** closed (covered by P8).
 
-**Status.** open.
+**Result.** Negative. On `N = 500` (124251 pairs), the overlap takes
+only 17 distinct values, and the top 6 cover 83% of the pairs. It is
+too coarse to discriminate. See `t04-overlap-too-coarse.md`.
 
 ### T14 — Fingerprint of Collatz trajectory itself
 
 **Statement.** Treat the Collatz trajectory from a given start as a
-sequence of values (not as a dynamical system). Compute its fingerprint.
-Compare across starting values.
+sequence of values and compute its fingerprint.
 
-**Minimal example.** Compare the fingerprint of the Collatz trajectory
-from 27 with that from 97.
+**Status.** closed (out of scope).
 
-**Status.** open.
+**Notes.** Same limitation as T10, T11, T12: `fingerprint.py` handles
+only `base^n`. A fingerprint for an arbitrary sequence (like a Collatz
+trajectory) does not exist.
 
 ### T15 — Structural signature of prime gaps
 
-**Statement.** Take the sequence of prime gaps `p_{n+1} - p_n`.
-Compute its structural fingerprint. Does it have a distinctive profile?
+**Statement.** Take the sequence of prime gaps and compute its
+structural fingerprint.
 
-**Minimal example.** First gaps: 1, 2, 2, 4, 2, 4, 2, 4, 6, 2, 6, ...
+**Status.** closed (out of scope).
 
-**Status.** open.
+**Notes.** Same limitation as T10, T11, T12, T14: no fingerprint for
+arbitrary sequences exists. `fingerprint.py` handles only `base^n`.
 
 ### T16 — Convergence of the cumulative fingerprint
 
