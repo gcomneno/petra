@@ -129,7 +129,14 @@ fingerprint classification changes.
 depths might produce different fingerprints under a depth-weighted
 metric.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Positive. Replacing `node_count` with `depth` or
+`depth_mass` in the fingerprint changes the classification: base 12
+separates from the other tested bases. `deep_branches` is too coarse.
+Recorded in `t07-finer-metrics-change-classification.md`. The
+earlier note `recursive-metric-no-clusters.md` addressed a different
+question (a distance, not a fingerprint).
 
 ### T08 — Collatz on `3n - 1`
 

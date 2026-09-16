@@ -240,3 +240,20 @@ reintroduces arithmetic. PETRA does not carry persistent identities
 between terms; two leaves are the same thing. History is not
 structure.
 
+## P11 — Finer structural metrics in the fingerprint
+
+**Statement.** Replace `node_count` with a finer measure (depth,
+depth_mass, deep_branches) in the fingerprint and test whether the
+classification of bases changes.
+
+**Why now.** Thread T07 proposed this. The fingerprint layer already
+exists; only the metric needs to be swapped.
+
+**Status.** closed.
+
+**Result.** Positive. With `depth` and `depth_mass`, base 12
+separates from the other eight tested bases at `N = 60`. With
+`node_count`, all nine share one class. With `deep_branches`, all
+nine collapse to a single class. The metric choice is not neutral.
+Recorded in `t07-finer-metrics-change-classification.md`.
+
