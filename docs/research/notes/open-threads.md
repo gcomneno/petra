@@ -36,6 +36,11 @@ representative for both.
 "fingerprint is a class invariant"). Classification is not settled:
 the cumulative fingerprint may or may not converge.
 
+Third result recorded in `recursive-reconstruction-t01.md`: any
+canonical shape can be built from the mother in a single chain of
+struct applications using only two elementary pieces, in height-first
+order.
+
 **Forward.** Continued in T16 (convergence of the cumulative fingerprint).
 
 **Prerequisite for.** T02 (functor).

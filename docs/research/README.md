@@ -57,6 +57,12 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
   distinct levels. The signature of a transition is the pair
   `(shape(n), shape(n+1))`, not the strada, not the value.
 
+- [`notes/recursive-reconstruction-t01.md`](notes/recursive-reconstruction-t01.md)
+  — T01 third result. Every canonical shape can be built from the
+  mother in a single chain of struct applications, using only two
+  elementary pieces, in a height-first order. The chain is one strada,
+  not a canonical invariant.
+
 ### Code
 
 The current research line has produced a derived layer in the Resolver:
