@@ -69,9 +69,12 @@ points. The distinction is not Collatz vs everything else, it is
 `collatz-like-reduction-dominance.md`. The original note has been
 corrected.
 
-**Open.** Why does the factor 3 produce reduction dominance and the
-factor 2 in `2n+1` does not? A structural argument on the exponent
-multiset is needed.
+**Closed.** The counterexample is the result. The follow-up question
+("why does the factor 3 reduce and the factor 2 not?") is out of
+scope for PETRA: it is an arithmetic question about values, not a
+structural question about shapes. PETRA observes maps through shape
+conversion; it does not define them. The question is not pursued
+here.
 
 ## P3 — Minimal context for deterministic succession
 
