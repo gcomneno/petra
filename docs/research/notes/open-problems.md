@@ -151,3 +151,25 @@ destruct case is recomposed on the four tested pairs (12^3, 30^2,
 found in T01 is resolved. Recorded in
 `p5-symmetric-struct-destruct.md`.
 
+## P6 — Functoriality of the fingerprint
+
+**Statement.** For which transformations `T` on sequences does there
+exist a map `F_T` such that
+`fingerprint(T(f)) = F_T(fingerprint(f))`?
+
+**Why now.** `fingerprint.py` exposes the fingerprint as a measurement.
+The classes it produces on `base^n` seem to follow the shape of the
+base, not the value. Whether `T` composes cleanly on top of that is
+untested.
+
+**First step.** For each candidate `T` (shift, double, scaling,
+reversal), check on a bounded sample whether bases in the same
+fingerprint class stay in the same transformed class.
+
+**Status.** in progress.
+
+**Partial result.** For `shift` and `double`, on bases `b in [2, 40]`
+and `N = 60`, the map `F_T` exists on the sample. The fingerprint
+classes appear to follow `shape(base)`. Recorded in
+`t02-functoriality-partial.md`. General question open.
+
