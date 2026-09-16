@@ -21,32 +21,33 @@ Statuses:
 
 ## Threads
 
-### T01 — Canonicalizer for exponential sequences
+### T01 — Composition and decomposition of shape(k^n)
 
-**Statement.** Extract `(inner_sequence, structural_class(base))` from a
-sequence `k^n` and operate on the pair instead of the full sequence.
+**Statement.** The exact identity `shape(k^n) = C(r0^shape(e1*n), ...)`
+is proven. Use `struct` and `destruct` to explore the exponential case
+`k^n` through composition and decomposition.
 
-**Minimal example.** `12^n` and `20^n` share the same shape
-`C(r0^C(r0^1), r1^1)`. The canonicalizer should produce the same
-representative for both.
+**Minimal example.** Decompose `shape(k^n)` for small `k` and `n`, and
+see what pieces appear.
 
-**Status.** in progress.
+**Status.** closed.
 
-**Notes.** First result recorded in
-`exponential-base-structural-class.md`: exact identity
-`shape(k^n) = C(r0^shape(e₁n), …)`, a duplication lemma
-(`{a,a} ≡ {a}`), and two falsified conjectures ("1 wins",
-"fingerprint is a class invariant"). Classification is not settled:
-the cumulative fingerprint may or may not converge.
+**Notes.** Earlier results of the T01 line are recorded elsewhere and
+are not part of this thread:
 
-Third result recorded in `recursive-reconstruction-t01.md`: any
-canonical shape can be built from the mother in a single chain of
-struct applications using only two elementary pieces, in height-first
-order.
+- exact identity and duplication lemma: `exponential-base-structural-class.md`;
+- recursive reconstruction: `recursive-reconstruction-t01.md`;
+- cumulative fingerprint convergence: moved to T16;
+- asymmetry of `structural_distance`: closed as T17 (test flakiness).
 
-**Forward.** Continued in T16 (convergence of the cumulative fingerprint).
+The exponential case is explored in
+`t01-struct-destruct-exponential.md`: struct/destruct work on
+`shape(k^n)` with one limit (fathers of inner containers are not
+recomposed by `struct`), and the duplication lemma is verified.
+The canonicity of the reconstruction chain is left open in the
+`recursive-reconstruction-t01.md` note; not tracked as a thread.
 
-**Prerequisite for.** T02 (functor).
+**Forward.** Prerequisite for T02 (functor).
 
 ### T02 — Functoriality of the fingerprint
 
