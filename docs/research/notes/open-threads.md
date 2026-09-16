@@ -215,12 +215,25 @@ The value moves by ~3 points between `N = 60` and `N = 500`, then by
 less than 0.5 points between `N = 500` and `N = 2000`. Slow
 convergence, slow drift, or neither — undecided.
 
-**Status.** open.
+**Status.** in progress.
 
 **Depends on.** T01 (decomposition and fingerprint layer).
 
 **Prerequisite for.** A stable notion of "structural class" that does
 not depend on a chosen window.
+
+**Second result** (`t16-fingerprint-asymptotics.md`): the transition
+signal of `k^n` reduces exactly to the arithmetic function
+`g(n) = node_count(shape(n))`, which satisfies
+`g(1) = 1`, `g(n) = 1 + sum over e in Exp(n) of (1 + g(e))`.
+For `k = 2`, `transition(shape(2^n), shape(2^(n+1))) = sign(g(n+1) - g(n))`,
+verified 79/79 on `n = 2..80`; the recurrence is verified 200/200 on
+`n = 1..200`. The cumulative fingerprint of `g` at `N = 10^8` is
+`(42.40, 42.40, 15.20)` with `red - exp -> 0` and `stab(N)` decreasing
+monotonically. The asymptotic form of `stab(N)` is undecided between
+`a + b/log N` with `a ~ 13` and `c/(log N)^alpha` with `alpha ~ 0.15`;
+the local slope of `stab * log N` decreases monotonically from 13.50 to
+13.09 over the last four decades and has not stabilised. See T19.
 
 **Notes.** The fingerprint layer is implemented in
 `resolver/src/resolver/fingerprint.py`. The motivation and the
@@ -264,6 +277,29 @@ surfaces ~50 ruff errors and ~16 mypy errors. Representative cases:
 **Notes.** CI currently installs `resolver` (so its tests run) but
 does not lint or type-check it. To close T18, either fix the issues or
 add explicit excludes to the CI config.
+
+### T19 — Asymptotic form of stab(N)
+
+**Statement.** Decide between
+`stab(N) = a + b/log N` with `a ~ 13` and
+`stab(N) = c/(log N)^alpha` with `alpha ~ 0.15`,
+where `stab(N)` is the percentage of `n in [1, N-1]` such that
+`g(n+1) = g(n)`, with `g` the arithmetic recurrence of T16.
+
+**Minimal example.** The local slope of `stab * log N` versus `log N`
+is `12.75, 15.14, 13.50, 13.47, 13.25, 13.09` for
+`N = 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8`. It decreases
+monotonically over the last four decades but has not stabilised.
+
+**Status.** open.
+
+**Depends on.** T16 (reduction to `g`).
+
+**Notes.** `10^8` is the practical limit of the linear-sieve method
+(~ 40 s sieve, ~ 132 s recurrence, ~ 800 MB peak). Distinguishing (A)
+from (B) probably requires either a larger scale with a segmented
+sieve, or an analytic argument on the exponent multisets of
+consecutive integers.
 
 ## Notes on the list
 
