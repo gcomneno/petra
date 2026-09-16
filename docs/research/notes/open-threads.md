@@ -320,7 +320,13 @@ surfaces ~50 ruff errors and ~16 mypy errors. Representative cases:
 - mypy: `petra` lacks a `py.typed` marker, `struct_destruct.py:160`
   redefines `results`.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Fixed. 50 ruff errors and 18 mypy errors resolved.
+`src/petra/py.typed` added; caches in `search.py` corrected to
+`dict[PetraShape, int]`; `struct_destruct.py` annotations fixed;
+`atlas.py` `shapes` type corrected. Ruff and mypy clean on resolver,
+718 tests pass. Recorded in `t18-ruff-mypy-clean.md`.
 
 **Notes.** CI currently installs `resolver` (so its tests run) but
 does not lint or type-check it. To close T18, either fix the issues or

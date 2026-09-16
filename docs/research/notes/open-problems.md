@@ -388,3 +388,19 @@ the full suite. Root cause identified.
 case give the correct path length only; full suite passes 718/718 for
 10 consecutive runs. Recorded in `t17-cache-id-bug.md`.
 
+## P21 — Ruff and mypy clean on resolver
+
+**Statement.** Fix the ~50 ruff and ~16 mypy errors that appear when
+`resolver/` is added to the CI's lint and type checks.
+
+**Why now.** Thread T18 proposed this.
+
+**Status.** closed.
+
+**Result.** Fixed. Ruff: 28 auto-fixed, 16 false positives on the
+`×` separator added to ignore list, 10 real issues fixed. Mypy: 10
+errors solved by adding `src/petra/py.typed`, 8 real issues fixed
+(caches typed as `dict[PetraShape, int]`, annotations, shadowing,
+`atlas.py` type). Ruff and mypy clean on resolver, 718 tests pass.
+Recorded in `t18-ruff-mypy-clean.md`.
+
