@@ -1,5 +1,8 @@
 # Open research threads
 
+**Front.** The active front is now `open-problems.md`. This file is kept as historical archive.
+
+
 Status: living document
 Scope: index of active and dormant research directions
 Update rule: append new threads, update status, never delete
