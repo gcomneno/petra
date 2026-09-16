@@ -71,7 +71,10 @@ n+1, n+2, n+3 show approximately balanced profiles. The explosive map
 2n+1 is expansion-dominant.
 
 Collatz is the only map in this set with a clear reduction-dominant
-profile.
+profile. The set was `phi`, `n+1`, `n+2`, `n+3`, `2n+1`; later work
+(`collatz-like-reduction-dominance.md`) shows that all `3n+k` (k odd)
+are also reduction-dominant. The distinction is `3n+k` vs linear maps,
+not Collatz vs everything else.
 
 ## Observation 3 — The profile is stable across scales
 

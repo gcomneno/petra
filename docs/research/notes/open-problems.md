@@ -59,7 +59,19 @@ observation is solid. The explanation is missing.
 Collatz-like maps (3n+k, k odd), and check whether reduction dominance
 correlates with any known property of the map.
 
-**Status.** open.
+**Status.** in progress.
+
+**First result.** The original claim ("Collatz is the only
+reduction-dominant map in the tested set") is refuted. Every tested
+`3n+k` (k odd) is reduction-dominant, with margins between +14 and +25
+points. The distinction is not Collatz vs everything else, it is
+`3n+k` vs linear maps. Recorded in
+`collatz-like-reduction-dominance.md`. The original note has been
+corrected.
+
+**Open.** Why does the factor 3 produce reduction dominance and the
+factor 2 in `2n+1` does not? A structural argument on the exponent
+multiset is needed.
 
 ## P3 — Minimal context for deterministic succession
 
