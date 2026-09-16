@@ -10,6 +10,9 @@ from .addresses import (
     render_address,
     resolve_address,
 )
+from .metrics import (
+    node_count,
+)
 from .model import (
     CanonicalData,
     Container,
@@ -20,9 +23,6 @@ from .model import (
     normalize_shape,
     to_canonical_data,
     validate_shape,
-)
-from .metrics import (
-    node_count,
 )
 from .operators import (
     apply_graft,
