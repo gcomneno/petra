@@ -363,10 +363,19 @@ decades.
 `stab(N) = a + b/log N` and `stab(N) = c/(log N)^alpha` are both
 incompatible with the data: `SumPk2` is not constant, and its
 estimated exponent in `log log N` decreases from 1.87 to 1.60 without
-stabilising. `10^8` is the practical limit of the linear-sieve method
-(~ 40 s sieve, ~ 132 s recurrence, ~ 800 MB peak). A segmented sieve
-or an analytic argument on exponent multisets of consecutive integers
-is required to go further.
+stabilising.
+
+A fifth data point at `N = 10^8` was computed with
+`tools/research/t16_asymptotics.py`. It excludes the hypothesis
+`SumPk2 ~ c / sqrt(log log N)`: the quantity `SumPk2 * sqrt(log log N)`
+continues to decline (33.49, 32.96, 32.62, 32.38, 32.19 over five
+decades), giving a five-point fit `alpha ~ 0.51`. `rho` continues to
+increase slowly (0.7595, 0.7758, 0.7888, 0.7983, 0.806). `stab`
+continues to decrease (17.07, 16.36, 15.88, 15.50, 15.20). Two open
+points remain. Recorded in `t19-stab-fifth-point.md`.
+
+A segmented sieve or an analytic argument on exponent multisets of
+consecutive integers is required to go beyond `10^8`.
 
 ## Notes on the list
 

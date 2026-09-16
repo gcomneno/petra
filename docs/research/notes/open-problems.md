@@ -347,3 +347,28 @@ sequences, which does not exist.
 **Result.** Not pursued. Same limitation as T10, T11, T12, T14: no
 fingerprint for arbitrary sequences exists.
 
+## P19 — Asymptotic form of stab(N)
+
+**Statement.** Determine the asymptotic behaviour of
+`stab(N) = #{ n in [1, N-1] : g(n+1) = g(n) } / (N-1)`.
+
+Two open points:
+
+1. Does `rho(N)` converge, and to which value?
+2. How does `SumPk2(N)` behave asymptotically?
+
+**Why now.** Thread T19, downstream of T16. The reduction to the
+arithmetic function `g` is exact; only the asymptotics is missing.
+
+**Status.** in progress.
+
+**Result.** Fifth data point at `N = 10^8` excludes the hypothesis
+`SumPk2 ~ c / sqrt(log log N)`: the product `SumPk2 * sqrt(log log N)`
+continues to decline (33.49, 32.96, 32.62, 32.38, 32.19). A five-point
+fit gives `alpha ~ 0.51`. `rho` continues to increase slowly
+(0.7595 to 0.806). `stab` continues to decrease (17.07 to 15.20).
+Recorded in `t19-stab-fifth-point.md`.
+
+Going beyond `10^8` requires a segmented sieve or an analytic
+argument on exponent multisets of consecutive integers.
+
