@@ -227,24 +227,25 @@ not depend on a chosen window.
 falsification of the naive "class = window fingerprint" reading are
 in `exponential-base-structural-class.md`.
 
-### T17 — Asymmetry of structural_distance_numbers
+### T17 — Flakiness of test_resolver under full suite
 
-**Statement.** `structural_distance_numbers(a, b)` is not always equal to
-`structural_distance_numbers(b, a)`. Example:
-`structural_distance_numbers(30030, 2) = 7` while
-`structural_distance_numbers(2, 30030) = 5`. The resolver uses A*, and
-its search order depends on the direction. Decide whether the
-asymmetry is acceptable (directional distance) or a bug to fix.
+**Statement.** A test in the resolver suite fails intermittently when
+the full test suite is run, but passes when run alone. Observed on
+`test_explored_equals_length_plus_one_on_wide_shapes[8]`: the resolver
+explores more than `max_visited=1000` shapes and raises `ResolverError`.
+Likely an execution-order or budget-edge issue, not a logic bug.
 
-**Minimal example.** See above; `30030` is the product of the first six
-primes.
+**Minimal example.** `pytest tests/ resolver/tests/` sometimes shows
+one failure; `pytest resolver/tests/test_resolver.py` alone passes.
 
 **Status.** open.
 
-**Notes.** Discovered during T16 session, unrelated to the struct/
-destruct work. The failing test
-`resolver/tests/test_distance.py::test_distance_numbers_is_symmetric`
-currently keeps the resolver suite red on `main`.
+**Notes.** Originally recorded as "asymmetry of
+structural_distance_numbers", with example
+`(30030, 2) = 7` vs `(2, 30030) = 5`. Re-verified on 14 cases: the
+distance is symmetric. The original failing example does not reproduce.
+The real issue is test flakiness under the full suite, unrelated to
+symmetry.
 
 ## Notes on the list
 
