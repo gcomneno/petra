@@ -119,3 +119,28 @@ share the same shape. At `N = 10000`, only 64 distinct shapes exist,
 and the top 10 shapes cover 92.7% of the integers. The most frequent
 shape is always `○^(A × B)` (semiprimes with distinct primes), growing
 roughly linearly with `N`. Recorded in `shape-multiplicity.md`.
+
+## P5 — Symmetric struct/destruct
+
+**Statement.** Today `struct` adds fathers only at the root (via
+`append` and `prepend`) or replaces a leaf with a container (via
+`replace`). It does not add a father to an inner container. As a
+result, `destruct` can produce a `(piece, rest, kind)` that
+`struct(rest, piece)` does not invert (seen for `12^3`,
+`t01-struct-destruct-exponential.md`).
+
+Two phases:
+
+- **A.** Extend `struct` with a fourth hook: add a father to a
+  container at a given path inside the shape.
+- **B.** Verify whether, with the extension, every
+  `(piece, rest, kind) in destruct(s)` satisfies `s in struct(rest, piece)`.
+
+**Why now.** The limit was found while closing T01. The exact shape of
+the limit is known, and the fix is local.
+
+**First step.** Implement the fourth hook, then re-run the four pairs
+from `t01_exponential_struct_destruct.py` and check phase B on each.
+
+**Status.** open.
+
