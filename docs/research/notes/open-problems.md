@@ -287,3 +287,16 @@ and not a class invariant, so a catalogue would have no stable
 entries. P1 also showed that integer families do not separate in shape
 space.
 
+## P14 — Beatty sequences and non-obvious families
+
+**Statement.** Test the fingerprint classifier on Beatty sequences,
+sums of two squares, random walks with drift.
+
+**Why now.** Thread T11 proposed this.
+
+**Status.** closed (out of scope).
+
+**Result.** Not pursued. Depends on a fingerprint classifier that
+does not exist, and on the assumption that families separate in
+shape space, which P1 falsified.
+
