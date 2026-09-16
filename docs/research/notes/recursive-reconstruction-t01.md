@@ -55,16 +55,6 @@ chain of three nested fathers), then the second, then the third.
 For `shape(30030)`, all fathers are leaf, so the chain is a simple
 sequence of append operations, one per father.
 
-## The chain is unique only under the chosen order
-
-The chain produced by this algorithm is unique because the traversal
-order (left to right, height first) is fixed. A different order (right
-to left, or width first) would produce a different chain for the same
-target.
-
-So the chain is **not** a canonical invariant of the shape. It is one
-of several possible descriptions.
-
 ## Relation to the form-strada-value boundary
 
 This note fits the boundary distinction recorded in
@@ -187,6 +177,26 @@ Notes:
 
 The two counts are not directly comparable: they assume different
 starting material.
+
+## The chain is not canonical
+
+The single-chain algorithm fixes an order (height-first, left to
+right), which produces one chain per target. But this chain is not a
+canonical invariant of the shape. A different order produces a
+different chain for the same target.
+
+Verified on `shape(720)`:
+
+- normal order (left to right): the first father is completed to full
+  depth, then the second, then the third;
+- reversed order (right to left): the third father, then the second,
+  then the first.
+
+Both orders reach the target, in the same number of steps, with
+different intermediate shapes.
+
+The chain is therefore one strada among many. The form is the target;
+the chain is a description, dependent on a chosen traversal order.
 
 ## Boundary
 
