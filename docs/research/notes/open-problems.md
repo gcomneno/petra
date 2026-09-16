@@ -372,3 +372,19 @@ Recorded in `t19-stab-fifth-point.md`.
 Going beyond `10^8` requires a segmented sieve or an analytic
 argument on exponent multisets of consecutive integers.
 
+## P20 — Cache by id() in the resolver search
+
+**Statement.** The A* search cached per-shape metrics by `id(shape)`.
+`id` is unique only among live objects, so discarded shapes could have
+their `id` reused and poison the cache, corrupting the heuristic.
+
+**Why now.** Thread T17 observed intermittent test failures only under
+the full suite. Root cause identified.
+
+**Status.** closed.
+
+**Result.** Fixed. Cache keyed by `shape` instead of `id(shape)` in
+`_build_cached_metrics`. Verified: 500 isolated runs of the failing
+case give the correct path length only; full suite passes 718/718 for
+10 consecutive runs. Recorded in `t17-cache-id-bug.md`.
+

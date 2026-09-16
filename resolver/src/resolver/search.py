@@ -283,7 +283,7 @@ def _build_cached_metrics(
     target_leaves = _leaf_count(target_shape)
 
     def node_count(shape: PetraShape) -> int:
-        key = id(shape)
+        key = shape
         cached = node_cache.get(key)
         if cached is None:
             cached = _node_count(shape)
@@ -291,7 +291,7 @@ def _build_cached_metrics(
         return cached
 
     def max_depth(shape: PetraShape) -> int:
-        key = id(shape)
+        key = shape
         cached = depth_cache.get(key)
         if cached is None:
             cached = _max_depth(shape)
@@ -299,7 +299,7 @@ def _build_cached_metrics(
         return cached
 
     def leaf_count(shape: PetraShape) -> int:
-        key = id(shape)
+        key = shape
         cached = leaf_cache.get(key)
         if cached is None:
             cached = _leaf_count(shape)
@@ -307,7 +307,7 @@ def _build_cached_metrics(
         return cached
 
     def heuristic(shape: PetraShape) -> int:
-        key = id(shape)
+        key = shape
         cached = heuristic_cache.get(key)
         if cached is None:
             cached = max(

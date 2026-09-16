@@ -299,14 +299,15 @@ Likely an execution-order or budget-edge issue, not a logic bug.
 **Minimal example.** `pytest tests/ resolver/tests/` sometimes shows
 one failure; `pytest resolver/tests/test_resolver.py` alone passes.
 
-**Status.** open.
+**Status.** closed.
 
-**Notes.** Originally recorded as "asymmetry of
-structural_distance_numbers", with example
-`(30030, 2) = 7` vs `(2, 30030) = 5`. Re-verified on 14 cases: the
-distance is symmetric. The original failing example does not reproduce.
-The real issue is test flakiness under the full suite, unrelated to
-symmetry.
+**Result.** Root cause identified and fixed: `_build_cached_metrics`
+in `resolver/src/resolver/search.py` cached metrics by `id(shape)`.
+`id` is unique only among live objects; discarded shapes can have
+their `id` reused, poisoning the cache and corrupting the heuristic.
+Fix: key the cache by `shape` instead of `id(shape)`. Verified: 500
+isolated runs give length 8 only; full suite passes 718/718 for 10
+consecutive runs. Recorded in `t17-cache-id-bug.md`.
 
 ### T18 — Resolver satellite has open lint and type issues
 
