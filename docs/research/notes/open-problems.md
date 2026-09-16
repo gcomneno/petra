@@ -89,7 +89,14 @@ context. The question is a yes/no with a computable answer.
 that `(shape(n), n mod 2^k)` determines `shape(Collatz(n))`. Report
 the distribution of minimal `k`.
 
-**Status.** open.
+**Status.** closed.
+
+**Result.** Negative. No bounded `k` is universal. By Dirichlet's
+theorem, for every `k` there are infinitely many primes in the same
+residue class `mod 2^k`; they share the same shape (`○^(A)`) but their
+images under `3n+1` have different shapes. The smallest explicit
+counterexample is at `k = 3`, among primes `≡ 5 mod 8`. Recorded in
+`shape-context-not-bounded.md`.
 
 ## P4 — Loss from factorization to shape
 
