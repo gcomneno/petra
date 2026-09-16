@@ -247,11 +247,23 @@ distance is symmetric. The original failing example does not reproduce.
 The real issue is test flakiness under the full suite, unrelated to
 symmetry.
 
+### T18 — Resolver satellite has open lint and type issues
+
+**Statement.** Adding `resolver/` to the CI's ruff and mypy checks
+surfaces ~50 ruff errors and ~16 mypy errors. Representative cases:
+
+- ruff: `__all__` not sorted, `×` (MULTIPLICATION SIGN) in strings and
+  docstrings flagged as ambiguous, `zip` without `strict=`, unused
+  imports, unused unpacked variables, `typing.Iterator` instead of
+  `collections.abc`.
+- mypy: `petra` lacks a `py.typed` marker, `struct_destruct.py:160`
+  redefines `results`.
+
+**Status.** open.
+
+**Notes.** CI currently installs `resolver` (so its tests run) but
+does not lint or type-check it. To close T18, either fix the issues or
+add explicit excludes to the CI config.
+
 ## Notes on the list
 
-The list is intentionally not prioritized. New threads should be
-appended below, with the next free identifier. Threads should not be
-removed; closed threads keep their entry with status updated.
-
-The list is not a commitment. It is a memory aid. A thread may stay
-open indefinitely without cost.
