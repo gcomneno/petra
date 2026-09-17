@@ -21,9 +21,12 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
 
 ### Living registry
 
-- [`notes/open-threads.md`](notes/open-threads.md) — index of active and
-  dormant research directions. Each thread has a statement, a minimal
-  example, a status, and dependencies. Updated as work progresses.
+- [`notes/open-problems.md`](notes/open-problems.md) — active front.
+  Each problem has a statement, a why-now, a first step, and a status.
+  Updated as work progresses.
+- [`notes/open-threads.md`](notes/open-threads.md) — historical archive
+  of the T-series. All threads closed, moved to `open-problems.md`, or
+  marked out of scope. Not maintained.
 
 ### Notes
 
@@ -63,6 +66,67 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
   elementary pieces, in a height-first order. The chain is one strada,
   not a canonical invariant.
 
+### Notes (continued)
+
+- [`notes/collatz-like-reduction-dominance.md`](notes/collatz-like-reduction-dominance.md)
+  — P2. Counterexample: every `3n+k` (k odd) is reduction-dominant, not
+  only Collatz. The factor 3, not the value k=1, produces the reduction.
+
+- [`notes/shape-context-not-bounded.md`](notes/shape-context-not-bounded.md)
+  — P3. Negative. No bounded `k` determines the Collatz successor's
+  shape from `(shape(n), n mod 2^k)`. Argument via Dirichlet.
+
+- [`notes/shape-multiplicity.md`](notes/shape-multiplicity.md)
+  — P4. Negative. The shape is a coarse descriptor: 64 distinct shapes
+  for 10000 integers, top 10 covering 92.7%.
+
+- [`notes/p5-symmetric-struct-destruct.md`](notes/p5-symmetric-struct-destruct.md)
+  — P5. Positive. `struct` gains a fourth hook for inner containers;
+  `destruct` is invertible with `inner=True`.
+
+- [`notes/t01-struct-destruct-exponential.md`](notes/t01-struct-destruct-exponential.md)
+  — T01 closed. `struct`/`destruct` on `shape(k^n)` work with one limit,
+  resolved later by P5. Duplication lemma verified.
+
+- [`notes/t02-functoriality-partial.md`](notes/t02-functoriality-partial.md)
+  — P6 partial. `shift` and `double` admit `F_T` on a bounded sample.
+  Six fingerprint classes at `N = 60`.
+
+- [`notes/t03-multiset-invariant.md`](notes/t03-multiset-invariant.md)
+  — P7. Positive. The fingerprint depends only on the multiset of
+  exponents in the base, not on the prime values nor their order.
+
+- [`notes/t04-overlap-too-coarse.md`](notes/t04-overlap-too-coarse.md)
+  — P8. Negative. `node_count(meet) / node_count(join)` takes only 17
+  distinct values on 124251 pairs.
+
+- [`notes/recursive-metric-no-clusters.md`](notes/recursive-metric-no-clusters.md)
+  — T07 partial. A recursive metric defined from shape structure
+  overlaps with `structural_distance`; no natural clusters.
+
+- [`notes/t07-finer-metrics-change-classification.md`](notes/t07-finer-metrics-change-classification.md)
+  — P11. Positive. Replacing `node_count` with `depth` or `depth_mass`
+  changes the fingerprint classification.
+
+- [`notes/t08-3n-minus-1.md`](notes/t08-3n-minus-1.md)
+  — P12. Positive. `3n-1` is reduction-dominant, same profile as
+  `3n+k`. The sign of k does not matter.
+
+- [`notes/t16-fingerprint-asymptotics.md`](notes/t16-fingerprint-asymptotics.md)
+  — T16. Reduction of the fingerprint signal to the arithmetic function
+  `g(n)` and its exact recurrence.
+
+- [`notes/t19-stab-fifth-point.md`](notes/t19-stab-fifth-point.md)
+  — T19 partial. Fifth data point at `N = 10^8` excludes the hypothesis
+  `SumPk2 ~ c / sqrt(log log N)`.
+
+- [`notes/t17-cache-id-bug.md`](notes/t17-cache-id-bug.md)
+  — T17. Root cause of intermittent test failure: cache keyed by
+  `id(shape)` could be poisoned by id reuse. Fixed.
+
+- [`notes/t18-ruff-mypy-clean.md`](notes/t18-ruff-mypy-clean.md)
+  — T18. Resolver now passes ruff and mypy clean.
+
 ### Code
 
 The current research line has produced a derived layer in the Resolver:
@@ -89,9 +153,9 @@ Current PETRA research:
 > [`../reference/SPEC.md`](../reference/SPEC.md).
 
 This section contains research material produced before the PETRA
-replacement. It documents the PET, PET-Base, PET/PEG 2.0, PET-Metrics,
-research lines. It is retained as evidence and
-provenance. It is not maintained.
+replacement. It documents the PET, PET-Base, PET/PEG 2.0, and PET-Metrics
+research lines. It is retained as evidence and provenance. It is not
+maintained.
 
 ## Structure
 
