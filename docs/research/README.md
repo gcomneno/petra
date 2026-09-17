@@ -21,6 +21,10 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
 
 ### Living registry
 
+- [`RELATED-WORK.md`](RELATED-WORK.md) — maintained survey of PETRA's
+  relationship to prior mathematics and computer-science literature, including
+  explicit novelty boundaries. Canonical for research context; non-normative
+  for PETRA semantics.
 - [`notes/open-problems.md`](notes/open-problems.md) — active front.
   Each problem has a statement, a why-now, a first step, and a status.
   Updated as work progresses.
