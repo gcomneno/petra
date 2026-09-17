@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from functools import lru_cache
+from itertools import permutations
 from math import factorial
 
 Tree = tuple["Tree", ...]
@@ -10,6 +11,7 @@ MarkedTree = tuple[bool, tuple["MarkedTree", ...]]
 
 Z: Tree = ()
 MAX_SIZE = 10
+BRUTE_VERIFY_MAX_SIZE = 8
 
 
 def key(tree: Tree) -> tuple:
@@ -96,6 +98,51 @@ def automorphism_count(tree: Tree) -> int:
     return total
 
 
+def parent_vector(tree: Tree) -> tuple[int, ...]:
+    """Return a DFS-labelled rooted realization as a parent vector.
+
+    Vertex 0 is the root. For every non-root vertex v, result[v] is its parent.
+    The concrete DFS labels are representation-local and are used only by the
+    bounded brute-force automorphism verifier below.
+    """
+
+    parents = [-1]
+
+    def visit(node: Tree, parent: int) -> None:
+        for child in node:
+            child_id = len(parents)
+            parents.append(parent)
+            visit(child, child_id)
+
+    visit(tree, 0)
+    return tuple(parents)
+
+
+def brute_automorphism_count(tree: Tree) -> int:
+    """Count root-preserving automorphisms by direct vertex permutations.
+
+    This deliberately does not use the recursive automorphism recurrence. It is
+    only practical for small trees and serves as an independent bounded check.
+    """
+
+    parents = parent_vector(tree)
+    n = len(parents)
+    if n == 1:
+        return 1
+
+    count = 0
+    for tail in permutations(range(1, n)):
+        image = (0, *tail)
+        valid = True
+        for vertex in range(1, n):
+            if image[parents[vertex]] != parents[image[vertex]]:
+                valid = False
+                break
+        if valid:
+            count += 1
+    return count
+
+
 def marked_key(marked: MarkedTree) -> tuple:
     is_marked, children = marked
     return (is_marked, tuple(marked_key(child) for child in children))
@@ -145,10 +192,26 @@ def main() -> None:
         "META_AUT_ENUMERATION_COUNTS",
     )
 
-    count_recurrence_ok = all(automorphism_count(tree) >= 1 for tree in corpus)
-    check(count_recurrence_ok, "META_AUT_COUNT_RECURRENCE")
+    brute_verified_forms = 0
+    count_recurrence_ok = True
+    rigidity_bruteforce_ok = True
+    for n in range(1, BRUTE_VERIFY_MAX_SIZE + 1):
+        for tree in by_size[n]:
+            brute_count = brute_automorphism_count(tree)
+            recurrence_count = automorphism_count(tree)
+            count_recurrence_ok &= brute_count == recurrence_count
 
-    rigid_criterion_ok = True
+            multiplicities = Counter(tree)
+            recursive_rigid = (
+                all(multiplicity == 1 for multiplicity in multiplicities.values())
+                and all(automorphism_count(child) == 1 for child in tree)
+            )
+            rigidity_bruteforce_ok &= (brute_count == 1) == recursive_rigid
+            brute_verified_forms += 1
+
+    check(count_recurrence_ok, "META_AUT_COUNT_RECURRENCE")
+    check(rigidity_bruteforce_ok, "META_AUT_RIGIDITY_CRITERION")
+
     same_orbit_add_same_successor = True
     same_orbit_remove_same_successor = True
     add_collision: tuple[Tree, list[Path]] | None = None
@@ -161,13 +224,6 @@ def main() -> None:
     for tree in corpus:
         if automorphism_count(tree) > 1:
             nontrivial_aut_forms += 1
-
-        multiplicities = Counter(tree)
-        recursive_rigid = (
-            all(multiplicity == 1 for multiplicity in multiplicities.values())
-            and all(automorphism_count(child) == 1 for child in tree)
-        )
-        rigid_criterion_ok &= (automorphism_count(tree) == 1) == recursive_rigid
 
         add_by_orbit: dict[tuple, set[Tree]] = defaultdict(set)
         add_by_successor: dict[Tree, list[Path]] = defaultdict(list)
@@ -215,7 +271,6 @@ def main() -> None:
                     remove_collision = (tree, target_paths)
                     break
 
-    check(rigid_criterion_ok, "META_AUT_RIGIDITY_CRITERION")
     check(
         same_orbit_add_same_successor,
         "META_AUT_ADD_ORBIT_IMPLIES_SAME_SUCCESSOR",
@@ -238,11 +293,14 @@ def main() -> None:
 
     print(f"META_AUT_MAX_SIZE={MAX_SIZE}")
     print(f"META_AUT_FORMS={len(corpus)}")
+    print(f"META_AUT_BRUTE_VERIFY_MAX_SIZE={BRUTE_VERIFY_MAX_SIZE}")
+    print(f"META_AUT_BRUTE_VERIFIED_FORMS={brute_verified_forms}")
     print(f"META_AUT_NONTRIVIAL_AUT_FORMS={nontrivial_aut_forms}")
     print(f"META_AUT_TOTAL_ADD_TARGET_ORBITS={total_add_orbits}")
     print(f"META_AUT_TOTAL_REMOVE_TARGET_ORBITS={total_remove_orbits}")
     print(
         "META_AUT_SCOPE=finite rooted non-plane trees up to size 10; "
+        "brute-force automorphism verification up to size 8; "
         "bounded corroboration only"
     )
 
