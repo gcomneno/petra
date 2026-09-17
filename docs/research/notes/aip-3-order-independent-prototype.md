@@ -50,6 +50,82 @@ Multiplicity is preserved. This is a multiset quotient, not a set quotient.
 Therefore one terminal child, two terminal children, and three terminal
 children remain three distinct abstract forms.
 
+## Recursive permutation equivalence
+
+Define `~perm` recursively as follows.
+
+```text
+Leaf ~perm Leaf
+```
+
+Two containers are equivalent when their direct children can be placed in a
+bijection such that matched children are recursively `~perm`-equivalent. In
+other words, the direct children form the same multiset of recursive
+permutation classes.
+
+This relation deliberately ignores sibling ordinal position while preserving:
+
+- the number of direct children;
+- duplicate occurrences;
+- recursive child structure.
+
+It does not identify `Leaf` with a container.
+
+## Proposition — quotient-key characterization
+
+For all current canonical PETRA shapes `x` and `y`:
+
+```text
+Q(x) = Q(y)  iff  x ~perm y
+```
+
+where `Q` is the recursive multiset key implemented by the prototype.
+
+### Proof sketch by structural induction
+
+**Base case.**
+
+If `x` is `Leaf`, then `Q(x) = Leaf`. The key construction emits that key only
+for a `Leaf`, so `Q(y) = Q(x)` implies that `y` is also `Leaf`. Therefore
+`x ~perm y`. The converse is immediate.
+
+**Inductive step.**
+
+Assume the statement holds for all proper recursive children of two containers
+`x` and `y`.
+
+`Q(x)` and `Q(y)` are equal exactly when their deterministically materialized
+multisets of child keys are equal. Equality of those multisets gives a
+multiplicity-preserving bijection between child-key occurrences. By the
+induction hypothesis, each matched pair of child keys corresponds exactly to a
+pair of recursively `~perm`-equivalent child shapes. Hence the two containers
+have the same multiset of recursive permutation classes, so `x ~perm y`.
+
+Conversely, if `x ~perm y`, the defining bijection matches every child of `x`
+with a recursively equivalent child of `y`, preserving multiplicity. By the
+induction hypothesis, matched children have equal `Q` keys. The two direct
+child-key multisets are therefore equal, hence `Q(x) = Q(y)`.
+
+Thus the prototype key is not merely permutation-invariant: under the stated
+recursive definition, it characterizes exactly the quotient relation it is
+intended to represent.
+
+This is a research proposition about the candidate abstraction. It is not yet
+a normative theorem of PETRA because the abstract ontology itself has not been
+promoted into `SPEC.md`.
+
+## Corollary — permutation invariance
+
+Any finite sequence of sibling permutations, applied at arbitrary recursive
+container locations, leaves `Q` unchanged.
+
+This follows immediately from the proposition because such rewrites do not
+change the recursive multiset of child classes.
+
+The converse also matters: equality of `Q` does not arise from accidental loss
+of multiplicity or recursive structure; it arises exactly from recursive
+sibling-permutation equivalence under the candidate model.
+
 ## Explicit permutation witness
 
 Consider two current canonical shapes whose root children are structurally:
@@ -125,7 +201,29 @@ It also verifies that the number of quotient classes equals the number of
 constructed unordered representatives, so no accidental collision is observed
 inside the bounded corpus.
 
-This is evidence, not proof for the unbounded shape-space.
+Observed local result on 2026-09-17:
+
+```text
+AIP3_EXPLICIT_PERMUTATION=PASS
+AIP3_RECURSIVE_PERMUTATION=PASS
+AIP3_MULTIPLICITY=PASS
+AIP3_BOUNDED_COUNTEREXAMPLE_SEARCH=PASS
+AIP3_REPRESENTATIVES=35
+AIP3_ORDERED_VARIANTS=85
+AIP3_QUOTIENT_CLASSES=35
+AIP3_SCOPE=max_depth=2,max_width=3
+```
+
+Therefore, within the bounded corpus:
+
+```text
+85 ordered variants -> 35 quotient classes = 35 unordered representatives
+```
+
+No accidental quotient collision was observed.
+
+This is computational evidence for the bounded corpus, not a proof about every
+future property admitted to the abstract PETRA core.
 
 ## Why this matters for AIP-3
 
@@ -137,11 +235,13 @@ PETRA v2.0.0.
 That fact alone does not establish order as ontology.
 
 The prototype demonstrates a coherent alternative abstraction in which current
-ordered states can map to order-free classes without losing the tested
-structural observables.
+ordered states map to order-free classes without losing the tested structural
+observables. The quotient-key proposition additionally shows that the chosen
+signature corresponds exactly to recursive sibling-permutation equivalence,
+not merely to a weaker heuristic grouping.
 
 This strengthens the hypothesis that current sibling order mixes at least two
-non-core concerns:
+non-core concerns.
 
 ### Representation order
 
@@ -225,6 +325,13 @@ More precisely:
 > that preserves terminal/composite structure, multiplicity, node count, depth,
 > and the recursively composed child-shape inventory in the bounded corpus.
 
+Together with the quotient-key proposition, the current AIP-3 evidence supports
+this stronger research position:
+
+> sibling order is not part of the candidate abstract identity unless an
+> independently justified core property can be shown not to factor through the
+> recursive permutation quotient.
+
 This does **not** yet prove that every future intrinsic PETRA property is
 permutation-invariant.
 
@@ -249,8 +356,18 @@ Any property that fails this factorization test must answer a harder question:
 why is sibling position intrinsic to form rather than merely representation or
 interpretation?
 
-## Next step
+## Current conclusion
 
-Run the probe locally, record the concrete bounded counts, and then extend the
-counterexample search only if the result justifies it. Do not modify the
-normative model before that evidence is captured.
+AIP-3 now has three mutually reinforcing pieces of evidence:
+
+1. conceptual independence: domain interpretations may or may not define an
+   order;
+2. constructive abstraction: the recursive multiset quotient is coherent and
+   exactly characterized by `Q`;
+3. bounded computation: 85 ordered variants collapse to 35 expected quotient
+   classes with no accidental collision in the tested scope.
+
+The remaining burden of proof has reversed. Order should not be admitted to the
+abstract ontology merely because the current runtime stores a sequence. A
+future claim that sibling position is `CORE` must exhibit a genuinely intrinsic
+property of form that cannot be defined on the quotient.
