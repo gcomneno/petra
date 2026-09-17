@@ -23,6 +23,12 @@ def size(tree: Tree) -> int:
     return 1 + sum(size(child) for child in tree)
 
 
+def render(tree: Tree) -> str:
+    if tree == Z:
+        return "Z"
+    return "Node({" + ",".join(render(child) for child in tree) + "})"
+
+
 def paths(tree: Tree, prefix: Path = ()) -> list[Path]:
     result = [prefix]
     for index, child in enumerate(tree):
@@ -202,6 +208,7 @@ def main() -> None:
     check(lower_bound_ok, "META_EDIT_SIZE_LOWER_BOUND")
     check(via_z_bound_ok, "META_EDIT_VIA_Z_UPPER_BOUND")
     check(parity_ok, "META_EDIT_DISTANCE_PARITY")
+    check(bool(nonunique_pairs), "META_EDIT_NONUNIQUE_MAX_COMMON_REDUCT_EXISTS")
 
     # Explicit non-geodesic via-Z example from the theory note.
     unary = canonical((Z,))
@@ -226,11 +233,19 @@ def main() -> None:
     print(f"META_EDIT_NONUNIQUE_MAX_COMMON_REDUCT_PAIRS={len(nonunique_pairs)}")
     if nonunique_pairs:
         left, right, maxima = nonunique_pairs[0]
+        maxima_ordered = sorted(maxima, key=key)
         print(
             "META_EDIT_FIRST_NONUNIQUE_MAX_COMMON_REDUCT="
             f"left_size:{size(left)};right_size:{size(right)};"
-            f"common_size:{size(next(iter(maxima)))};count:{len(maxima)}"
+            f"common_size:{size(maxima_ordered[0])};count:{len(maxima_ordered)}"
         )
+        print(f"META_EDIT_FIRST_NONUNIQUE_LEFT={render(left)}")
+        print(f"META_EDIT_FIRST_NONUNIQUE_RIGHT={render(right)}")
+        for index, common in enumerate(maxima_ordered, start=1):
+            print(
+                f"META_EDIT_FIRST_NONUNIQUE_COMMON_{index}="
+                f"{render(common)}"
+            )
     print(
         "META_EDIT_SCOPE=finite rooted non-plane trees up to size 7; "
         "bounded corroboration only"
