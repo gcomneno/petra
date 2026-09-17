@@ -24,7 +24,9 @@ Stable URL / DOI:
 
 - https://doi.org/10.1017/fms.2026.10218
 
-Type: **MODERN REFERENCE / PRIMARY research article**.
+Type: **PRIMARY**.
+
+This recent primary research article also serves as a useful modern reference for current Pólya-tree terminology and statements.
 
 ### Supports / limits
 
@@ -279,6 +281,30 @@ This source gives the standard conceptual relation between recursively generated
 This is **not yet sufficient** to validate PETRA's exact claim that the finite-unordered-multiset carrier is the initial algebra for the finite-multiset endofunctor on `Set`.
 
 A primary or textbook-quality source specific enough to the finite-multiset functor is still required.
+
+---
+
+## S11 — Otter 1948, enumeration of rooted trees
+
+**Bibliographic identity**
+
+Richard Otter, *The Number of Trees*, Annals of Mathematics, Second Series 49(3) (1948), 583–599.
+
+Stable DOI:
+
+- https://doi.org/10.2307/1969046
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+Otter is a classical primary source for enumeration of finite trees and rooted trees. It supplies a direct historical anchor for the rooted-tree enumeration tradition cited in the validation matrix, rather than relying only on modern references or sequence indexes.
+
+For PETRA it supports the prior-art boundary that enumeration of the classical rooted-tree carrier is established mathematics and predates PETRA.
+
+### Convention mismatch
+
+Otter's enumeration theory does not establish PETRA's leaf-only edit algebra, interpretation theory, witnessed-path presentation, or PETRA-specific metric results.
 
 ---
 
