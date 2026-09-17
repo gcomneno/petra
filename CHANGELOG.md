@@ -3,7 +3,32 @@
 Tutte le modifiche rilevanti di questo progetto saranno documentate qui.
 
 Il formato si ispira a Keep a Changelog.
-Versioning corrente: `1.y.z`.
+Versioning corrente: `2.y.z`.
+
+## [2.0.0] — 2026-09-17
+
+### Added
+- Satellite `resolver/`: algebra strutturale (`struct`/`destruct`), distanza, fingerprint, proiezione, atlas e CLI dedicata.
+- Hook inner-container in `struct`/`destruct` (nuovo test `test_struct_destruct_inner.py`).
+- Note di ricerca `docs/research/notes/t02..t19` e `docs/research/open-problems.md`.
+- Tool `tools/research/t16_asymptotics.py` per l'analisi asintotica di `stab`.
+- Marker `py.typed` in `src/petra/` (PEP 561).
+- Job CI che installa il satellite `resolver` per la test suite.
+
+### Changed
+- `resolver`: `struct` accetta ora il limite `max_nodes`; `destruct` non richiede più il flag `terminal`.
+- `resolver`: correzione del bug di cache basato su `id()` nella ricerca.
+- `resolver`: `struct` con leaf piece aggiunge un father (non identità).
+- Notazione `mother` ora usa parentesi per i container.
+- `ruff` e `mypy` (strict-ish) puliti su `src/petra/` e `resolver/`.
+- Import sorting in `src/petra/__init__.py` (ruff I001).
+
+### Removed
+- Linea PET-METICA rimossa da docs, report e riferimenti.
+- Thread `open-threads.md` archiviato in favore di `docs/research/open-problems.md`.
+
+### Breaking Changes
+- La v2.0.0 NON è retrocompatibile con la v1.0.3.
 
 ## [1.0.3] — 2026-09-14
 

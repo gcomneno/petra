@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resolver"
-version = "0.1.0"
+version = "2.0.0"
 description = "Bounded A* search over PETRA canonical shapes"
 readme = "README.md"
 requires-python = ">=3.10"
