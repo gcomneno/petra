@@ -30,6 +30,9 @@ Versioning corrente: `2.y.z`.
 ### Breaking Changes
 - La v2.0.0 NON è retrocompatibile con la v1.0.3.
 
+### Published
+- Release Zenodo: `PETRA — Prime Exponent Tower Recursive Algebra v2.0.0`, Version DOI `10.5281/zenodo.22804836`. Concept DOI `10.5281/zenodo.22741778`.
+
 ## [1.0.3] — 2026-09-14
 
 ### Fixed
