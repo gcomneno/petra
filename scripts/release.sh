@@ -15,13 +15,13 @@ PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REPO_DIR="$(cd "${PARENT_DIR}/petra" && pwd)"
 
 # ---------- Colori ----------
-C_RESET='\033[0m'
-C_BOLD='\033[1m'
-C_GREEN='\033[0;32m'
-C_YELLOW='\033[0;33m'
-C_RED='\033[0;31m'
-C_BLUE='\033[0;34m'
-C_DIM='\033[2m'
+C_RESET=$'\033[0m'
+C_BOLD=$'\033[1m'
+C_GREEN=$'\033[0;32m'
+C_YELLOW=$'\033[0;33m'
+C_RED=$'\033[0;31m'
+C_BLUE=$'\033[0;34m'
+C_DIM=$'\033[2m'
 
 say()  { printf "${C_BLUE}==>${C_RESET} %s\n" "$*"; }
 ok()   { printf "${C_GREEN}✅${C_RESET} %s\n" "$*"; }
