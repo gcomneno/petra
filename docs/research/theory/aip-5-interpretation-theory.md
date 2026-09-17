@@ -31,7 +31,7 @@ Let
 Z = Node(empty).
 ```
 
-AIP-4 also supplies two intrinsic unpointed edit relations on `P`:
+AIP-4 supplies two intrinsic unpointed edit relations on `P`:
 
 ```text
 P --ADD--> Q
@@ -40,11 +40,37 @@ P --REMOVE--> Q
 
 induced by pointed elementary node addition and zero-child leaf removal, respectively.
 
-This note treats the carrier structure and the edit structure separately before considering interpretations that preserve both.
+This note treats carrier structure, information preservation, and edit preservation as logically distinct dimensions.
 
-## 2. Multiset lifting
+### Lemma 1 — The PETRA carrier is a set
 
-### Definition 1 — Multiset lifting of a map
+The carrier `P` is a set, not a proper class.
+
+#### Proof
+
+For every natural number `n >= 1`, every concrete PETRA realization with `n` occurrences is isomorphic to one whose vertex set is
+
+```text
+{0, ..., n-1}.
+```
+
+Such a realization is determined by finite data: a distinguished root and a binary incidence relation on that finite set satisfying the PETRA rooted-tree conditions.
+
+For fixed `n` there are only finitely many such finite structures. The union over all natural numbers `n` is therefore countable. Passing to root-preserving isomorphism classes is a quotient of that set, hence again a set.
+
+Therefore `P` may be used as an object of `Set`. QED.
+
+### Remark 1 — Why sethood matters here
+
+Earlier carrier notes allowed the cautious phrase “set/class”. AIP-5 needs a genuine set-level statement because the finite-multiset construction is used as an endofunctor on `Set` and the initial-algebra claim quantifies over ordinary set-based target algebras.
+
+No cardinality claim beyond sethood is required for the theory below.
+
+## 2. Finite-multiset functor
+
+### Definition 1 — Finite-multiset lifting
+
+For a set `X`, let `M_f(X)` be the set of finite multisets over `X`.
 
 For a map
 
@@ -74,6 +100,26 @@ M_f(f)(M) = {f(x_1), ..., f(x_n)}.
 
 No sibling order is introduced by this lifting.
 
+### Lemma 2 — Functoriality
+
+The finite-multiset lifting satisfies
+
+```text
+M_f(id_X) = id_{M_f(X)}
+```
+
+and
+
+```text
+M_f(g o f) = M_f(g) o M_f(f).
+```
+
+#### Proof
+
+Both equalities hold copywise on every finite multiset and preserve multiplicity. QED.
+
+Hence `M_f` is an endofunctor on `Set` for the purposes of this note.
+
 ## 3. Arbitrary interpretations
 
 ### Definition 2 — Arbitrary interpretation
@@ -88,25 +134,13 @@ The pair `(X,I)` is an arbitrary PETRA interpretation.
 
 This is the weakest possible notion. It asserts only that equal PETRA forms receive one well-defined target value because `I` is defined on the quotient carrier `P` itself.
 
-### Remark 1 — What arbitrary interpretation does not mean
+### Proposition 1 — Arbitrary interpretation carries no preservation law
 
-An arbitrary interpretation need not preserve:
-
-- recursive `Node` construction;
-- size, depth, multiplicity, or any other structural invariant;
-- ADD/REMOVE steps;
-- distinctness of PETRA forms;
-- any target operation or relation.
-
-Therefore the word **interpretation** alone carries no preservation theorem.
-
-### Proposition 1 — Every carrier map is an arbitrary interpretation
-
-Every function `I : P -> X` is an arbitrary PETRA interpretation, and no additional PETRA property follows from this fact alone.
+Every function `I : P -> X` is an arbitrary interpretation. From this fact alone one may not infer preservation of recursive construction, injectivity, ADD/REMOVE, size, depth, multiplicity, or any other PETRA property.
 
 #### Proof
 
-This is Definition 2. The absence of additional conclusions follows because Definition 2 imposes no equations or relation-preservation conditions beyond being a function on `P`. QED.
+Immediate from Definition 2. QED.
 
 ## 4. Structural interpretations
 
@@ -118,13 +152,11 @@ A **finite-multiset target algebra** is a pair
 (X, alpha)
 ```
 
-with a structure map
+with
 
 ```text
 alpha : M_f(X) -> X.
 ```
-
-The map `alpha` specifies how a finite unordered multiset of already-interpreted child values is combined into one target value.
 
 No injectivity, surjectivity, associativity, arithmetic meaning, or edit semantics are assumed.
 
@@ -155,8 +187,6 @@ M_f(X) --alpha-->   X
 
 commutes.
 
-This is the exact sense in which the recursive PETRA constructor is preserved.
-
 ### Theorem 1 — Structural recursion theorem
 
 For every finite-multiset target algebra `(X,alpha)`, there exists a unique structural interpretation
@@ -165,7 +195,7 @@ For every finite-multiset target algebra `(X,alpha)`, there exists a unique stru
 fold_alpha : P -> X
 ```
 
-satisfying
+such that
 
 ```text
 fold_alpha(Node(M))
@@ -176,25 +206,27 @@ for every finite multiset `M` of PETRA forms.
 
 #### Proof — existence
 
-Define `fold_alpha` by induction on PETRA size.
+Proceed by induction on PETRA size.
 
-For the unique size-one form `Z = Node(empty)`, set
+For the unique size-one form `Z = Node(empty)`, define
 
 ```text
 fold_alpha(Z) = alpha(empty).
 ```
 
-Assume `fold_alpha` has been defined for all PETRA forms of size strictly less than `n`. Let `P = Node(M)` have size `n`. Every child form occurring in `M` has size strictly less than `n`, so its image is already defined. Set
+Assume the map is defined on all PETRA forms of size less than `n`. Let `p = Node(M)` have size `n`. Every child form in `M` has strictly smaller size, so each child image is already defined. Set
 
 ```text
-fold_alpha(P) = alpha(M_f(fold_alpha)(M)).
+fold_alpha(p) = alpha(M_f(fold_alpha)(M)).
 ```
 
-Carrier equality is recursive multiset equality modulo structural isomorphism, while `M_f` is insensitive to sibling order and preserves multiplicity. Hence this value depends only on the PETRA form, not on a chosen realization or ordering. Thus the definition is well-defined for every finite size. QED.
+PETRA equality identifies exactly the root-preserving isomorphism class of the finite rooted non-plane realization. The recursive multiset presentation is invariant under that equality, and `M_f` preserves multiplicity without introducing sibling order. Therefore the value depends only on the PETRA form and not on a representative or ordering.
+
+Since every PETRA form has finite size, the definition reaches every element of `P`. QED.
 
 #### Proof — uniqueness
 
-Let `f,g : P -> X` both satisfy the structural equation. Proceed by induction on PETRA size.
+Let `f,g : P -> X` satisfy the structural equation. Proceed by induction on size.
 
 For `Z`,
 
@@ -202,41 +234,54 @@ For `Z`,
 f(Z) = alpha(empty) = g(Z).
 ```
 
-Suppose `f(Q)=g(Q)` for every form `Q` of size smaller than `n`, and let `P=Node(M)` have size `n`. Every child in `M` has smaller size, hence
+Assume `f(q)=g(q)` for every form of size less than `n`, and let `p=Node(M)` have size `n`. Every child in `M` has smaller size, hence
 
 ```text
 M_f(f)(M) = M_f(g)(M).
 ```
 
-Applying `alpha` gives
+Therefore
 
 ```text
-f(P) = alpha(M_f(f)(M))
-     = alpha(M_f(g)(M))
-     = g(P).
+f(p)
+= alpha(M_f(f)(M))
+= alpha(M_f(g)(M))
+= g(p).
 ```
 
-Therefore `f=g`. QED.
+Thus `f=g`. QED.
 
-### Corollary 1 — Initial-algebra property, internally established
+### Corollary 1 — Initial-algebra property
 
-The recursive PETRA carrier has the universal property that for every finite-multiset algebra `(X,alpha)` there is exactly one homomorphism from `(P,Node)` to `(X,alpha)`.
+The algebra
 
-This is the usual form of an initial-algebra property. The theorem above establishes the property internally; terminology and relation to established literature still require external validation before novelty or canonical-literature claims.
+```text
+(P, Node)
+```
 
-### Definition 5 — Carrier homomorphism
+with
 
-A structural interpretation is equivalently a homomorphism of the finite-multiset algebras
+```text
+Node : M_f(P) -> P
+```
+
+is initial among `M_f`-algebras in `Set`: for every algebra `(X,alpha)` there exists exactly one algebra homomorphism
 
 ```text
 (P,Node) -> (X,alpha).
 ```
 
-The word **homomorphism** is used here only because the source and target signatures have been stated explicitly.
+#### Proof
+
+An `M_f`-algebra homomorphism is exactly a map satisfying the structural equation of Definition 4. Existence and uniqueness are Theorem 1. QED.
+
+### Remark 2 — Terminology discipline
+
+The universal property is proved internally. The words “initial algebra”, “structural recursion”, and related categorical terminology are standard-mathematics claims about the formulation, not PETRA novelty claims. Their relation to established literature must be documented separately before canonical publication claims.
 
 ## 5. Faithfulness
 
-### Definition 6 — Faithful interpretation
+### Definition 5 — Faithful interpretation
 
 An interpretation
 
@@ -250,17 +295,17 @@ is **faithful on forms** when it is injective:
 I(P) = I(Q)  =>  P = Q.
 ```
 
-Faithfulness means that the target value retains enough information to reconstruct which PETRA form was interpreted.
+Faithfulness means that target values retain enough information to recover source-form identity.
 
-It does not, by itself, say that PETRA operations or recursive construction are preserved.
+It does not imply that recursive construction or edit relations are preserved.
 
-### Proposition 2 — Structural preservation does not imply faithfulness
+### Proposition 2 — Structural does not imply faithful
 
-There exists a structural interpretation that maps every PETRA form to the same target value.
+There exists a structural interpretation that collapses all PETRA forms.
 
 #### Proof
 
-Take the singleton set
+Let
 
 ```text
 X = {*}
@@ -272,23 +317,55 @@ and define
 alpha(M) = *
 ```
 
-for every finite multiset `M` over `X`.
+for every finite multiset over `X`.
 
-By Theorem 1 there is a unique structural interpretation `fold_alpha : P -> X`; necessarily it sends every PETRA form to `*`. Since PETRA has distinct forms, for example
+Theorem 1 gives a unique structural interpretation `fold_alpha : P -> X`, necessarily constant. Since PETRA has distinct forms such as
 
 ```text
 Z != Node({Z}),
 ```
 
-this interpretation is not injective. QED.
+the interpretation is not injective. QED.
 
-### Corollary 2 — Structure preservation and information preservation are independent notions
+### Proposition 3 — Faithful does not imply structural
 
-A structural homomorphism may intentionally collapse structural distinctions. Faithfulness must therefore be stated separately.
+There exists a faithful arbitrary interpretation that is not structural for a chosen target algebra.
+
+#### Proof
+
+Let
+
+```text
+X = P
+```
+
+and let `I = id_P`, which is injective. Define a target algebra
+
+```text
+alpha : M_f(P) -> P
+```
+
+by the constant rule
+
+```text
+alpha(M) = Z
+```
+
+for every `M`.
+
+For `p = Node({Z})`,
+
+```text
+I(p) = p != Z = alpha(M_f(I)({Z})).
+```
+
+Hence the structural equation fails although `I` is faithful. QED.
+
+Therefore faithfulness and structural preservation are independent properties.
 
 ## 6. Edit interpretations
 
-### Definition 7 — Target edit structure
+### Definition 6 — Target edit structure
 
 A **target edit structure** is a triple
 
@@ -298,9 +375,9 @@ A **target edit structure** is a triple
 
 where `A_X` and `R_X` are binary relations on `X` intended to receive PETRA ADD and REMOVE steps.
 
-No assumption is made that these target relations are functions, inverses, deterministic, or generated by concrete target operations.
+No assumption is made that these relations are functions, inverses, deterministic, or generated by concrete target operations.
 
-### Definition 8 — AIP-4 algebra-preserving interpretation
+### Definition 7 — Edit-preserving interpretation
 
 An interpretation
 
@@ -315,34 +392,38 @@ P --ADD--> Q     =>     I(P) A_X I(Q),
 P --REMOVE--> Q  =>     I(P) R_X I(Q).
 ```
 
-This is preservation of the unpointed AIP-4 relation algebra.
+### Definition 8 — Edit-reflecting interpretation
 
-### Definition 9 — Edit-reflecting interpretation
+An interpretation
 
-An edit-preserving interpretation is **edit-reflecting** when the converses also hold:
+```text
+I : P -> X
+```
+
+is **edit-reflecting** into `(X,A_X,R_X)` when
 
 ```text
 I(P) A_X I(Q)    =>    P --ADD--> Q,
-I(P) R_X I(Q)    =>    P --REMOVE--> Q.
+I(P) R_X I(Q)    =>    P --REMOVE--> Q
 ```
 
-Reflection is strictly stronger than preservation.
+for all PETRA forms `P,Q`.
 
-### Definition 10 — Strong edit interpretation
+Reflection is logically distinct from preservation; neither is built into the definition of the other.
+
+### Definition 9 — Strong edit interpretation
 
 A **strong edit interpretation** is both edit-preserving and edit-reflecting.
 
-### Remark 2 — Pointed versus unpointed semantics
+### Remark 3 — Pointed versus unpointed semantics
 
-AIP-4 pointed operations live on targeted realizations such as `(R,u)`, while the intrinsic carrier-level operations are the induced relations on `P`.
+AIP-4 pointed operations live on targeted realizations such as `(R,u)`, while carrier-level AIP-4 operations are the induced relations on `P`.
 
-An interpretation `I : P -> X` has no occurrence target parameter and therefore naturally interprets the **unpointed relations**.
+An interpretation `I : P -> X` naturally interprets the unpointed relations. Interpreting pointed operations requires additional target-pointing structure and a map on pointed realizations; that is a separate extension.
 
-Interpreting pointed operations requires additional target-pointing structure and a separate map on pointed realizations. That is an extension of AIP-5, not something silently contained in a map on `P`.
+## 7. Independence results for edit semantics
 
-## 7. Independence results between faithfulness and edit preservation
-
-### Proposition 3 — Faithfulness alone does not imply edit preservation
+### Proposition 4 — Faithful does not imply edit-preserving
 
 There exists a faithful interpretation into a target edit structure that preserves no non-trivial PETRA edits.
 
@@ -351,85 +432,96 @@ There exists a faithful interpretation into a target edit structure that preserv
 Take
 
 ```text
-X = P
-```
-
-and let
-
-```text
-I = identity_P.
-```
-
-This interpretation is injective. Define both target relations to be empty:
-
-```text
+X = P,
+I = id_P,
 A_X = empty relation,
 R_X = empty relation.
 ```
 
-PETRA has non-trivial ADD/REMOVE steps, but none can map to a target relation edge because there are no target edges. Therefore `I` is faithful but not edit-preserving. QED.
+`I` is injective, but PETRA has non-trivial ADD/REMOVE edges and the target has none. Therefore `I` is faithful and not edit-preserving. QED.
 
-### Proposition 4 — Edit preservation does not imply reflection
+### Proposition 5 — Edit-preserving does not imply edit-reflecting
 
-There exists an edit-preserving interpretation that reflects neither ADD nor REMOVE.
+There exists an edit-preserving interpretation that reflects neither relation.
 
 #### Proof
 
-Take again
+Let
 
 ```text
 X = {*},
-I(P) = *
-```
-
-for every PETRA form `P`, and define
-
-```text
+I(P) = *,
 A_X = {(*,*)},
 R_X = {(*,*)}.
 ```
 
-Every PETRA ADD or REMOVE step maps to the unique target loop, so preservation holds.
+Every PETRA edit maps to the unique target loop, so preservation holds.
 
-Reflection fails. For any PETRA form `P`, the target relation `* A_X *` holds, but
+Reflection fails because `* A_X *` holds while
 
 ```text
 P --ADD--> P
 ```
 
-is impossible because ADD increases size by exactly one. Similarly `P --REMOVE--> P` is impossible. QED.
+is impossible for every `P` by the AIP-4 size `+1` theorem. Likewise `* R_X *` holds while `P --REMOVE--> P` is impossible. QED.
 
-### Proposition 5 — Structural preservation does not imply edit preservation
+### Proposition 6 — Structural does not imply edit-preserving
 
-There exists a structural interpretation whose chosen target edit relations do not preserve AIP-4.
+There exists a structural interpretation that is not edit-preserving.
 
 #### Proof
 
-Use any structural interpretation, for example the singleton structural interpretation from Proposition 2, and choose empty target edit relations. Since PETRA has ADD/REMOVE edges, edit preservation fails. QED.
+Use the singleton structural interpretation from Proposition 2 and choose empty target edit relations. PETRA has ADD/REMOVE edges, so preservation fails. QED.
 
-### Remark 3 — Distinct preservation axes
+### Proposition 7 — Edit-preserving does not imply structural
 
-Carrier recursion, faithfulness, and edit preservation answer different questions:
+There exists an edit-preserving interpretation that is not structural for a chosen target algebra.
+
+#### Proof
+
+Take
 
 ```text
-structural:  does recursive construction commute?
-faithful:    are distinct PETRA forms kept distinct?
-edit:        are ADD/REMOVE edges preserved?
+X = P,
+I = id_P,
+A_X = ADD,
+R_X = REMOVE.
 ```
 
-No one of these properties should be inferred merely from another unless a theorem supplies additional hypotheses.
+Then edit preservation holds exactly.
 
-## 8. Embeddings of the PETRA edit graph
+Now equip the same set `X=P` with the constant target algebra
 
-### Definition 11 — PETRA labeled edit graph
+```text
+alpha(M) = Z.
+```
 
-Define the labeled directed graph
+As in Proposition 3, the identity map fails the structural equation at `Node({Z})`. Therefore edit preservation does not imply structural preservation. QED.
+
+### Remark 4 — Independent qualifiers
+
+The following are independent predicates on an interpretation once the relevant target structures have been supplied:
+
+```text
+STRUCTURAL
+FAITHFUL
+EDIT-PRESERVING
+EDIT-REFLECTING
+```
+
+They are not levels of one hierarchy and must not be drawn as a single inheritance tree.
+
+## 8. PETRA edit-graph embeddings
+
+### Definition 10 — PETRA labeled edit graph
+
+Define
 
 ```text
 G_P = (P, ADD, REMOVE)
 ```
 
-whose vertices are PETRA forms and whose two edge labels are the AIP-4 relations.
+with vertices `P` and the two AIP-4 edge labels.
 
 ### Theorem 2 — Faithful strong edit interpretations are graph embeddings
 
@@ -439,9 +531,9 @@ Let
 I : P -> X
 ```
 
-be injective, edit-preserving, and edit-reflecting into `(X,A_X,R_X)`.
+be faithful, edit-preserving, and edit-reflecting into `(X,A_X,R_X)`.
 
-Then `I` identifies `G_P` with the labeled subgraph of the target induced on the image `I(P)`: for every `P,Q`,
+Then `I` identifies `G_P` with the labeled subgraph of the target relation structure induced on `I(P)`:
 
 ```text
 P --ADD--> Q
@@ -459,17 +551,17 @@ I(P) R_X I(Q).
 
 #### Proof
 
-Preservation gives both forward implications and reflection gives both reverse implications. Injectivity identifies each source vertex with a unique image vertex, so no distinct PETRA forms are collapsed. Hence the labeled source graph is isomorphic to its image subgraph. QED.
+Preservation supplies both forward implications; reflection supplies both reverse implications. Injectivity prevents distinct PETRA forms from being identified. Hence the source labeled graph is isomorphic to its image. QED.
 
-### Corollary 3 — Reconstruction from a faithful strong edit image
+### Corollary 2 — Source reconstruction inside the image
 
-Within the image of a faithful strong edit interpretation, both PETRA form identity and one-step AIP-4 adjacency are recoverable.
+Within the image of a faithful strong edit interpretation, PETRA form identity and one-step AIP-4 adjacency are recoverable.
 
-This does not imply recovery of realization-local occurrence targets, because those were never part of the unpointed carrier.
+This does not recover realization-local occurrence targets, because those are not part of the unpointed carrier.
 
-## 9. Combined PETRA models
+## 9. Combined model notions
 
-### Definition 12 — Structural model
+### Definition 11 — Structural model
 
 A **PETRA structural model** is a triple
 
@@ -477,9 +569,9 @@ A **PETRA structural model** is a triple
 (X, alpha, I)
 ```
 
-where `(X,alpha)` is a finite-multiset algebra and `I` is the unique structural interpretation supplied by Theorem 1.
+where `(X,alpha)` is an `M_f`-algebra and `I` is the unique structural interpretation supplied by Theorem 1.
 
-### Definition 13 — Edit model
+### Definition 12 — Edit model
 
 A **PETRA edit model** is a quadruple
 
@@ -489,9 +581,9 @@ A **PETRA edit model** is a quadruple
 
 where `I : P -> X` is edit-preserving.
 
-### Definition 14 — Full structure-and-edit model
+### Definition 13 — Full PETRA model
 
-A **full PETRA model** consists of
+A **full PETRA model** is
 
 ```text
 (X, alpha, A_X, R_X, I)
@@ -499,24 +591,26 @@ A **full PETRA model** consists of
 
 such that:
 
-1. `I` is the structural homomorphism from `(P,Node)` to `(X,alpha)`;
-2. `I` preserves AIP-4 ADD and REMOVE relations.
+1. `I` is structural with respect to `alpha`;
+2. `I` is edit-preserving with respect to `A_X,R_X`.
 
-Optional qualifiers are then stated separately:
+Additional qualifiers are stated independently:
 
 ```text
-faithful       iff I is injective
-strong-edit    iff I also reflects ADD/REMOVE
-embedded       iff faithful + strong-edit
+faithful    iff I is injective
+strong-edit iff I is preserving + reflecting
+embedded    iff I is structural + faithful + preserving + reflecting
 ```
 
-This note proposes **full PETRA model** as the useful default when both the recursive carrier and the intrinsic edit algebra matter. An arbitrary interpretation remains valid terminology but carries no structural guarantee.
+### Remark 5 — “Full” is a PETRA-local convenience term
 
-## 10. Interpretation cannot feed back into PETRA
+“Full PETRA model” is proposed here as project terminology for a target carrying both recursive carrier semantics and AIP-4 edit semantics. It is not asserted to be standard terminology in category theory, universal algebra, graph theory, or model theory.
 
-### Theorem 3 — Interpretation independence
+## 10. Interpretation independence
 
-Let `I : P -> X` be any arbitrary, structural, faithful, edit-preserving, strong, or full interpretation/model.
+### Theorem 3 — Interpretation cannot feed back into PETRA
+
+Let `I : P -> X` be any arbitrary interpretation, with or without structural, faithful, preserving, reflecting, or full-model qualifiers.
 
 For PETRA forms `P,Q`, whether
 
@@ -526,25 +620,57 @@ P --ADD--> Q,
 P --REMOVE--> Q
 ```
 
-holds is determined entirely in the PETRA source theory and is independent of the values `I(P)` and `I(Q)`.
+holds is determined entirely in the PETRA source theory and is independent of `I(P)` and `I(Q)`.
 
 #### Proof
 
-Carrier equality is defined by source root-preserving structural isomorphism. ADD/REMOVE are defined by source elementary edit witnesses modulo that equality. None of these definitions quantifies over a target set, target algebra, target relation, or interpretation map. Therefore target meaning cannot alter any of the three source judgments. QED.
+Carrier equality is defined by root-preserving structural isomorphism in the source. ADD/REMOVE are defined by source elementary edit witnesses modulo that equality. None of these source definitions quantifies over a target set, target algebra, target relation, or interpretation map. QED.
 
-### Corollary 4 — External values are semantically downstream
+### Corollary 3 — External values are downstream
 
-Numbers, names, weights, labels, physical meanings, logical meanings, application states, or any other target values may be assigned by interpretations, but they cannot become PETRA structural identity merely because an interpretation uses them.
+Numbers, names, weights, labels, logical meanings, physical meanings, application states, or any other target values may be assigned by interpretations, but they cannot become PETRA structural identity or edit legality merely because an interpretation uses them.
 
-### Corollary 5 — Non-faithful models are legitimate
+### Corollary 4 — Non-faithful models are legitimate
 
-A model may intentionally identify distinct PETRA forms without changing PETRA itself. The collapse occurs in the model, not in the source carrier.
+A model may intentionally identify distinct PETRA forms. The collapse occurs in the model, not in PETRA itself.
 
-## 11. Historical arithmetic reading
+## 11. Classification summary
+
+The basic object is always a map
+
+```text
+I : P -> X.
+```
+
+Possible independent qualifiers are:
+
+```text
+STRUCTURAL       preserves Node / finite-multiset recursion
+FAITHFUL         injective on PETRA forms
+EDIT-PRESERVING  source edit => target edit
+EDIT-REFLECTING  target edit between images => source edit
+```
+
+Combined notions used in this note are:
+
+```text
+STRONG-EDIT
+= EDIT-PRESERVING + EDIT-REFLECTING
+
+FULL PETRA MODEL
+= STRUCTURAL + EDIT-PRESERVING
+
+EMBEDDED FULL MODEL
+= STRUCTURAL + FAITHFUL + EDIT-PRESERVING + EDIT-REFLECTING
+```
+
+There is no single total hierarchy among the four qualifiers.
+
+## 12. Historical arithmetic reading
 
 The historical arithmetic motivation is not used in any definition or proof above.
 
-If an arithmetic interpretation is retained, it must be presented as a concrete target model and separately checked against the hierarchy in this note:
+If an arithmetic interpretation is retained, it must be presented as one concrete target and separately checked against the predicates in this note:
 
 ```text
 arbitrary?
@@ -553,68 +679,46 @@ faithful?
 edit-preserving?
 edit-reflecting?
 full?
+embedded?
 ```
 
-No status is granted merely because arithmetic historically motivated the project.
+No status is granted merely because arithmetic historically motivated PETRA.
 
-In particular, if two different PETRA forms or two different PETRA edit steps receive the same arithmetic image, that is a property of the arithmetic model and does not alter source equality or source reachability.
-
-## 12. Current AIP-5 classification
-
-The interpretation hierarchy is therefore:
-
-```text
-arbitrary interpretation
-        |
-        +-- structural interpretation / carrier homomorphism
-        |       |
-        |       +-- faithful structural interpretation
-        |
-        +-- edit-preserving interpretation
-                |
-                +-- edit-reflecting / strong edit interpretation
-
-full PETRA model
-= structural + edit-preserving
-
-embedded full model
-= structural + edit-preserving + edit-reflecting + faithful
-```
-
-The branches are not a total ordering: structural preservation, faithfulness, and edit preservation are independent properties unless combined explicitly.
-
-## 13. What is proved here
+## 13. Results established here
 
 This note establishes internally:
 
-- the distinction between arbitrary, structural, faithful, edit-preserving, edit-reflecting, and full interpretations;
-- a structural recursion theorem for every finite-multiset target algebra;
-- uniqueness of the structural interpretation for a fixed target algebra;
-- the corresponding initial-algebra universal property of the PETRA recursive carrier;
-- an explicit structural-but-non-faithful model;
-- an explicit faithful-but-not-edit-preserving interpretation;
-- an explicit edit-preserving-but-not-reflecting interpretation;
-- the labeled edit-graph embedding theorem for faithful strong interpretations;
-- the interpretation-independence theorem.
+- `P` is a set and can be used in `Set`;
+- `M_f` acts functorially on sets and maps;
+- every finite-multiset algebra admits a unique PETRA structural interpretation;
+- `(P,Node)` therefore has the corresponding initial-algebra universal property;
+- structural preservation and faithfulness are independent;
+- faithfulness and edit preservation are independent;
+- structural preservation and edit preservation are independent;
+- edit preservation does not imply edit reflection;
+- faithful strong edit interpretations embed the labeled PETRA edit graph into their target relation structure;
+- interpretation values cannot feed back into PETRA equality or intrinsic edit legality.
 
 ## 14. What remains external or open
 
-This note does **not** yet establish:
+This note does **not** establish:
 
 - novelty of any universal-property statement;
-- canonical terminology relative to category theory, universal algebra, coalgebra, term algebra, graph homomorphism, or model theory;
+- canonical terminology relative to category theory, universal algebra, term algebra, graph homomorphism, or model theory;
 - a classification of all finite-multiset target algebras;
 - conditions on `alpha` that guarantee faithfulness of `fold_alpha`;
 - conditions that derive target edit relations canonically from `alpha`;
 - a theory of pointed-operation interpretations;
 - composition/category structure among PETRA models;
-- whether the historical arithmetic reading is structural, faithful, or edit-preserving under this formalization;
+- whether the historical arithmetic reading is structural, faithful, or edit-preserving;
 - normative SPEC/runtime/API changes.
 
 Those questions belong to later meta-theory, related-work validation, or model-specific follow-up.
 
 ## 15. Evidence discipline
 
-The principal AIP-5 results are universal mathematical statements and are proved by definitions, structural induction, and explicit counterexamples. A bounded executable probe may corroborate examples but is neither necessary nor sufficient to establish Theorem 1, Theorem 2, or Theorem 3.
+The principal AIP-5 results are universal mathematical statements and are supported here by definitions, induction, and explicit counterexamples.
 
-Before canonical promotion, terminology and universal-property claims should be compared explicitly with established mathematics. No originality claim is made here.
+A bounded executable probe may corroborate examples but cannot prove Theorem 1, Theorem 2, or Theorem 3.
+
+Before canonical promotion, terminology and universal-property claims must be compared explicitly with established mathematics. No originality claim is made here.
