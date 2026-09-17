@@ -6,14 +6,18 @@ This document classifies the mathematical results developed in Phases 1–5 agai
 
 ## Classification vocabulary
 
-- **KNOWN** — established mathematics directly matching the PETRA statement at the relevant level.
-- **SPECIALIZED** — known mathematics specialized or reformulated in PETRA terminology / carrier.
-- **PETRA-INTERNAL** — proved internally for PETRA, but external equivalence / novelty remains unresolved.
-- **OPEN** — conjecture or unresolved theorem question.
-- **BOUNDED** — computational evidence only.
+Each validation row uses exactly one status from this vocabulary:
+
+- **KNOWN** — established mathematics directly matching the PETRA statement at the relevant level;
+- **SPECIALIZED** — known mathematics specialized or reformulated in PETRA terminology / carrier;
+- **PETRA-INTERNAL** — proved internally for PETRA, but external equivalence / novelty remains unresolved;
+- **OPEN** — conjecture or unresolved theorem question;
+- **BOUNDED** — computational evidence only;
 - **TO-VERIFY** — literature comparison not yet strong enough to classify.
 
-No row labeled `PETRA-INTERNAL` is a novelty claim.
+Qualifiers such as “elementary”, “likely standard”, or “not established” belong in the validation note, not in the status column.
+
+No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` may be promoted merely because no contrary source was found.
 
 ---
 
@@ -23,14 +27,14 @@ No row labeled `PETRA-INTERNAL` is a novelty claim.
 | --- | --- | --- | --- |
 | Carrier as finite rooted unlabeled non-plane trees | **KNOWN** | Pólya-tree literature; Bartholdi–Diaconis 2026; standard rooted unordered tree references | PETRA's `Node(M_f(P))` describes the classical rooted unlabeled/non-plane tree class. |
 | Root child collection as finite multiset; sibling order non-intrinsic | **KNOWN** | Pólya-tree recursive specification; rooted unordered tree references | This is standard structure of rooted unordered trees. |
-| Enumeration `1,1,2,4,9,20,48,115,286,719,...` | **KNOWN** | Pólya/Otter tradition; modern Pólya-tree references; OEIS A000081 | PETRA bounded enumeration agrees with the classical Pólya-tree sequence. |
+| Enumeration `1,1,2,4,9,20,48,115,286,719,...` | **KNOWN** | Pólya/Otter tradition; Bartholdi–Diaconis 2026; OEIS A000081 | PETRA bounded enumeration agrees with the classical Pólya-tree sequence. |
 | Root / parent / connectedness / finiteness / acyclicity facts | **KNOWN** | elementary rooted-tree theory | These are standard consequences of the tree carrier, not PETRA novelty. |
 | One-constructor zero-child formulation | **SPECIALIZED** | standard recursive rooted-tree representation | PETRA's exact presentation is a reformulation of the standard recursive carrier. |
 | Prime-factorization / natural-number rooted-tree correspondence | **KNOWN** | Matula 1968; Göbel 1980 | Clear prior art. Arithmetic correspondence is interpretation/encoding, not PETRA novelty. |
-| Structural rooted-tree statistics such as size/depth/profile/degree | **KNOWN** | classical rooted-tree literature; Matula-number statistics literature | The statistics themselves are standard. |
-| `Aut(P)` recursive decomposition by child types and symmetric permutations | **KNOWN / SPECIALIZED** | Colbourn–Booth 1981; modern Pólya-tree automorphism statements | Same structural theorem is classical for rooted trees; PETRA notation specializes it. |
-| Automorphism-count recurrence | **KNOWN / SPECIALIZED** | same automorphism decomposition | Immediate cardinality consequence of the classical decomposition. |
-| Recursive rigidity criterion | **SPECIALIZED** | consequence of classical automorphism decomposition | PETRA proof is valid, but mathematical content follows from standard rooted-tree automorphism structure. |
+| Structural rooted-tree statistics such as size/depth/profile/degree | **KNOWN** | classical rooted-tree literature; Deutsch 2012; Bartholdi–Diaconis 2026 | The statistics themselves are standard. PETRA-specific edit bounds remain separate rows. |
+| `Aut(P)` recursive decomposition by child types and symmetric permutations | **SPECIALIZED** | Colbourn–Booth 1981; Bartholdi–Diaconis 2026, Lemma 3.5 | The structural theorem is classical for rooted trees; PETRA notation specializes it. |
+| Automorphism-count recurrence | **SPECIALIZED** | classical rooted-tree automorphism decomposition | Immediate cardinality consequence of the classical decomposition. |
+| Recursive rigidity criterion | **SPECIALIZED** | consequence of classical automorphism decomposition | PETRA's criterion follows from the standard recursive automorphism structure. |
 | Target orbit iff same witnessed edit class | **PETRA-INTERNAL** | no exact external match recorded yet | Depends on PETRA's witnessed-edit definition; externally unclassified. |
 | Same target orbit implies same unpointed successor | **PETRA-INTERNAL** | consequence of PETRA witness quotient | Internally proved; no novelty claim. |
 | Converse: same successor implies same target orbit | **OPEN** | bounded search only | No counterexample through size 10; not a theorem. |
@@ -38,29 +42,29 @@ No row labeled `PETRA-INTERNAL` is a novelty claim.
 | Global PETRA edit-graph automorphisms fix `Z` and preserve size layers | **PETRA-INTERNAL** | follows internally from graph theory + PETRA rank theorem | The generic graph-theory steps are standard; the characterization of this graph is PETRA-specific. |
 | Global `Aut(E_P)` triviality | **OPEN** | none | Not proved and not externally validated. |
 | Generic unordered tree edit distance as a field | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005 | Strong prior art exists, but operation semantics differ from PETRA. |
-| PETRA elementary ADD/REMOVE metric identical to classical TED | **NOT ESTABLISHED** | classical TED uses broader operations | Must not be claimed without an explicit equivalence theorem. |
-| PETRA edit graph connectedness and size bipartition | **PETRA-INTERNAL / elementary** | generic graph consequences of ±1 grading | Internally direct; external novelty not assessed. |
+| PETRA elementary ADD/REMOVE metric identical to classical TED | **TO-VERIFY** | classical TED uses broader operations | Identity is not established. Current sources show a semantic mismatch, so equivalence would require an explicit operation-by-operation theorem. |
+| PETRA edit graph connectedness and size bipartition | **PETRA-INTERNAL** | generic graph consequences of ±1 grading | Internally direct and elementary; external novelty is not assessed. |
 | Exact PETRA distance `d(P,Q)=size(P)+size(Q)-2c(P,Q)` | **TO-VERIFY** | common-subtree / edit-distance literature relevant but not yet matched to PETRA's restricted edits | Internal proof stands; external equivalence and novelty remain unresolved. |
 | Existence of REMOVE*ADD* geodesic through a maximum common reduct | **TO-VERIFY** | likely related to common-subtree/edit-script normal forms | Requires operation-exact comparison. |
-| REMOVE reachability is a partial order | **PETRA-INTERNAL / elementary** | generic consequences of strict size decrease and reachability | Standard style of argument; exact poset is PETRA-specific. |
+| REMOVE reachability is a partial order | **PETRA-INTERNAL** | generic consequences of strict size decrease and reachability | Standard style of argument; the exact poset is PETRA-specific. |
 | REMOVE poset not a meet-semilattice | **PETRA-INTERNAL** | no exact external comparison yet | Explicit counterexample internally proved. No novelty claim. |
-| Structural interpretation as recursive fold / homomorphism | **TO-VERIFY / likely SPECIALIZED** | generic initial-algebra literature | General idea is standard; exact finite-multiset-functor theorem needs stronger sourcing. |
-| `(P,Node)` initial algebra for finite-multiset functor on `Set` | **TO-VERIFY** | generic initial-algebra references insufficiently specific so far | Keep internal theorem, but Phase 6 source not yet adequate. |
-| Faithful structural interpretation iff injective | **SPECIALIZED / elementary** | direct definition-level consequence | No plausible novelty claim. |
-| Kernel of structural interpretation is structural congruence | **TO-VERIFY / likely SPECIALIZED** | standard algebraic kernel-congruence pattern | Exact signature / functor formulation still needs source. |
-| Quotient algebra iff structural congruence | **TO-VERIFY / likely SPECIALIZED** | standard universal-algebra quotient principle | Needs exact external reference. |
-| First-isomorphism-style factorization through image | **TO-VERIFY / likely SPECIALIZED** | standard algebraic pattern | PETRA proof stands; external classification incomplete. |
+| Structural interpretation as recursive fold / homomorphism | **TO-VERIFY** | generic initial-algebra literature | General idea is standard; exact finite-multiset-functor theorem needs stronger sourcing. |
+| `(P,Node)` initial algebra for finite-multiset functor on `Set` | **TO-VERIFY** | generic initial-algebra references insufficiently specific so far | Keep internal theorem, but Phase 6 source is not yet adequate. |
+| Faithful structural interpretation iff injective | **SPECIALIZED** | direct definition-level consequence | Elementary specialization; no novelty claim. |
+| Kernel of structural interpretation is structural congruence | **TO-VERIFY** | standard algebraic kernel-congruence pattern | Exact signature / functor formulation still needs a source. |
+| Quotient algebra iff structural congruence | **TO-VERIFY** | standard universal-algebra quotient principle | Needs an exact external reference. |
+| First-isomorphism-style factorization through image | **TO-VERIFY** | standard algebraic pattern | PETRA proof stands; external classification incomplete. |
 | Arbitrary semantic kernel need not be structural | **PETRA-INTERNAL** | explicit PETRA counterexample | No external comparison yet. |
 | Structural congruence does not imply REMOVE transition compatibility | **PETRA-INTERNAL** | explicit universal-congruence counterexample | Specific distinction in PETRA theory. |
-| Witnessed edit paths form free category | **SPECIALIZED / standard construction** | generic free-category-on-a-graph mathematics | Exact PETRA witness graph is specific; categorical construction itself is standard. |
-| Quotient by inverse cancellation is a groupoid | **SPECIALIZED / standard construction** | generic path groupoid / free groupoid pattern | Needs a primary/reference citation in later Phase 6 work. |
+| Witnessed edit paths form free category | **TO-VERIFY** | generic free-category-on-a-graph mathematics is relevant | The construction is expected to be standard, but this Phase-6 register does not yet contain a sufficiently explicit source. |
+| Quotient by inverse cancellation is a groupoid | **TO-VERIFY** | generic free-groupoid / path-groupoid mathematics is relevant | Expected to be standard; keep `TO-VERIFY` until an explicit source is registered. |
 | Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | trace/concurrency/rewriting analogues plausible | Exact comparison not yet sourced. |
 | Reduced path need not be geodesic | **PETRA-INTERNAL** | explicit PETRA counterexample | No novelty claim. |
 | Completeness of cancellation + independent commutation | **OPEN** | none | Explicitly unresolved. |
-| Depth / leaf / root-degree / width / max-degree 1-Lipschitz under PETRA edits | **PETRA-INTERNAL** | standard statistics, PETRA-specific edit bound | Internal proofs direct; external novelty unresolved. |
+| Depth / leaf / root-degree / width / max-degree 1-Lipschitz under PETRA edits | **PETRA-INTERNAL** | standard statistics, PETRA-specific edit bound | Internal proofs are direct; external novelty unresolved. |
 | Degree-profile `L1 <= 3` one-step bound | **PETRA-INTERNAL** | no exact external match recorded | Sharp internally and bounded-corroborated. |
 | Level-profile `L1 = 1` per edit | **PETRA-INTERNAL** | direct from PETRA leaf edit | No novelty claim. |
-| Natural statistic tuple fails to classify forms | **KNOWN phenomenon / PETRA witness** | rooted-tree invariants generally non-complete | PETRA explicit witness is internal; non-completeness of coarse invariants is unsurprising and not candidate novelty. |
+| Natural statistic tuple fails to classify forms | **PETRA-INTERNAL** | explicit PETRA witness | The witness is proved internally. A broader external “known phenomenon” classification is not asserted without a source. |
 
 ---
 
@@ -68,7 +72,7 @@ No row labeled `PETRA-INTERNAL` is a novelty claim.
 
 ### Carrier
 
-PETRA's abstract carrier is not a new combinatorial species. A rooted unlabeled/non-plane tree is classically described recursively by a root carrying an unordered collection / multiset of rooted trees. Modern Pólya-tree literature uses precisely this class.
+PETRA's abstract carrier is not a new combinatorial species. A rooted unlabeled/non-plane tree is classically described recursively by a root carrying an unordered collection / multiset of rooted trees. Modern Pólya-tree literature uses this class and gives the same enumeration sequence.
 
 Therefore PETRA should say, at most:
 
@@ -90,7 +94,7 @@ PETRA's potentially distinctive contribution, if any, must lie elsewhere: for ex
 
 ### Automorphisms
 
-The recursive structure of rooted-tree automorphism groups — internal automorphisms of child subtrees together with permutations among isomorphic child copies — is classical. PETRA's Phase-5 group decomposition and cardinality recurrence should be cited as specialization/rederivation, not novelty.
+The recursive structure of rooted-tree automorphism groups — internal automorphisms of child subtrees together with permutations among isomorphic child copies — is classical. Bartholdi–Diaconis 2026 states this explicitly in Lemma 3.5 and attributes the orbit machinery to Colbourn–Booth. PETRA's Phase-5 group decomposition and cardinality recurrence should therefore be cited as specialization/rederivation, not novelty.
 
 ### Tree edit distance
 
