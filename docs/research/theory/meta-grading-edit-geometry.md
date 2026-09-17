@@ -203,7 +203,7 @@ Hence the via-`Z` path is not geodesic. QED.
 
 ## 4. REMOVE order and common reducts
 
-### Definition 5 — REMOVE preorder candidate
+### Definition 5 — REMOVE reachability
 
 Write
 
@@ -445,15 +445,74 @@ size(P)+size(Q)-2.
 
 By Theorem 6 this equals the distance exactly when `2*c(P,Q)=2`, hence when `c(P,Q)=1`. QED.
 
-### Remark 1 — Maximum size need not mean unique common reduct
+### Theorem 7 — Maximum-size common reducts need not be unique
 
-The distance theorem requires only the maximum **size** `c(P,Q)`. It does not assert that a maximum-size common reduct is unique up to PETRA equality.
+There exist PETRA forms with two distinct maximum-size common reducts.
 
-Whether non-isomorphic maximum common reducts occur is a separate structural question and must not be replaced silently by a meet/lattice claim.
+#### Proof
+
+Let
+
+```text
+P = Node({ Node({ Z, Node({Z}) }) })
+```
+
+and
+
+```text
+Q = Node({ Node({Z,Z}), Node({Node({Z})}) }).
+```
+
+Then
+
+```text
+size(P)=5,
+size(Q)=7.
+```
+
+Consider
+
+```text
+S_1 = Node({Node({Z,Z})})
+```
+
+and
+
+```text
+S_2 = Node({Node({Node({Z})})}).
+```
+
+Both have size four and they are not equal: in `S_1` the unique level-one node has two children, while in `S_2` the realization is a unary chain below the root.
+
+From `P`, removing the leaf inside its unary child subtree yields `S_1`, while removing the sibling leaf instead yields `S_2`. Hence both are reducts of `P`.
+
+From `Q`, delete the entire size-three child subtree complementary to the desired one, using descendant-first leaf removals. This yields `S_1` in one case and `S_2` in the other. Hence both are also reducts of `Q`.
+
+It remains to prove maximality. A common reduct of size five would have to equal `P`, because every non-empty REMOVE sequence from `P` strictly decreases size. But reducing `Q` from size seven to size five permits exactly two REMOVE steps. To obtain a root-degree-one form from `Q`, one of its two root child subtrees must disappear completely. Each such subtree has size three, requiring three leaf removals. Therefore `P` is not a reduct of `Q`, and no common reduct can have size five.
+
+Thus `c(P,Q)=4`, and both distinct forms `S_1,S_2` attain that maximum. QED.
+
+### Corollary 7 — The REMOVE poset is not a meet-semilattice
+
+The partial order `(P, <=_R)` is not a meet-semilattice.
+
+#### Proof
+
+For the pair `P,Q` from Theorem 7, `S_1` and `S_2` are distinct common lower bounds of maximum possible size four.
+
+If one were strictly below the other under `<=_R`, a non-empty REMOVE sequence would connect them and strictly decrease size. Since they have equal size, neither can lie below the other unless they are equal, which they are not.
+
+Therefore the pair has no greatest lower bound. Hence `(P, <=_R)` is not a meet-semilattice. QED.
+
+### Remark 1 — Distance depends on maximum size, not on a meet
+
+The distance theorem requires only the numerical quantity `c(P,Q)`, the maximum **size** of a common reduct. Theorem 7 shows that there need not be a unique maximum common reduct and Corollary 7 rules out a global meet operation for `<=_R`.
+
+No lattice interpretation should therefore be inferred from the common-reduct distance formula.
 
 ## 6. Geodesic normalization
 
-### Theorem 7 — Every geodesic determines a maximum common survivor reduct
+### Theorem 8 — Every geodesic determines a maximum common survivor reduct
 
 Let a shortest path from `P` to `Q` be lifted to concrete realizations as in Lemma 2. The initial occurrences that survive the entire path form a common reduct of size exactly `c(P,Q)`.
 
@@ -467,7 +526,7 @@ Let the geodesic length be `L=d(P,Q)`. The survivor estimate in the lower-bound 
 
 By the exact distance formula this quantity is `c(P,Q)`. No common reduct can be larger by definition, so the survivor reduct has exactly that size. QED.
 
-### Corollary 7 — No wasted add-then-delete steps on a geodesic
+### Corollary 8 — No wasted add-then-delete steps on a geodesic
 
 On a lifted geodesic, no occurrence created by an ADD step is later deleted by a REMOVE step.
 
@@ -475,7 +534,7 @@ On a lifted geodesic, no occurrence created by an ADD step is later deleted by a
 
 If an added occurrence were later removed, then at least one REMOVE step would be spent on a non-initial occurrence. Fewer than `r` initial occurrences would be removed, so strictly more than `size(P)-r=c(P,Q)` initial occurrences would survive. Lemma 3 would then produce a common reduct larger than `c(P,Q)`, contradiction. QED.
 
-### Corollary 8 — Geodesic normal form exists
+### Corollary 9 — Geodesic normal form exists
 
 Every pair `P,Q` admits a shortest path with all REMOVE steps before all ADD steps.
 
@@ -487,7 +546,7 @@ This is an existence statement about geodesic normal form. It does not claim uni
 
 ## 7. Local finiteness
 
-### Theorem 8 — Finite degree
+### Theorem 9 — Finite degree
 
 Every vertex of `E_P` has finite degree.
 
@@ -569,6 +628,8 @@ This note proves internally:
 
 - every pair admits a REMOVE-then-ADD geodesic through a maximum common reduct;
 - via-`Z` is geodesic exactly when the largest common reduct has size one;
+- maximum-size common reducts need not be unique;
+- the REMOVE poset is not a meet-semilattice;
 - the edit graph is locally finite;
 - depth, leaf count, and root degree have bounded one-step variation as specified above.
 
@@ -576,8 +637,8 @@ This note proves internally:
 
 This note does **not** yet establish:
 
-- uniqueness of maximum-size common reducts;
-- existence of a meet operation for `<=_R`;
+- a classification of all pairs with non-unique maximum common reducts;
+- join-semilattice or weaker order-theoretic properties beyond the negative meet result;
 - lattice, median-graph, CAT(0), modular, or distributive properties;
 - a closed formula for the number of geodesics;
 - exact unpointed degree in terms of automorphism orbits;
@@ -592,4 +653,6 @@ These belong to later Phase-5 work or Phase-6 external validation.
 
 The results above are mathematical statements proved from the canonical carrier and AIP-4 edit rules.
 
-A bounded executable probe may be added to search for examples such as non-unique maximum common reducts or to corroborate the exact distance formula on small forms. Such a probe would be evidence only and would not replace the proofs in this note.
+The bounded executable probe corroborates the exact distance formula on small forms and was used to discover the explicit non-uniqueness witness promoted into Theorem 7. The proof of Theorem 7 is independent of the bounded enumeration.
+
+Probe results remain computational evidence only and do not replace the general proofs.
