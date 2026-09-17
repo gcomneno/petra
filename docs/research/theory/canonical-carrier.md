@@ -25,8 +25,11 @@ such that:
 - `V` is a finite non-empty set of occurrence-local vertices;
 - `r in V` is the distinguished root;
 - `->` is the direct parent-child incidence relation;
+- `r` has no immediate parent;
 - every `v != r` has exactly one immediate parent;
 - every vertex is reachable from `r` by a finite `->`-path.
+
+These conditions are intended as the explicit structural characterization used below; acyclicity is derived rather than added as an independent axiom.
 
 Vertex labels, names, addresses, or persistent identities are not part of the structure. Vertices merely distinguish simultaneous occurrences inside one realization.
 
@@ -254,7 +257,7 @@ Every concrete realization of a PETRA form has exactly one root occurrence.
 
 #### Proof
 
-This is part of the concrete-realization structure in Definition 2: one distinguished root `r` is given, and all vertices are reachable from it. Any second root candidate distinct from `r` would, by reachability, have a non-empty path from `r` and therefore an immediate parent, so it would not be a root. QED.
+The distinguished root `r` has no immediate parent by Definition 2. Any other occurrence `v != r` has exactly one immediate parent, again by Definition 2. Therefore `r` is the unique parentless occurrence and hence the unique root. QED.
 
 ### Theorem 2 — Unique immediate parent
 
@@ -288,7 +291,11 @@ No occurrence is a proper descendant of itself, and every descending direct-inci
 
 #### Proof
 
-Assume for contradiction that a directed cycle exists. Every occurrence on that cycle is reachable from the root by Theorem 3. Choose the first occurrence `v` on the cycle encountered along the unique root path. The predecessor of `v` on the cycle is distinct from the predecessor of `v` on the root path unless the entire root path already lies on the cycle; in the latter case the root would have an immediate parent on the cycle, contradicting that it is the root. Therefore `v` would have two distinct immediate parents, contradicting Theorem 2. Hence no directed cycle exists.
+Assume for contradiction that a directed cycle exists.
+
+If the distinguished root `r` lies on that cycle, then `r` has an immediate predecessor on the cycle, contradicting Definition 2, which states that `r` has no immediate parent.
+
+Otherwise, choose any occurrence `v` on the cycle. By Theorem 3, there is a unique finite path from `r` to `v`. Let `w` be the first occurrence on that root-to-`v` path that lies on the cycle. Since `w != r`, it has one predecessor on the root path. It also has a predecessor on the directed cycle. These predecessors are distinct because `w` was the first cycle occurrence encountered from the root. Thus `w` has two immediate parents, contradicting Theorem 2. Hence no directed cycle exists.
 
 By Theorem 4 there are finitely many occurrences. An infinite descending chain would repeat an occurrence and therefore contain a directed cycle. Thus every descending chain is finite. QED.
 
