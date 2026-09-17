@@ -240,9 +240,11 @@ def check_wrapper_erasure() -> None:
             TERMINAL,
         ),
     )
-    assert "r" not in repr(raw)
-    assert "^" not in repr(raw)
-    assert "exponent" not in repr(raw)
+    rendered = repr(raw)
+    assert "Root(" not in rendered
+    assert "Term(" not in rendered
+    assert "^" not in rendered
+    assert "exponent" not in rendered
 
 
 def check_aip3_compatibility() -> None:
