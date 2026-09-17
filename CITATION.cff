@@ -15,10 +15,10 @@ authors:
     alias: "gcomneno"
 repository-code: "https://github.com/gcomneno/petra"
 url: "https://github.com/gcomneno/petra"
-doi: "10.5281/zenodo.22741778"
+doi: "10.5281/zenodo.22804836"
 license: MIT
-version: 1.0.0
-date-released: "2026-09-14"
+version: 2.0.0
+date-released: "2026-09-17"
 keywords:
   - "prime exponent tower"
   - "recursive algebra"
