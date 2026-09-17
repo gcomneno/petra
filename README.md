@@ -11,7 +11,7 @@ behavior merely for continuity.
 
 ## Current status
 
-PETRA is now the maintained runtime, distribution, and command-line surface.
+PETRA is the maintained runtime, distribution, and command-line surface.
 
 - The canonical PETRA architecture is defined by the specification.
 - The immutable PETRA runtime is implemented under `src/petra/`.
@@ -20,10 +20,11 @@ PETRA is now the maintained runtime, distribution, and command-line surface.
 - The minimal maintained CLI is `petra`.
 - Phase 8 — minimal CLI — is complete.
 - The Phase 9 readiness audit concluded `PHASE_10_READY`.
-- Phase 10 — complete replacement — is active.
-- `src/pet/` remains temporarily in the repository as historical migration
-  residue, but it is not part of the maintained PETRA distribution surface.
-- Tag `v0.3.0` preserves the final historical PET release.
+- Phase 10 — complete replacement — is complete.
+- The historical `src/pet/` runtime and obsolete PET test/tool surface were
+  removed during Phase 10 and remain recoverable through Git history and tag
+  `v0.3.0`.
+- PETRA v2.0.0 was released on 2026-09-17.
 
 Do not treat the historical `pet` CLI, PET-Base JSON, `PETObject`, PET-Metrics, numeric projection, or legacy operators as PETRA behavior.
 
@@ -98,16 +99,14 @@ contract.
 
 ## Running the tests
 
-The canonical test gate excludes slow research tests and the historical
-PET legacy surface:
+The canonical test gate excludes slow research tests:
 
 ~~~bash
-pytest tests/ -q -m "not slow and not legacy"
+pytest tests/ -q -m "not slow"
 ~~~
 
-Running the full suite without filters takes considerably longer and
-includes historical migration residue that is not part of the maintained
-PETRA contract.
+Running the full suite without filters takes considerably longer and includes
+slow research/integration coverage outside the default CI gate.
 
 ## Role of primes
 
@@ -122,14 +121,11 @@ factorization are outside the initial structural core.
 PETRA reuses only artifacts required by a concrete PETRA contract.
 
 Historical PET behavior remains recoverable through Git history, tags, and
-releases. Obsolete APIs, commands, formats, tests, tools, and readers are
-removed or retargeted during Phase 10 rather than retained as permanent
-compatibility layers.
+releases. Phase 10 removed obsolete APIs, commands, formats, tests, tools, and
+readers rather than retaining permanent compatibility layers.
 
-The replacement program is tracked by
-[issue #169](https://github.com/gcomneno/petra/issues/169). The current Phase 10
-distribution-boundary slice is tracked by
-[issue #226](https://github.com/gcomneno/petra/issues/226).
+The completed replacement program is tracked by
+[issue #169](https://github.com/gcomneno/petra/issues/169).
 
 ## Versioning
 
@@ -141,11 +137,11 @@ PETRA uses semantic versioning with an explicit discontinuity:
 - `v1.0.0` is the first **PETRA** release. The version line restarts at
   `1.0.0` by design: PETRA is not a compatible successor of PET, so inheriting
   the PET version number would be misleading.
+- `v2.0.0` is the current PETRA major release and is not backward compatible
+  with the `1.x` line.
 - The `petra` distribution tracks the PETRA line only. Releases with
   version `< 1.0.0` belong to the historical PET packaging and should not be
   installed for PETRA use.
 
-Stability commitment: within the `1.x` line, the canonical serialization,
-operator semantics, and CLI contract defined in
-[`docs/reference/SPEC.md`](docs/reference/SPEC.md) are frozen. Additions are
-allowed; breaking changes require a `2.0.0` bump.
+Within a major release line, additions and compatible changes follow semantic
+versioning. Breaking changes require the next major version.
