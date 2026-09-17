@@ -25,6 +25,9 @@ satellite (`../../resolver/`) and the PETRA canonical runtime
   relationship to prior mathematics and computer-science literature, including
   explicit novelty boundaries. Canonical for research context; non-normative
   for PETRA semantics.
+- [`SOURCE-REGISTER.md`](SOURCE-REGISTER.md) — maintained classification of
+  external research material as direct related work, methodological
+  inspiration, or unpromoted source material.
 - [`notes/open-problems.md`](notes/open-problems.md) — active front.
   Each problem has a statement, a why-now, a first step, and a status.
   Updated as work progresses.
