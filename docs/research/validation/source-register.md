@@ -758,12 +758,38 @@ The multiset theorem does not transfer to the set of distinct PETRA predecessors
 
 ---
 
+## S29 — Kuboyama, Shin & Miyahara 2006, edit-distance/common-subtree framework
+
+**Bibliographic identity**
+
+Tetsuji Kuboyama, Kilho Shin and Tetsuhiro Miyahara, *A Theoretical Analysis of Tree Edit Distance Measures*, Information and Media Technologies 1(1) (2006), 242–256.
+
+DOI:
+
+- https://doi.org/10.11185/imt.1.242
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper gives a general mapping-based framework relating several tree edit-distance measures to common-subtree and related common-structure problems.
+
+It supports the general principle that edit distance and maximum common structure can be dual formulations under compatible operation and cost models.
+
+### Convention mismatch
+
+The paper does not state PETRA's exact theorem under the full convention set `unlabeled + unordered + rooted + root-preserving + leaf-only + unit cost + quotient by rooted isomorphism`, nor does it define PETRA's `c(P,Q)` as maximum common REMOVE reduct.
+
+Therefore it supports provenance and analogy, not literal theorem identity.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 
 1. an axiom-by-axiom determination of whether PETRA witnessed edits form a residual structure in the Melliès / Glauert–Khasidashvili sense;
-2. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
+2. no further source-exact metric match is required for Phase 6: issue #309 classifies PETRA's exact common-REMOVE-reduct formula and REMOVE*ADD* geodesic theorem as PETRA-INTERNAL after targeted comparison;
 3. no source is required for universal rooted lower-neighbour set reconstruction: issue #307 gives an explicit size-3 counterexample; any further work would concern stronger neighbourhood signatures or restricted classes;
 4. dedicated novelty review for any PETRA-specific theorem candidate.
 
