@@ -48,11 +48,13 @@ d(P,Q) = size(P) + size(Q) - 2*c(P,Q)
 
 The literature search confirms strong connections among tree edit distance, restricted edit distance, and maximum-common-structure formulations, but the currently registered sources do not establish this exact formula under all PETRA conventions simultaneously: unlabeled, unordered, rooted, root-preserving, unit-cost, leaf-only, modulo rooted-tree isomorphism, with `c` defined by common leaf-pruning reducts.
 
-Therefore the exact formula remains **TO-VERIFY externally**. Its internal proof is unaffected.
+Targeted Phase-6 comparison found no registered source stating this exact theorem under PETRA's full convention set. Selkow / 1-degree literature validates the leaf-edit operation family, while general edit-distance/common-subtree literature validates the broader duality pattern, but neither source family identifies its common structure with PETRA's maximum common REMOVE reduct on rooted unlabeled unordered isomorphism classes.
+
+Therefore the exact formula is classified **PETRA-INTERNAL**: proved internally, externally related to known edit/common-structure theory, but not identified with an operation-exact published theorem. This is **not** a novelty claim.
 
 ## 7. REMOVE* ADD* geodesic
 
-PETRA's existence theorem for a geodesic of the form `REMOVE* ADD*` through a maximum common reduct remains **TO-VERIFY externally**. The current literature makes the comparison substantially narrower, but no source-exact theorem has yet been registered.
+PETRA's existence theorem for a geodesic of the form `REMOVE* ADD*` through a maximum common reduct is likewise classified **PETRA-INTERNAL**. The normal form follows from PETRA's own common-reduct argument. Existing top-down / 1-degree literature confirms the leaf insertion/deletion setting but the registered sources do not state the exact maximum-common-REMOVE-reduct geodesic theorem under PETRA's quotient conventions.
 
 ## 8. REMOVE reachability
 
@@ -60,4 +62,11 @@ PETRA REMOVE reachability is related to pruning / tree-inclusion ideas, but gene
 
 ## 9. Result
 
-Phase 6 can now strengthen one boundary safely: PETRA's elementary leaf ADD/REMOVE operation family is a specialization of established 1-degree / Selkow edit operations. The exact PETRA metric formula, geodesic normal form, and pruning-order equivalence remain narrower `TO-VERIFY` questions.
+Phase 6 now has a stable boundary:
+
+- PETRA's elementary leaf ADD/REMOVE operation family is **SPECIALIZED** from established 1-degree / Selkow edit operations;
+- the general edit-distance / maximum-common-structure duality is **KNOWN**;
+- PETRA's exact common-REMOVE-reduct distance formula is **PETRA-INTERNAL**;
+- PETRA's maximum-common-reduct `REMOVE* ADD*` geodesic theorem is **PETRA-INTERNAL**.
+
+No novelty claim is inferred from the lack of an operation-exact external match.

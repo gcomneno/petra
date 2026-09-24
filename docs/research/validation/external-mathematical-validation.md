@@ -48,8 +48,8 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | PETRA ADD/REMOVE operation family | **SPECIALIZED** | Selkow 1977; 1-degree literature | Unlabeled unordered unit-cost specialization with relabeling absent. |
 | PETRA elementary operation system versus unrestricted classical TED | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005; Selkow 1977 | The operation systems are not identical: unrestricted TED permits broader insertion/deletion semantics, whereas PETRA permits leaf ADD/REMOVE only. This row makes no claim about a closed-form relation between the resulting metrics. |
 | PETRA edit graph connectedness and size bipartition | **PETRA-INTERNAL** | generic graph consequences of ±1 grading | Internally direct and elementary; external novelty is not assessed. |
-| Exact PETRA distance `d(P,Q)=size(P)+size(Q)-2c(P,Q)` | **TO-VERIFY** | Selkow/1-degree and common-structure literature narrow the comparison | Internal proof stands; the exact formula under PETRA's full convention set has not yet been located externally. |
-| Existence of REMOVE*ADD* geodesic through a maximum common reduct | **TO-VERIFY** | leaf-edit/common-structure literature relevant | A source-exact theorem under PETRA's conventions is still required. |
+| Exact PETRA distance `d(P,Q)=size(P)+size(Q)-2c(P,Q)` | **PETRA-INTERNAL** | Selkow/1-degree prior art; Kuboyama–Shin–Miyahara 2006 common-structure framework | Internal proof stands. Targeted comparison found broad known analogues but no operation-exact external theorem for PETRA's maximum common REMOVE reduct under all PETRA conventions. No novelty claim. |
+| Existence of REMOVE*ADD* geodesic through a maximum common reduct | **PETRA-INTERNAL** | Selkow/1-degree leaf-edit family; general edit/common-structure duality | The theorem is internally proved for PETRA. No registered source states the exact normal form with PETRA's common-REMOVE-reduct and quotient conventions. No novelty claim. |
 | REMOVE reachability is a partial order | **PETRA-INTERNAL** | generic consequences of strict size decrease and reachability | Standard style of argument; the exact poset is PETRA-specific. |
 | REMOVE poset not a meet-semilattice | **PETRA-INTERNAL** | no exact external comparison yet | Explicit counterexample internally proved. No novelty claim. |
 | Structural interpretation as recursive fold / homomorphism | **SPECIALIZED** | Adámek–Milius–Moss 2025, bag-functor initial algebra | The unique PETRA structural fold is the standard unique homomorphism out of the initial bag algebra, expressed in PETRA terminology. |
@@ -146,7 +146,7 @@ These results support implementation/proof confidence but **do not establish ext
 
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
-1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
+1. **Phase-6 closure audit** — ensure no `TO-VERIFY` rows remain unintentionally unresolved and freeze provenance classifications;
 2. **global rigidity via stronger neighbourhood data, only if pursued** — lower-neighbour-set reconstruction is false already at size 3;
 3. **residual-semantics redesign only if needed** — enrich joint witness data before reconsidering full residual-system membership;
 4. only then, a dedicated **novelty candidate audit**.
