@@ -55,7 +55,7 @@ PETRA is **not yet classified** as a Stable Deterministic Residual Structure or 
 
 The current definitions/proofs establish selected commuting squares, but the full residual-system package has not been checked: residual existence, uniqueness versus multiplicity, self-residual behaviour, erasure/duplication, coherence of iterated residuals, stability/conflict-freedom hypotheses, and the exact permutation-equivalence theorem.
 
-Thus PETRA witnessed residual transport as an instance of a standard residual system remains **TO-VERIFY**.
+That uncertainty is resolved by the Phase-6 axiom audit in issue #303: the current `W_P` witness quotient is **not a full residual system as defined**, although its realization-level independent fragment has genuine residual-style commuting squares.
 
 ## 6. What is already safe to classify
 
@@ -64,7 +64,7 @@ generic residual transport                 KNOWN
 generic permutation equivalence            KNOWN
 PETRA residual-shaped commuting square     PETRA-INTERNAL theorem with known analogue
 PETRA exact independence criterion         PETRA-INTERNAL
-PETRA residual-system membership           TO-VERIFY
+PETRA full residual-system membership      NEGATIVE FOR CURRENT W_P QUOTIENT
 ```
 
 No item labelled PETRA-INTERNAL is a novelty claim.
@@ -101,4 +101,4 @@ PETRA exact independence criterion          PETRA-INTERNAL
 local-presentation completeness             OPEN
 ```
 
-The next step is a formal residual-system axiom audit against PETRA's witnessed edit definitions. No Phase-7 promotion follows automatically.
+The formal axiom audit is recorded in `residual-system-axiom-audit.md`. It identifies a concrete witness-quotient obstruction rather than merely a missing literature reference. No Phase-7 promotion follows automatically.
