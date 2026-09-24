@@ -279,9 +279,7 @@ This source gives the standard conceptual relation between recursively generated
 
 ### Validation status
 
-This is **not yet sufficient** to validate PETRA's exact claim that the finite-unordered-multiset carrier is the initial algebra for the finite-multiset endofunctor on `Set`.
-
-A primary or textbook-quality source specific enough to the finite-multiset functor is still required.
+This source by itself is **not sufficient** to validate PETRA's exact finite-multiset initial-algebra claim. That gap is now resolved separately by S14, which gives a textbook-grade bag-functor statement matching the PETRA carrier.
 
 ---
 
