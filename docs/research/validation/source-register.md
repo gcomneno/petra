@@ -552,11 +552,83 @@ As with S18, the standard trace-monoid setup assumes a fixed action alphabet and
 
 ---
 
+## S20 — Melliès 2002, axiomatic residual theory
+
+**Bibliographic identity**
+
+Paul-André Melliès, *Axiomatic Rewriting Theory VI: Residual Theory Revisited*, in RTA 2002, Lecture Notes in Computer Science 2378, pp. 24–50.
+
+DOI:
+
+- https://doi.org/10.1007/3-540-45610-4_4
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+Melliès describes residual theory as the algebraic theory of confluence for the lambda calculus and, more generally, conflict-free rewriting systems. The paper explicitly discusses Lévy-style **permutation equivalence between rewriting paths** and residual-theoretic confluence diagrams.
+
+This is a substantially closer external framework for PETRA's source-dependent witnessed edits than fixed-alphabet trace monoids.
+
+### Convention boundary
+
+The source does not establish that PETRA satisfies the axioms of Melliès' residual structures. PETRA's exact witness transport, multiplicity handling, independence criterion, and completeness claim must therefore be checked separately.
+
+---
+
+## S21 — Bruggink 2003, residuals in higher-order rewriting
+
+**Bibliographic identity**
+
+H. J. Sander Bruggink, *Residuals in Higher-Order Rewriting*, in RTA 2003, Lecture Notes in Computer Science 2706, pp. 123–137.
+
+Stable proceedings reference:
+
+- https://link.springer.com/book/10.1007/3-540-44881-0
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The work studies residuals in an explicit rewriting formalism, defines reductions by proof terms that witness rewriting steps, and constructs a residual operator. It also connects the resulting residual system with confluence and permutation equivalence of reductions.
+
+The use of witnessed reductions and a residual operator makes this source structurally relevant to PETRA's residualized second edit after one witnessed edit has occurred.
+
+### Convention boundary
+
+The formalism is higher-order pattern rewriting, not PETRA's unordered rooted-tree leaf editing. The existence of residual machinery in that setting does not by itself prove that PETRA forms a residual system.
+
+---
+
+## S22 — Glauert & Khasidashvili 1996, deterministic residual structures
+
+**Bibliographic identity**
+
+John R. W. Glauert and Zurab Khasidashvili, *Relative Normalization in Deterministic Residual Structures*, CAAP '96, Lecture Notes in Computer Science 1059, pp. 180–195.
+
+DOI:
+
+- https://doi.org/10.1007/3-540-61064-2_37
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper defines Stable Deterministic Residual Structures as abstract reduction systems equipped with axiomatized residual relations, intended to model orthogonal / conflict-free rewriting behaviour.
+
+For PETRA this supplies a useful validation target: if a residual operator on witnessed edits is defined, its axioms should be checked explicitly rather than inferred from the existence of commuting squares.
+
+### Convention boundary
+
+No current PETRA Phase-6 result verifies the full SDRS axiom set. PETRA must therefore not yet be called a Stable Deterministic Residual Structure.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 
-1. a more exact rewriting/concurrency source for PETRA's **state-dependent** residual-witness commuting squares, beyond fixed-alphabet trace monoids;
+1. an axiom-by-axiom determination of whether PETRA witnessed edits form a residual structure in the Melliès / Glauert–Khasidashvili sense;
 2. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
 3. literature sufficient to assess the global PETRA edit-graph automorphism questions;
 4. dedicated novelty review for any PETRA-specific theorem candidate.
