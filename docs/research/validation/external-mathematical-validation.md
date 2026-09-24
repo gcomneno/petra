@@ -118,8 +118,7 @@ The following currently deserve dedicated literature review because they are int
 4. automorphism group of the global PETRA edit graph;
 5. completeness or incompleteness of the local witnessed-path presentation;
 6. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
-7. structural-congruence versus edit-compatibility separation in this exact algebra;
-8. exact universal-property formulation for the finite-multiset carrier — now externally resolved by the bag-functor initial-algebra reference.
+7. structural-congruence versus edit-compatibility separation in this exact algebra.
 
 No item in this list is called novel.
 
