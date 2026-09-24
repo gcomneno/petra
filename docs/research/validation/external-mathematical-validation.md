@@ -58,9 +58,9 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | First-isomorphism-style factorization through image | **SPECIALIZED** | Burris–Sankappanavar, Homomorphism Theorem | Standard `A/ker(h) ~= im(h)` factorization specialized to PETRA structural homomorphisms. |
 | Arbitrary semantic kernel need not be structural | **PETRA-INTERNAL** | explicit PETRA counterexample | No external comparison yet. |
 | Structural congruence does not imply REMOVE transition compatibility | **PETRA-INTERNAL** | explicit universal-congruence counterexample | Specific distinction in PETRA theory. |
-| Witnessed edit paths form free category | **TO-VERIFY** | generic free-category-on-a-graph mathematics is relevant | The construction is expected to be standard, but this Phase-6 register does not yet contain a sufficiently explicit source. |
-| Quotient by inverse cancellation is a groupoid | **TO-VERIFY** | generic free-groupoid / path-groupoid mathematics is relevant | Expected to be standard; keep `TO-VERIFY` until an explicit source is registered. |
-| Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | trace/concurrency/rewriting analogues plausible | Exact comparison not yet sourced. |
+| Witnessed edit paths form free category | **SPECIALIZED** | Sharifi free-category construction | PETRA's witnessed paths are the standard free category on the witnessed edit graph, specialized to PETRA edge semantics. |
+| Quotient by inverse cancellation is a groupoid | **SPECIALIZED** | Brown, free groupoid on a graph | PETRA's inverse-cancellation quotient is the standard free-groupoid construction before adding any commutation relations. |
+| Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | Mazurkiewicz trace theory supplies the generic partial-commutation pattern | The generic commuting-independent-actions idea is known, but PETRA's witnesses and independence are state-dependent; no exact trace-monoid equivalence is claimed. |
 | Reduced path need not be geodesic | **PETRA-INTERNAL** | explicit PETRA counterexample | No novelty claim. |
 | Completeness of cancellation + independent commutation | **OPEN** | none | Explicitly unresolved. |
 | Depth / leaf / root-degree / width / max-degree 1-Lipschitz under PETRA edits | **PETRA-INTERNAL** | standard statistics, PETRA-specific edit bound | Internal proofs are direct; external novelty unresolved. |
@@ -143,7 +143,7 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **rewrite/path comparison** — free category/groupoid, traces, commuting independent rewrites;
+2. **state-dependent rewrite/concurrency comparison** — residual witnesses and commuting squares beyond fixed-alphabet trace monoids;
 3. **global edit-graph literature** — reconstruction / automorphism questions;
 4. only then, a dedicated **novelty candidate audit**.
 
