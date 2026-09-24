@@ -732,13 +732,39 @@ Therefore it must not be used as an exact proof of PETRA lower-neighbour reconst
 
 ---
 
+## S28 — Kostochka, Nahvi, West & Zirlin 2022, rooted connected leaf-deletion decks
+
+**Bibliographic identity**
+
+Alexandr V. Kostochka, Mina Nahvi, Douglas B. West and Dara Zirlin, *3-reconstructibility of rooted trees*, Pure and Applied Mathematics Quarterly 18(6) (2022), 2479–2509.
+
+DOI:
+
+- https://doi.org/10.4310/pamq.2022.v18.n6.a7
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper defines an `rc1-card` of a rooted tree exactly as the rooted tree obtained by deleting one non-root leaf, preserving the root. The `rc1-deck` is explicitly a **multiset** of these cards.
+
+Theorem 2.1 proves that rooted trees are weakly 1-reconstructible from that multiset.
+
+For order three, the proof notes that the two rooted trees are distinguished by the **number** of `rc1` cards. This is precisely the information PETRA's lower-neighbour **set** discards.
+
+### PETRA consequence
+
+The multiset theorem does not transfer to the set of distinct PETRA predecessors. In fact the two rooted order-three forms already give a counterexample to set reconstruction.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 
 1. an axiom-by-axiom determination of whether PETRA witnessed edits form a residual structure in the Melliès / Glauert–Khasidashvili sense;
 2. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
-3. an exact rooted set-reconstruction theorem for PETRA's one-leaf REMOVE predecessor set, or a direct proof/classification of the remaining exceptional rooted cases;
+3. no source is required for universal rooted lower-neighbour set reconstruction: issue #307 gives an explicit size-3 counterexample; any further work would concern stronger neighbourhood signatures or restricted classes;
 4. dedicated novelty review for any PETRA-specific theorem candidate.
 
 No absence from this initial register is evidence of novelty.
