@@ -35,12 +35,14 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | `Aut(P)` recursive decomposition by child types and symmetric permutations | **SPECIALIZED** | Colbourn–Booth 1981; Bartholdi–Diaconis 2026, Lemma 3.5 | The structural theorem is classical for rooted trees; PETRA notation specializes it. |
 | Automorphism-count recurrence | **SPECIALIZED** | classical rooted-tree automorphism decomposition | Immediate cardinality consequence of the classical decomposition. |
 | Recursive rigidity criterion | **SPECIALIZED** | consequence of classical automorphism decomposition | PETRA's criterion follows from the standard recursive automorphism structure. |
-| Target orbit iff same witnessed edit class | **PETRA-INTERNAL** | no exact external match recorded yet | Depends on PETRA's witnessed-edit definition; externally unclassified. |
+| Target orbit iff same witnessed edit class | **PETRA-INTERNAL** | PETRA witness definition; rooted-tree automorphism theory | Exact at witnessed-edge level by definition/proof in Phase 5. |
 | Same target orbit implies same unpointed successor | **PETRA-INTERNAL** | consequence of PETRA witness quotient | Internally proved; no novelty claim. |
-| Converse: same successor implies same target orbit | **OPEN** | bounded search only | No counterexample through size 10; not a theorem. |
+| Same unpointed ADD successor implies same target orbit | **SPECIALIZED** | Krasikov 1991 branch-interchange theorem + PETRA root-marker reduction | The classical pendant-attachment similarity theorem gives the unrooted result; a finite rigid marker attached at the distinguished root forces the resulting automorphism to be root-preserving. |
+| Same unpointed REMOVE successor implies same target orbit | **SPECIALIZED** | Harary–Palmer / Kirkpatrick–Klawe–Corneil endvertex pseudosimilarity theorem + PETRA root-marker reduction | Removal-similar leaves of a tree are similar; the same marker reduction preserves PETRA's distinguished root. |
 | `Z` unique degree-one vertex of PETRA edit graph | **PETRA-INTERNAL** | no exact external match recorded | Specific to PETRA leaf-edit graph as currently defined. |
-| Global PETRA edit-graph automorphisms fix `Z` and preserve size layers | **PETRA-INTERNAL** | follows internally from graph theory + PETRA rank theorem | The generic graph-theory steps are standard; the characterization of this graph is PETRA-specific. |
-| Global `Aut(E_P)` triviality | **OPEN** | none | Not proved and not externally validated. |
+| Global PETRA edit-graph automorphisms fix `Z` and preserve size layers | **SPECIALIZED** | generic graph automorphism distance invariance + PETRA rank theorem | Once `Z` is uniquely degree one, every graph automorphism fixes it and therefore preserves distance/rank. The PETRA-specific input is the rank formula `d(Z,P)=size(P)-1`. |
+| Reconstruction from the set of lower neighbours | **TO-VERIFY** | Harary–Palmer 1966; Manvel 1970 | Classical trees are leaf-reconstructible, and Manvel treats sets of non-isomorphic maximal subtrees, but his theorem is unrooted and has exceptional cases. Exact rooted PETRA applicability remains unresolved. |
+| Global `Aut(E_P)` triviality | **OPEN** | Manvel-style set reconstruction is a strong analogue but not operation-exact for rooted PETRA | No exact theorem currently proves that every rooted PETRA form is determined by its unpointed lower-neighbour set, so global rigidity remains open. |
 | Generic unordered tree edit distance as a field | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005 | Strong prior art exists, but unrestricted operation semantics differ from PETRA. |
 | Leaf-restricted insertion/deletion as a tree-edit family | **KNOWN** | Selkow 1977; modern 1-degree edit-distance literature | Known as Selkow / top-down / degree-1 / 1-degree edit distance. |
 | PETRA ADD/REMOVE operation family | **SPECIALIZED** | Selkow 1977; 1-degree literature | Unlabeled unordered unit-cost specialization with relabeling absent. |
@@ -116,8 +118,8 @@ The following currently deserve dedicated literature review because they are int
 
 1. exact distance via maximum common REMOVE reduct;
 2. non-meet property of the REMOVE poset under the PETRA reduction relation;
-3. exact relationship between edit-target automorphism orbits and unpointed successors;
-4. automorphism group of the global PETRA edit graph;
+3. automorphism group of the global PETRA edit graph;
+4. rooted set-reconstruction from PETRA lower-neighbour sets, including any exceptional forms;
 5. completeness or incompleteness of the local witnessed-path presentation;
 6. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
 7. structural-congruence versus edit-compatibility separation in this exact algebra.
@@ -145,7 +147,7 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **global edit-graph literature** — reconstruction / automorphism questions;
+2. **rooted lower-neighbour reconstruction** — determine whether Manvel-style set reconstruction closes after rooting and PETRA conventions;
 3. **residual-semantics redesign only if needed** — enrich joint witness data before reconsidering full residual-system membership;
 4. only then, a dedicated **novelty candidate audit**.
 

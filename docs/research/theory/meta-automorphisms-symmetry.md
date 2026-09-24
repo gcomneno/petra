@@ -308,36 +308,80 @@ and
 
 The first inequalities may be strict only if distinct witnessed target-orbits collapse to the same unpointed endpoint.
 
-## 7. Converse orbit question
+## 7. Converse orbit theorem
 
-The difficult converse is:
+Phase-6 external validation resolves the converse:
 
 ```text
 same unpointed successor
 => same target orbit.
 ```
 
-If true, then witnessed edit classes and unpointed successor forms coincide exactly for that operation. If false, the unpointed relation forgets more than automorphism symmetry alone.
+The external ingredients are classical tree-similarity results:
 
-### Open Problem 1 — ADD successor collision across distinct target orbits
+- Krasikov's branch-interchange theorem implies that if attaching one pendant leaf at `u` or `v` gives isomorphic **unrooted** trees, then `u` and `v` are automorphism-similar in the original tree;
+- Harary–Palmer and Kirkpatrick–Klawe–Corneil show that removal-similar endvertices of a tree are automorphism-similar.
 
-For a fixed realization `T`, suppose attaching one fresh leaf at targets `u` and `v` gives isomorphic resulting rooted trees. Must there exist
+PETRA requires the automorphism to preserve the distinguished root. The following finite marker reduction supplies that bridge.
+
+### Lemma 2 — Root-marker reduction
+
+Let `T` be a finite rooted tree with root `r`. Attach to `r` a new marker centre `m`, and attach `D` fresh leaves to `m`, where
 
 ```text
-g in Aut(T)
+D > |V(T)| + 2.
 ```
 
-with `g(u)=v`?
+Call the resulting unrooted tree `T^*`.
 
-No general proof or counterexample is asserted in this note.
+Then every automorphism of `T^*` fixes `m` and `r`.
 
-### Open Problem 2 — REMOVE successor collision across distinct leaf orbits
+#### Proof
 
-For a fixed realization `T`, suppose deleting removable leaves `u` and `v` gives isomorphic resulting rooted trees. Must `u` and `v` lie in the same `Aut(T)`-orbit?
+The marker centre `m` has degree `D+1`, strictly larger than the degree of every original vertex even after one PETRA ADD operation. Hence `m` is uniquely characterized by degree and is fixed by every automorphism.
 
-Again, no general proof or counterexample is asserted here.
+Among the neighbours of `m`, exactly one — `r` — is not one of the `D` new marker leaves. Therefore every automorphism fixing `m` also fixes `r`. QED.
 
-A bounded probe accompanies this note and searches for counterexamples. Bounded absence of collisions is evidence only.
+### Theorem 5 — ADD successor equality iff target-orbit equality
+
+Let `u,v` be occurrences of a rooted realization `T`. Attaching one fresh leaf at `u` and at `v` yields the same PETRA successor form iff `u` and `v` lie in the same root-preserving `Aut(T)`-orbit.
+
+#### Proof
+
+The forward direction is the only new one.
+
+Assume the two rooted ADD results are isomorphic. Attach the same marker of Lemma 2 at the root of both results. The rooted isomorphism extends over the identical marker, so the two marked trees are isomorphic as unrooted trees.
+
+Apply Krasikov's theorem to the marked base tree `T^*`, taking one attached rooted tree to be a single edge and the other to be a single vertex. It follows that `u` and `v` are similar in `T^*`.
+
+By Lemma 2 every automorphism of `T^*` fixes the original root `r`. Restricting the automorphism to the original vertices gives a root-preserving automorphism of `T` carrying `u` to `v`.
+
+The reverse direction is Proposition 1. QED.
+
+### Theorem 6 — REMOVE successor equality iff target-orbit equality
+
+Let `u,v` be removable leaves of a rooted realization `T`. Deleting `u` and `v` yields the same PETRA predecessor form iff `u` and `v` lie in the same root-preserving `Aut(T)`-orbit.
+
+#### Proof
+
+Assume the two rooted deletion results are isomorphic. Attach the same marker of Lemma 2 to the root. Then in the marked unrooted tree `T^*`, the endvertices `u` and `v` are removal-similar.
+
+The classical endvertex pseudosimilarity theorem implies that `u` and `v` are similar in `T^*`. Lemma 2 forces the witnessing automorphism to fix the original root, and restriction to `T` gives a root-preserving automorphism carrying `u` to `v`.
+
+The reverse direction is Proposition 1. QED.
+
+### Corollary 5 — Exact unpointed degree formulas
+
+For every PETRA form `P`,
+
+```text
+#ADD_successors(P) = orb_ADD(P)
+#REMOVE_successors(P) = orb_REMOVE(P).
+```
+
+Thus forgetting witnesses loses exactly automorphism symmetry for a **single** elementary ADD or REMOVE target. It does not introduce any additional one-step target collisions.
+
+This does not contradict the residual-system obstruction from Phase 6: pairwise relative occurrence information can still be lost when two individually quotient-equivalent witnessed edges are considered together.
 
 ## 8. Marked-tree characterization of target orbits
 
@@ -395,7 +439,7 @@ to be the group of graph automorphisms of `E_P`.
 
 This is a different object from `Aut(P)`: the former permutes PETRA forms globally; the latter permutes occurrences inside one realization while fixing its form.
 
-### Theorem 5 — `Z` is graph-theoretically distinguished
+### Theorem 7 — `Z` is graph-theoretically distinguished
 
 `Z` is the unique vertex of degree one in `E_P`.
 
@@ -409,7 +453,7 @@ Every form also has at least one ADD neighbor of size `size(P)+1`, obtained by a
 
 Therefore `Z` is the unique degree-one vertex. QED.
 
-### Corollary 5 — Every global edit-graph automorphism fixes `Z`
+### Corollary 6 — Every global edit-graph automorphism fixes `Z`
 
 Every element of `Aut(E_P)` fixes `Z`.
 
@@ -417,7 +461,7 @@ Every element of `Aut(E_P)` fixes `Z`.
 
 Graph automorphisms preserve vertex degree, and `Z` is uniquely characterized by degree one. QED.
 
-### Theorem 6 — Distance from `Z` equals rank
+### Theorem 8 — Distance from `Z` equals rank
 
 For every PETRA form `P`,
 
@@ -435,7 +479,7 @@ d(Z,P) >= size(P)-size(Z) = size(P)-1.
 
 AIP-4 constructibility gives an ADD-only path from `Z` to `P` of exactly `size(P)-1` steps. Hence equality holds. QED.
 
-### Corollary 6 — Global graph automorphisms preserve size exactly
+### Corollary 7 — Global graph automorphisms preserve size exactly
 
 For every
 
@@ -451,7 +495,7 @@ size(F(P)) = size(P).
 
 #### Proof
 
-By Corollary 5, `F(Z)=Z`. Graph automorphisms preserve distance, so
+By Corollary 6, `F(Z)=Z`. Graph automorphisms preserve distance, so
 
 ```text
 d(Z,F(P))
@@ -459,9 +503,9 @@ d(Z,F(P))
 = d(Z,P).
 ```
 
-Apply Theorem 6 to both sides. QED.
+Apply Theorem 8 to both sides. QED.
 
-### Corollary 7 — Global graph automorphisms preserve each rank layer and the canonical bipartition
+### Corollary 8 — Global graph automorphisms preserve each rank layer and the canonical bipartition
 
 Every global edit-graph automorphism preserves every set
 
@@ -488,7 +532,9 @@ This note proves internally:
 - ADD-target automorphism orbits classify witnessed ADD edge classes exactly;
 - REMOVE-target automorphism orbits classify witnessed REMOVE edge classes exactly;
 - same-orbit targets necessarily have the same unpointed successor;
-- orbit counts refine the previous local degree bounds;
+- conversely, equal unpointed ADD successors imply equal ADD-target orbits;
+- conversely, equal unpointed REMOVE predecessors imply equal REMOVE-target orbits;
+- unpointed ADD/REMOVE degree equals the corresponding target-orbit count exactly;
 - target orbits are characterized by once-marked rooted-tree isomorphism;
 - `Z` is the unique degree-one vertex of the global edit graph;
 - every global edit-graph automorphism fixes `Z`;
@@ -499,10 +545,8 @@ This note proves internally:
 
 This note does **not** establish:
 
-- that equal unpointed ADD successors imply equal target orbits;
-- that equal unpointed REMOVE successors imply equal target orbits;
-- exact unpointed edit degree in terms of orbit counts in full generality;
 - triviality or a complete classification of `Aut(E_P)`;
+- rooted reconstruction of a PETRA form from the **set** of its lower neighbours in every rank;
 - reconstruction of a PETRA form from its lower-neighbor data;
 - novelty relative to established rooted-tree automorphism, wreath-product, reconstruction, or graph-automorphism theory;
 - any normative runtime or SPEC consequence.

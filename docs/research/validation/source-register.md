@@ -624,13 +624,121 @@ No current PETRA Phase-6 result verifies the full SDRS axiom set. PETRA must the
 
 ---
 
+## S23 — Harary & Palmer 1966, maximal-subtree reconstruction
+
+**Bibliographic identity**
+
+Frank Harary and Ed Palmer, *The Reconstruction of a Tree from its Maximal Subtrees*, Canadian Journal of Mathematics 18 (1966), 803–810.
+
+DOI:
+
+- https://doi.org/10.4153/CJM-1966-079-8
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper proves that a finite tree can be reconstructed from its maximal proper subtrees; for a tree these are obtained by deleting endvertices / leaves.
+
+This is directly relevant to PETRA because a REMOVE predecessor is obtained by deleting one non-root leaf. However PETRA vertices are **rooted** tree isomorphism classes and the global edit graph records only adjacency to distinct predecessor forms, not a multiplicity-labelled deletion deck.
+
+Therefore this source supports a strong reconstruction analogue but does not by itself prove global rigidity of the PETRA edit graph.
+
+---
+
+## S24 — Krasikov 1991, branch interchange and similarity
+
+**Bibliographic identity**
+
+I. Krasikov, *Interchanging branches and similarity in a tree*, Graphs and Combinatorics 7 (1991), 165–175.
+
+Secondary exact statement recorded in Asciak et al. (2014): if `A` and `B` are non-isomorphic rooted trees and `T_{a,b}(A,B) ~= T_{a,b}(B,A)`, then `a` and `b` are similar in `T`.
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+Taking `A` to be a rooted edge and `B` a single rooted vertex gives the exact unrooted attachment statement needed for PETRA ADD targets: if adjoining one new pendant leaf at `a` or at `b` yields isomorphic trees, then `a` and `b` lie in the same automorphism orbit of the original tree.
+
+A root-marker reduction is required to transfer this unrooted theorem to PETRA's root-preserving setting.
+
+---
+
+## S25 — Kirkpatrick, Klawe & Corneil 1983, pseudosimilarity in trees
+
+**Bibliographic identity**
+
+D. G. Kirkpatrick, M. M. Klawe and D. G. Corneil, *On pseudosimilarity in trees*, Journal of Combinatorial Theory, Series B 34(3) (1983), 323–339.
+
+DOI:
+
+- https://doi.org/10.1016/0095-8956(83)90044-8
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper characterizes pseudosimilar vertices in trees and records the strong restriction that endvertices cannot be pseudosimilar: removal-similar endvertices are automorphism-similar.
+
+For PETRA REMOVE this is the relevant external theorem shape. Again, a root-marker reduction is needed because PETRA uses root-preserving isomorphisms and automorphisms.
+
+---
+
+## S26 — Manvel 1970, set reconstruction of trees
+
+**Bibliographic identity**
+
+Bennet Manvel, *Reconstruction of Trees*, Canadian Journal of Mathematics 22 (1970), 55–60.
+
+DOI:
+
+- https://doi.org/10.4153/CJM-1970-007-4
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+Manvel studies reconstruction from the **set of non-isomorphic maximal proper subtrees**, i.e. multiplicities are discarded. The main theorem says that a tree is determined by this set except for two exceptional cases illustrated in the paper.
+
+This is much closer to PETRA's unpointed lower-neighbour set than an ordinary reconstruction deck because PETRA adjacency likewise forgets multiplicity.
+
+### Critical convention mismatch
+
+Manvel's theorem is for unrooted trees. PETRA forms are rooted, and the exact effect of rooting on the exceptional set-reconstruction pairs has not yet been imported into a theorem about the infinite PETRA edit graph.
+
+Thus the result strongly narrows the global-rigidity question but does not close it.
+
+---
+
+## S27 — Andriantiana & Wagner 2024, rooted-tree reconstruction variant
+
+**Bibliographic identity**
+
+Ervin Andriantiana and Stephan Wagner, *Polynomial invariants for rooted trees related to ...*, Electronic Journal of Combinatorics 31(4) (2024), Paper P4.37.
+
+Stable article PDF:
+
+- https://www.combinatorics.org/ojs/index.php/eljc/article/download/v31i4p37/pdf/
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper proves a rooted-forest reconstruction theorem from maximal **leaf-induced** proper subforests when there are at least three leaves.
+
+This confirms that strong rooted reconstruction results exist, but its deletion operation is not PETRA REMOVE: a leaf-induced subtree is the union of root-to-selected-leaf paths, so omitting one leaf may remove more than a single leaf occurrence.
+
+Therefore it must not be used as an exact proof of PETRA lower-neighbour reconstruction.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 
 1. an axiom-by-axiom determination of whether PETRA witnessed edits form a residual structure in the Melliès / Glauert–Khasidashvili sense;
 2. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
-3. literature sufficient to assess the global PETRA edit-graph automorphism questions;
+3. an exact rooted set-reconstruction theorem for PETRA's one-leaf REMOVE predecessor set, or a direct proof/classification of the remaining exceptional rooted cases;
 4. dedicated novelty review for any PETRA-specific theorem candidate.
 
 No absence from this initial register is evidence of novelty.
