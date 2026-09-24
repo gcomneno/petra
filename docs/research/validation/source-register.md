@@ -10,6 +10,7 @@ This register records external sources used to classify the provenance of PETRA'
 - **SURVEY** — survey / tutorial synthesizing prior literature.
 - **MODERN REFERENCE** — recent research/reference source useful for terminology and a current statement of known results.
 - **REFERENCE / SOFTWARE MANUAL** — implementation/reference documentation; useful for terminology and representation, not novelty.
+- **TEXTBOOK / MONOGRAPH** — book-length reference establishing standard theory at textbook/reference level.
 - **SECONDARY INDEX** — bibliographic/index source used only to locate or cross-check primary literature.
 
 ---
@@ -278,9 +279,7 @@ This source gives the standard conceptual relation between recursively generated
 
 ### Validation status
 
-This is **not yet sufficient** to validate PETRA's exact claim that the finite-unordered-multiset carrier is the initial algebra for the finite-multiset endofunctor on `Set`.
-
-A primary or textbook-quality source specific enough to the finite-multiset functor is still required.
+This source by itself is **not sufficient** to validate PETRA's exact finite-multiset initial-algebra claim. That gap is now resolved separately by S14, which gives a textbook-grade bag-functor statement matching the PETRA carrier.
 
 ---
 
@@ -369,15 +368,99 @@ The paper works with labeled ordered trees and pattern matching. PETRA removes l
 
 ---
 
+
+## S14 — Adámek, Milius & Moss 2025, bag functor initial algebra
+
+**Bibliographic identity**
+
+Jiří Adámek, Stefan Milius and Lawrence S. Moss, *Initial Algebras and Terminal Coalgebras: The Theory of Fixed Points of Functors*, Cambridge University Press, 2025.
+
+Stable publisher page:
+
+- https://www.cambridge.org/core/books/initial-algebras-and-terminal-coalgebras/5D35C77FF1C940558D6D09B0E8BBB9A6
+
+Relevant material:
+
+- Chapter 3, finitary iteration;
+- Example 3.2.10, bag functor.
+
+Type: **TEXTBOOK / MONOGRAPH**.
+
+### Supports / limits
+
+The book defines the bag functor
+
+```text
+B : Set -> Set
+```
+
+where `B(X)` is the set of finite bags / finite multisets over `X`, and maps are pushed forward by summing multiplicities along fibres.
+
+It then identifies the initial algebra of `B` with **all finite unordered trees**, with algebra structure given by joining the trees in a finite bag under a fresh common root, preserving multiplicities.
+
+This is an operation-exact external match for PETRA's research carrier:
+
+```text
+P ::= Node(M_f(P))
+```
+
+when `M_f` is read as the finite-multiset / bag functor.
+
+The empty bag gives the one-node tree, matching PETRA's zero-child form.
+
+### Phase-6 consequence
+
+The claim that PETRA's canonical carrier is the initial algebra of the finite-multiset functor is established mathematics, not a PETRA novelty candidate.
+
+PETRA's notation and surrounding interpretation/edit theory remain project-specific.
+
+---
+
+## S15 — Burris & Sankappanavar, universal-algebra homomorphism theory
+
+**Bibliographic identity**
+
+Stanley Burris and H. P. Sankappanavar, *A Course in Universal Algebra*, Graduate Texts in Mathematics 78, Springer-Verlag, 1981; Millennium Edition available from the University of Waterloo.
+
+Stable references:
+
+- https://link.springer.com/book/9781461381327
+- https://www.math.uwaterloo.ca/~snburris/htdocs/UALG/univ-algebra.pdf
+
+Type: **TEXTBOOK / MONOGRAPH**.
+
+### Supports / limits
+
+The text gives the standard universal-algebra results needed for PETRA's quotient comparison, including:
+
+- kernel of a homomorphism is a congruence (Theorem 6.8 in the Millennium Edition);
+- quotient algebras by congruences;
+- natural quotient maps as homomorphisms;
+- Homomorphism Theorem / first-isomorphism form `A / ker(h) ~= B` for a surjective homomorphism `h : A -> B` (Theorem 6.12).
+
+Applied to the image of a general homomorphism, this yields the usual factorization:
+
+```text
+A / ker(h) ~= im(h).
+```
+
+### Convention bridge
+
+PETRA's bag-algebra presentation is not literally a one-operation fixed-arity universal algebra. To use these theorems transparently, one may present the bag constructor by a finitary signature with one `n`-ary constructor for each `n >= 0`, quotienting by equations expressing invariance under permutations.
+
+Under that presentation, PETRA structural congruence is ordinary compatibility with the constructor operations, so the standard quotient/kernel/homomorphism theorems apply.
+
+These results do **not** imply any compatibility with PETRA's ADD/REMOVE transition system.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 
-1. a primary / textbook-grade source for the exact finite-multiset functor initial-algebra statement;
-2. universal-algebra references for congruence, quotient, kernel congruence and first-isomorphism-style factorization in the exact signature used;
-3. term-rewriting / trace / concurrency literature close enough to PETRA's witnessed-edit commutation to support a precise comparison;
-4. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
-5. literature sufficient to assess the global PETRA edit-graph automorphism questions;
-6. dedicated novelty review for any PETRA-specific theorem candidate.
+1. term-rewriting / trace / concurrency literature close enough to PETRA's witnessed-edit commutation to support a precise comparison;
+2. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
+3. literature sufficient to assess the global PETRA edit-graph automorphism questions;
+4. dedicated novelty review for any PETRA-specific theorem candidate.
 
 No absence from this initial register is evidence of novelty.

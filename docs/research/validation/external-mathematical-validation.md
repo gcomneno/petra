@@ -50,12 +50,12 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | Existence of REMOVE*ADD* geodesic through a maximum common reduct | **TO-VERIFY** | leaf-edit/common-structure literature relevant | A source-exact theorem under PETRA's conventions is still required. |
 | REMOVE reachability is a partial order | **PETRA-INTERNAL** | generic consequences of strict size decrease and reachability | Standard style of argument; the exact poset is PETRA-specific. |
 | REMOVE poset not a meet-semilattice | **PETRA-INTERNAL** | no exact external comparison yet | Explicit counterexample internally proved. No novelty claim. |
-| Structural interpretation as recursive fold / homomorphism | **TO-VERIFY** | generic initial-algebra literature | General idea is standard; exact finite-multiset-functor theorem needs stronger sourcing. |
-| `(P,Node)` initial algebra for finite-multiset functor on `Set` | **TO-VERIFY** | generic initial-algebra references insufficiently specific so far | Keep internal theorem, but Phase 6 source is not yet adequate. |
+| Structural interpretation as recursive fold / homomorphism | **SPECIALIZED** | Adámek–Milius–Moss 2025, bag-functor initial algebra | The unique PETRA structural fold is the standard unique homomorphism out of the initial bag algebra, expressed in PETRA terminology. |
+| `(P,Node)` initial algebra for finite-multiset functor on `Set` | **KNOWN** | Adámek–Milius–Moss 2025, Example 3.2.10 | The bag functor's initial algebra is explicitly all finite unordered trees with tree-tupling by finite bags; this matches PETRA's carrier. |
 | Faithful structural interpretation iff injective | **SPECIALIZED** | direct definition-level consequence | Elementary specialization; no novelty claim. |
-| Kernel of structural interpretation is structural congruence | **TO-VERIFY** | standard algebraic kernel-congruence pattern | Exact signature / functor formulation still needs a source. |
-| Quotient algebra iff structural congruence | **TO-VERIFY** | standard universal-algebra quotient principle | Needs an exact external reference. |
-| First-isomorphism-style factorization through image | **TO-VERIFY** | standard algebraic pattern | PETRA proof stands; external classification incomplete. |
+| Kernel of structural interpretation is structural congruence | **SPECIALIZED** | Burris–Sankappanavar, kernel-congruence theorem | Standard universal-algebra theorem after presenting the bag constructor as symmetric finitary operations. |
+| Quotient algebra iff structural congruence | **SPECIALIZED** | Burris–Sankappanavar, quotient algebra theory | Standard quotient-congruence principle under the same presentation bridge. |
+| First-isomorphism-style factorization through image | **SPECIALIZED** | Burris–Sankappanavar, Homomorphism Theorem | Standard `A/ker(h) ~= im(h)` factorization specialized to PETRA structural homomorphisms. |
 | Arbitrary semantic kernel need not be structural | **PETRA-INTERNAL** | explicit PETRA counterexample | No external comparison yet. |
 | Structural congruence does not imply REMOVE transition compatibility | **PETRA-INTERNAL** | explicit universal-congruence counterexample | Specific distinction in PETRA theory. |
 | Witnessed edit paths form free category | **TO-VERIFY** | generic free-category-on-a-graph mathematics is relevant | The construction is expected to be standard, but this Phase-6 register does not yet contain a sufficiently explicit source. |
@@ -118,8 +118,7 @@ The following currently deserve dedicated literature review because they are int
 4. automorphism group of the global PETRA edit graph;
 5. completeness or incompleteness of the local witnessed-path presentation;
 6. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
-7. structural-congruence versus edit-compatibility separation in this exact algebra;
-8. exact universal-property formulation for the finite-multiset carrier.
+7. structural-congruence versus edit-compatibility separation in this exact algebra.
 
 No item in this list is called novel.
 
@@ -144,9 +143,8 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **algebraic semantics validation** — finite-multiset initial algebra, congruences, quotients, kernels;
-3. **rewrite/path comparison** — free groupoid, traces, commuting independent rewrites;
-4. **global edit-graph literature** — reconstruction / automorphism questions;
-5. only then, a dedicated **novelty candidate audit**.
+2. **rewrite/path comparison** — free category/groupoid, traces, commuting independent rewrites;
+3. **global edit-graph literature** — reconstruction / automorphism questions;
+4. only then, a dedicated **novelty candidate audit**.
 
 Phase 7 remains blocked until this validation work is complete enough to support a normative decision.
