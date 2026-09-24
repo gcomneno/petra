@@ -1,6 +1,6 @@
 # PETRA Phase 6 — external mathematical validation matrix
 
-Status: **working Phase 6 classification** for issue #293 under programme #276.
+Status: **Phase 6 COMPLETE / provenance classification frozen** under programme #276.
 
 This document classifies the mathematical results developed in Phases 1–5 against external literature. It is a provenance / novelty-boundary document, not a replacement for PETRA's internal proofs.
 
@@ -114,15 +114,14 @@ This does **not** yet identify PETRA's quotient metric or its maximum-common-red
 
 ## Candidate PETRA-specific theorem families requiring deeper search
 
-The following currently deserve dedicated literature review because they are internally nontrivial but not externally classified:
+The following remain legitimate future research questions, but **do not block Phase 6 closure** because their current provenance status is explicit:
 
-1. exact distance via maximum common REMOVE reduct;
-2. non-meet property of the REMOVE poset under the PETRA reduction relation;
-3. automorphism group of the global PETRA edit graph;
-4. stronger graph-theoretic neighbourhood signatures for global rigidity, if pursued;
-5. completeness or incompleteness of the local witnessed-path presentation;
-6. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
-7. structural-congruence versus edit-compatibility separation in this exact algebra.
+1. non-meet property of the REMOVE poset under the PETRA reduction relation;
+2. automorphism group of the global PETRA edit graph;
+3. stronger graph-theoretic neighbourhood signatures for global rigidity, if pursued;
+4. completeness or incompleteness of the local witnessed-path presentation;
+5. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
+6. structural-congruence versus edit-compatibility separation in this exact algebra.
 
 No item in this list is called novel.
 
@@ -142,13 +141,18 @@ These results support implementation/proof confidence but **do not establish ext
 
 ---
 
-## Phase-6 next research slices
+## Phase-6 closure state
 
-The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
+The closure audit for #311 confirms:
 
-1. **Phase-6 closure audit** — ensure no `TO-VERIFY` rows remain unintentionally unresolved and freeze provenance classifications;
-2. **global rigidity via stronger neighbourhood data, only if pursued** — lower-neighbour-set reconstruction is false already at size 3;
-3. **residual-semantics redesign only if needed** — enrich joint witness data before reconsidering full residual-system membership;
-4. only then, a dedicated **novelty candidate audit**.
+- every major Phase 1–5 theorem family represented here has an explicit provenance status;
+- the validation table contains **no `TO-VERIFY` rows**;
+- unresolved mathematical questions are explicitly classified `OPEN` or `PETRA-INTERNAL` rather than treated as hidden blockers;
+- `PETRA-INTERNAL` means internally proved / externally unmatched at the audited level, **not novel**;
+- negative results and failed comparison routes remain part of the record rather than being erased.
 
-Phase 7 remains blocked until this validation work is complete enough to support a normative decision.
+Therefore Phase 6 is **COMPLETE**.
+
+Future work on global rigidity, stronger residual semantics, path-completeness, or candidate-specific novelty review may be undertaken if needed, but none is a prerequisite for closing Phase 6.
+
+Phase 7 may now begin as a separate normative-promotion phase. This document itself makes no SPEC, runtime, API, CLI, serialization, or Resolver change.
