@@ -1,6 +1,6 @@
 # PETRA Phase 6 — external mathematical validation source register
 
-Status: **Phase 6 working source register** for issue #293 under programme #276.
+Status: **Phase 6 COMPLETE / source register frozen for closure** under programme #276.
 
 This register records external sources used to classify the provenance of PETRA's research theory. Inclusion of a source does **not** by itself establish equivalence with a PETRA theorem; convention mismatches are recorded explicitly.
 
@@ -784,13 +784,15 @@ Therefore it supports provenance and analogy, not literal theorem identity.
 
 ---
 
-# Sources still required
+# Phase-6 closure status
 
-The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
+No unresolved source search is required to close Phase 6.
 
-1. an axiom-by-axiom determination of whether PETRA witnessed edits form a residual structure in the Melliès / Glauert–Khasidashvili sense;
-2. no further source-exact metric match is required for Phase 6: issue #309 classifies PETRA's exact common-REMOVE-reduct formula and REMOVE*ADD* geodesic theorem as PETRA-INTERNAL after targeted comparison;
-3. no source is required for universal rooted lower-neighbour set reconstruction: issue #307 gives an explicit size-3 counterexample; any further work would concern stronger neighbourhood signatures or restricted classes;
-4. dedicated novelty review for any PETRA-specific theorem candidate.
+The previously open validation targets have explicit outcomes:
 
-No absence from this initial register is evidence of novelty.
+1. residual-system membership was audited axiom by axiom in #303/#304; the current witnessed-edge quotient is not a full residual system as presently defined;
+2. the exact common-REMOVE-reduct metric formula and maximum-common-reduct geodesic theorem were classified PETRA-INTERNAL in #309/#310 after targeted comparison;
+3. universal rooted lower-neighbour **set** reconstruction was refuted by the size-3 counterexample in #307/#308;
+4. remaining OPEN or PETRA-INTERNAL questions are recorded as such and are not silently promoted to novelty claims.
+
+This register is frozen as the Phase-6 provenance baseline. Future sources may refine individual classifications during later work, but absence of a source remains **no evidence of novelty**.
