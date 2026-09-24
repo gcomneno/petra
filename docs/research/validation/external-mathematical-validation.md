@@ -41,8 +41,8 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | Same unpointed REMOVE successor implies same target orbit | **SPECIALIZED** | Harary–Palmer / Kirkpatrick–Klawe–Corneil endvertex pseudosimilarity theorem + PETRA root-marker reduction | Removal-similar leaves of a tree are similar; the same marker reduction preserves PETRA's distinguished root. |
 | `Z` unique degree-one vertex of PETRA edit graph | **PETRA-INTERNAL** | no exact external match recorded | Specific to PETRA leaf-edit graph as currently defined. |
 | Global PETRA edit-graph automorphisms fix `Z` and preserve size layers | **SPECIALIZED** | generic graph automorphism distance invariance + PETRA rank theorem | Once `Z` is uniquely degree one, every graph automorphism fixes it and therefore preserves distance/rank. The PETRA-specific input is the rank formula `d(Z,P)=size(P)-1`. |
-| Reconstruction from the set of lower neighbours | **TO-VERIFY** | Harary–Palmer 1966; Manvel 1970 | Classical trees are leaf-reconstructible, and Manvel treats sets of non-isomorphic maximal subtrees, but his theorem is unrooted and has exceptional cases. Exact rooted PETRA applicability remains unresolved. |
-| Global `Aut(E_P)` triviality | **OPEN** | Manvel-style set reconstruction is a strong analogue but not operation-exact for rooted PETRA | No exact theorem currently proves that every rooted PETRA form is determined by its unpointed lower-neighbour set, so global rigidity remains open. |
+| Reconstruction from the set of lower neighbours | **PETRA-INTERNAL** | Kostochka–Nahvi–West–Zirlin 2022 clarifies the multiset/set distinction; explicit PETRA size-3 counterexample | False in general: the rooted 3-chain and the rooted 2-leaf star have the same singleton set of REMOVE predecessors, although their `rc1` multisets differ in multiplicity. |
+| Global `Aut(E_P)` triviality | **OPEN** | lower-neighbour-set induction route is refuted by the size-3 collision | Global rigidity may still hold, but it cannot be proved by the proposed claim that every form is uniquely determined by its lower-neighbour set. |
 | Generic unordered tree edit distance as a field | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005 | Strong prior art exists, but unrestricted operation semantics differ from PETRA. |
 | Leaf-restricted insertion/deletion as a tree-edit family | **KNOWN** | Selkow 1977; modern 1-degree edit-distance literature | Known as Selkow / top-down / degree-1 / 1-degree edit distance. |
 | PETRA ADD/REMOVE operation family | **SPECIALIZED** | Selkow 1977; 1-degree literature | Unlabeled unordered unit-cost specialization with relabeling absent. |
@@ -119,7 +119,7 @@ The following currently deserve dedicated literature review because they are int
 1. exact distance via maximum common REMOVE reduct;
 2. non-meet property of the REMOVE poset under the PETRA reduction relation;
 3. automorphism group of the global PETRA edit graph;
-4. rooted set-reconstruction from PETRA lower-neighbour sets, including any exceptional forms;
+4. stronger graph-theoretic neighbourhood signatures for global rigidity, if pursued;
 5. completeness or incompleteness of the local witnessed-path presentation;
 6. PETRA-specific Lipschitz/profile bounds under leaf-only edits;
 7. structural-congruence versus edit-compatibility separation in this exact algebra.
@@ -147,7 +147,7 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **rooted lower-neighbour reconstruction** — determine whether Manvel-style set reconstruction closes after rooting and PETRA conventions;
+2. **global rigidity via stronger neighbourhood data, only if pursued** — lower-neighbour-set reconstruction is false already at size 3;
 3. **residual-semantics redesign only if needed** — enrich joint witness data before reconsidering full residual-system membership;
 4. only then, a dedicated **novelty candidate audit**.
 
