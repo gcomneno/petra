@@ -61,7 +61,7 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | Witnessed edit paths form free category | **SPECIALIZED** | Sharifi free-category construction | PETRA's witnessed paths are the standard free category on the witnessed edit graph, specialized to PETRA edge semantics. |
 | Quotient by inverse cancellation is a groupoid | **SPECIALIZED** | Brown, free groupoid on a graph | PETRA's inverse-cancellation quotient is the standard free-groupoid construction before adding any commutation relations. |
 | Generic residual transport / permutation equivalence of rewriting steps | **KNOWN** | Melliès 2002; Bruggink 2003; Glauert–Khasidashvili 1996 | Residual theory explicitly studies how one step transforms the status of another and compares reductions modulo permutation equivalence. |
-| PETRA witnessed residual transport as an instance of residual theory | **TO-VERIFY** | residual theory is structurally close | PETRA has source-typed witnesses and residualized second steps in commuting squares, but the required residual-system axioms have not yet been checked. |
+| PETRA witnessed residual transport as a full residual system | **PETRA-INTERNAL** | Bruggink 2003 residual-system axioms; PETRA axiom audit #303 | The audit gives a negative result for the current `W_P` witness quotient: residual transport is only defined on a restricted realization-level independence domain, and automorphism-quotiented edge classes can conflate self and distinct symmetric occurrences. A total well-defined projection on all coinitial witnessed edges is therefore not currently available. |
 | Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | residual theory and trace theory supply generic analogues | The exact PETRA structural criterion remains internally proved; no theorem has yet identified it with a standard residual-system independence condition. |
 | Reduced path need not be geodesic | **PETRA-INTERNAL** | explicit PETRA counterexample | No novelty claim. |
 | Completeness of cancellation + independent commutation | **OPEN** | none | Explicitly unresolved. |
@@ -145,8 +145,8 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **residual-system axiom audit** — test PETRA witnessed edits against a standard residual-structure axiom package;
-3. **global edit-graph literature** — reconstruction / automorphism questions;
+2. **global edit-graph literature** — reconstruction / automorphism questions;
+3. **residual-semantics redesign only if needed** — enrich joint witness data before reconsidering full residual-system membership;
 4. only then, a dedicated **novelty candidate audit**.
 
 Phase 7 remains blocked until this validation work is complete enough to support a normative decision.
