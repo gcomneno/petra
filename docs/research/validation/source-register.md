@@ -458,7 +458,7 @@ These results do **not** imply any compatibility with PETRA's ADD/REMOVE transit
 
 **Bibliographic identity**
 
-Romy ar Sharifi, *Homological Algebra — Chapter 1: Category Theory*, Definition 1.1.8.
+Romyar Sharifi, *Homological Algebra — Chapter 1: Category Theory*, Definition 1.1.8.
 
 Stable reference:
 
@@ -502,21 +502,21 @@ The free-groupoid construction validates inverse cancellation only. It does **no
 
 ---
 
-## S18 — Mazurkiewicz 1988, trace theory
+## S18 — Aalbersberg & Rozenberg 1988, trace theory
 
 **Bibliographic identity**
 
-Antoni Mazurkiewicz, *Theory of traces*, Theoretical Computer Science 60(1) (1988), 1–82.
+IJsbrand Jan Aalbersberg and Grzegorz Rozenberg, *Theory of traces*, Theoretical Computer Science 60(1) (1988), 1–82.
 
 Stable DOI:
 
 - https://doi.org/10.1016/0304-3975(88)90051-5
 
-Type: **PRIMARY / FOUNDATIONAL REFERENCE**.
+Type: **PRIMARY**.
 
 ### Supports / limits
 
-Trace theory models partial commutation by fixing an alphabet and a symmetric irreflexive independence relation. Words are identified when adjacent independent letters are swapped.
+The paper presents trace theory as a theory of partial commutativity for concurrent systems and explicitly notes that the theory originated with A. Mazurkiewicz in 1977. In the standard trace setting, one fixes an alphabet and an independence / partial-commutation relation, and words are identified by commuting independent letters.
 
 Thus the generic pattern `... a b ... ~= ... b a ...` for independent actions is established prior art.
 
