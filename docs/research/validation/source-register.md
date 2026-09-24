@@ -308,6 +308,67 @@ Otter's enumeration theory does not establish PETRA's leaf-only edit algebra, in
 
 ---
 
+## S12 — Selkow 1977, leaf-restricted tree editing
+
+**Bibliographic identity**
+
+Stanley M. Selkow, *The Tree-to-Tree Editing Problem*, Information Processing Letters 6(6) (1977), 184–186.
+
+DOI:
+
+- https://doi.org/10.1016/0020-0190(77)90064-3
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+Selkow's original problem is formulated for labeled ordered rooted trees. Its edit system is an early direct source for the restriction that insertion and deletion operate at leaves. Later literature refers to this family as Selkow distance / top-down edit distance / degree-1 or 1-degree edit distance.
+
+This establishes clear prior art for the elementary operation shape:
+
+```text
+leaf insertion
+leaf deletion
+```
+
+PETRA specializes this family by using an unlabeled unordered carrier, omitting relabeling, and assigning unit cost to elementary ADD/REMOVE.
+
+### Convention mismatch
+
+Selkow's original carrier is ordered and labeled. PETRA forms are unlabeled rooted non-plane trees modulo rooted-tree isomorphism. The source supports the operation-family prior-art classification but does not by itself establish equality of the resulting quotient metrics or PETRA's maximum-common-reduct formula.
+
+---
+
+## S13 — Šestáková, Guth & Janoušek, modern 1-degree terminology
+
+**Bibliographic identity**
+
+Eliška Šestáková, Ondřej Guth and Jan Janoušek, *Inexact tree pattern matching with 1-degree edit distance using finite automata*, Discrete Applied Mathematics (2023).
+
+Stable publisher page:
+
+- https://www.sciencedirect.com/science/article/abs/pii/S0166218X23000057
+
+Type: **PRIMARY**.
+
+### Supports / limits
+
+The paper explicitly describes 1-degree edit distance using three elementary operations:
+
+```text
+node relabel
+leaf insert
+leaf delete
+```
+
+and cites Selkow 1977 as the originating reference. This provides a modern confirmation that leaf-only insertion/deletion is an established named edit-distance family.
+
+### Convention mismatch
+
+The paper works with labeled ordered trees and pattern matching. PETRA removes labels, relabeling, and intrinsic sibling order. It supports specialization/provenance, not literal metric identity.
+
+---
+
 # Sources still required
 
 The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
@@ -315,7 +376,7 @@ The following areas remain deliberately **TO VERIFY** before Phase 6 can close:
 1. a primary / textbook-grade source for the exact finite-multiset functor initial-algebra statement;
 2. universal-algebra references for congruence, quotient, kernel congruence and first-isomorphism-style factorization in the exact signature used;
 3. term-rewriting / trace / concurrency literature close enough to PETRA's witnessed-edit commutation to support a precise comparison;
-4. literature on leaf-add/delete or rooted-subtree-reduction metrics close enough to test whether PETRA's exact common-reduct distance formula is already known in equivalent form;
+4. a source-exact comparison for PETRA's common-REMOVE-reduct distance formula and REMOVE*ADD* geodesic normal form inside the Selkow / 1-degree leaf-edit family;
 5. literature sufficient to assess the global PETRA edit-graph automorphism questions;
 6. dedicated novelty review for any PETRA-specific theorem candidate.
 
