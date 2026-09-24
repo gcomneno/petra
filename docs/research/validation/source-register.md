@@ -590,7 +590,7 @@ Type: **PRIMARY**.
 
 ### Supports / limits
 
-The work studies residuals in an explicit rewriting formalism, defines reductions by proof terms that witness rewriting steps, and constructs a residual operator. It also connects the resulting residual system with confluence and permutation equivalence of reductions.
+The work studies residuals in an explicit rewriting formalism, defines reductions by proof terms that witness rewriting steps, and constructs a residual operator. Its Definition 2.4 gives an especially useful audit target: a residual system has identities and a projection `/` defined on **every pair of coinitial steps**, with matching-source/target conditions and the laws `1/phi = 1`, `phi/1 = phi`, `phi/phi = 1`, and the cube identity `(phi/psi)/(chi/psi) = (phi/chi)/(psi/chi)`. It also connects residual systems with confluence and permutation equivalence of reductions.
 
 The use of witnessed reductions and a residual operator makes this source structurally relevant to PETRA's residualized second edit after one witnessed edit has occurred.
 
