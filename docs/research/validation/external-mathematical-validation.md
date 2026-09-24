@@ -41,11 +41,13 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | `Z` unique degree-one vertex of PETRA edit graph | **PETRA-INTERNAL** | no exact external match recorded | Specific to PETRA leaf-edit graph as currently defined. |
 | Global PETRA edit-graph automorphisms fix `Z` and preserve size layers | **PETRA-INTERNAL** | follows internally from graph theory + PETRA rank theorem | The generic graph-theory steps are standard; the characterization of this graph is PETRA-specific. |
 | Global `Aut(E_P)` triviality | **OPEN** | none | Not proved and not externally validated. |
-| Generic unordered tree edit distance as a field | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005 | Strong prior art exists, but operation semantics differ from PETRA. |
-| PETRA elementary ADD/REMOVE metric identical to classical TED | **TO-VERIFY** | classical TED uses broader operations | Identity is not established. Current sources show a semantic mismatch, so equivalence would require an explicit operation-by-operation theorem. |
+| Generic unordered tree edit distance as a field | **KNOWN** | Zhang–Statman–Shasha 1992; Bille 2005 | Strong prior art exists, but unrestricted operation semantics differ from PETRA. |
+| Leaf-restricted insertion/deletion as a tree-edit family | **KNOWN** | Selkow 1977; modern 1-degree edit-distance literature | Known as Selkow / top-down / degree-1 / 1-degree edit distance. |
+| PETRA ADD/REMOVE operation family | **SPECIALIZED** | Selkow 1977; 1-degree literature | Unlabeled unordered unit-cost specialization with relabeling absent. |
+| PETRA metric identical to unrestricted classical TED | **TO-VERIFY** | generic TED permits broader edits | No literal identity established; generic TED is semantically broader. |
 | PETRA edit graph connectedness and size bipartition | **PETRA-INTERNAL** | generic graph consequences of ±1 grading | Internally direct and elementary; external novelty is not assessed. |
-| Exact PETRA distance `d(P,Q)=size(P)+size(Q)-2c(P,Q)` | **TO-VERIFY** | common-subtree / edit-distance literature relevant but not yet matched to PETRA's restricted edits | Internal proof stands; external equivalence and novelty remain unresolved. |
-| Existence of REMOVE*ADD* geodesic through a maximum common reduct | **TO-VERIFY** | likely related to common-subtree/edit-script normal forms | Requires operation-exact comparison. |
+| Exact PETRA distance `d(P,Q)=size(P)+size(Q)-2c(P,Q)` | **TO-VERIFY** | Selkow/1-degree and common-structure literature narrow the comparison | Internal proof stands; the exact formula under PETRA's full convention set has not yet been located externally. |
+| Existence of REMOVE*ADD* geodesic through a maximum common reduct | **TO-VERIFY** | leaf-edit/common-structure literature relevant | A source-exact theorem under PETRA's conventions is still required. |
 | REMOVE reachability is a partial order | **PETRA-INTERNAL** | generic consequences of strict size decrease and reachability | Standard style of argument; the exact poset is PETRA-specific. |
 | REMOVE poset not a meet-semilattice | **PETRA-INTERNAL** | no exact external comparison yet | Explicit counterexample internally proved. No novelty claim. |
 | Structural interpretation as recursive fold / homomorphism | **TO-VERIFY** | generic initial-algebra literature | General idea is standard; exact finite-multiset-functor theorem needs stronger sourcing. |
@@ -100,12 +102,9 @@ The recursive structure of rooted-tree automorphism groups — internal automorp
 
 Tree edit distance is a mature literature. However, operation semantics matter critically. Classical insertion/deletion may reattach children and may include labels/relabeling, whereas PETRA's elementary operation inserts or removes only a leaf occurrence.
 
-Therefore the safe Phase-6 statement is:
+Phase-6 research now identifies a closer prior-art family than generic TED: Selkow's leaf-restricted edit distance, commonly called 1-degree / degree-1 / top-down edit distance. PETRA's ADD/REMOVE operation family is therefore classified as a specialization of known leaf-edit operations to unlabeled unordered rooted trees with unit costs and no relabel operation.
 
-```text
-PETRA defines a restricted rooted-unordered-tree edit metric related to,
-but not yet identified with, classical tree edit distance.
-```
+This does **not** yet identify PETRA's quotient metric or its maximum-common-reduct formula with a published theorem under the same full convention set.
 
 ---
 
