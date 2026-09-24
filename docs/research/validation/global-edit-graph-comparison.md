@@ -56,17 +56,52 @@ The residual-system audit found loss of **joint** occurrence information. In `No
 
 The new theorem concerns one target at a time. It proves there are no additional one-step successor collisions beyond automorphism symmetry. It does not restore relative identity for pairs of symmetric occurrences.
 
-## 6. Lower-neighbour reconstruction
+## 6. Lower-neighbour reconstruction: false for PETRA sets
 
-Harary–Palmer prove that ordinary finite trees are reconstructible from maximal proper subtrees, equivalently from leaf-deleted trees.
+The exact rooted multiset analogue is known. Kostochka–Nahvi–West–Zirlin define an `rc1-card` exactly by deleting one non-root leaf while preserving the root, and prove rooted trees reconstructible from the resulting **multiset**.
 
-Manvel goes closer to PETRA's unpointed graph: he discards multiplicities and studies the **set of non-isomorphic maximal proper subtrees**. His theorem reconstructs a tree from that set except for two exceptional unrooted cases.
+PETRA's unpointed lower neighbourhood is weaker: it keeps only the **set of distinct predecessor forms**.
 
-This matters because, after the orbit-converse theorem above, PETRA's lower-neighbour set is exactly the set of distinct rooted forms obtained by deleting a leaf.
+That loss of multiplicity is already fatal at size three.
 
-However Manvel's theorem is unrooted. A rooted version with PETRA's exact one-leaf deletion convention has not yet been established here, and the exceptional unrooted pairs cannot simply be ignored.
+Let
 
-Thus lower-neighbour reconstruction remains **TO-VERIFY** rather than being promoted.
+```text
+C = Node({Node({Z})})
+S = Node({Z,Z}).
+```
+
+These are non-isomorphic rooted trees: `C` is the rooted chain of length two below the root, while `S` is the rooted star with two leaf children.
+
+Deleting the unique non-root leaf of `C` gives
+
+```text
+Node({Z}).
+```
+
+Deleting either leaf of `S` gives the same rooted predecessor
+
+```text
+Node({Z}).
+```
+
+Hence
+
+```text
+Lower(C) = { Node({Z}) } = Lower(S),
+```
+
+although `C != S`.
+
+The multiset decks remain different: `C` has one such card, while `S` has two. This is exactly why the rooted reconstruction theorem does not imply PETRA set reconstruction.
+
+Therefore:
+
+```text
+rooted lower-neighbour set reconstruction    FALSE
+```
+
+No larger search or probe is needed to refute the universal statement.
 
 ## 7. Rooted reconstruction literature is not automatically operation-exact
 
@@ -82,9 +117,9 @@ PETRA internally proves that `Z` is the unique degree-one vertex. Hence every au
 
 The generic graph-theoretic part is standard; the rank formula is PETRA-specific. This result is best classified **SPECIALIZED**, not novel.
 
-To prove `Aut(E_P)` trivial by induction on rank, it would suffice to know that every rooted form is uniquely determined by its set of lower neighbours once all lower layers are fixed.
+The proposed induction from lower-neighbour sets cannot work as stated, because the size-three chain and star have identical lower-neighbour sets.
 
-Classical set-reconstruction makes this strategy plausible but does not yet establish the exact rooted theorem needed.
+This does **not** produce a nontrivial automorphism of the global graph: upper-neighbour structure may still distinguish the two vertices. It only kills this particular reconstruction route.
 
 Therefore:
 
@@ -100,22 +135,22 @@ one-step ADD successor-orbit converse                 SPECIALIZED
 one-step REMOVE predecessor-orbit converse            SPECIALIZED
 exact unpointed one-step degree = orbit count         SPECIALIZED
 fix Z / preserve rank under global automorphisms      SPECIALIZED
-rooted lower-neighbour set reconstruction             TO-VERIFY
+rooted lower-neighbour set reconstruction             FALSE
 global Aut(E_P) triviality                            OPEN
 ```
 
 No absence of a global-rigidity theorem is treated as evidence of novelty.
 
-## 10. Next exact question
+## 10. Consequence for the global question
 
-The remaining global problem has now narrowed to a concrete reconstruction statement:
+The lower-neighbour-set route is closed negatively by the smallest nontrivial collision.
+
+The remaining global question is therefore still
 
 ```text
-Is every finite rooted non-plane tree determined
-by the set of distinct rooted trees obtained
-by deleting one non-root leaf?
+Aut(E_P) triviality    OPEN
 ```
 
-If yes, global rigidity follows by rank induction. If not, the exceptional rooted pairs become candidate sources of nontrivial global edit-graph symmetry, but further compatibility across upper layers would still have to be proved.
+but any future proof must use more graph-theoretic information than the set of lower neighbours alone — for example upper neighbours or a richer multi-layer signature.
 
-No Phase-7 promotion follows from this note.
+No such stronger programme is started here. No Phase-7 promotion follows from this note.
