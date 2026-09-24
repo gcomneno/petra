@@ -76,3 +76,45 @@ It also sharpens the commutation boundary: generic partial commutation is **KNOW
 The remaining external question is narrower: find a rewriting/concurrency framework with state-dependent residuals and commuting squares close enough to PETRA to classify the exact independence criterion more strongly.
 
 No Phase-7 promotion follows from this note.
+
+## 10. Deeper comparison: residual theory
+
+The fixed-alphabet trace comparison is not the end of the story. Classical rewriting residual theory is structurally closer to PETRA because it asks what becomes of one redex after another coinitial redex has been contracted.
+
+The generic residual notation is `b / a` for the residual of step / redex `b` after contracting coinitial step `a`.
+
+This matches PETRA's commuting-square shape more closely than a trace swap:
+
+```text
+P --e1--> P1 --e2/e1--> Q
+|                       ^
+e2                      |
+v                       e1/e2
+P2 ---------------------+
+```
+
+Melliès' axiomatic residual theory and the deterministic residual-structure literature show that **residuals, permutation equivalence of reductions, and commuting/confluence diagrams are established rewriting concepts**.
+
+### What this changes
+
+```text
+generic residual transport                       KNOWN
+permutation equivalence of reductions             KNOWN
+PETRA state-dependent commuting-square shape      structurally analogous
+PETRA as a standard residual structure            TO-VERIFY
+PETRA exact independence criterion                PETRA-INTERNAL
+```
+
+This is stronger than the earlier statement that PETRA is merely related to trace theory, but it still stops short of identifying PETRA with a published residual-system class.
+
+### Why PETRA is not yet classified as a residual structure
+
+A commuting square is not enough. A residual framework normally imposes axioms on coinitial steps and their residuals. PETRA has not yet been checked axiom-by-axiom for existence and uniqueness/multiplicity behaviour of residuals, self-residual behaviour, erasure or duplication, compatibility of iterated residualization, stability/conflict assumptions, and permutation-equivalence coherence.
+
+PETRA's unordered carrier with multiplicities also means occurrence-sensitive witnessed edits must remain distinct from unpointed successor forms during this audit.
+
+### Completeness boundary
+
+The PETRA statement that inverse cancellation plus independent commutation is complete for equal witnessed path effects remains **OPEN**.
+
+No confluence, standardization, or permutation-equivalence theorem from orthogonal/conflict-free rewriting may be imported until PETRA is shown to satisfy the relevant hypotheses.

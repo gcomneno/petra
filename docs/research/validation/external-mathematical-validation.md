@@ -60,7 +60,9 @@ No row labeled `PETRA-INTERNAL` is a novelty claim. No row labeled `TO-VERIFY` m
 | Structural congruence does not imply REMOVE transition compatibility | **PETRA-INTERNAL** | explicit universal-congruence counterexample | Specific distinction in PETRA theory. |
 | Witnessed edit paths form free category | **SPECIALIZED** | Sharifi free-category construction | PETRA's witnessed paths are the standard free category on the witnessed edit graph, specialized to PETRA edge semantics. |
 | Quotient by inverse cancellation is a groupoid | **SPECIALIZED** | Brown, free groupoid on a graph | PETRA's inverse-cancellation quotient is the standard free-groupoid construction before adding any commutation relations. |
-| Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | Mazurkiewicz trace theory supplies the generic partial-commutation pattern | The generic commuting-independent-actions idea is known, but PETRA's witnesses and independence are state-dependent; no exact trace-monoid equivalence is claimed. |
+| Generic residual transport / permutation equivalence of rewriting steps | **KNOWN** | Melliès 2002; Bruggink 2003; Glauert–Khasidashvili 1996 | Residual theory explicitly studies how one step transforms the status of another and compares reductions modulo permutation equivalence. |
+| PETRA witnessed residual transport as an instance of residual theory | **TO-VERIFY** | residual theory is structurally close | PETRA has source-typed witnesses and residualized second steps in commuting squares, but the required residual-system axioms have not yet been checked. |
+| Independent edits commute under PETRA's explicit criterion | **PETRA-INTERNAL** | residual theory and trace theory supply generic analogues | The exact PETRA structural criterion remains internally proved; no theorem has yet identified it with a standard residual-system independence condition. |
 | Reduced path need not be geodesic | **PETRA-INTERNAL** | explicit PETRA counterexample | No novelty claim. |
 | Completeness of cancellation + independent commutation | **OPEN** | none | Explicitly unresolved. |
 | Depth / leaf / root-degree / width / max-degree 1-Lipschitz under PETRA edits | **PETRA-INTERNAL** | standard statistics, PETRA-specific edit bound | Internal proofs are direct; external novelty unresolved. |
@@ -143,7 +145,7 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **state-dependent rewrite/concurrency comparison** — residual witnesses and commuting squares beyond fixed-alphabet trace monoids;
+2. **residual-system axiom audit** — test PETRA witnessed edits against a standard residual-structure axiom package;
 3. **global edit-graph literature** — reconstruction / automorphism questions;
 4. only then, a dedicated **novelty candidate audit**.
 
