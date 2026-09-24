@@ -145,7 +145,7 @@ These results support implementation/proof confidence but **do not establish ext
 The next source-driven work should proceed narrowly rather than attempting novelty review all at once:
 
 1. **exact edit metric comparison** — PETRA leaf-only metric vs common-subtree / rooted-tree edit metrics;
-2. **state-dependent rewrite/concurrency comparison** — residual witnesses and commuting squares beyond fixed-alphabet trace monoids;
+2. **residual-system axiom audit** — test PETRA witnessed edits against a standard residual-structure axiom package;
 3. **global edit-graph literature** — reconstruction / automorphism questions;
 4. only then, a dedicated **novelty candidate audit**.
 
