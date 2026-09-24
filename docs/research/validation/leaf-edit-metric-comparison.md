@@ -32,7 +32,7 @@ Therefore leaf-restricted insertion/deletion is not a PETRA novelty candidate.
 
 The operation family is **SPECIALIZED**: PETRA removes labels/relabeling and sibling order from a known leaf-edit family.
 
-Literal equality with Selkow's original metric is not asserted because the carrier and quotient conventions differ.
+Literal equality with Selkow's original metric is not asserted because the carrier and quotient conventions differ. By contrast, non-identity with **unrestricted** classical TED at the operation-system level is already established by the definitions: unrestricted TED permits internal-node insertion/deletion semantics that PETRA does not.
 
 ## 5. Common reduct is not generic common subtree
 
